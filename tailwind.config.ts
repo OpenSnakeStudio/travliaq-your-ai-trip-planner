@@ -47,16 +47,28 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+        // Travliaq Brand Colors
+        travliaq: {
+          'deep-blue': "hsl(var(--travliaq-deep-blue))",
+          'light-blue': "hsl(var(--travliaq-light-blue))",
+          'turquoise': "hsl(var(--travliaq-turquoise))",
+          'golden-sand': "hsl(var(--travliaq-golden-sand))",
+          'white': "hsl(var(--travliaq-white))",
         },
+      },
+      backgroundImage: {
+        'gradient-hero': 'var(--gradient-hero)',
+        'gradient-accent': 'var(--gradient-accent)',
+        'gradient-subtle': 'var(--gradient-subtle)',
+      },
+      boxShadow: {
+        'adventure': 'var(--shadow-adventure)',
+        'golden': 'var(--shadow-golden)',
+        'deep': 'var(--shadow-deep)',
+      },
+      fontFamily: {
+        'montserrat': ['Montserrat', 'sans-serif'],
+        'inter': ['Inter', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,10 +92,33 @@ export default {
             height: "0",
           },
         },
+        "fade-up": {
+          "0%": {
+            opacity: "0",
+            transform: "translateY(30px)"
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateY(0)"
+          }
+        },
+        "adventure-float": {
+          "0%, 100%": {
+            transform: "translateY(0px)"
+          },
+          "50%": {
+            transform: "translateY(-10px)"
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-up": "fade-up 0.6s ease-out",
+        "adventure-float": "adventure-float 3s ease-in-out infinite",
+      },
+      transitionProperty: {
+        'adventure': 'var(--transition-adventure)',
       },
     },
   },
