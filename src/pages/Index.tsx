@@ -12,7 +12,7 @@ const Index = () => {
           <img 
             src={logo} 
             alt="Logo Travliaq" 
-            className="h-12 w-auto"
+            className="h-20 w-auto"
           />
         </div>
       </header>
@@ -62,60 +62,126 @@ const Index = () => {
       {/* Comment ça marche Section */}
       <section className="py-20 bg-gradient-subtle">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-montserrat font-bold text-center mb-6 text-travliaq-deep-blue">
+          <h2 className="text-4xl md:text-5xl font-montserrat font-bold text-center mb-8 text-travliaq-deep-blue">
             Comment ça marche ?
           </h2>
-          <p className="text-xl text-center mb-16 text-muted-foreground max-w-2xl mx-auto">
-            Travliaq organise votre voyage personnalisé en 4 étapes simples…
-          </p>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            <div className="text-center group hover:transform hover:scale-105 transition-adventure">
-              <div className="bg-travliaq-turquoise w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-adventure group-hover:shadow-deep">
-                <MapPin className="w-10 h-10 text-white" />
-              </div>
-              <h3 className="text-xl font-montserrat font-bold mb-4 text-travliaq-deep-blue">
-                1. Vos envies
-              </h3>
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Indique destination, dates, budget, style de voyage.
+          {/* Description encadrée */}
+          <div className="max-w-5xl mx-auto mb-16">
+            <div className="bg-gradient-to-r from-purple-100 to-blue-50 border-2 border-purple-300 rounded-lg p-6 text-center">
+              <p className="text-lg text-travliaq-deep-blue leading-relaxed font-inter">
+                Travliaq organise votre voyage personnalisé en 4 étapes simples : vous indiquez vos envies, nous comparons en temps réel vols, 
+                hébergements et activités (prix, météo, distances), nous assemblons un itinéraire jour-par-jour logique et maîtrisé côté budget, puis vous 
+                recevez le tout par e-mail avec des liens prêts à réserver. Moins d'onglets, plus d'aventure. Idéal pour backpackers et solo travelers : 
+                rapide, flexible, sans carte bancaire.
               </p>
             </div>
-
-            <div className="text-center group hover:transform hover:scale-105 transition-adventure">
-              <div className="bg-travliaq-golden-sand w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-golden group-hover:shadow-deep">
-                <Sparkles className="w-10 h-10 text-travliaq-deep-blue" />
+          </div>
+          
+          {/* 4 étapes en flèches */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {/* Étape 1 */}
+            <div className="relative">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+                <div className="flex items-center mb-4">
+                  <MapPin className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
+                    Vos envies
+                  </h3>
+                </div>
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Indique ta destination :</strong> que ce soit Lisbonne, Tokyo ou juste l'aéroport de départ, pour que Travliaq trouve les meilleures options.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Précise tes dates :</strong> fixes ou flexibles, pour optimiser prix et météo, et te garantir un timing parfait.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Partage ton budget et ton style de voyage :</strong> solo, sac à dos, confort ou premium, on adapte chaque étape à ton rythme et à tes envies.</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-montserrat font-bold mb-4 text-travliaq-deep-blue">
-                2. Recherche intelligente
-              </h3>
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Scan vols, hôtels, météo, activités en temps réel.
-              </p>
             </div>
 
-            <div className="text-center group hover:transform hover:scale-105 transition-adventure">
-              <div className="bg-travliaq-light-blue w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-deep group-hover:shadow-adventure">
-                <Clock className="w-10 h-10 text-white" />
+            {/* Étape 2 */}
+            <div className="relative">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+                <div className="flex items-center mb-4">
+                  <Sparkles className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
+                    Recherche intelligente
+                  </h3>
+                </div>
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>On scanne les meilleures options :</strong> vols, hébergements et activités, via des sources fiables et mises à jour en temps réel.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>On croise prix, météo et logistique :</strong> pour que chaque étape s'enchaîne naturellement, sans perte de temps ni de budget.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>On filtre selon ton profil :</strong> solo, backpacker, confort ou premium, chaque résultat est ajusté à tes priorités.</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-montserrat font-bold mb-4 text-travliaq-deep-blue">
-                3. Itinéraire optimisé
-              </h3>
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Jour par jour, budget maîtrisé, astuces locales.
-              </p>
             </div>
 
-            <div className="text-center group hover:transform hover:scale-105 transition-adventure">
-              <div className="bg-travliaq-turquoise w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-adventure group-hover:shadow-deep">
-                <Mail className="w-10 h-10 text-white" />
+            {/* Étape 3 */}
+            <div className="relative">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+                <div className="flex items-center mb-4">
+                  <Clock className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
+                    Itinéraire optimisé
+                  </h3>
+                </div>
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Programme jour par jour :</strong> activités, visites, pauses et repas organisés dans un ordre logique, pour profiter sans te presser.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Budget maîtrisé :</strong> chaque étape est chiffrée pour éviter les mauvaises surprises, du vol au café du coin.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Astuces locales intégrées :</strong> spots photo, restaurants cachés, transports malins... comme si un ami sur place te guidait.</span>
+                  </li>
+                </ul>
               </div>
-              <h3 className="text-xl font-montserrat font-bold mb-4 text-travliaq-deep-blue">
-                4. Voyage prêt à réserver
-              </h3>
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Itinéraire envoyé par email + liens directs.
-              </p>
+            </div>
+
+            {/* Étape 4 */}
+            <div className="relative">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+                <div className="flex items-center mb-4">
+                  <Mail className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
+                    Voyage prêt à réserver
+                  </h3>
+                </div>
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Itinéraire complet envoyé par e-mail :</strong> prêt à être consulté en ligne ou hors connexion.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>Liens directs pour réserver :</strong> vols, hébergements, activités, tout est à portée de clic.</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    <span><strong>100% modulable :</strong> tu peux ajuster les dates, changer une activité ou relancer une recherche en un instant.</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
