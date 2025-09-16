@@ -115,18 +115,18 @@ const Index = () => {
             </div>
           </div>
           
-          {/* 4 étapes en flèches */}
+          {/* 4 étapes harmonisées */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {/* Étape 1 */}
-            <div className="relative">
-              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+            <div className="relative h-full">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
                   <MapPin className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Vos envies
                   </h3>
                 </div>
-                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
                     <span><strong>Indique ta destination :</strong> que ce soit Lisbonne, Tokyo ou juste l'aéroport de départ, pour que Travliaq trouve les meilleures options.</span>
@@ -144,15 +144,15 @@ const Index = () => {
             </div>
 
             {/* Étape 2 */}
-            <div className="relative">
-              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+            <div className="relative h-full">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
                   <Sparkles className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Recherche intelligente
                   </h3>
                 </div>
-                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
                     <span><strong>On scanne les meilleures options :</strong> vols, hébergements et activités, via des sources fiables et mises à jour en temps réel.</span>
@@ -170,15 +170,15 @@ const Index = () => {
             </div>
 
             {/* Étape 3 */}
-            <div className="relative">
-              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+            <div className="relative h-full">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
                   <Clock className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Itinéraire optimisé
                   </h3>
                 </div>
-                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
                     <span><strong>Programme jour par jour :</strong> activités, visites, pauses et repas organisés dans un ordre logique, pour profiter sans te presser.</span>
@@ -196,15 +196,15 @@ const Index = () => {
             </div>
 
             {/* Étape 4 */}
-            <div className="relative">
-              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure relative">
+            <div className="relative h-full">
+              <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
                   <Mail className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Voyage prêt à réserver
                   </h3>
                 </div>
-                <ul className="space-y-3 text-sm text-travliaq-deep-blue">
+                <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
                     <span><strong>Itinéraire complet envoyé par e-mail :</strong> prêt à être consulté en ligne ou hors connexion.</span>
@@ -221,50 +221,146 @@ const Index = () => {
               </div>
             </div>
           </div>
+
+          {/* Call-to-action après Comment ça marche */}
+          <div className="text-center mt-16">
+            <Button 
+              variant="hero" 
+              size="xl" 
+              className="animate-adventure-float"
+              asChild
+            >
+              <a href="https://form.typeform.com/to/w3660YhR" target="_blank" rel="noopener noreferrer">
+                <Sparkles className="mr-2" />
+                Commencer mon voyage
+              </a>
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-background">
+      {/* Pourquoi Travliaq Section - Refactorisée */}
+      <section className="py-20 bg-gradient-to-br from-travliaq-deep-blue via-travliaq-deep-blue/95 to-travliaq-light-blue">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl md:text-5xl font-montserrat font-bold text-center mb-16 text-travliaq-deep-blue">
-            Pourquoi Travliaq ?
-          </h2>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-montserrat font-bold mb-6 text-white">
+              Pourquoi Travliaq ?
+            </h2>
+            <p className="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
+              La révolution du voyage intelligent est arrivée
+            </p>
+          </div>
           
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div className="bg-card p-8 rounded-xl shadow-adventure hover:shadow-deep transition-adventure border border-border">
-              <div className="bg-travliaq-turquoise/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6">
-                <Clock className="w-8 h-8 text-travliaq-turquoise" />
+          {/* Grid principal avec design moderne */}
+          <div className="grid lg:grid-cols-2 gap-12 max-w-7xl mx-auto mb-16">
+            
+            {/* Colonne gauche - Avantages principaux */}
+            <div className="space-y-8">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-start gap-6">
+                  <div className="bg-travliaq-golden-sand rounded-xl p-4 group-hover:scale-110 transition-transform duration-300">
+                    <Clock className="w-8 h-8 text-travliaq-deep-blue" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
+                      Fini la galère de planification
+                    </h3>
+                    <p className="text-white/80 leading-relaxed text-lg">
+                      Plus de 20 onglets ouverts, plus de comparaisons interminables. L'IA analyse tout pour toi : prix, météo, distances, disponibilités.
+                    </p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-montserrat font-bold mb-4 text-card-foreground">
-                Gain de temps
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Plus besoin de passer des heures à comparer les prix et les options. L'IA fait tout le travail pour toi.
-              </p>
+
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
+                <div className="flex items-start gap-6">
+                  <div className="bg-travliaq-turquoise rounded-xl p-4 group-hover:scale-110 transition-transform duration-300">
+                    <Users className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
+                      Voyager comme un local
+                    </h3>
+                    <p className="text-white/80 leading-relaxed text-lg">
+                      Nos recommandations te mènent vers les vrais trésors cachés, loin des pièges à touristes. Authentique, pas artificiel.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-card p-8 rounded-xl shadow-golden hover:shadow-deep transition-adventure border border-border">
-              <div className="bg-travliaq-golden-sand/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6">
-                <Users className="w-8 h-8 text-travliaq-golden-sand" />
+            {/* Colonne droite - Statistiques et garanties */}
+            <div className="space-y-8">
+              <div className="bg-gradient-to-br from-travliaq-golden-sand to-travliaq-golden-sand/80 rounded-2xl p-8 text-travliaq-deep-blue">
+                <div className="text-center">
+                  <div className="text-5xl font-montserrat font-bold mb-2">92%</div>
+                  <p className="text-lg font-medium mb-4">d'économies en temps de recherche</p>
+                  <div className="flex justify-center">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                </div>
               </div>
-              <h3 className="text-2xl font-montserrat font-bold mb-4 text-card-foreground">
-                Expérience authentique
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Recommandations locales et culturelles pour vivre ton voyage comme un habitant, pas comme un touriste.
+
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
+                <h3 className="text-2xl font-montserrat font-bold mb-6 text-white text-center">
+                  Nos garanties
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 bg-travliaq-golden-sand rounded-full"></div>
+                    <span className="text-white/90">Meilleurs prix garantis</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 bg-travliaq-turquoise rounded-full"></div>
+                    <span className="text-white/90">Itinéraire en moins de 24h</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 bg-travliaq-light-blue rounded-full"></div>
+                    <span className="text-white/90">100% personnalisable</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 bg-travliaq-golden-sand rounded-full"></div>
+                    <span className="text-white/90">Support 7j/7</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section testimonial intégrée */}
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 md:p-12 border border-white/10 max-w-5xl mx-auto mb-12">
+            <div className="text-center">
+              <div className="flex justify-center mb-6">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-8 h-8 text-travliaq-golden-sand fill-current" />
+                ))}
+              </div>
+              <blockquote className="text-2xl md:text-3xl font-montserrat font-bold text-white mb-6 leading-relaxed">
+                « J'ai économisé 15 heures de recherche et 300€ sur mon voyage à Tokyo. Travliaq a trouvé des spots que même mes amis japonais ne connaissaient pas ! »
+              </blockquote>
+              <p className="text-xl text-white/70 font-inter">
+                Sarah, 26 ans — Tokyo & Kyoto, 10 jours
               </p>
             </div>
+          </div>
 
-            <div className="bg-card p-8 rounded-xl shadow-deep hover:shadow-adventure transition-adventure border border-border">
-              <div className="bg-travliaq-light-blue/10 w-16 h-16 rounded-lg flex items-center justify-center mb-6">
-                <Sparkles className="w-8 h-8 text-travliaq-light-blue" />
-              </div>
-              <h3 className="text-2xl font-montserrat font-bold mb-4 text-card-foreground">
-                Optimisation IA
-              </h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Meilleur prix, meilleure météo, meilleurs moments — l'algorithme trouve la combinaison gagnante.
+          {/* Double call-to-action harmonieux */}
+          <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
+            <Button 
+              variant="hero" 
+              size="xl" 
+              className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90 font-bold px-8 py-4"
+              asChild
+            >
+              <a href="https://form.typeform.com/to/w3660YhR" target="_blank" rel="noopener noreferrer">
+                <Sparkles className="mr-2" />
+                Créer mon itinéraire
+              </a>
+            </Button>
+            
+            <div className="text-center">
+              <p className="text-white/60 text-sm">
+                Gratuit • Sans engagement • Résultat en 24h
               </p>
             </div>
           </div>
