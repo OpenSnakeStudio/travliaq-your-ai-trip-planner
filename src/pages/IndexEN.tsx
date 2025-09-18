@@ -62,16 +62,6 @@ const IndexEN = () => {
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center text-white animate-fade-up">
-          {user && user.user_metadata?.full_name && (
-            <div className="mb-6 animate-fade-up">
-              <p className="text-2xl md:text-3xl font-inter font-medium text-travliaq-golden-sand mb-2">
-                Hello {user.user_metadata.full_name.split(' ')[0]},
-              </p>
-              <p className="text-xl md:text-2xl font-inter text-white/90">
-                ready for a new adventure?
-              </p>
-            </div>
-          )}
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold mb-6 leading-tight">
             Your trip,<br />
             <span className="bg-gradient-accent bg-clip-text text-transparent">
@@ -79,7 +69,13 @@ const IndexEN = () => {
             </span>
           </h1>
           <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto font-inter leading-relaxed opacity-90">
-            Discover your next personalized itinerary — flights, hotels, weather, activities, all in one click.
+            {user && user.user_metadata?.full_name ? (
+              <span className="animate-fade-in">
+                <strong className="text-travliaq-golden-sand">{user.user_metadata.full_name.split(' ')[0]}</strong>, discover your next personalized itinerary — flights, hotels, weather, activities, all in one click.
+              </span>
+            ) : (
+              "Discover your next personalized itinerary — flights, hotels, weather, activities, all in one click."
+            )}
           </p>
           <Button variant="hero" size="xl" className="animate-adventure-float" asChild>
             <a href="https://form.typeform.com/to/w3660YhR" target="_blank" rel="noopener noreferrer">
