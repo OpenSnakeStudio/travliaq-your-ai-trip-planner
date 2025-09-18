@@ -62,6 +62,16 @@ const IndexEN = () => {
         </div>
         
         <div className="relative z-10 container mx-auto px-6 text-center text-white animate-fade-up">
+          {user && user.user_metadata?.full_name && (
+            <div className="mb-6 animate-fade-up">
+              <p className="text-2xl md:text-3xl font-inter font-medium text-travliaq-golden-sand mb-2">
+                Hello {user.user_metadata.full_name.split(' ')[0]},
+              </p>
+              <p className="text-xl md:text-2xl font-inter text-white/90">
+                ready for a new adventure?
+              </p>
+            </div>
+          )}
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold mb-6 leading-tight">
             Your trip,<br />
             <span className="bg-gradient-accent bg-clip-text text-transparent">
