@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Sparkles, Users, Star, Mail } from "lucide-react";
+import { MapPin, Compass, Route, Plane, Camera, Globe, Star, Sparkles, Mail } from "lucide-react";
 import heroImage from "@/assets/hero-travliaq.jpg";
 import logo from "@/assets/logo-travliaq.png";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
@@ -116,10 +116,12 @@ const Index = () => {
           <div className="max-w-5xl mx-auto mb-16">
             <div className="bg-gradient-to-r from-purple-100 to-blue-50 border-2 border-purple-300 rounded-lg p-6 text-center">
               <p className="text-lg text-travliaq-deep-blue leading-relaxed font-inter">
-                Travliaq organise votre voyage personnalisé en 4 étapes simples : vous indiquez vos envies, nous comparons en temps réel vols, 
-                hébergements et activités (prix, météo, distances), nous assemblons un itinéraire jour-par-jour logique et maîtrisé côté budget, puis vous 
-                recevez le tout par e-mail avec des liens prêts à réserver. Moins d'onglets, plus d'aventure. Idéal pour backpackers et solo travelers : 
-                rapide, flexible, sans carte bancaire.
+                <strong>Travliaq</strong> simplifie ton voyage en <strong>4 étapes</strong> : <br/>
+                1️⃣ Tu indiques tes envies (destination, budget, style). <br/>
+                2️⃣ Nous comparons en temps réel vols, hébergements et activités (prix, météo, distances). <br/>
+                3️⃣ Nous créons pour toi un itinéraire jour-par-jour clair, optimisé et respectueux de ton budget. <br/>
+                4️⃣ Tu reçois une proposition personnalisée avec un prix détaillé et un seul lien pour tout réserver en quelques clics. <br/>
+                <em>Moins d'onglets, plus d'aventure.</em> 🎒
               </p>
             </div>
           </div>
@@ -156,7 +158,7 @@ const Index = () => {
             <div className="relative h-full">
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
-                  <Sparkles className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <Compass className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Recherche intelligente
                   </h3>
@@ -182,7 +184,7 @@ const Index = () => {
             <div className="relative h-full">
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
-                  <Clock className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <Route className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Itinéraire optimisé
                   </h3>
@@ -208,7 +210,7 @@ const Index = () => {
             <div className="relative h-full">
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
-                  <Mail className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <Plane className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Voyage prêt à réserver
                   </h3>
@@ -268,7 +270,7 @@ const Index = () => {
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
                 <div className="flex items-start gap-6">
                   <div className="bg-travliaq-golden-sand rounded-xl p-4 group-hover:scale-110 transition-transform duration-300">
-                    <Clock className="w-8 h-8 text-travliaq-deep-blue" />
+                    <Camera className="w-8 h-8 text-travliaq-deep-blue" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
@@ -284,7 +286,7 @@ const Index = () => {
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
                 <div className="flex items-start gap-6">
                   <div className="bg-travliaq-turquoise rounded-xl p-4 group-hover:scale-110 transition-transform duration-300">
-                    <Users className="w-8 h-8 text-white" />
+                    <Globe className="w-8 h-8 text-white" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">

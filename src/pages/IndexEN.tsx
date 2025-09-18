@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MapPin, Clock, Sparkles, Users, Star, Mail } from "lucide-react";
+import { MapPin, Compass, Route, Plane, Camera, Globe, Star, Sparkles, Mail } from "lucide-react";
 import heroImage from "@/assets/hero-travliaq.jpg";
 import logo from "@/assets/logo-travliaq.png";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
@@ -103,7 +103,14 @@ const IndexEN = () => {
           {/* Description box */}
           <div className="max-w-5xl mx-auto mb-16">
             <div className="bg-gradient-to-r from-purple-100 to-blue-50 border-2 border-purple-300 rounded-lg p-6 text-center">
-              <p className="text-lg text-travliaq-deep-blue leading-relaxed font-inter">Travliaq organizes your personalized trip in 4 simple steps: you share your preferences, we compare flights, accommodations and activities in real-time (prices, weather, distances), we assemble a logical day-by-day itinerary within your budget, then you receive everything by email with ready-to-book links. Fewer tabs, more adventure. Perfect for backpackers and solo travelers: fast, flexible, no credit card required.</p>
+              <p className="text-lg text-travliaq-deep-blue leading-relaxed font-inter">
+                <strong>Travliaq</strong> simplifies your trip in <strong>4 steps</strong>: <br/>
+                1️⃣ You indicate your wishes (destination, budget, style). <br/>
+                2️⃣ We compare flights, accommodations and activities in real-time (prices, weather, distances). <br/>
+                3️⃣ We create a clear, optimized day-by-day itinerary that respects your budget. <br/>
+                4️⃣ You receive a personalized proposal with detailed pricing and a single link to book everything in a few clicks. <br/>
+                <em>Fewer tabs, more adventure.</em> 🎒
+              </p>
             </div>
           </div>
           
@@ -139,7 +146,7 @@ const IndexEN = () => {
             <div className="relative h-full">
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
-                  <Sparkles className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <Compass className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Smart search
                   </h3>
@@ -165,7 +172,7 @@ const IndexEN = () => {
             <div className="relative h-full">
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
-                  <Clock className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <Route className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Optimized itinerary
                   </h3>
@@ -191,7 +198,7 @@ const IndexEN = () => {
             <div className="relative h-full">
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
-                  <Mail className="w-8 h-8 text-travliaq-deep-blue mr-3" />
+                  <Plane className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
                     Trip ready to book
                   </h3>
@@ -246,7 +253,7 @@ const IndexEN = () => {
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
                 <div className="flex items-start gap-6">
                   <div className="bg-travliaq-golden-sand rounded-xl p-4 group-hover:scale-110 transition-transform duration-300">
-                    <Clock className="w-8 h-8 text-travliaq-deep-blue" />
+                    <Camera className="w-8 h-8 text-travliaq-deep-blue" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
@@ -262,7 +269,7 @@ const IndexEN = () => {
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:bg-white/15 transition-all duration-300 group">
                 <div className="flex items-start gap-6">
                   <div className="bg-travliaq-turquoise rounded-xl p-4 group-hover:scale-110 transition-transform duration-300">
-                    <Users className="w-8 h-8 text-white" />
+                    <Globe className="w-8 h-8 text-white" />
                   </div>
                   <div>
                     <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
