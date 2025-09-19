@@ -474,7 +474,7 @@ const IndexEN = () => {
             {/* Copyright */}
             <div className="border-t border-travliaq-light-blue pt-8 text-center">
               <p className="text-white/60 font-inter">
-                © 2024 Travliaq. All rights reserved. Your next journey starts here.
+                © 2025 Travliaq. All rights reserved. Made with ❤️ for authentic travelers
               </p>
             </div>
           </div>
