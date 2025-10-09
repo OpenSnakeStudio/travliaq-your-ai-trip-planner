@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import IndexEN from "./pages/IndexEN";
 import CGV from "./pages/CGV";
 import CGVEN from "./pages/CGVEN";
+import Questionnaire from "./pages/Questionnaire";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/cgv" element={<CGV />} />
           <Route path="/en" element={<IndexEN />} />
           <Route path="/en/terms" element={<CGVEN />} />
+          <Route path="/questionnaire" element={<Questionnaire />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
