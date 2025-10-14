@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Calendar, DollarSign, CloudSun, Sparkles, Share2, MapPin, Users, Activity, Plane } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { Calendar, DollarSign, CloudSun, Sparkles, MapPin, Users, Activity, Plane } from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import { TripShareButtons } from "./TripShareButtons";
 
 export interface SummaryStat {
   icon: LucideIcon;
@@ -24,15 +24,21 @@ interface FooterSummaryProps {
   activities?: number;
   cities?: number;
   stopovers?: number;
+  // For sharing
+  destination?: string;
+  tripTitle?: string;
 }
 
-const FooterSummary = ({ stats, summary, travelers = 2, activities = 0, cities = 0, stopovers = 0 }: FooterSummaryProps) => {
-  const handleShare = () => {
-    toast({
-      title: "Partage en cours",
-      description: "Fonctionnalité de partage à venir !",
-    });
-  };
+const FooterSummary = ({ 
+  stats, 
+  summary, 
+  travelers = 2, 
+  activities = 0, 
+  cities = 0, 
+  stopovers = 0,
+  destination = "votre destination",
+  tripTitle = "Votre voyage"
+}: FooterSummaryProps) => {
 
   // Generate 8 comprehensive stats
   const displayStats: SummaryStat[] = stats || (summary ? [
@@ -100,15 +106,11 @@ const FooterSummary = ({ stats, summary, travelers = 2, activities = 0, cities =
               Réserver ce voyage en un clic
             </Button>
 
-            <Button
-              variant="outline"
-              size="xl"
-              onClick={handleShare}
-              className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20"
-            >
-              <Share2 className="mr-2 h-5 w-5" />
-              Partager cet itinéraire
-            </Button>
+            <TripShareButtons
+              title={tripTitle}
+              destination={destination}
+              totalDays={summary?.totalDays || 7}
+            />
           </div>
 
           {/* Signature */}

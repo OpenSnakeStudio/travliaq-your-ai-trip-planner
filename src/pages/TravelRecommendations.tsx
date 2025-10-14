@@ -669,6 +669,8 @@ const TravelRecommendations = () => {
           activities={regularSteps.length}
           cities={new Set(regularSteps.map(d => d.title.split(' ')[0])).size}
           stopovers={travelData.flight?.type?.toLowerCase().includes('direct') ? 0 : 1}
+          destination={travelData.destination}
+          tripTitle={`Voyage à ${travelData.destination} - ${travelData.summary.totalDays} jours`}
         />
       </div>
     </div>
