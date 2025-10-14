@@ -151,7 +151,7 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["step_number", "day_number", "title"],
+        "required": ["step_number", "day_number", "title", "main_image"],
         "properties": {
           "step_number": {
             "type": "integer",
@@ -186,8 +186,9 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
           },
           "main_image": {
             "type": "string",
-            "description": "URL de l'image principale de l'étape (OBLIGATOIRE - réutilisez des images cohérentes si nécessaire)",
-            "format": "uri"
+            "description": "Image de fond d'écran de l'étape (OBLIGATOIRE pour chaque step)",
+            "format": "uri",
+            "minLength": 1
           },
           "is_summary": {
             "type": "boolean",
@@ -286,6 +287,39 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
               "format": "uri"
             },
             "default": []
+          },
+          "summary_stats": {
+            "type": "array",
+            "description": "Statistiques dynamiques pour l'étape récapitulative (obligatoire si is_summary=true)",
+            "items": {
+              "type": "object",
+              "required": ["type", "value"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["days", "budget", "weather", "style", "cities", "people", "activities", "custom"],
+                  "description": "Type de statistique prédéfini ou personnalisé"
+                },
+                "value": {
+                  "type": ["string", "number"],
+                  "description": "Valeur de la statistique (nombre ou texte avec unité)"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Label personnalisé (requis uniquement pour type 'custom')"
+                },
+                "icon": {
+                  "type": "string",
+                  "description": "Nom de l'icône Lucide React (requis uniquement pour type 'custom')",
+                  "examples": ["Plane", "Car", "Train", "Ship"]
+                },
+                "color": {
+                  "type": "string",
+                  "enum": ["turquoise", "golden"],
+                  "description": "Couleur de la statistique (uniquement pour type 'custom')"
+                }
+              }
+            }
           }
         }
       }
@@ -587,16 +621,26 @@ Voici un exemple JSON complet basé sur le trip **TOKYO2025** actuellement en ba
       "is_summary": true,
       "latitude": 35.6938,
       "longitude": 139.7006,
-      "why": "",
-      "tips": "",
+      "why": "Un voyage mémorable alliant culture, gastronomie et modernité.",
+      "tips": "N'oubliez pas d'échanger quelques euros en yens avant votre départ.",
       "transfer": "",
       "suggestion": "",
       "weather_icon": "✅",
-      "weather_temp": "",
-      "weather_description": null,
-      "price": null,
-      "duration": null,
-      "images": []
+      "weather_temp": "21°C",
+      "weather_description": "Voyage terminé",
+      "price": 0,
+      "duration": "—",
+      "images": [],
+      "summary_stats": [
+        { "type": "days", "value": 7 },
+        { "type": "budget", "value": "3 200 €" },
+        { "type": "weather", "value": "21°C" },
+        { "type": "style", "value": "Culture & Gastronomie" },
+        { "type": "cities", "value": 2 },
+        { "type": "people", "value": 2 },
+        { "type": "activities", "value": 12 },
+        { "type": "custom", "value": "Direct", "label": "Vol", "icon": "Plane", "color": "turquoise" }
+      ]
     }
   ]
 }
@@ -972,7 +1016,8 @@ SELECT insert_trip_from_json('[nouveau JSON]'::jsonb);
 
 1. **Champs obligatoires** :
    - `code`, `destination`, `total_days`, `steps`
-   - Pour chaque step : `step_number`, `day_number`, `title`, `main_image`
+   - Pour chaque step : `step_number`, `day_number`, `title`, **`main_image`** (OBLIGATOIRE)
+   - Pour l'étape récapitulative (is_summary: true) : **`summary_stats`** (OBLIGATOIRE)
 
 2. **Image de fond (main_image)** :
    - **OBLIGATOIRE** pour chaque step, pas de step sans background
@@ -982,7 +1027,9 @@ SELECT insert_trip_from_json('[nouveau JSON]'::jsonb);
 3. **Step de récapitulatif (is_summary)** :
    - Ajoutez une dernière step avec `is_summary: true` pour afficher le widget de fin
    - Cette step affiche une checkbox ✓ au lieu d'un numéro d'étape
+   - **`summary_stats` est OBLIGATOIRE** pour cette étape récapitulative
    - Les champs `why`, `tips`, `transfer`, `suggestion` peuvent être vides pour cette step
+   - Voir `SUMMARY_STATS_GUIDE.md` pour la configuration détaillée des statistiques
 
 4. **Types de données** :
    - **Code unique** : Le champ `code` doit être unique dans la table `trips`

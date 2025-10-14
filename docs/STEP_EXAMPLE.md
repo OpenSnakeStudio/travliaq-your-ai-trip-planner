@@ -107,6 +107,7 @@ INSERT INTO steps (
 - `step_number` : Numéro d'ordre de l'étape
 - `day_number` : Jour du voyage
 - `title` : Titre de l'étape
+- **`main_image` : Image de fond d'écran de l'étape (URL complète - OBLIGATOIRE)**
 
 ### Champs Optionnels
 
@@ -118,7 +119,6 @@ INSERT INTO steps (
 - `is_summary` : Si `true`, affiche une checkbox au lieu d'un numéro d'étape
 
 #### Localisation
-- `main_image` : Image principale (URL)
 - `latitude`, `longitude` : Coordonnées GPS (format décimal)
   - Si non renseignées, l'étape n'apparaît pas sur la carte
 
@@ -143,6 +143,12 @@ INSERT INTO steps (
 - `images` : Tableau JSON d'URLs d'images supplémentaires
   - Format : `'["url1", "url2"]'::jsonb`
   - Affichées dans un carousel si présentes
+
+#### Statistiques récapitulatives
+- `summary_stats` : Array de statistiques pour l'étape récapitulative (is_summary: true)
+  - Types prédéfinis : `days`, `budget`, `weather`, `style`, `cities`, `people`, `activities`
+  - Type personnalisé : `custom` (nécessite `label`, `icon`, `color`)
+  - Voir `SUMMARY_STATS_GUIDE.md` pour plus de détails
 
 ## Types d'Étapes Suggérés
 
@@ -183,13 +189,17 @@ INSERT INTO steps (
   trip_id,
   step_number,
   day_number,
-  title
+  title,
+  main_image
 ) VALUES (
   (SELECT id FROM trips WHERE code = 'TOKYO2025'),
   6,
   3,
-  'Déjeuner libre'
+  'Déjeuner libre',
+  'https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1920&q=80'
 );
 ```
+
+⚠️ **IMPORTANT** : `main_image` est **OBLIGATOIRE** pour chaque step. Si vous n'avez pas d'image spécifique, réutilisez l'image du trip ou une image cohérente de la destination.
 
 Cette flexibilité permet d'adapter le niveau de détail selon vos besoins.
