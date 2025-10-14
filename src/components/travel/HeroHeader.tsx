@@ -103,11 +103,14 @@ const HeroHeader = ({ destination, mainImage, flight, hotel, totalPrice, tripCod
         {/* Indicateur de scroll/swipe - différent selon le device */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
           {/* Mobile: Swipe horizontal indicator */}
-          <div className="lg:hidden flex items-center gap-2 text-white/50">
-            <div className="flex items-center gap-1 animate-pulse">
-              <div className="w-6 h-1 rounded-full bg-white/50" />
-              <svg className="w-6 h-6 animate-[slide-in-right_1.5s_ease-in-out_infinite]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          <div className="lg:hidden flex items-center gap-2 text-white/70">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-1 rounded-full bg-white/70 animate-pulse" />
+              <svg className="w-8 h-8 animate-[slide-in-right_1s_ease-in-out_infinite]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+              <svg className="w-8 h-8 animate-[slide-in-right_1s_ease-in-out_infinite] opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} style={{ animationDelay: "0.2s" }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </div>
           </div>
