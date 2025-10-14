@@ -6,6 +6,7 @@ interface Trip {
   id: string;
   code: string;
   destination: string;
+  destination_en?: string;
   main_image: string;
   flight_from: string | null;
   flight_to: string | null;
@@ -18,6 +19,7 @@ interface Trip {
   total_budget: string | null;
   average_weather: string | null;
   travel_style: string | null;
+  travel_style_en?: string;
   start_date: string | null;
   travelers?: number;
   price_flights?: string;
@@ -32,21 +34,29 @@ interface Step {
   step_number: number;
   day_number: number;
   title: string;
+  title_en?: string;
   subtitle: string;
+  subtitle_en?: string;
   main_image: string;
   is_summary: boolean;
   latitude: number;
   longitude: number;
   why: string;
+  why_en?: string;
   tips: string;
+  tips_en?: string;
   transfer: string;
+  transfer_en?: string;
   suggestion: string;
+  suggestion_en?: string;
   weather_icon: string;
   weather_temp: string;
   weather_description: string | null;
+  weather_description_en?: string;
   price: number | null;
   duration: string | null;
   images: string[];
+  step_type?: string;
 }
 
 export const useTripData = (code: string | null) => {

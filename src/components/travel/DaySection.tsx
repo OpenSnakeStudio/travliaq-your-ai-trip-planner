@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MapPin, Lightbulb, Car, Utensils, Clock, Euro } from "lucide-react";
+import { MapPin, Lightbulb, Car, Utensils, Clock, Euro, Tag } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -27,6 +27,7 @@ interface DaySectionProps {
     images?: string[]; // Optional slider images
     price?: number; // Optional price in euros
     duration?: string; // Duration of the step
+    step_type?: string; // Type of step (activity, restaurant, transport, etc.)
   };
   index: number;
   isActive: boolean;
@@ -77,7 +78,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
           <div className="mb-3 animate-fade-in">
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex-1 min-w-0">
-                {/* Première ligne: Badge/Checkbox + Prix + Durée */}
+                {/* Première ligne: Badge/Checkbox + Type + Prix + Durée */}
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   {day.isSummary ? (
                     <div className="inline-flex items-center justify-center bg-travliaq-turquoise text-white w-6 h-6 rounded-full font-montserrat font-bold text-sm">
@@ -86,6 +87,12 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
                   ) : (
                     <div className="inline-block bg-travliaq-turquoise text-white px-2 py-0.5 rounded-full font-montserrat font-semibold text-[10px]">
                       Étape {day.id}
+                    </div>
+                  )}
+                  {day.step_type && (
+                    <div className="flex items-center gap-0.5 bg-white/20 backdrop-blur-md rounded px-1.5 py-0.5 text-white border border-white/30">
+                      <Tag className="h-2.5 w-2.5" />
+                      <span className="font-inter text-[10px] capitalize">{day.step_type}</span>
                     </div>
                   )}
                   {day.duration && (

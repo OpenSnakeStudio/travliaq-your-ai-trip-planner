@@ -219,17 +219,25 @@ export type Database = {
           main_image: string
           price: number | null
           step_number: number
+          step_type: string | null
           subtitle: string | null
+          subtitle_en: string | null
           suggestion: string | null
+          suggestion_en: string | null
           tips: string | null
+          tips_en: string | null
           title: string
+          title_en: string | null
           transfer: string | null
+          transfer_en: string | null
           trip_id: string
           updated_at: string
           weather_description: string | null
+          weather_description_en: string | null
           weather_icon: string | null
           weather_temp: string | null
           why: string | null
+          why_en: string | null
         }
         Insert: {
           created_at?: string
@@ -243,17 +251,25 @@ export type Database = {
           main_image?: string
           price?: number | null
           step_number: number
+          step_type?: string | null
           subtitle?: string | null
+          subtitle_en?: string | null
           suggestion?: string | null
+          suggestion_en?: string | null
           tips?: string | null
+          tips_en?: string | null
           title: string
+          title_en?: string | null
           transfer?: string | null
+          transfer_en?: string | null
           trip_id: string
           updated_at?: string
           weather_description?: string | null
+          weather_description_en?: string | null
           weather_icon?: string | null
           weather_temp?: string | null
           why?: string | null
+          why_en?: string | null
         }
         Update: {
           created_at?: string
@@ -267,17 +283,25 @@ export type Database = {
           main_image?: string
           price?: number | null
           step_number?: number
+          step_type?: string | null
           subtitle?: string | null
+          subtitle_en?: string | null
           suggestion?: string | null
+          suggestion_en?: string | null
           tips?: string | null
+          tips_en?: string | null
           title?: string
+          title_en?: string | null
           transfer?: string | null
+          transfer_en?: string | null
           trip_id?: string
           updated_at?: string
           weather_description?: string | null
+          weather_description_en?: string | null
           weather_icon?: string | null
           weather_temp?: string | null
           why?: string | null
+          why_en?: string | null
         }
         Relationships: [
           {
@@ -295,6 +319,7 @@ export type Database = {
           code: string
           created_at: string
           destination: string
+          destination_en: string | null
           flight_duration: string | null
           flight_from: string | null
           flight_to: string | null
@@ -308,6 +333,7 @@ export type Database = {
           total_days: number
           total_price: string | null
           travel_style: string | null
+          travel_style_en: string | null
           updated_at: string
         }
         Insert: {
@@ -315,6 +341,7 @@ export type Database = {
           code: string
           created_at?: string
           destination: string
+          destination_en?: string | null
           flight_duration?: string | null
           flight_from?: string | null
           flight_to?: string | null
@@ -328,6 +355,7 @@ export type Database = {
           total_days?: number
           total_price?: string | null
           travel_style?: string | null
+          travel_style_en?: string | null
           updated_at?: string
         }
         Update: {
@@ -335,6 +363,7 @@ export type Database = {
           code?: string
           created_at?: string
           destination?: string
+          destination_en?: string | null
           flight_duration?: string | null
           flight_from?: string | null
           flight_to?: string | null
@@ -348,6 +377,7 @@ export type Database = {
           total_days?: number
           total_price?: string | null
           travel_style?: string | null
+          travel_style_en?: string | null
           updated_at?: string
         }
         Relationships: []

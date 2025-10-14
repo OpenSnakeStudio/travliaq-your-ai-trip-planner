@@ -45,15 +45,21 @@ Contient les étapes individuelles de chaque voyage.
 - `latitude` (numeric) : Latitude GPS
 - `longitude` (numeric) : Longitude GPS
 - `why` (text) : Pourquoi cette étape ?
+- `why_en` (text) : Traduction anglaise du "pourquoi"
 - `tips` (text) : Conseils IA
+- `tips_en` (text) : Traduction anglaise des conseils
 - `transfer` (text) : Informations sur le transfert
+- `transfer_en` (text) : Traduction anglaise du transfert
 - `suggestion` (text) : Suggestions d'activités
+- `suggestion_en` (text) : Traduction anglaise des suggestions
 - `weather_icon` (text) : Icône météo (emoji)
 - `weather_temp` (text) : Température (ex: "18°C")
 - `weather_description` (text) : Description météo
+- `weather_description_en` (text) : Traduction anglaise de la météo
 - `price` (numeric) : Prix de l'étape en euros
 - `duration` (text) : Durée de l'étape (ex: "3h")
 - `images` (jsonb array) : Galerie d'images supplémentaires
+- `step_type` (text) : Type d'étape (ex: "activité", "restaurant", "transport") **NOUVEAU**
 
 ## Comment ajouter un nouveau voyage
 
@@ -218,6 +224,53 @@ Si non fournies, les étapes apparaîtront quand même dans le planning mais pas
 5. **Météo** : Utilisez des emojis météo standard : ☀️ 🌤️ ⛅ 🌧️ ❄️
 6. **Ordre des étapes** : Utilisez step_number pour l'ordre d'affichage, day_number pour le jour
 
-## Support
+## Support Multilingue
+
+Le système prend désormais en charge les traductions en ajoutant des colonnes avec le suffixe de la langue.
+
+### Champs Traduisibles pour les Trips
+- `destination_en` : Traduction anglaise de la destination
+- `travel_style_en` : Traduction anglaise du style de voyage
+
+### Champs Traduisibles pour les Steps
+- `title_en` : Traduction anglaise du titre
+- `subtitle_en` : Traduction anglaise du sous-titre
+- `why_en` : Traduction anglaise du "pourquoi"
+- `tips_en` : Traduction anglaise des conseils
+- `transfer_en` : Traduction anglaise des infos de transfert
+- `suggestion_en` : Traduction anglaise des suggestions
+- `weather_description_en` : Traduction anglaise de la description météo
+
+### Extension Multilingue
+
+Pour ajouter d'autres langues :
+1. Ajoutez les colonnes avec le suffixe approprié (ex: `_es` pour espagnol)
+2. Mettez à jour les interfaces TypeScript
+3. Adaptez la logique de sélection de langue dans l'application
+
+---
+
+## Type d'Étape
+
+Le nouveau champ `step_type` permet de catégoriser les étapes visuellement.
+
+### Types Suggérés
+- `activité` : Activités, excursions, expériences
+- `restaurant` : Restaurants, cafés, marchés alimentaires
+- `transport` : Transferts, trajets entre villes
+- `hébergement` : Check-in/check-out hôtel
+- `visite` : Monuments, musées, sites touristiques
+- `loisir` : Détente, plage, spa
+- `shopping` : Marchés, boutiques
+- `spectacle` : Concerts, théâtre, événements
+
+### Affichage
+
+Le type d'étape est affiché dans l'interface avec :
+- Un badge semi-transparent avec icône Tag
+- Position : entre le badge "Étape X" et les badges durée/prix
+- Format automatique : première lettre en majuscule
+
+---
 
 Pour toute question sur la structure des données ou l'ajout de voyages, consultez la documentation Supabase du projet.

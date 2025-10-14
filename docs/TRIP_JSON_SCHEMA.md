@@ -39,6 +39,11 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
       "minLength": 1,
       "examples": ["Tokyo & Kyoto", "Paris", "Sidi Bel Abbès"]
     },
+    "destination_en": {
+      "type": ["string", "null"],
+      "description": "English translation of destination",
+      "examples": ["Tokyo & Kyoto", "Paris", "Sidi Bel Abbes"]
+    },
     "total_days": {
       "type": "integer",
       "description": "Nombre total de jours du voyage",
@@ -103,6 +108,11 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
       "description": "Style de voyage",
       "examples": ["Culture & Gastronomie", "Aventure", "Détente & Spa"]
     },
+    "travel_style_en": {
+      "type": ["string", "null"],
+      "description": "English translation of travel style",
+      "examples": ["Culture & Gastronomy", "Adventure", "Relaxation & Spa"]
+    },
     "start_date": {
       "type": ["string", "null"],
       "description": "Date de début du voyage (format ISO 8601)",
@@ -133,10 +143,20 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
             "minLength": 1,
             "examples": ["Arrivée à Tokyo", "Senso-ji Temple", "TeamLab Borderless"]
           },
+          "title_en": {
+            "type": ["string", "null"],
+            "description": "English translation of title",
+            "examples": ["Arrival in Tokyo", "Senso-ji Temple", "TeamLab Borderless"]
+          },
           "subtitle": {
             "type": ["string", "null"],
             "description": "Sous-titre descriptif",
             "examples": ["Aéroport Narita", "Temple historique d'Asakusa"]
+          },
+          "subtitle_en": {
+            "type": ["string", "null"],
+            "description": "English translation of subtitle",
+            "examples": ["Narita Airport", "Historic Asakusa Temple"]
           },
           "main_image": {
             "type": "string",
@@ -162,22 +182,44 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
             "maximum": 180,
             "examples": [139.7006, 2.3522]
           },
+          "step_type": {
+            "type": ["string", "null"],
+            "description": "Type d'étape (optionnel)",
+            "examples": ["activité", "restaurant", "transport", "hébergement", "visite", "loisir"]
+          },
           "why": {
             "type": ["string", "null"],
             "description": "Pourquoi visiter cette étape (markdown supporté)"
           },
+          "why_en": {
+            "type": ["string", "null"],
+            "description": "English translation of why section"
+          },
           "tips": {
             "type": ["string", "null"],
             "description": "Conseils de l'IA pour cette étape (markdown supporté)"
+          },
+          "tips_en": {
+            "type": ["string", "null"],
+            "description": "English translation of tips"
           },
           "transfer": {
             "type": ["string", "null"],
             "description": "Informations de transfert/transport",
             "examples": ["75 min en Narita Express", "10 min à pied", "30 min en métro"]
           },
+          "transfer_en": {
+            "type": ["string", "null"],
+            "description": "English translation of transfer info",
+            "examples": ["75 min by Narita Express", "10 min walk", "30 min by subway"]
+          },
           "suggestion": {
             "type": ["string", "null"],
             "description": "Suggestions supplémentaires (markdown supporté)"
+          },
+          "suggestion_en": {
+            "type": ["string", "null"],
+            "description": "English translation of suggestion"
           },
           "weather_icon": {
             "type": ["string", "null"],
@@ -193,6 +235,11 @@ Schéma JSON conforme à **JSON Schema Draft 7** définissant la structure compl
             "type": ["string", "null"],
             "description": "Description de la météo",
             "examples": ["Ensoleillé", "Nuageux", "Pluvieux"]
+          },
+          "weather_description_en": {
+            "type": ["string", "null"],
+            "description": "English translation of weather description",
+            "examples": ["Sunny", "Cloudy", "Rainy"]
           },
           "price": {
             "type": ["number", "null"],
@@ -545,6 +592,7 @@ BEGIN
   INSERT INTO trips (
     code,
     destination,
+    destination_en,
     total_days,
     main_image,
     flight_from,
@@ -557,10 +605,12 @@ BEGIN
     total_budget,
     average_weather,
     travel_style,
+    travel_style_en,
     start_date
   ) VALUES (
     trip_data->>'code',
     trip_data->>'destination',
+    NULLIF(trip_data->>'destination_en', ''),
     (trip_data->>'total_days')::integer,
     NULLIF(trip_data->>'main_image', ''),
     NULLIF(trip_data->>'flight_from', ''),
@@ -573,6 +623,7 @@ BEGIN
     NULLIF(trip_data->>'total_budget', ''),
     NULLIF(trip_data->>'average_weather', ''),
     NULLIF(trip_data->>'travel_style', ''),
+    NULLIF(trip_data->>'travel_style_en', ''),
     NULLIF(trip_data->>'start_date', '')::date
   ) RETURNING id INTO new_trip_id;
   
@@ -584,18 +635,26 @@ BEGIN
       step_number,
       day_number,
       title,
+      title_en,
       subtitle,
+      subtitle_en,
       main_image,
       is_summary,
+      step_type,
       latitude,
       longitude,
       why,
+      why_en,
       tips,
+      tips_en,
       transfer,
+      transfer_en,
       suggestion,
+      suggestion_en,
       weather_icon,
       weather_temp,
       weather_description,
+      weather_description_en,
       price,
       duration,
       images
@@ -604,18 +663,26 @@ BEGIN
       (step_item->>'step_number')::integer,
       (step_item->>'day_number')::integer,
       step_item->>'title',
+      NULLIF(step_item->>'title_en', ''),
       NULLIF(step_item->>'subtitle', ''),
+      NULLIF(step_item->>'subtitle_en', ''),
       step_item->>'main_image',
       COALESCE((step_item->>'is_summary')::boolean, false),
+      NULLIF(step_item->>'step_type', ''),
       NULLIF(step_item->>'latitude', '')::numeric,
       NULLIF(step_item->>'longitude', '')::numeric,
       NULLIF(step_item->>'why', ''),
+      NULLIF(step_item->>'why_en', ''),
       NULLIF(step_item->>'tips', ''),
+      NULLIF(step_item->>'tips_en', ''),
       NULLIF(step_item->>'transfer', ''),
+      NULLIF(step_item->>'transfer_en', ''),
       NULLIF(step_item->>'suggestion', ''),
+      NULLIF(step_item->>'suggestion_en', ''),
       NULLIF(step_item->>'weather_icon', ''),
       NULLIF(step_item->>'weather_temp', ''),
       NULLIF(step_item->>'weather_description', ''),
+      NULLIF(step_item->>'weather_description_en', ''),
       NULLIF(step_item->>'price', '')::numeric,
       NULLIF(step_item->>'duration', ''),
       COALESCE(step_item->'images', '[]'::jsonb)
