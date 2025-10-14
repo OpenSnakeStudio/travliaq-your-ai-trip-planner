@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTripData } from "@/hooks/useTripData";
 import Navigation from "@/components/Navigation";
-import { ArrowLeft, Users, CreditCard, Shield, Lock, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Users, CreditCard, Shield, Lock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const travelerSchema = z.object({
@@ -64,6 +64,7 @@ const Booking = () => {
 
   const [currentTraveler, setCurrentTraveler] = useState(0);
   const [travelersData, setTravelersData] = useState<any[]>([]);
+  const [acceptedCGV, setAcceptedCGV] = useState(false);
 
   const formSchema = travelerSchema;
 
@@ -144,6 +145,7 @@ const Booking = () => {
   }
 
   const allTravelersFilled = travelersData.length === travelers && currentTraveler === travelers - 1;
+  const canProceedToPayment = allTravelersFilled && acceptedCGV;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-travliaq-deep-blue to-travliaq-deep-blue/80">
@@ -696,8 +698,43 @@ const Booking = () => {
                   )}
                 </div>
 
+                {/* Avertissement non-annulation */}
+                <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-white/90 text-sm">
+                      <p className="font-semibold mb-1">Politique d'annulation stricte</p>
+                      <p className="text-white/70 text-xs">
+                        Aucune annulation ou modification n'est possible après le paiement (vols, hôtels, activités, transports). Veuillez vérifier attentivement toutes les informations avant de procéder au paiement.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Acceptation CGV */}
+                <div className="mb-4 flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
+                  <input
+                    type="checkbox"
+                    id="cgv-checkbox"
+                    checked={acceptedCGV}
+                    onChange={(e) => setAcceptedCGV(e.target.checked)}
+                    className="h-4 w-4 mt-0.5 rounded border-white/20 bg-white/10 text-travliaq-turquoise focus:ring-travliaq-turquoise cursor-pointer"
+                  />
+                  <label htmlFor="cgv-checkbox" className="text-white/90 text-sm cursor-pointer">
+                    J'ai lu et j'accepte les{" "}
+                    <a 
+                      href="/cgv" 
+                      target="_blank" 
+                      className="text-travliaq-turquoise hover:text-travliaq-turquoise/80 underline font-semibold"
+                    >
+                      Conditions Générales de Vente
+                    </a>
+                    {" "}et je reconnais qu'aucune annulation ou modification ne sera possible après le paiement *
+                  </label>
+                </div>
+
                 <Button
-                  disabled={!allTravelersFilled}
+                  disabled={!canProceedToPayment}
                   className="w-full bg-travliaq-golden-sand hover:bg-travliaq-golden-sand/80 text-travliaq-deep-blue font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
@@ -707,6 +744,12 @@ const Booking = () => {
                 {!allTravelersFilled && (
                   <p className="text-white/60 text-xs text-center mt-2">
                     Remplissez les informations de tous les voyageurs
+                  </p>
+                )}
+                
+                {allTravelersFilled && !acceptedCGV && (
+                  <p className="text-white/60 text-xs text-center mt-2">
+                    Acceptez les CGV pour continuer
                   </p>
                 )}
 
