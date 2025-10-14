@@ -2383,45 +2383,52 @@ const Questionnaire = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue via-white to-travliaq-golden-sand/20">
-      {/* Navigation discrète */}
-      <div className="opacity-60 hover:opacity-100 transition-opacity">
-        <Navigation />
-      </div>
+      {/* Navigation minimale */}
+      <Navigation variant="minimal" />
       
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+      {/* Progress Bar améliorée */}
+      <div className="fixed top-0 left-0 right-0 h-2 bg-gradient-to-r from-gray-200 to-gray-300 z-50 shadow-sm">
         <div 
-          className="h-full bg-travliaq-deep-blue transition-all duration-500"
+          className="h-full bg-gradient-to-r from-travliaq-deep-blue via-travliaq-turquoise to-travliaq-golden-sand transition-all duration-500 ease-out relative overflow-hidden"
           style={{ width: `${progress}%` }}
-        />
+        >
+          <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+        </div>
       </div>
 
-      {/* Header */}
-      <div className="pt-8 pb-4 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-montserrat font-bold text-travliaq-deep-blue text-center">
+      {/* Header compact */}
+      <div className="pt-24 pb-2 px-4">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-xl md:text-2xl font-montserrat font-bold text-travliaq-deep-blue text-center mb-2">
             VOTRE VOYAGE SUR MESURE
           </h1>
-          <p className="text-center text-travliaq-deep-blue/70 font-medium mt-2">
-            Étape {step} sur {totalSteps}
-          </p>
+          <div className="flex items-center justify-center gap-3">
+            <p className="text-sm text-travliaq-deep-blue/70 font-medium">
+              Étape {step} sur {totalSteps}
+            </p>
+            <div className="bg-travliaq-golden-sand/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold text-travliaq-deep-blue">
+                {Math.round(progress)}%
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {step > 1 && (
           <Button
             variant="ghost"
             onClick={prevStep}
-            className="mb-6 text-travliaq-deep-blue hover:text-travliaq-deep-blue/80"
+            className="mb-3 text-travliaq-deep-blue hover:text-travliaq-deep-blue/80"
           >
             <ChevronLeft className="mr-2" />
             Retour
           </Button>
         )}
 
-        <div className="bg-white rounded-2xl shadow-adventure p-8 md:p-12 min-h-[400px]">
+        <div className="bg-white rounded-2xl shadow-adventure p-6 md:p-8 min-h-[350px]">
           {renderStep()}
         </div>
       </div>

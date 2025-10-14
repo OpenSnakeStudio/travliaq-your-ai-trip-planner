@@ -8,13 +8,19 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 
-const Navigation = () => {
+interface NavigationProps {
+  variant?: 'default' | 'minimal';
+}
+
+const Navigation = ({ variant = 'default' }: NavigationProps) => {
   const { user, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
 
   const closeMenu = () => setIsOpen(false);
+  
+  const isMinimal = variant === 'minimal';
 
   return (
     <header className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
@@ -24,7 +30,8 @@ const Navigation = () => {
         </a>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-4">
+        {!isMinimal && (
+          <nav className="hidden md:flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
@@ -88,8 +95,10 @@ const Navigation = () => {
           
           <LanguageSwitcher />
         </nav>
+        )}
 
         {/* Mobile Navigation */}
+        {!isMinimal && (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="md:hidden">
             <Button
@@ -177,6 +186,7 @@ const Navigation = () => {
             </nav>
           </SheetContent>
         </Sheet>
+        )}
       </div>
     </header>
   );
