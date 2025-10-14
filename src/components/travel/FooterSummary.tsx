@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Calendar, DollarSign, CloudSun, Sparkles, MapPin, Users, Activity, Plane } from "lucide-react";
+import * as Icons from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import { TripShareButtons } from "./TripShareButtons";
 import { useNavigate } from "react-router-dom";
 
 export interface SummaryStat {
-  icon: LucideIcon;
+  type: 'days' | 'budget' | 'weather' | 'style' | 'cities' | 'people' | 'activities' | 'custom';
   value: string | number;
-  label: string;
-  color: 'turquoise' | 'golden';
+  icon?: string;
+  label?: string;
+  color?: 'turquoise' | 'golden';
 }
 
 interface FooterSummaryProps {
@@ -51,17 +52,45 @@ const FooterSummary = ({
     }
   };
 
-  // Generate 8 comprehensive stats
-  const displayStats: SummaryStat[] = stats || (summary ? [
-    { icon: Calendar, value: summary.totalDays, label: "JOURS", color: 'turquoise' },
-    { icon: DollarSign, value: summary.totalBudget, label: "BUDGET", color: 'golden' },
-    { icon: CloudSun, value: summary.averageWeather, label: "MÉTÉO", color: 'turquoise' },
-    { icon: Sparkles, value: summary.travelStyle.split(' ')[0], label: "STYLE", color: 'golden' }, // Premier mot uniquement
-    { icon: Users, value: travelers, label: "VOYAGEURS", color: 'turquoise' },
-    { icon: Activity, value: activities > 0 ? activities : summary.totalDays * 2, label: "ACTIVITÉS", color: 'golden' },
-    { icon: MapPin, value: cities > 0 ? cities : 3, label: "VILLES", color: 'turquoise' },
-    { icon: Plane, value: stopovers === 0 ? "Direct" : `${stopovers}`, label: "ESCALES", color: 'golden' },
-  ] : []);
+  // Type mapping configuration
+  const typeConfig: Record<string, { icon: LucideIcon; label: string; color: 'turquoise' | 'golden' }> = {
+    days: { icon: Icons.Calendar, label: "JOURS", color: 'turquoise' },
+    budget: { icon: Icons.DollarSign, label: "BUDGET", color: 'golden' },
+    weather: { icon: Icons.CloudSun, label: "MÉTÉO", color: 'turquoise' },
+    style: { icon: Icons.Sparkles, label: "STYLE", color: 'golden' },
+    cities: { icon: Icons.MapPin, label: "VILLES", color: 'turquoise' },
+    people: { icon: Icons.Users, label: "VOYAGEURS", color: 'turquoise' },
+    activities: { icon: Icons.Activity, label: "ACTIVITÉS", color: 'golden' },
+    custom: { icon: Icons.Info, label: "INFO", color: 'turquoise' } // Default for custom
+  };
+
+  // Convert stats to display format
+  const displayStats = (stats || (summary ? [
+    { type: 'days' as const, value: summary.totalDays },
+    { type: 'budget' as const, value: summary.totalBudget },
+    { type: 'weather' as const, value: summary.averageWeather },
+    { type: 'style' as const, value: summary.travelStyle.split(' ')[0] },
+    { type: 'people' as const, value: travelers },
+    { type: 'activities' as const, value: activities > 0 ? activities : summary.totalDays * 2 },
+    { type: 'cities' as const, value: cities > 0 ? cities : 3 },
+    { type: 'custom' as const, value: stopovers === 0 ? "Direct" : `${stopovers}`, icon: "Plane", label: "ESCALES", color: 'golden' as const },
+  ] : [])).map(stat => {
+    const config = typeConfig[stat.type];
+    let IconComponent: LucideIcon = config.icon;
+    
+    // Handle custom type with string icon name
+    if (stat.type === 'custom' && stat.icon) {
+      const iconName = stat.icon as keyof typeof Icons;
+      IconComponent = (Icons[iconName] as LucideIcon) || config.icon;
+    }
+    
+    return {
+      icon: IconComponent,
+      value: stat.value,
+      label: stat.label || config.label,
+      color: stat.color || config.color
+    };
+  });
 
   return (
     <section data-day-id="summary" className="relative h-screen bg-gradient-to-b from-travliaq-deep-blue to-travliaq-deep-blue/95 text-white snap-start flex items-center py-12 md:py-20 pb-24 lg:pb-20">
@@ -75,7 +104,7 @@ const FooterSummary = ({
           {/* Statistiques - 8 cards en 4 colonnes */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-16">
             {displayStats.map((stat, idx) => {
-              const IconComponent = stat.icon;
+              const Icon = stat.icon;
               const colorClass = stat.color === 'turquoise' ? 'text-travliaq-turquoise' : 'text-travliaq-golden-sand';
               
               // Tronquer les valeurs trop longues sur mobile
@@ -90,7 +119,7 @@ const FooterSummary = ({
                 >
                   <div className="flex flex-col items-center justify-center gap-1.5 md:gap-3">
                     {/* Icon */}
-                    <IconComponent className={`h-5 w-5 md:h-8 md:w-8 ${colorClass}`} />
+                    <Icon className={`h-5 w-5 md:h-8 md:w-8 ${colorClass}`} />
                     
                     {/* Value - responsive sizing */}
                     <div className="font-montserrat text-lg sm:text-2xl md:text-4xl font-bold text-white text-center break-words hyphens-auto max-w-full px-1" lang="fr">

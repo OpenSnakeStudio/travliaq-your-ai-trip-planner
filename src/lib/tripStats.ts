@@ -1,4 +1,3 @@
-import { Calendar, DollarSign, CloudSun, Sparkles, MapPin, Users, Activity } from "lucide-react";
 import type { SummaryStat } from "@/components/travel/FooterSummary";
 
 /**
@@ -8,57 +7,44 @@ import type { SummaryStat } from "@/components/travel/FooterSummary";
 
 export const createSummaryStats = {
   days: (value: number): SummaryStat => ({
-    icon: Calendar,
-    value,
-    label: "Jours",
-    color: 'turquoise'
+    type: 'days',
+    value
   }),
   
   budget: (value: string): SummaryStat => ({
-    icon: DollarSign,
-    value,
-    label: "Budget",
-    color: 'golden'
+    type: 'budget',
+    value
   }),
   
   weather: (value: string): SummaryStat => ({
-    icon: CloudSun,
-    value,
-    label: "Météo moy.",
-    color: 'turquoise'
+    type: 'weather',
+    value
   }),
   
   style: (value: string): SummaryStat => ({
-    icon: Sparkles,
-    value,
-    label: "Style",
-    color: 'golden'
+    type: 'style',
+    value
   }),
   
   cities: (value: number): SummaryStat => ({
-    icon: MapPin,
-    value,
-    label: "Villes",
-    color: 'turquoise'
+    type: 'cities',
+    value
   }),
   
   people: (value: number): SummaryStat => ({
-    icon: Users,
-    value,
-    label: "Personnes",
-    color: 'golden'
+    type: 'people',
+    value
   }),
   
   activities: (value: number): SummaryStat => ({
-    icon: Activity,
-    value,
-    label: "Activités",
-    color: 'turquoise'
+    type: 'activities',
+    value
   }),
   
-  // Generic custom stat
-  custom: (icon: any, value: string | number, label: string, color: 'turquoise' | 'golden'): SummaryStat => ({
-    icon,
+  // Generic custom stat with icon name (e.g., "Plane", "MapPin")
+  custom: (iconName: string, value: string | number, label: string, color: 'turquoise' | 'golden'): SummaryStat => ({
+    type: 'custom',
+    icon: iconName,
     value,
     label,
     color
@@ -76,7 +62,7 @@ export const createSummaryStats = {
  *   createSummaryStats.people(2),
  *   createSummaryStats.activities(15),
  *   createSummaryStats.cities(3),
- *   createSummaryStats.custom(Plane, "Direct", "VOL", 'golden')
+ *   createSummaryStats.custom("Plane", "Direct", "VOL", 'golden')
  * ];
  * 
  * <FooterSummary stats={stats} />
