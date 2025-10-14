@@ -18,6 +18,7 @@ import {
   Loader2,
   Info
 } from "lucide-react";
+import confetti from 'canvas-confetti';
 import {
   Command,
   CommandEmpty,
@@ -512,7 +513,7 @@ const Questionnaire = () => {
     setTimeout(nextStep, 300);
   };
 
-  const handleMultiChoice = (field: keyof Answer, value: string, maxLimit?: number) => {
+  const handleMultiChoice = (field: keyof Answer, value: string, maxLimit?: number, autoAdvanceWhenComplete?: number) => {
     const current = (answers[field] as string[]) || [];
     const updated = current.includes(value)
       ? current.filter(v => v !== value)
@@ -520,6 +521,11 @@ const Questionnaire = () => {
       ? current
       : [...current, value];
     setAnswers({ ...answers, [field]: updated });
+    
+    // Auto-advance when all options are selected (if autoAdvanceWhenComplete is provided)
+    if (autoAdvanceWhenComplete && updated.length === autoAdvanceWhenComplete) {
+      setTimeout(nextStep, 400);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent, action: () => void, condition: boolean = true) => {
@@ -548,6 +554,38 @@ const Questionnaire = () => {
       case "Groupe 3-5": return 4; // Default middle
       default: return 1;
     }
+  };
+
+  // Celebration animation
+  const triggerCelebration = () => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
   };
 
   const handleSubmitQuestionnaire = async () => {
@@ -643,6 +681,9 @@ const Questionnaire = () => {
 
       setSubmittedResponseId(data.data.id);
       
+      // Trigger celebration animation
+      triggerCelebration();
+      
       toast({
         title: "Questionnaire envoyé ! 🎉",
         description: "Nous vous enverrons votre itinéraire personnalisé sous 48h.",
@@ -653,7 +694,7 @@ const Questionnaire = () => {
       if (user) {
         setTimeout(() => {
           navigate('/');
-        }, 3000);
+        }, 3500);
       } else {
         setShowGoogleLogin(true);
       }
@@ -865,12 +906,12 @@ const Questionnaire = () => {
               return (
                 <Card
                   key={option.label}
-                  className={`p-6 cursor-pointer transition-all hover:scale-105 ${
+                   className={`p-6 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => handleMultiChoice("helpWith", option.label)}
+                  onClick={() => handleMultiChoice("helpWith", option.label, undefined, 3)}
                 >
                   <div className="flex flex-col items-center space-y-2">
                     <span className="text-5xl">{option.icon}</span>
@@ -2381,8 +2422,42 @@ const Questionnaire = () => {
     return null;
   };
 
+  // Swipe gesture handling for mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    // Right swipe = go back
+    if (isRightSwipe && step > 1) {
+      prevStep();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue via-white to-travliaq-golden-sand/20">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue via-white to-travliaq-golden-sand/20"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Navigation minimale */}
       <Navigation variant="minimal" />
       

@@ -21,6 +21,8 @@ import {
   Loader2,
   Info
 } from "lucide-react";
+import confetti from 'canvas-confetti';
+import Navigation from "@/components/Navigation";
 import {
   Command,
   CommandEmpty,
@@ -214,12 +216,19 @@ const Questionnaire = () => {
     setTimeout(nextStep, 300);
   };
 
-  const handleMultiChoice = (key: keyof Answer, value: string) => {
+  const handleMultiChoice = (key: keyof Answer, value: string, maxLimit?: number, autoAdvanceWhenComplete?: number) => {
     const current = (answers[key] as string[]) || [];
     const newValue = current.includes(value)
       ? current.filter(item => item !== value)
+      : maxLimit && current.length >= maxLimit
+      ? current
       : [...current, value];
     setAnswers({ ...answers, [key]: newValue });
+    
+    // Auto-advance when all options are selected (if autoAdvanceWhenComplete is provided)
+    if (autoAdvanceWhenComplete && newValue.length === autoAdvanceWhenComplete) {
+      setTimeout(nextStep, 400);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent, callback: () => void, condition: boolean) => {
@@ -237,6 +246,38 @@ const Questionnaire = () => {
       case "Group 3-5": return 4;
       default: return 1;
     }
+  };
+
+  // Celebration animation
+  const triggerCelebration = () => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
   };
 
   const handleSubmitQuestionnaire = async () => {
@@ -329,6 +370,9 @@ const Questionnaire = () => {
 
       setSubmittedResponseId(data.data.id);
       
+      // Trigger celebration animation
+      triggerCelebration();
+      
       toast({
         title: "Questionnaire submitted! 🎉",
         description: "We'll send you your personalized itinerary within 48 hours.",
@@ -339,7 +383,7 @@ const Questionnaire = () => {
       if (user) {
         setTimeout(() => {
           navigate('/en');
-        }, 3000);
+        }, 3500);
       } else {
         setShowGoogleLogin(true);
       }
@@ -443,41 +487,97 @@ const Questionnaire = () => {
     return <div>English questionnaire implementation in progress...</div>;
   };
 
+  // Swipe gesture handling for mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Minimum swipe distance (in px)
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    // Right swipe = go back
+    if (isRightSwipe && step > 1) {
+      prevStep();
+    }
+  };
+
   const totalSteps = getTotalSteps();
   const progress = (step / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue/20 via-background to-travliaq-sky-blue/10 py-8 px-4">
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-travliaq-deep-blue to-travliaq-golden transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-          <span>Step {step}/{totalSteps}</span>
-          <span>{Math.round(progress)}%</span>
+    <div 
+      className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue via-white to-travliaq-golden-sand/20"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Minimal Navigation */}
+      <Navigation variant="minimal" />
+      
+      {/* Enhanced Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-2 bg-gradient-to-r from-gray-200 to-gray-300 z-50 shadow-sm">
+        <div 
+          className="h-full bg-gradient-to-r from-travliaq-deep-blue via-travliaq-turquoise to-travliaq-golden-sand transition-all duration-500 ease-out relative overflow-hidden"
+          style={{ width: `${progress}%` }}
+        >
+          <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-8">
-        {renderStep()}
-
-        {step > 1 && (
-          <div className="flex justify-center mt-8">
-            <Button
-              variant="ghost"
-              onClick={prevStep}
-              className="text-travliaq-deep-blue"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
+      {/* Ultra-compact header */}
+      <div className="pt-20 pb-3 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-center gap-4">
+            <h1 className="text-lg md:text-xl font-montserrat font-bold text-travliaq-deep-blue">
+              YOUR CUSTOM TRIP
+            </h1>
+            <div className="flex items-center gap-2 bg-travliaq-golden-sand/20 px-3 py-1 rounded-full">
+              <span className="text-xs text-travliaq-deep-blue/70 font-medium">
+                {step}/{totalSteps}
+              </span>
+              <span className="text-xs font-bold text-travliaq-deep-blue">
+                {Math.round(progress)}%
+              </span>
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
+      {/* Compact content */}
+      <div className="max-w-3xl mx-auto px-4 py-2">
+        {step > 1 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={prevStep}
+            className="mb-2 text-travliaq-deep-blue hover:text-travliaq-deep-blue/80"
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Back
+          </Button>
+        )}
+
+        <div className="bg-white rounded-xl shadow-adventure p-5 md:p-6">
+          {renderStep()}
+        </div>
+      </div>
+
+      {/* Google Login Popup */}
       {showGoogleLogin && (
         <GoogleLoginPopup
           onSuccess={handleGoogleLoginSuccess}
