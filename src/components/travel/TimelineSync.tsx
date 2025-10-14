@@ -9,18 +9,8 @@ interface TimelineSyncProps {
 }
 
 const TimelineSync = ({ days, activeDay, scrollProgress, onScrollToDay }: TimelineSyncProps) => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    // Afficher la timeline après le hero
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > window.innerHeight * 0.3);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Visible dès que l'on quitte le hero: basé sur la section active
+  const isVisible = activeDay >= 1 && activeDay <= days.length;
 
   const scrollToDay = (dayId: number | string) => {
     if (onScrollToDay) {
