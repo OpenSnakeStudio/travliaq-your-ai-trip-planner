@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, DollarSign, CloudSun, Sparkles, MapPin, Users, Activity, Plane } from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import { TripShareButtons } from "./TripShareButtons";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export interface SummaryStat {
   icon: LucideIcon;
@@ -39,6 +40,13 @@ const FooterSummary = ({
   destination = "votre destination",
   tripTitle = "Votre voyage"
 }: FooterSummaryProps) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get("code");
+
+  const handleBooking = () => {
+    navigate(`/booking?code=${code}&travelers=${travelers}`);
+  };
 
   // Generate 8 comprehensive stats
   const displayStats: SummaryStat[] = stats || (summary ? [
@@ -101,6 +109,7 @@ const FooterSummary = ({
             <Button
               variant="hero"
               size="xl"
+              onClick={handleBooking}
               className="w-full sm:w-auto shadow-glow"
             >
               Réserver ce voyage en un clic

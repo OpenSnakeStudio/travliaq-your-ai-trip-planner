@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plane, Hotel, DollarSign } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 interface HeroHeaderProps {
   destination: string;
@@ -18,6 +19,15 @@ interface HeroHeaderProps {
 }
 
 const HeroHeader = ({ destination, mainImage, flight, hotel, totalPrice }: HeroHeaderProps) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const code = searchParams.get("code");
+
+  const handleBooking = () => {
+    const travelers = searchParams.get("travelers") || "1";
+    navigate(`/booking?code=${code}&travelers=${travelers}`);
+  };
+
   return (
     <section className="relative h-screen w-full overflow-hidden snap-start">
       {/* Image de fond avec effet parallax */}
@@ -83,6 +93,7 @@ const HeroHeader = ({ destination, mainImage, flight, hotel, totalPrice }: HeroH
         <Button
           variant="hero"
           size="xl"
+          onClick={handleBooking}
           className="animate-fade-in shadow-glow"
           style={{ animationDelay: "0.8s" }}
         >
