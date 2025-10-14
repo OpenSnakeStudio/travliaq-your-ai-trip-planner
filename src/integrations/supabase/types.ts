@@ -224,6 +224,7 @@ export type Database = {
           subtitle_en: string | null
           suggestion: string | null
           suggestion_en: string | null
+          summary_stats: Json | null
           tips: string | null
           tips_en: string | null
           title: string
@@ -256,6 +257,7 @@ export type Database = {
           subtitle_en?: string | null
           suggestion?: string | null
           suggestion_en?: string | null
+          summary_stats?: Json | null
           tips?: string | null
           tips_en?: string | null
           title: string
@@ -288,6 +290,7 @@ export type Database = {
           subtitle_en?: string | null
           suggestion?: string | null
           suggestion_en?: string | null
+          summary_stats?: Json | null
           tips?: string | null
           tips_en?: string | null
           title?: string
