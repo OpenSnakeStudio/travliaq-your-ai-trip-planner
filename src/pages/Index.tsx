@@ -7,19 +7,21 @@ import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
 
 const Index = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     // Show a discrete toast notification if user is not logged in
     if (!user) {
       const timer = setTimeout(() => {
-        toast.info("Connectez-vous avec Google pour sauvegarder vos préférences", {
+        toast.info(t('toast.login'), {
           duration: 8000,
           position: "top-right",
           action: {
-            label: "Se connecter",
+            label: t('toast.loginButton'),
             onClick: async () => {
               const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
@@ -32,7 +34,7 @@ const Index = () => {
                 }
               });
               if (error) {
-                toast.error('Erreur de connexion: ' + error.message);
+                toast.error(t('toast.loginError', { error: error.message }));
               }
             }
           }
@@ -40,7 +42,7 @@ const Index = () => {
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user, t]);
   
   return (
     <div className="min-h-screen bg-background">
@@ -55,20 +57,23 @@ const Index = () => {
         
         <div className="relative z-10 container mx-auto px-6 text-center text-white animate-fade-up">
           <h1 className="text-5xl md:text-7xl font-montserrat font-bold mb-6 leading-tight">
-            Ton voyage,<br />
+            {t('hero.title')}<br />
             <span className="bg-gradient-accent bg-clip-text text-transparent">
-              optimisé par l'IA
+              {t('hero.title.ai')}
             </span>
           </h1>
           <p className="text-xl md:text-2xl mb-10 max-w-3xl mx-auto font-inter leading-relaxed opacity-90">
-            {user && user.user_metadata?.full_name ? <span className="animate-fade-in">
-                <strong className="text-travliaq-golden-sand">{user.user_metadata.full_name.split(' ')[0]}</strong>, découvre ton prochain itinéraire personnalisé — vols, hôtels, météo, activités, tout en un seul clic.
-              </span> : "Découvre ton prochain itinéraire personnalisé — vols, hôtels, météo, activités, tout en un seul clic."}
+            {user && user.user_metadata?.full_name ? (
+              <span className="animate-fade-in">
+                <strong className="text-travliaq-golden-sand">{user.user_metadata.full_name.split(' ')[0]}</strong>
+                {', ' + t('hero.subtitle.user', { name: '' }).replace(', ', '')}
+              </span>
+            ) : t('hero.subtitle')}
           </p>
           <Button variant="hero" size="xl" className="animate-adventure-float" asChild>
             <a href="/questionnaire">
               <Sparkles className="mr-2" />
-              Crée ton itinéraire
+              {t('hero.cta')}
             </a>
           </Button>
         </div>
@@ -85,19 +90,19 @@ const Index = () => {
       <section className="py-20 bg-gradient-subtle">
         <div className="container mx-auto px-6">
           <h2 className="text-4xl md:text-5xl font-montserrat font-bold text-center mb-8 text-travliaq-deep-blue">
-            Comment ça marche ?
+            {t('howItWorks.title')}
           </h2>
           
           {/* Description encadrée */}
           <div className="max-w-5xl mx-auto mb-16">
             <div className="bg-gradient-to-r from-purple-100 to-blue-50 border-2 border-purple-300 rounded-lg p-6 text-center">
               <p className="text-lg text-travliaq-deep-blue leading-relaxed font-inter">
-                <strong>Travliaq</strong> simplifie ton voyage en <strong>4 étapes</strong> : <br />
-                1️⃣ Tu indiques tes envies (destination, budget, style). <br />
-                2️⃣ Nous comparons en temps réel vols, hébergements et activités (prix, météo, distances). <br />
-                3️⃣ Nous créons pour toi un itinéraire jour-par-jour clair, optimisé et respectueux de ton budget. <br />
-                4️⃣ Tu reçois une proposition personnalisée avec un prix détaillé et un seul lien pour tout réserver en quelques clics. <br />
-                <em>Moins d'onglets, plus d'aventure.</em> 🎒
+                <strong>Travliaq</strong> {t('howItWorks.description')} <br />
+                1️⃣ {t('howItWorks.step1')} <br />
+                2️⃣ {t('howItWorks.step2')} <br />
+                3️⃣ {t('howItWorks.step3')} <br />
+                4️⃣ {t('howItWorks.step4')} <br />
+                <em>{t('howItWorks.tagline')}</em> 🎒
               </p>
             </div>
           </div>
@@ -110,21 +115,21 @@ const Index = () => {
                 <div className="flex items-center mb-4">
                   <MapPin className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
-                    Vos envies
+                    {t('step1.title')}
                   </h3>
                 </div>
                 <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Indique ta destination :</strong> que ce soit Lisbonne, Tokyo ou juste l'aéroport de départ, pour que Travliaq trouve les meilleures options.</span>
+                    <span><strong>{t('step1.dest')}</strong> {t('step1.dest.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Précise tes dates :</strong> fixes ou flexibles, pour optimiser prix et météo, et te garantir un timing parfait.</span>
+                    <span><strong>{t('step1.dates')}</strong> {t('step1.dates.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Partage ton budget et ton style de voyage :</strong> solo, sac à dos, confort ou premium, on adapte chaque étape à ton rythme et à tes envies.</span>
+                    <span><strong>{t('step1.budget')}</strong> {t('step1.budget.desc')}</span>
                   </li>
                 </ul>
               </div>
@@ -135,20 +140,20 @@ const Index = () => {
               <div className="bg-travliaq-golden-sand rounded-lg p-6 shadow-golden transform hover:scale-105 transition-adventure h-full flex flex-col">
                 <div className="flex items-center mb-4">
                   <Compass className="w-8 h-8 text-travliaq-deep-blue mr-3" />
-                  <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">Recherche intelligente</h3>
+                  <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">{t('step2.title')}</h3>
                 </div>
                 <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>On scanne les meilleures options :</strong> vols, hébergements et activités, via des sources fiables et mises à jour en temps réel.</span>
+                    <span><strong>{t('step2.scan')}</strong> {t('step2.scan.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>On croise prix, météo et logistique :</strong> pour que chaque étape s'enchaîne naturellement, sans perte de temps ni de budget.</span>
+                    <span><strong>{t('step2.cross')}</strong> {t('step2.cross.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>On filtre selon ton profil :</strong> solo, backpacker, confort ou premium, chaque résultat est ajusté à tes priorités.</span>
+                    <span><strong>{t('step2.filter')}</strong> {t('step2.filter.desc')}</span>
                   </li>
                 </ul>
               </div>
@@ -160,21 +165,21 @@ const Index = () => {
                 <div className="flex items-center mb-4">
                   <Route className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
-                    Itinéraire optimisé
+                    {t('step3.title')}
                   </h3>
                 </div>
                 <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Programme jour par jour :</strong> activités, visites, pauses et repas organisés dans un ordre logique, pour profiter sans te presser.</span>
+                    <span><strong>{t('step3.program')}</strong> {t('step3.program.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Budget maîtrisé :</strong> chaque étape est chiffrée pour éviter les mauvaises surprises, du vol au café du coin.</span>
+                    <span><strong>{t('step3.budget')}</strong> {t('step3.budget.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Astuces locales intégrées :</strong> spots photo, restaurants cachés, transports malins... comme si un ami sur place te guidait.</span>
+                    <span><strong>{t('step3.tips')}</strong> {t('step3.tips.desc')}</span>
                   </li>
                 </ul>
               </div>
@@ -186,21 +191,21 @@ const Index = () => {
                 <div className="flex items-center mb-4">
                   <Plane className="w-8 h-8 text-travliaq-deep-blue mr-3" />
                   <h3 className="text-xl font-montserrat font-bold text-travliaq-deep-blue">
-                    Voyage prêt à réserver
+                    {t('step4.title')}
                   </h3>
                 </div>
                 <ul className="space-y-3 text-sm text-travliaq-deep-blue flex-grow">
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Itinéraire complet envoyé par e-mail :</strong> prêt à être consulté en ligne ou hors connexion.</span>
+                    <span><strong>{t('step4.email')}</strong> {t('step4.email.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>Liens directs pour réserver :</strong> vols, hébergements, activités, tout est à portée de clic.</span>
+                    <span><strong>{t('step4.links')}</strong> {t('step4.links.desc')}</span>
                   </li>
                   <li className="flex items-start">
                     <span className="w-2 h-2 bg-travliaq-deep-blue rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                    <span><strong>100% modulable :</strong> tu peux ajuster les dates, changer une activité ou relancer une recherche en un instant.</span>
+                    <span><strong>{t('step4.modular')}</strong> {t('step4.modular.desc')}</span>
                   </li>
                 </ul>
               </div>
@@ -212,7 +217,7 @@ const Index = () => {
             <Button variant="hero" size="xl" className="animate-adventure-float" asChild>
               <a href="/questionnaire">
                 <Sparkles className="mr-2" />
-                Commencer mon voyage
+                {t('cta.start')}
               </a>
             </Button>
           </div>
@@ -224,10 +229,10 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-6xl font-montserrat font-bold mb-6 text-white">
-              Pourquoi Travliaq ?
+              {t('whyTravliaq.title')}
             </h2>
             <p className="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
-              La révolution du voyage intelligent est arrivée
+              {t('whyTravliaq.subtitle')}
             </p>
           </div>
           
@@ -243,10 +248,10 @@ const Index = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
-                      Fini la galère de planification
+                      {t('whyTravliaq.noPlan.title')}
                     </h3>
                     <p className="text-white/80 leading-relaxed text-lg">
-                      Plus de 20 onglets ouverts, plus de comparaisons interminables. L'IA analyse tout pour toi : prix, météo, distances, disponibilités.
+                      {t('whyTravliaq.noPlan.desc')}
                     </p>
                   </div>
                 </div>
@@ -259,10 +264,10 @@ const Index = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-montserrat font-bold mb-3 text-white">
-                      Voyager comme un local
+                      {t('whyTravliaq.local.title')}
                     </h3>
                     <p className="text-white/80 leading-relaxed text-lg">
-                      Nos recommandations te mènent vers les vrais trésors cachés, loin des pièges à touristes. Authentique, pas artificiel.
+                      {t('whyTravliaq.local.desc')}
                     </p>
                   </div>
                 </div>
@@ -274,7 +279,7 @@ const Index = () => {
               <div className="bg-gradient-to-br from-travliaq-golden-sand to-travliaq-golden-sand/80 rounded-2xl p-8 text-travliaq-deep-blue">
                 <div className="text-center">
                   <div className="text-5xl font-montserrat font-bold mb-2">92%</div>
-                  <p className="text-lg font-medium mb-4">d'économies en temps de recherche</p>
+                  <p className="text-lg font-medium mb-4">{t('whyTravliaq.stat')}</p>
                   <div className="flex justify-center">
                     <Sparkles className="w-6 h-6" />
                   </div>
@@ -283,24 +288,24 @@ const Index = () => {
 
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20">
                 <h3 className="text-2xl font-montserrat font-bold mb-6 text-white text-center">
-                  Nos garanties
+                  {t('whyTravliaq.guarantees')}
                 </h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="w-3 h-3 bg-travliaq-golden-sand rounded-full"></div>
-                    <span className="text-white/90">Meilleurs prix garantis</span>
+                    <span className="text-white/90">{t('whyTravliaq.guarantee1')}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-3 h-3 bg-travliaq-turquoise rounded-full"></div>
-                    <span className="text-white/90">Itinéraire en moins de 24h</span>
+                    <span className="text-white/90">{t('whyTravliaq.guarantee2')}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-3 h-3 bg-travliaq-light-blue rounded-full"></div>
-                    <span className="text-white/90">100% personnalisable</span>
+                    <span className="text-white/90">{t('whyTravliaq.guarantee3')}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="w-3 h-3 bg-travliaq-golden-sand rounded-full"></div>
-                    <span className="text-white/90">Support 7j/7</span>
+                    <span className="text-white/90">{t('whyTravliaq.guarantee4')}</span>
                   </div>
                 </div>
               </div>
@@ -314,10 +319,10 @@ const Index = () => {
                 {[...Array(5)].map((_, i) => <Star key={i} className="w-8 h-8 text-travliaq-golden-sand fill-current" />)}
               </div>
               <blockquote className="text-2xl md:text-3xl font-montserrat font-bold text-white mb-6 leading-relaxed">
-                « J'ai économisé 15 heures de recherche et 300€ sur mon voyage à Tokyo. Travliaq a trouvé des spots que même mes amis japonais ne connaissaient pas ! »
+                {t('whyTravliaq.testimonial')}
               </blockquote>
               <p className="text-xl text-white/70 font-inter">
-                Sarah, 26 ans — Tokyo & Kyoto, 10 jours
+                {t('whyTravliaq.testimonial.author')}
               </p>
             </div>
           </div>
@@ -327,7 +332,7 @@ const Index = () => {
             <Button variant="hero" size="xl" className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90 font-bold px-8 py-4" asChild>
               <a href="/questionnaire">
                 <Sparkles className="mr-2" />
-                Créer mon itinéraire
+                {t('cta.create')}
               </a>
             </Button>
             
