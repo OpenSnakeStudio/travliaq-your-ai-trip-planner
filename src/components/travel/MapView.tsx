@@ -1,0 +1,234 @@
+import { useEffect, useRef, useState } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import "@/styles/mapbox-overrides.css";
+
+interface MapViewProps {
+  days: Array<{
+    id: number;
+    title: string;
+    coordinates: [number, number];
+  }>;
+  activeDay: number;
+  onScrollToDay?: (dayId: number) => void;
+}
+
+const MapView = ({ days, activeDay, onScrollToDay }: MapViewProps) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markers = useRef<{ [key: number]: mapboxgl.Marker }>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    
+    // Ne pas réinitialiser la map si elle existe déjà
+    if (map.current) return;
+
+    // Public token fourni par l'utilisateur
+    mapboxgl.accessToken = "pk.eyJ1IjoibW9oYW1lZGJvdWNoaWJhIiwiYSI6ImNtZ2t3dHZ0MzAyaDAya3NldXJ1dTkxdTAifQ.vYCeVngdG4_B0Zpms0dQNA";
+
+    try {
+      // Find first valid coordinate or use default
+      const firstValidCoordinate = days.find(d => 
+        d.coordinates && !(d.coordinates[0] === 0 && d.coordinates[1] === 0)
+      )?.coordinates || [139.6917, 35.6895]; // Default to Tokyo
+
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: "mapbox://styles/mapbox/dark-v11",
+        center: firstValidCoordinate,
+        zoom: 11,
+        attributionControl: false,
+      });
+
+      map.current.on('load', () => {
+        setIsLoaded(true);
+        // Force resize to ensure proper rendering
+        setTimeout(() => {
+          map.current?.resize();
+        }, 100);
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }), "top-right");
+      map.current.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
+      // Désactiver le scroll zoom pour ne pas gêner le snap-scroll
+      map.current.scrollZoom.disable();
+
+      // Wait for map style to load before adding route line
+      map.current.on('style.load', () => {
+        if (!map.current) return;
+
+        // Create route line connecting all points in order (only valid coordinates)
+        const coordinates = days
+          .filter(day => day.coordinates && !(day.coordinates[0] === 0 && day.coordinates[1] === 0))
+          .map(day => day.coordinates);
+        
+        // Only create route if we have at least 2 valid points
+        if (coordinates.length < 2) return;
+        
+        map.current.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: coordinates
+            }
+          }
+        });
+
+        // Add the line layer with styling
+        map.current.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': 'hsl(172, 66%, 50%)',
+            'line-width': 3,
+            'line-opacity': 0.8,
+            'line-dasharray': [2, 2]
+          }
+        });
+
+        // Add a glow effect layer underneath
+        map.current.addLayer({
+          id: 'route-glow',
+          type: 'line',
+          source: 'route',
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': 'hsl(172, 66%, 50%)',
+            'line-width': 8,
+            'line-opacity': 0.3,
+            'line-blur': 4
+          }
+        }, 'route');
+      });
+
+      // Add markers for each step (only if valid coordinates)
+      days.forEach((day) => {
+        // Skip steps with invalid coordinates (0,0 or missing)
+        if (!day.coordinates || (day.coordinates[0] === 0 && day.coordinates[1] === 0)) {
+          return;
+        }
+
+        const el = document.createElement("div");
+        el.className = "marker-pin";
+        el.style.width = "32px";
+        el.style.height = "32px";
+        el.style.borderRadius = "50%";
+        el.style.display = "flex";
+        el.style.alignItems = "center";
+        el.style.justifyContent = "center";
+        el.style.transition = "all 0.3s";
+        el.style.cursor = "pointer";
+        el.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+
+        // Add click handler to navigate to step
+        el.addEventListener('click', () => {
+          if (onScrollToDay) {
+            onScrollToDay(day.id);
+          }
+        });
+
+        if (map.current) {
+          const marker = new mapboxgl.Marker(el).setLngLat(day.coordinates).addTo(map.current);
+          markers.current[day.id] = marker;
+        }
+      });
+    } catch (error) {
+      console.error("Error initializing map:", error);
+    }
+
+    return () => {
+      // Cleanup markers
+      Object.values(markers.current).forEach(marker => marker.remove());
+      markers.current = {};
+      
+      // Remove map
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!map.current || !isLoaded) return;
+
+    const activeLocation = days.find((day) => day.id === activeDay);
+    // Only fly to location if it has valid coordinates
+    if (activeLocation && activeLocation.coordinates && 
+        !(activeLocation.coordinates[0] === 0 && activeLocation.coordinates[1] === 0)) {
+      map.current.flyTo({
+        center: activeLocation.coordinates, 
+        zoom: 12.5, 
+        duration: 1200, 
+        essential: true 
+      });
+    }
+
+    // Color palette for different activities
+    const getActivityColor = (id: number, isActive: boolean) => {
+      const colors = [
+        'hsl(172, 66%, 50%)',  // Turquoise
+        'hsl(45, 93%, 58%)',   // Golden
+        'hsl(262, 83%, 58%)',  // Purple
+        'hsl(142, 71%, 45%)',  // Green
+        'hsl(24, 95%, 53%)',   // Orange
+        'hsl(221, 83%, 53%)',  // Blue
+      ];
+      
+      const colorIndex = (id - 1) % colors.length;
+      return isActive ? colors[colorIndex] : 'rgba(255, 255, 255, 0.3)';
+    };
+
+    // Update marker styles
+    days.forEach((day) => {
+      const markerEl = markers.current[day.id]?.getElement();
+      if (markerEl) {
+        const isActive = day.id === activeDay;
+        const color = getActivityColor(day.id, isActive);
+        
+        if (isActive) {
+          markerEl.style.backgroundColor = color;
+          markerEl.style.color = "white";
+          markerEl.style.transform = "scale(1.3)";
+          markerEl.style.boxShadow = `0 0 20px ${color}99`;
+          markerEl.style.border = "none";
+          markerEl.style.zIndex = "1000";
+        } else {
+          markerEl.style.backgroundColor = "rgba(15, 23, 42, 0.9)";
+          markerEl.style.color = color;
+          markerEl.style.transform = "scale(0.9)";
+          markerEl.style.boxShadow = "none";
+          markerEl.style.border = `2px solid ${color}`;
+          markerEl.style.zIndex = "1";
+        }
+      }
+    });
+  }, [activeDay, days, isLoaded]);
+
+  return (
+    <div className="w-full rounded-lg overflow-hidden border border-travliaq-turquoise/20 shadow-[0_0_15px_rgba(56,189,248,0.1)] bg-gradient-to-br from-travliaq-deep-blue/70 to-travliaq-deep-blue/50 backdrop-blur-md">
+      <div ref={mapContainer} className="w-full h-56" style={{ minHeight: '224px' }} />
+      <div className="bg-gradient-to-r from-travliaq-deep-blue/90 to-travliaq-deep-blue/80 backdrop-blur-md p-2 border-t border-travliaq-turquoise/20">
+        <p className="font-montserrat text-white text-xs font-semibold truncate">
+          {days.find((d) => d.id === activeDay)?.title || ""}
+        </p>
+        <p className="font-inter text-travliaq-turquoise/80 text-[10px]">Étape {activeDay}</p>
+      </div>
+    </div>
+  );
+};
+
+export default MapView;

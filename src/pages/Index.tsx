@@ -2,57 +2,49 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Compass, Route, Plane, Camera, Globe, Star, Sparkles, Mail } from "lucide-react";
 import heroImage from "@/assets/hero-travliaq.jpg";
 import logo from "@/assets/logo-travliaq.png";
-import GoogleLoginPopup from "@/components/GoogleLoginPopup";
-import { useState, useEffect } from "react";
+import Navigation from "@/components/Navigation";
+import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@supabase/supabase-js";
+
 const Index = () => {
-  const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
+
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      setUser(user);
-
-      // Show popup only if user is not logged in
-      if (!user) {
-        // Show popup after 2 seconds
-        const timer = setTimeout(() => {
-          setShowLoginPopup(true);
-        }, 2000);
-        return () => clearTimeout(timer);
-      }
-    };
-    checkUser();
-
-    // Listen for auth changes
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setShowLoginPopup(false);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-  return <div className="min-h-screen bg-background">
-      {/* Header with Logo */}
-      <header className="absolute top-0 left-0 right-0 z-20 p-6">
-        <div className="container mx-auto flex justify-between items-center">
-          <img src={logo} alt="Logo Travliaq" className="h-20 w-auto" />
-          <a href="/en" className="text-white hover:text-travliaq-golden-sand transition-colors font-inter">
-            English
-          </a>
-        </div>
-      </header>
+    // Show a discrete toast notification if user is not logged in
+    if (!user) {
+      const timer = setTimeout(() => {
+        toast.info("Connectez-vous avec Google pour sauvegarder vos préférences", {
+          duration: 8000,
+          position: "top-right",
+          action: {
+            label: "Se connecter",
+            onClick: async () => {
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                  redirectTo: `${window.location.origin}/`,
+                  queryParams: {
+                    access_type: 'offline',
+                    prompt: 'consent',
+                  }
+                }
+              });
+              if (error) {
+                toast.error('Erreur de connexion: ' + error.message);
+              }
+            }
+          }
+        });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
+  
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation language="fr" />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -74,7 +66,7 @@ const Index = () => {
               </span> : "Découvre ton prochain itinéraire personnalisé — vols, hôtels, météo, activités, tout en un seul clic."}
           </p>
           <Button variant="hero" size="xl" className="animate-adventure-float" asChild>
-            <a href="https://form.typeform.com/to/w3660YhR" target="_blank" rel="noopener noreferrer">
+            <a href="/questionnaire">
               <Sparkles className="mr-2" />
               Crée ton itinéraire
             </a>
@@ -218,7 +210,7 @@ const Index = () => {
           {/* Call-to-action après Comment ça marche */}
           <div className="text-center mt-16">
             <Button variant="hero" size="xl" className="animate-adventure-float" asChild>
-              <a href="https://form.typeform.com/to/w3660YhR" target="_blank" rel="noopener noreferrer">
+              <a href="/questionnaire">
                 <Sparkles className="mr-2" />
                 Commencer mon voyage
               </a>
@@ -333,7 +325,7 @@ const Index = () => {
           {/* Double call-to-action harmonieux */}
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <Button variant="hero" size="xl" className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90 font-bold px-8 py-4" asChild>
-              <a href="https://form.typeform.com/to/w3660YhR" target="_blank" rel="noopener noreferrer">
+              <a href="/questionnaire">
                 <Sparkles className="mr-2" />
                 Créer mon itinéraire
               </a>
@@ -362,8 +354,26 @@ const Index = () => {
             </div>
 
             {/* Grid des sections */}
-            <div className="grid md:grid-cols-3 gap-12 mb-16">
+            <div className="grid md:grid-cols-4 gap-12 mb-16">
               
+              {/* Navigation */}
+              <div className="text-center md:text-left">
+                <h4 className="text-lg font-montserrat font-bold mb-6 text-travliaq-golden-sand">
+                  Navigation
+                </h4>
+                <div className="space-y-4">
+                  <a href="/" className="block text-white/90 hover:text-travliaq-turquoise transition-colors">
+                    Accueil
+                  </a>
+                  <a href="/questionnaire" className="block text-white/90 hover:text-travliaq-turquoise transition-colors">
+                    Créer un itinéraire
+                  </a>
+                  <a href="/blog" className="block text-white/90 hover:text-travliaq-turquoise transition-colors">
+                    Blog
+                  </a>
+                </div>
+              </div>
+
               {/* Contact */}
               <div className="text-center md:text-left">
                 <h4 className="text-lg font-montserrat font-bold mb-6 text-travliaq-golden-sand">
@@ -434,9 +444,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
-
-      {/* Google Login Popup */}
-      {showLoginPopup && !user && <GoogleLoginPopup onClose={() => setShowLoginPopup(false)} />}
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

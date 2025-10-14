@@ -14,16 +14,424 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blog_posts: {
+        Row: {
+          author_id: string
+          content: string
+          cover_image: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published: boolean
+          published_at: string | null
+          slug: string
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          author_id: string
+          content: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          cover_image?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published?: boolean
+          published_at?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
+      cities: {
+        Row: {
+          country: string
+          country_code: string
+          created_at: string | null
+          id: string
+          name: string
+          search_text: string | null
+        }
+        Insert: {
+          country: string
+          country_code: string
+          created_at?: string | null
+          id?: string
+          name: string
+          search_text?: string | null
+        }
+        Update: {
+          country?: string
+          country_code?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          search_text?: string | null
+        }
+        Relationships: []
+      }
+      questionnaire_responses: {
+        Row: {
+          accommodation_type: Json | null
+          additional_info: string | null
+          amenities: Json | null
+          approximate_departure_date: string | null
+          budget: string | null
+          budget_amount: number | null
+          budget_currency: string | null
+          budget_type: string | null
+          climate_preference: string | null
+          comfort: string | null
+          constraints: Json | null
+          created_at: string
+          dates_type: string | null
+          departure_date: string | null
+          departure_location: string | null
+          destination: string | null
+          duration: string | null
+          email: string
+          exact_nights: number | null
+          flexibility: string | null
+          flight_preference: string | null
+          has_approximate_departure_date: string | null
+          has_destination: string | null
+          id: string
+          luggage: Json | null
+          mobility: Json | null
+          neighborhood: string | null
+          number_of_travelers: number | null
+          open_comments: string | null
+          return_date: string | null
+          rhythm: string | null
+          styles: Json | null
+          travel_affinities: Json | null
+          travel_ambiance: string | null
+          travel_group: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accommodation_type?: Json | null
+          additional_info?: string | null
+          amenities?: Json | null
+          approximate_departure_date?: string | null
+          budget?: string | null
+          budget_amount?: number | null
+          budget_currency?: string | null
+          budget_type?: string | null
+          climate_preference?: string | null
+          comfort?: string | null
+          constraints?: Json | null
+          created_at?: string
+          dates_type?: string | null
+          departure_date?: string | null
+          departure_location?: string | null
+          destination?: string | null
+          duration?: string | null
+          email: string
+          exact_nights?: number | null
+          flexibility?: string | null
+          flight_preference?: string | null
+          has_approximate_departure_date?: string | null
+          has_destination?: string | null
+          id?: string
+          luggage?: Json | null
+          mobility?: Json | null
+          neighborhood?: string | null
+          number_of_travelers?: number | null
+          open_comments?: string | null
+          return_date?: string | null
+          rhythm?: string | null
+          styles?: Json | null
+          travel_affinities?: Json | null
+          travel_ambiance?: string | null
+          travel_group?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accommodation_type?: Json | null
+          additional_info?: string | null
+          amenities?: Json | null
+          approximate_departure_date?: string | null
+          budget?: string | null
+          budget_amount?: number | null
+          budget_currency?: string | null
+          budget_type?: string | null
+          climate_preference?: string | null
+          comfort?: string | null
+          constraints?: Json | null
+          created_at?: string
+          dates_type?: string | null
+          departure_date?: string | null
+          departure_location?: string | null
+          destination?: string | null
+          duration?: string | null
+          email?: string
+          exact_nights?: number | null
+          flexibility?: string | null
+          flight_preference?: string | null
+          has_approximate_departure_date?: string | null
+          has_destination?: string | null
+          id?: string
+          luggage?: Json | null
+          mobility?: Json | null
+          neighborhood?: string | null
+          number_of_travelers?: number | null
+          open_comments?: string | null
+          return_date?: string | null
+          rhythm?: string | null
+          styles?: Json | null
+          travel_affinities?: Json | null
+          travel_ambiance?: string | null
+          travel_group?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      steps: {
+        Row: {
+          created_at: string
+          day_number: number
+          duration: string | null
+          id: string
+          images: Json | null
+          is_summary: boolean | null
+          latitude: number | null
+          longitude: number | null
+          main_image: string
+          price: number | null
+          step_number: number
+          subtitle: string | null
+          suggestion: string | null
+          tips: string | null
+          title: string
+          transfer: string | null
+          trip_id: string
+          updated_at: string
+          weather_description: string | null
+          weather_icon: string | null
+          weather_temp: string | null
+          why: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          duration?: string | null
+          id?: string
+          images?: Json | null
+          is_summary?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          main_image?: string
+          price?: number | null
+          step_number: number
+          subtitle?: string | null
+          suggestion?: string | null
+          tips?: string | null
+          title: string
+          transfer?: string | null
+          trip_id: string
+          updated_at?: string
+          weather_description?: string | null
+          weather_icon?: string | null
+          weather_temp?: string | null
+          why?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          duration?: string | null
+          id?: string
+          images?: Json | null
+          is_summary?: boolean | null
+          latitude?: number | null
+          longitude?: number | null
+          main_image?: string
+          price?: number | null
+          step_number?: number
+          subtitle?: string | null
+          suggestion?: string | null
+          tips?: string | null
+          title?: string
+          transfer?: string | null
+          trip_id?: string
+          updated_at?: string
+          weather_description?: string | null
+          weather_icon?: string | null
+          weather_temp?: string | null
+          why?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "steps_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trips: {
+        Row: {
+          average_weather: string | null
+          code: string
+          created_at: string
+          destination: string
+          flight_duration: string | null
+          flight_from: string | null
+          flight_to: string | null
+          flight_type: string | null
+          hotel_name: string | null
+          hotel_rating: number | null
+          id: string
+          main_image: string
+          start_date: string | null
+          total_budget: string | null
+          total_days: number
+          total_price: string | null
+          travel_style: string | null
+          updated_at: string
+        }
+        Insert: {
+          average_weather?: string | null
+          code: string
+          created_at?: string
+          destination: string
+          flight_duration?: string | null
+          flight_from?: string | null
+          flight_to?: string | null
+          flight_type?: string | null
+          hotel_name?: string | null
+          hotel_rating?: number | null
+          id?: string
+          main_image?: string
+          start_date?: string | null
+          total_budget?: string | null
+          total_days?: number
+          total_price?: string | null
+          travel_style?: string | null
+          updated_at?: string
+        }
+        Update: {
+          average_weather?: string | null
+          code?: string
+          created_at?: string
+          destination?: string
+          flight_duration?: string | null
+          flight_from?: string | null
+          flight_to?: string | null
+          flight_type?: string | null
+          hotel_name?: string | null
+          hotel_rating?: number | null
+          id?: string
+          main_image?: string
+          start_date?: string | null
+          total_budget?: string | null
+          total_days?: number
+          total_price?: string | null
+          travel_style?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_questionnaire_response: {
+        Args: { response_id: string }
+        Returns: undefined
+      }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      insert_trip_from_json: {
+        Args: { trip_data: Json }
+        Returns: string
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +558,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const

@@ -2,57 +2,26 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Compass, Route, Plane, Camera, Globe, Star, Sparkles, Mail } from "lucide-react";
 import heroImage from "@/assets/hero-travliaq.jpg";
 import logo from "@/assets/logo-travliaq.png";
+import Navigation from "@/components/Navigation";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useAuth } from "@/contexts/AuthContext";
+
 const IndexEN = () => {
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
+
   useEffect(() => {
-    // Check if user is already logged in
-    const checkUser = async () => {
-      const {
-        data: {
-          user
-        }
-      } = await supabase.auth.getUser();
-      setUser(user);
-
-      // Show popup only if user is not logged in
-      if (!user) {
-        // Show popup after 2 seconds
-        const timer = setTimeout(() => {
-          setShowLoginPopup(true);
-        }, 2000);
-        return () => clearTimeout(timer);
-      }
-    };
-    checkUser();
-
-    // Listen for auth changes
-    const {
-      data: {
-        subscription
-      }
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setShowLoginPopup(false);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    // Show popup only if user is not logged in
+    if (!user) {
+      const timer = setTimeout(() => {
+        setShowLoginPopup(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
   return <div className="min-h-screen bg-background">
-      {/* Header with Logo */}
-      <header className="absolute top-0 left-0 right-0 z-20 p-6">
-        <div className="container mx-auto flex justify-between items-center">
-          <img src={logo} alt="Travliaq Logo" className="h-20 w-auto" />
-          <a href="/" className="text-white hover:text-travliaq-golden-sand transition-colors font-inter">
-            Français
-          </a>
-        </div>
-      </header>
+      <Navigation language="en" />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">

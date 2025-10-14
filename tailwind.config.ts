@@ -65,6 +65,7 @@ export default {
         'adventure': 'var(--shadow-adventure)',
         'golden': 'var(--shadow-golden)',
         'deep': 'var(--shadow-deep)',
+        'glow': 'var(--shadow-glow)',
       },
       fontFamily: {
         'montserrat': ['Montserrat', 'sans-serif'],
@@ -122,5 +123,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

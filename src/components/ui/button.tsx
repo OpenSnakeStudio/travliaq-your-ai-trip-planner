@@ -9,14 +9,14 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-hero text-white font-montserrat font-bold shadow-adventure hover:shadow-deep transform hover:scale-105 transition-adventure",
-        accent: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-golden",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70",
+        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+        link: "text-primary underline-offset-4 hover:underline active:text-primary/80",
+        hero: "bg-gradient-hero text-white font-montserrat font-bold shadow-adventure hover:shadow-deep transform hover:scale-105 active:scale-100 active:shadow-adventure transition-adventure",
+        accent: "bg-accent text-accent-foreground hover:bg-accent/90 active:bg-accent/80 shadow-golden",
       },
       size: {
         default: "h-10 px-4 py-2",

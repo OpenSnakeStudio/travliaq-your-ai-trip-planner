@@ -1,1 +1,7 @@
 project_id = "cinbnmlfpffmyjmkwbco"
+
+[functions.geocode]
+verify_jwt = false
+
+[functions.submit-questionnaire]
+verify_jwt = false
