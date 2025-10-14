@@ -30,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
+import Navigation from "@/components/Navigation";
 import { z } from "zod";
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
@@ -2382,6 +2383,11 @@ const Questionnaire = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue via-white to-travliaq-golden-sand/20">
+      {/* Navigation discrète */}
+      <div className="opacity-60 hover:opacity-100 transition-opacity">
+        <Navigation />
+      </div>
+      
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
         <div 

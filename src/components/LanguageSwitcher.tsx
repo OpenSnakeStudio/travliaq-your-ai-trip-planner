@@ -20,7 +20,9 @@ const LanguageSwitcher = () => {
     { code: 'en', name: 'English', label: 'EN' }
   ];
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  // Extract the base language code (e.g., 'en' from 'en-GB')
+  const currentLangCode = i18n.language.split('-')[0];
+  const currentLanguage = languages.find(lang => lang.code === currentLangCode) || languages[0];
 
   return (
     <DropdownMenu>

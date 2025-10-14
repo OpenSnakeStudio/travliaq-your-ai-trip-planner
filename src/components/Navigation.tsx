@@ -43,6 +43,15 @@ const Navigation = () => {
             <a href="/blog">{t('nav.blog')}</a>
           </Button>
           
+          <Button
+            variant="hero"
+            size="sm"
+            asChild
+            className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90 font-semibold"
+          >
+            <a href="/questionnaire">{t('hero.cta')}</a>
+          </Button>
+          
           {user && !roleLoading && isAdmin && (
             <Button
               variant="ghost"
@@ -111,6 +120,16 @@ const Navigation = () => {
                 onClick={closeMenu}
               >
                 <a href="/blog">{t('nav.blog')}</a>
+              </Button>
+              
+              <Button
+                variant="hero"
+                size="lg"
+                asChild
+                className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90 font-semibold justify-start"
+                onClick={closeMenu}
+              >
+                <a href="/questionnaire">{t('hero.cta')}</a>
               </Button>
               
               {user && !roleLoading && isAdmin && (
