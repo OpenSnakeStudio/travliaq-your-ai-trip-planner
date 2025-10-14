@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useSearchParams, useParams } from "react-router-dom";
+import { useSearchParams, useParams, useNavigate } from "react-router-dom";
 import HeroHeader from "@/components/travel/HeroHeader";
 import DaySection from "@/components/travel/DaySection";
 import TimelineSync from "@/components/travel/TimelineSync";
@@ -9,7 +9,7 @@ import TravelCalendar from "@/components/travel/TravelCalendar";
 import TravelDayCalendar from "@/components/travel/TravelDayCalendar";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Map as MapIcon, Calendar as CalendarIcon } from "lucide-react";
+import { Map as MapIcon, Calendar as CalendarIcon, CreditCard } from "lucide-react";
 import { useTripData } from "@/hooks/useTripData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -296,6 +296,7 @@ const TravelRecommendations = () => {
   const code = rawCode ? decodeURIComponent(rawCode).replace(/^=+/, '').trim() : null;
   const { trip, steps, loading } = useTripData(code);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   const [activeDay, setActiveDay] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -631,6 +632,22 @@ const TravelRecommendations = () => {
               >
                 <CalendarIcon className="h-4 w-4" />
                 <span>Planning</span>
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                className="flex-1 justify-center gap-2 bg-travliaq-golden-sand hover:bg-travliaq-golden-sand/90 active:bg-travliaq-golden-sand text-white font-montserrat font-semibold shadow-[0_4px_12px_rgba(245,158,11,0.3)]"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (code) {
+                    navigate(`/booking?code=${encodeURIComponent(code)}`);
+                  }
+                }}
+                aria-label="Réserver le voyage"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Réserver</span>
               </Button>
             </div>
             
