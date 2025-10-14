@@ -19,6 +19,11 @@ interface Trip {
   average_weather: string | null;
   travel_style: string | null;
   start_date: string | null;
+  travelers?: number;
+  price_flights?: string;
+  price_hotels?: string;
+  price_transport?: string;
+  price_activities?: string;
 }
 
 interface Step {

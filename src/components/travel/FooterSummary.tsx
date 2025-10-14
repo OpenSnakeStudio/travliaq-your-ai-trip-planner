@@ -45,7 +45,7 @@ const FooterSummary = ({
   const code = searchParams.get("code");
 
   const handleBooking = () => {
-    navigate(`/booking?code=${code}&travelers=${travelers}`);
+    navigate(`/booking?code=${code}`);
   };
 
   // Generate 8 comprehensive stats

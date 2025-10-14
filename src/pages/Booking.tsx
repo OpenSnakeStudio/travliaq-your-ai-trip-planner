@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useTripData } from "@/hooks/useTripData";
 import Navigation from "@/components/Navigation";
-import { ArrowLeft, Users, CreditCard } from "lucide-react";
+import { ArrowLeft, Users, CreditCard, Shield, Lock, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const travelerSchema = z.object({
@@ -56,9 +56,11 @@ const Booking = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const code = searchParams.get("code");
-  const travelers = parseInt(searchParams.get("travelers") || "1");
   const { trip, loading } = useTripData(code);
   const { toast } = useToast();
+  
+  // Récupérer le nombre de voyageurs depuis les données du trip
+  const travelers = trip?.travelers || 1;
 
   const [currentTraveler, setCurrentTraveler] = useState(0);
   const [travelersData, setTravelersData] = useState<any[]>([]);
@@ -189,8 +191,8 @@ const Booking = () => {
 
                   <p className="text-white/80 font-inter">
                     {currentTraveler === 0 
-                      ? "Veuillez remplir vos informations personnelles"
-                      : `Informations du voyageur ${currentTraveler + 1}`
+                      ? "Veuillez remplir vos informations personnelles (voyageur principal)"
+                      : `Veuillez remplir les informations du voyageur ${currentTraveler + 1}`
                     }
                   </p>
                 </div>
@@ -481,110 +483,113 @@ const Booking = () => {
                       </div>
                     </div>
 
-                    {/* Adresse de facturation */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-travliaq-turquoise">Adresse de facturation</h3>
-                      
-                      <FormField
-                        control={form.control}
-                        name="billingAddressSame"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                            <FormControl>
-                              <input
-                                type="checkbox"
-                                checked={field.value}
-                                onChange={field.onChange}
-                                className="h-4 w-4 rounded border-white/20 bg-white/10 text-travliaq-turquoise focus:ring-travliaq-turquoise"
+                    {/* Adresse de facturation - uniquement pour le voyageur principal */}
+                    {currentTraveler === 0 && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-travliaq-turquoise">Adresse de facturation</h3>
+                        <p className="text-white/60 text-sm">L'adresse de facturation sera utilisée pour tous les voyageurs</p>
+                        
+                        <FormField
+                          control={form.control}
+                          name="billingAddressSame"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormControl>
+                                <input
+                                  type="checkbox"
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                  className="h-4 w-4 rounded border-white/20 bg-white/10 text-travliaq-turquoise focus:ring-travliaq-turquoise"
+                                />
+                              </FormControl>
+                              <div className="space-y-1 leading-none">
+                                <FormLabel className="text-white">
+                                  L'adresse de facturation est la même que l'adresse ci-dessus
+                                </FormLabel>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+
+                        {!form.watch("billingAddressSame") && (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name="billingAddress"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Adresse de facturation *</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      placeholder="123 Rue de Facturation"
+                                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <div className="grid md:grid-cols-3 gap-4">
+                              <FormField
+                                control={form.control}
+                                name="billingCity"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">Ville *</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="Paris"
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
                               />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel className="text-white">
-                                L'adresse de facturation est la même que l'adresse ci-dessus
-                              </FormLabel>
+
+                              <FormField
+                                control={form.control}
+                                name="billingPostalCode"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">Code postal *</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="75001"
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name="billingCountry"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-white">Pays *</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        placeholder="France"
+                                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
                             </div>
-                          </FormItem>
+                          </>
                         )}
-                      />
-
-                      {!form.watch("billingAddressSame") && (
-                        <>
-                          <FormField
-                            control={form.control}
-                            name="billingAddress"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-white">Adresse de facturation *</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    {...field}
-                                    placeholder="123 Rue de Facturation"
-                                    className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <div className="grid md:grid-cols-3 gap-4">
-                            <FormField
-                              control={form.control}
-                              name="billingCity"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Ville *</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      placeholder="Paris"
-                                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="billingPostalCode"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Code postal *</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      placeholder="75001"
-                                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="billingCountry"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Pays *</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      placeholder="France"
-                                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     <div className="flex gap-4 pt-4">
                       {currentTraveler > 0 && (
@@ -612,6 +617,13 @@ const Booking = () => {
             {/* Récapitulatif */}
             <div className="md:col-span-1">
               <Card className="bg-white/10 backdrop-blur-md border-travliaq-turquoise/30 p-6 sticky top-24">
+                {/* Badge de sécurité */}
+                <div className="flex items-center justify-center gap-2 mb-6 p-3 bg-travliaq-turquoise/10 rounded-lg border border-travliaq-turquoise/30">
+                  <Shield className="h-5 w-5 text-travliaq-turquoise" />
+                  <span className="text-white text-sm font-semibold">Paiement 100% sécurisé</span>
+                  <Lock className="h-4 w-4 text-travliaq-turquoise" />
+                </div>
+
                 <h3 className="text-xl font-bold text-white font-montserrat mb-4">
                   Récapitulatif
                 </h3>
@@ -636,11 +648,46 @@ const Booking = () => {
                     <p className="text-white font-semibold">{travelers}</p>
                   </div>
                   
+                  <Separator className="bg-white/20" />
+                  
+                  {/* Détail des prix */}
+                  <div className="space-y-3">
+                    <p className="text-white font-semibold text-sm mb-2">Détail du prix</p>
+                    
+                    {trip.price_flights && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Billets d'avion</span>
+                        <span className="text-white font-medium">{trip.price_flights}</span>
+                      </div>
+                    )}
+                    
+                    {trip.price_hotels && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Hôtels</span>
+                        <span className="text-white font-medium">{trip.price_hotels}</span>
+                      </div>
+                    )}
+                    
+                    {trip.price_transport && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Transport</span>
+                        <span className="text-white font-medium">{trip.price_transport}</span>
+                      </div>
+                    )}
+                    
+                    {trip.price_activities && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-white/70 text-sm">Activités</span>
+                        <span className="text-white font-medium">{trip.price_activities}</span>
+                      </div>
+                    )}
+                  </div>
+                  
                   {trip.total_price && (
                     <>
                       <Separator className="bg-white/20" />
-                      <div>
-                        <p className="text-white/60 text-sm">Prix total</p>
+                      <div className="flex justify-between items-center pt-2">
+                        <p className="text-white font-bold text-lg">Prix total</p>
                         <p className="text-travliaq-golden-sand font-bold text-2xl">
                           {trip.total_price}
                         </p>
@@ -662,6 +709,22 @@ const Booking = () => {
                     Remplissez les informations de tous les voyageurs
                   </p>
                 )}
+
+                {/* Indicateurs de sécurité */}
+                <div className="mt-6 pt-6 border-t border-white/10 space-y-2">
+                  <div className="flex items-center gap-2 text-white/70 text-xs">
+                    <CheckCircle2 className="h-3 w-3 text-travliaq-turquoise" />
+                    <span>Cryptage SSL 256 bits</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white/70 text-xs">
+                    <CheckCircle2 className="h-3 w-3 text-travliaq-turquoise" />
+                    <span>Conformité PCI-DSS</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white/70 text-xs">
+                    <CheckCircle2 className="h-3 w-3 text-travliaq-turquoise" />
+                    <span>Données personnelles protégées</span>
+                  </div>
+                </div>
               </Card>
             </div>
           </div>

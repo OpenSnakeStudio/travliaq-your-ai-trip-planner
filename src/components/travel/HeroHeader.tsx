@@ -24,8 +24,7 @@ const HeroHeader = ({ destination, mainImage, flight, hotel, totalPrice }: HeroH
   const code = searchParams.get("code");
 
   const handleBooking = () => {
-    const travelers = searchParams.get("travelers") || "1";
-    navigate(`/booking?code=${code}&travelers=${travelers}`);
+    navigate(`/booking?code=${code}`);
   };
 
   return (
