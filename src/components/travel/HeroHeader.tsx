@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plane, Hotel, DollarSign } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface HeroHeaderProps {
   destination: string;
@@ -16,15 +16,16 @@ interface HeroHeaderProps {
     rating: number;
   };
   totalPrice: string;
+  tripCode?: string | null;
 }
 
-const HeroHeader = ({ destination, mainImage, flight, hotel, totalPrice }: HeroHeaderProps) => {
+const HeroHeader = ({ destination, mainImage, flight, hotel, totalPrice, tripCode }: HeroHeaderProps) => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const code = searchParams.get("code");
 
   const handleBooking = () => {
-    navigate(`/booking?code=${code}`);
+    if (tripCode) {
+      navigate(`/booking?code=${encodeURIComponent(tripCode)}`);
+    }
   };
 
   return (

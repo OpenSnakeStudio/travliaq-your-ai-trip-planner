@@ -651,6 +651,7 @@ const TravelRecommendations = () => {
             flight={travelData.flight}
             hotel={travelData.hotel}
             totalPrice={travelData.totalPrice}
+            tripCode={code}
           />
         </section>
 

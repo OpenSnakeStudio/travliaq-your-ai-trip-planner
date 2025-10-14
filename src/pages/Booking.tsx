@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,6 +12,7 @@ import { useTripData } from "@/hooks/useTripData";
 import Navigation from "@/components/Navigation";
 import { ArrowLeft, Users, CreditCard, Shield, Lock, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const travelerSchema = z.object({
   // Informations personnelles
@@ -58,6 +59,19 @@ const Booking = () => {
   const code = searchParams.get("code");
   const { trip, loading } = useTripData(code);
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast({
+        title: "Connexion requise",
+        description: "Vous devez être connecté pour réserver un voyage.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate, toast]);
   
   // Récupérer le nombre de voyageurs depuis les données du trip
   const travelers = trip?.travelers || 1;
@@ -125,12 +139,17 @@ const Booking = () => {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-travliaq-deep-blue to-travliaq-deep-blue/80">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-travliaq-turquoise"></div>
       </div>
     );
+  }
+
+  // Don't render the page if user is not authenticated
+  if (!user) {
+    return null;
   }
 
   if (!trip) {
