@@ -331,12 +331,17 @@ export type Database = {
           hotel_rating: number | null
           id: string
           main_image: string
+          price_activities: string | null
+          price_flights: string | null
+          price_hotels: string | null
+          price_transport: string | null
           start_date: string | null
           total_budget: string | null
           total_days: number
           total_price: string | null
           travel_style: string | null
           travel_style_en: string | null
+          travelers: number | null
           updated_at: string
         }
         Insert: {
@@ -353,12 +358,17 @@ export type Database = {
           hotel_rating?: number | null
           id?: string
           main_image?: string
+          price_activities?: string | null
+          price_flights?: string | null
+          price_hotels?: string | null
+          price_transport?: string | null
           start_date?: string | null
           total_budget?: string | null
           total_days?: number
           total_price?: string | null
           travel_style?: string | null
           travel_style_en?: string | null
+          travelers?: number | null
           updated_at?: string
         }
         Update: {
@@ -375,12 +385,17 @@ export type Database = {
           hotel_rating?: number | null
           id?: string
           main_image?: string
+          price_activities?: string | null
+          price_flights?: string | null
+          price_hotels?: string | null
+          price_transport?: string | null
           start_date?: string | null
           total_budget?: string | null
           total_days?: number
           total_price?: string | null
           travel_style?: string | null
           travel_style_en?: string | null
+          travelers?: number | null
           updated_at?: string
         }
         Relationships: []
