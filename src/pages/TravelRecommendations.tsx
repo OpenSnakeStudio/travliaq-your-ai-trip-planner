@@ -389,6 +389,17 @@ const TravelRecommendations = () => {
       for (const o of offsetsRef.current) {
         if (scrollTop >= o.top) currentId = o.id; else break;
       }
+      
+      // Si on est au footer summary, currentId = summaryId
+      const summaryElement = el.querySelector(`[data-day-id="summary"]`) as HTMLElement | null;
+      if (summaryElement) {
+        const summaryTop = summaryElement.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+        if (scrollTop >= summaryTop - 100) { // 100px de tolérance
+          const maxStepId = Math.max(...travelData.days.filter(d => !(d as any).isSummary).map(d => d.id), 0);
+          currentId = maxStepId + 1; // summaryId
+        }
+      }
+      
       setActiveDay(currentId);
     };
 
@@ -447,9 +458,12 @@ const TravelRecommendations = () => {
   const regularSteps = travelData.days.filter(d => !(d as any).isSummary);
   const summaryStep = travelData.days.find(d => (d as any).isSummary);
   
+  // ID spécial pour le footer summary (après toutes les étapes régulières)
+  const summaryId = Math.max(...regularSteps.map(d => d.id), 0) + 1;
+  
   const allSteps = [
     ...regularSteps.map(d => ({ id: d.id, title: d.title, isSummary: false })),
-    ...(summaryStep ? [{ id: summaryStep.id, title: summaryStep.title, isSummary: true }] : [])
+    { id: summaryId, title: 'Validation', isSummary: true }
   ];
 
 
@@ -472,7 +486,7 @@ const TravelRecommendations = () => {
   return (
     <div className="relative min-h-screen bg-background">
       {/* Fixed sidebar with Timeline (mobile bottom, desktop left) */}
-      {activeDay >= 1 && activeDay <= travelData.days.length && (
+      {activeDay >= 1 && (
         <TimelineSync
           days={allSteps}
           activeDay={activeDay}
@@ -493,11 +507,11 @@ const TravelRecommendations = () => {
 
       )}
 
-      {/* Fixed planning widget (left side, visible only on steps 1-16) */}
-      {activeDay >= 1 && activeDay <= travelData.days.length && (
+      {/* Fixed planning widget (left side, visible only on regular steps, hidden on summary) */}
+      {activeDay >= 1 && activeDay <= regularSteps.length && (
         <div className="hidden lg:block fixed left-4 top-32 z-40 w-64">
           <TravelDayCalendar
-            days={travelData.days.map(d => ({
+            days={regularSteps.map(d => ({
               id: d.id,
               title: d.title,
               day: d.day,
@@ -509,11 +523,11 @@ const TravelRecommendations = () => {
         </div>
       )}
 
-      {/* Fixed map widget (right side, visible only on steps 1-16) */}
-      {activeDay >= 1 && activeDay <= travelData.days.length && (
+      {/* Fixed map widget (right side, visible only on regular steps, hidden on summary) */}
+      {activeDay >= 1 && activeDay <= regularSteps.length && (
         <div className="hidden lg:block fixed right-4 top-32 z-40 w-72">
           <MapView
-            days={travelData.days.map(d => ({
+            days={regularSteps.map(d => ({
               id: d.id,
               title: d.title,
               coordinates: d.coordinates,
@@ -525,7 +539,7 @@ const TravelRecommendations = () => {
       )}
 
       {/* Mobile/tablet bottom bar with steps - au plus bas */}
-      {activeDay >= 1 && activeDay <= travelData.days.length && (
+      {activeDay >= 1 && activeDay <= regularSteps.length && (
         <div className="lg:hidden fixed bottom-2 left-0 right-0 z-50 pointer-events-none">
           <div className="mx-auto max-w-screen-md px-4 space-y-1.5">
             {/* Action buttons en premier */}
