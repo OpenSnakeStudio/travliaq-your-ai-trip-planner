@@ -363,6 +363,83 @@ const TravelRecommendations = () => {
     }
   } : mockTravelData;
 
+  // Separate summary step from regular steps - AVANT les hooks
+  const regularSteps = travelData.days.filter(d => !(d as any).isSummary);
+  const summaryStep = travelData.days.find(d => (d as any).isSummary);
+  
+  // ID spécial pour le footer summary (après toutes les étapes régulières)
+  const summaryId = Math.max(...regularSteps.map(d => d.id), 0) + 1;
+  
+  const allSteps = [
+    ...regularSteps.map(d => ({ id: d.id, title: d.title, isSummary: false })),
+    { id: summaryId, title: 'Validation', isSummary: true }
+  ];
+
+  // Fonction scrollToDay - DOIT être avant les returns
+  const scrollToDay = useCallback((dayId: number | string) => {
+    // Mobile: use carousel
+    if (isMobile && carouselApi) {
+      // dayId 0 = hero, 1-n = days, summaryId = footer
+      if (dayId === 0) {
+        carouselApi.scrollTo(0);
+      } else if (dayId === summaryId) {
+        carouselApi.scrollTo(regularSteps.length + 1); // hero + steps + footer
+      } else {
+        const stepIndex = regularSteps.findIndex(d => d.id === dayId);
+        if (stepIndex !== -1) {
+          carouselApi.scrollTo(stepIndex + 1); // +1 car hero est à l'index 0
+        }
+      }
+      return;
+    }
+
+    // Desktop: use scroll
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const targetSelector = dayId === summaryId ? '[data-day-id="summary"]' : `[data-day-id="${dayId}"]`;
+    const target = el.querySelector(targetSelector) as HTMLElement | null;
+    if (!target) return;
+
+    const getTop = (node: HTMLElement) => node.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
+    const targetTop = getTop(target);
+    
+    el.scrollTo({
+      top: targetTop,
+      behavior: 'smooth'
+    });
+  }, [isMobile, carouselApi, summaryId, regularSteps]);
+
+  // Carousel effect for mobile - DOIT être avant les returns
+  useEffect(() => {
+    if (!carouselApi || !isMobile) return;
+
+    const onSelect = () => {
+      const current = carouselApi.selectedScrollSnap();
+      setCarouselCurrent(current);
+      
+      // Update activeDay based on carousel position
+      if (current === 0) {
+        setActiveDay(0); // Hero
+      } else if (current <= regularSteps.length) {
+        setActiveDay(regularSteps[current - 1]?.id || 0);
+      } else {
+        setActiveDay(summaryId); // Footer
+      }
+      
+      // Update progress
+      const progress = (current / (regularSteps.length + 1)) * 100;
+      setScrollProgress(progress);
+    };
+
+    carouselApi.on("select", onSelect);
+    onSelect(); // Initial call
+
+    return () => {
+      carouselApi.off("select", onSelect);
+    };
+  }, [carouselApi, isMobile, regularSteps, summaryId]);
+
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -464,83 +541,6 @@ const TravelRecommendations = () => {
       </div>
     );
   }
-
-  // Separate summary step from regular steps
-  const regularSteps = travelData.days.filter(d => !(d as any).isSummary);
-  const summaryStep = travelData.days.find(d => (d as any).isSummary);
-  
-  // ID spécial pour le footer summary (après toutes les étapes régulières)
-  const summaryId = Math.max(...regularSteps.map(d => d.id), 0) + 1;
-  
-  const allSteps = [
-    ...regularSteps.map(d => ({ id: d.id, title: d.title, isSummary: false })),
-    { id: summaryId, title: 'Validation', isSummary: true }
-  ];
-
-
-  const scrollToDay = useCallback((dayId: number | string) => {
-    // Mobile: use carousel
-    if (isMobile && carouselApi) {
-      // dayId 0 = hero, 1-n = days, summaryId = footer
-      if (dayId === 0) {
-        carouselApi.scrollTo(0);
-      } else if (dayId === summaryId) {
-        carouselApi.scrollTo(regularSteps.length + 1); // hero + steps + footer
-      } else {
-        const stepIndex = regularSteps.findIndex(d => d.id === dayId);
-        if (stepIndex !== -1) {
-          carouselApi.scrollTo(stepIndex + 1); // +1 car hero est à l'index 0
-        }
-      }
-      return;
-    }
-
-    // Desktop: use scroll
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const targetSelector = dayId === summaryId ? '[data-day-id="summary"]' : `[data-day-id="${dayId}"]`;
-    const target = el.querySelector(targetSelector) as HTMLElement | null;
-    if (!target) return;
-
-    const getTop = (node: HTMLElement) => node.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop;
-    const targetTop = getTop(target);
-    
-    el.scrollTo({
-      top: targetTop,
-      behavior: 'smooth'
-    });
-  }, [isMobile, carouselApi, summaryId, regularSteps]);
-
-  // Carousel effect for mobile
-  useEffect(() => {
-    if (!carouselApi || !isMobile) return;
-
-    const onSelect = () => {
-      const current = carouselApi.selectedScrollSnap();
-      setCarouselCurrent(current);
-      
-      // Update activeDay based on carousel position
-      if (current === 0) {
-        setActiveDay(0); // Hero
-      } else if (current <= regularSteps.length) {
-        setActiveDay(regularSteps[current - 1]?.id || 0);
-      } else {
-        setActiveDay(summaryId); // Footer
-      }
-      
-      // Update progress
-      const progress = (current / (regularSteps.length + 1)) * 100;
-      setScrollProgress(progress);
-    };
-
-    carouselApi.on("select", onSelect);
-    onSelect(); // Initial call
-
-    return () => {
-      carouselApi.off("select", onSelect);
-    };
-  }, [carouselApi, isMobile, regularSteps, summaryId]);
 
   return (
     <div className="relative min-h-screen bg-background">
