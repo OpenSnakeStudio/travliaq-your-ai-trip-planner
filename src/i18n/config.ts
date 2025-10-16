@@ -101,7 +101,230 @@ const resources = {
       "footer.terms": "Conditions Générales de Vente",
       "footer.imprint": "Mentions légales",
       "footer.privacy": "Politique de confidentialité",
-      "footer.copyright": "© 2025 Travliaq. Tous droits réservés. Fait avec ❤️ pour les voyageurs authentiques"
+      "footer.copyright": "© 2025 Travliaq. Tous droits réservés. Fait avec ❤️ pour les voyageurs authentiques",
+      
+      // Questionnaire
+      "q.title": "VOTRE VOYAGE SUR MESURE",
+      "q.back": "Retour",
+      "q.continue": "Continuer",
+      "q.send": "Envoyer 🚀",
+      "q.sending": "Envoi en cours...",
+      
+      // Q1: Who's traveling
+      "q.step1.title": "Qui voyage ? 👥",
+      "q.step1.solo": "Solo",
+      "q.step1.duo": "Duo",
+      "q.step1.group": "Groupe 3-5",
+      "q.step1.family": "Famille (enfants <12)",
+      "q.step1b.group.title": "Nombre de voyageurs",
+      "q.step1b.family.title": "Nombre de personnes (enfants inclus) 👨‍👩‍👧‍👦",
+      
+      // Q2: Help needed
+      "q.step2.title": "Comment Travliaq peut vous aider ? 🎯",
+      "q.step2.desc": "Sélectionnez tous les services nécessaires",
+      "q.step2.flights": "Vols",
+      "q.step2.accommodation": "Hébergement",
+      "q.step2.activities": "Activités & Suggestions",
+      
+      // Q3: Destination
+      "q.step3.title": "Où souhaitez-vous aller ? 🌍",
+      "q.step3.desc": "Destination finale de votre voyage",
+      "q.step3.yes": "Oui, j'ai une destination en tête",
+      "q.step3.no": "Non, je ne sais pas encore",
+      "q.step3.search": "Rechercher une destination...",
+      "q.step3.popular": "Destinations populaires",
+      
+      // Q4: Departure location
+      "q.step4.title": "D'où partez-vous ? ✈️",
+      "q.step4.search": "Rechercher votre ville de départ...",
+      "q.step4.detect": "Détecter automatiquement",
+      "q.step4.detecting": "Détection en cours...",
+      
+      // Q5: Climate
+      "q.step5.title": "Quel climat préférez-vous ? 🌡️",
+      "q.step5.desc": "Sélectionnez tous les climats qui vous plaisent",
+      "q.step5.hot": "Chaud (plage, soleil)",
+      "q.step5.mild": "Tempéré (doux, agréable)",
+      "q.step5.cold": "Froid (montagne, neige)",
+      "q.step5.mix": "Mixte (variété)",
+      
+      // Q6: Travel affinities
+      "q.step6.title": "Quelles sont vos affinités de voyage ? 💫",
+      "q.step6.desc": "Choisissez 3 maximum",
+      "q.step6.culture": "Culture (musées, monuments)",
+      "q.step6.nature": "Nature (randonnée, parcs)",
+      "q.step6.gastro": "Gastronomie",
+      "q.step6.beach": "Plage & Détente",
+      "q.step6.nightlife": "Vie nocturne",
+      "q.step6.shopping": "Shopping",
+      "q.step6.adventure": "Aventure",
+      "q.step6.wellbeing": "Bien-être (spa, yoga)",
+      
+      // Q7: Travel ambiance
+      "q.step7.title": "Ambiance de voyage souhaitée 🎨",
+      "q.step7.romantic": "Romantique (couple)",
+      "q.step7.family": "Famille (enfants)",
+      "q.step7.friends": "Entre amis (fête)",
+      "q.step7.relax": "Détente absolue",
+      "q.step7.cultural": "Culturel (apprentissage)",
+      "q.step7.adventure": "Aventure (sport)",
+      
+      // Q8: Dates
+      "q.step8.title": "Quand souhaitez-vous partir ? 📅",
+      "q.step8.exact": "J'ai des dates précises",
+      "q.step8.approx": "J'ai une période approximative",
+      "q.step8.flexible": "Je suis flexible",
+      "q.step8.departure": "Date de départ",
+      "q.step8.return": "Date de retour",
+      "q.step8.approx.title": "Avez-vous une période approximative de départ ?",
+      "q.step8.approx.yes": "Oui, j'ai une idée",
+      "q.step8.approx.no": "Non, je suis totalement flexible",
+      "q.step8.approx.when": "Vers quand souhaiteriez-vous partir ?",
+      "q.step8.flex.title": "Quel est votre niveau de flexibilité ? ⏰",
+      "q.step8.flex.days": "±3 jours",
+      "q.step8.flex.week": "±1 semaine",
+      "q.step8.flex.2weeks": "±2 semaines",
+      "q.step8.flex.month": "±1 mois",
+      
+      // Q9: Duration
+      "q.step9.title": "Durée du séjour 📆",
+      "q.step9.1week": "1 semaine (5-7 jours)",
+      "q.step9.2weeks": "2 semaines (10-14 jours)",
+      "q.step9.3weeks": "3 semaines (18-21 jours)",
+      "q.step9.custom": "Durée personnalisée",
+      "q.step9.nights": "Nombre exact de nuits",
+      
+      // Q10: Budget
+      "q.step10.title": "Budget par personne 💰",
+      "q.step10.desc": "Estimation approximative",
+      "q.step10.low": "Petit budget (< 1000€)",
+      "q.step10.mid": "Moyen (1000-3000€)",
+      "q.step10.high": "Confortable (3000-5000€)",
+      "q.step10.premium": "Premium (> 5000€)",
+      "q.step10.exact": "Budget précis",
+      "q.step10.custom.title": "Budget exact par personne",
+      "q.step10.total": "Budget total",
+      "q.step10.perperson": "Budget par personne",
+      "q.step10.amount": "Montant",
+      "q.step10.currency": "Devise",
+      
+      // Q11: Travel styles
+      "q.step11.title": "Styles de voyage 🎒",
+      "q.step11.desc": "Sélectionnez tous ceux qui correspondent",
+      "q.step11.backpacker": "Backpacker (auberges, routard)",
+      "q.step11.comfort": "Confort (hôtels 3-4⭐)",
+      "q.step11.premium": "Premium (hôtels 5⭐, luxe)",
+      "q.step11.authentic": "Authentique (local, immersion)",
+      "q.step11.classic": "Classique (incontournables)",
+      "q.step11.offbeat": "Insolite (hors sentiers battus)",
+      
+      // Q12: Rhythm
+      "q.step12.title": "Rythme du voyage 🕐",
+      "q.step12.slow": "Slow travel (prendre son temps)",
+      "q.step12.balanced": "Équilibré (mix détente/visites)",
+      "q.step12.intense": "Intense (programme chargé)",
+      
+      // Q13: Flight preference
+      "q.step13.title": "Préférence de vol ✈️",
+      "q.step13.direct": "Direct uniquement",
+      "q.step13.1stop": "1 escale max",
+      "q.step13.any": "Peu importe (meilleur prix)",
+      
+      // Q14: Luggage
+      "q.step14.title": "Bagages par voyageur 🧳",
+      "q.step14.cabin": "Bagage cabine",
+      "q.step14.hold": "Bagage soute",
+      "q.step14.both": "Cabine + Soute",
+      
+      // Q15: Mobility
+      "q.step15.title": "Mobilité & Accessibilité ♿",
+      "q.step15.desc": "Sélectionnez tout ce qui s'applique",
+      "q.step15.none": "Aucune contrainte",
+      "q.step15.wheelchair": "Fauteuil roulant",
+      "q.step15.walking": "Difficulté à marcher longtemps",
+      "q.step15.elevator": "Besoin ascenseur",
+      "q.step15.stairs": "Éviter les escaliers",
+      
+      // Q16: Accommodation type
+      "q.step16.title": "Type d'hébergement 🏨",
+      "q.step16.desc": "Choisissez tous ceux qui vous conviennent",
+      "q.step16.hotel": "Hôtel",
+      "q.step16.airbnb": "Airbnb/Location",
+      "q.step16.hostel": "Auberge de jeunesse",
+      "q.step16.resort": "Resort/All-inclusive",
+      "q.step16.boutique": "Hôtel boutique",
+      "q.step16b.title": "Préférences pour l'hôtel 🏨",
+      "q.step16b.desc": "Sélectionnez ce qui vous intéresse",
+      "q.step16b.breakfast": "Petit-déjeuner inclus",
+      "q.step16b.halfboard": "Demi-pension",
+      "q.step16b.fullboard": "Pension complète",
+      "q.step16b.allinc": "All-inclusive",
+      "q.step16b.room": "Room service",
+      
+      // Q17: Comfort
+      "q.step17.title": "Niveau de confort attendu 🛏️",
+      "q.step17.simple": "Simple (propreté de base)",
+      "q.step17.standard": "Standard (confortable)",
+      "q.step17.superior": "Supérieur (très confortable)",
+      "q.step17.luxury": "Luxe (5 étoiles)",
+      
+      // Q18: Neighborhood
+      "q.step18.title": "Emplacement de l'hébergement 📍",
+      "q.step18.center": "Centre-ville (accès facile)",
+      "q.step18.quiet": "Quartier calme (éloigné)",
+      "q.step18.transport": "Près des transports",
+      "q.step18.attractions": "Près des attractions",
+      
+      // Q19: Amenities
+      "q.step19.title": "Équipements souhaités 🏊",
+      "q.step19.desc": "Sélectionnez tous ceux importants pour vous",
+      "q.step19.wifi": "Wi-Fi",
+      "q.step19.pool": "Piscine",
+      "q.step19.gym": "Salle de sport",
+      "q.step19.spa": "Spa",
+      "q.step19.restaurant": "Restaurant sur place",
+      "q.step19.parking": "Parking",
+      "q.step19.ac": "Climatisation",
+      "q.step19.kitchen": "Cuisine équipée",
+      
+      // Q20: Constraints
+      "q.step20.title": "Contraintes & préférences 🎯",
+      "q.step20.desc": "Sélectionnez toutes les options importantes",
+      "q.step20.halal": "Halal",
+      "q.step20.kosher": "Casher",
+      "q.step20.vege": "Végétarien",
+      "q.step20.vegan": "Vegan",
+      "q.step20.gluten": "Sans gluten",
+      "q.step20.allergies": "Allergies alimentaires",
+      "q.step20.none": "Aucune contrainte",
+      
+      // Q21: Additional info
+      "q.step21.title": "Informations complémentaires 📝",
+      "q.step21.desc": "Précisez vos attentes, contraintes ou préférences particulières (optionnel)",
+      "q.step21.placeholder": "Ex: anniversaire, allergies alimentaires, accessibilité spécifique...",
+      
+      // Q22: Open comments
+      "q.step22.title": "Zone libre 💭",
+      "q.step22.desc": "Ajoutez tout commentaire, question ou information utile (optionnel)",
+      "q.step22.placeholder": "Partagez vos envies, inspirations, contraintes particulières...",
+      
+      // Q23: Email
+      "q.step23.title": "Dernière étape ! 📧",
+      "q.step23.desc": "Où devons-nous envoyer votre itinéraire personnalisé ?",
+      "q.step23.email": "Votre email",
+      "q.step23.name": "Votre nom (optionnel)",
+      
+      // Errors & Success
+      "q.error.quota": "Quota atteint 🚫",
+      "q.error.quota.desc": "Vous avez atteint votre quota de 2 questionnaires par jour. Revenez demain pour planifier un autre voyage !",
+      "q.error.auth": "Connexion requise 🔒",
+      "q.error.auth.desc": "Vous devez être connecté pour soumettre un questionnaire.",
+      "q.error.validation": "Erreur de validation",
+      "q.error.validation.desc": "Certains champs contiennent des données invalides.",
+      "q.error.generic": "Erreur",
+      "q.error.generic.desc": "Une erreur est survenue lors de l'envoi du questionnaire. Veuillez réessayer.",
+      "q.success": "Questionnaire envoyé ! 🎉",
+      "q.success.desc": "Nous vous enverrons votre itinéraire personnalisé sous 48h."
     }
   },
   en: {
@@ -202,7 +425,230 @@ const resources = {
       "footer.terms": "Terms and Conditions",
       "footer.imprint": "Legal Notice",
       "footer.privacy": "Privacy Policy",
-      "footer.copyright": "© 2025 Travliaq. All rights reserved. Made with ❤️ for authentic travelers"
+      "footer.copyright": "© 2025 Travliaq. All rights reserved. Made with ❤️ for authentic travelers",
+      
+      // Questionnaire
+      "q.title": "YOUR CUSTOM TRIP",
+      "q.back": "Back",
+      "q.continue": "Continue",
+      "q.send": "Send 🚀",
+      "q.sending": "Sending...",
+      
+      // Q1: Who's traveling
+      "q.step1.title": "Who's traveling? 👥",
+      "q.step1.solo": "Solo",
+      "q.step1.duo": "Duo",
+      "q.step1.group": "Group 3-5",
+      "q.step1.family": "Family (children <12)",
+      "q.step1b.group.title": "Number of travelers",
+      "q.step1b.family.title": "Number of people (children included) 👨‍👩‍👧‍👦",
+      
+      // Q2: Help needed
+      "q.step2.title": "How can Travliaq help you? 🎯",
+      "q.step2.desc": "Select all services needed",
+      "q.step2.flights": "Flights",
+      "q.step2.accommodation": "Accommodation",
+      "q.step2.activities": "Activities & Suggestions",
+      
+      // Q3: Destination
+      "q.step3.title": "Where do you want to go? 🌍",
+      "q.step3.desc": "Final destination of your trip",
+      "q.step3.yes": "Yes, I have a destination in mind",
+      "q.step3.no": "No, I don't know yet",
+      "q.step3.search": "Search for a destination...",
+      "q.step3.popular": "Popular destinations",
+      
+      // Q4: Departure location
+      "q.step4.title": "Where are you departing from? ✈️",
+      "q.step4.search": "Search your departure city...",
+      "q.step4.detect": "Auto-detect",
+      "q.step4.detecting": "Detecting...",
+      
+      // Q5: Climate
+      "q.step5.title": "What climate do you prefer? 🌡️",
+      "q.step5.desc": "Select all climates you like",
+      "q.step5.hot": "Hot (beach, sun)",
+      "q.step5.mild": "Mild (gentle, pleasant)",
+      "q.step5.cold": "Cold (mountains, snow)",
+      "q.step5.mix": "Mixed (variety)",
+      
+      // Q6: Travel affinities
+      "q.step6.title": "What are your travel interests? 💫",
+      "q.step6.desc": "Choose maximum 3",
+      "q.step6.culture": "Culture (museums, monuments)",
+      "q.step6.nature": "Nature (hiking, parks)",
+      "q.step6.gastro": "Gastronomy",
+      "q.step6.beach": "Beach & Relaxation",
+      "q.step6.nightlife": "Nightlife",
+      "q.step6.shopping": "Shopping",
+      "q.step6.adventure": "Adventure",
+      "q.step6.wellbeing": "Wellness (spa, yoga)",
+      
+      // Q7: Travel ambiance
+      "q.step7.title": "Desired travel atmosphere 🎨",
+      "q.step7.romantic": "Romantic (couple)",
+      "q.step7.family": "Family (with children)",
+      "q.step7.friends": "With friends (party)",
+      "q.step7.relax": "Total relaxation",
+      "q.step7.cultural": "Cultural (learning)",
+      "q.step7.adventure": "Adventure (sports)",
+      
+      // Q8: Dates
+      "q.step8.title": "When do you want to travel? 📅",
+      "q.step8.exact": "I have specific dates",
+      "q.step8.approx": "I have an approximate period",
+      "q.step8.flexible": "I'm flexible",
+      "q.step8.departure": "Departure date",
+      "q.step8.return": "Return date",
+      "q.step8.approx.title": "Do you have an approximate departure period?",
+      "q.step8.approx.yes": "Yes, I have an idea",
+      "q.step8.approx.no": "No, I'm totally flexible",
+      "q.step8.approx.when": "When would you like to leave?",
+      "q.step8.flex.title": "What is your flexibility level? ⏰",
+      "q.step8.flex.days": "±3 days",
+      "q.step8.flex.week": "±1 week",
+      "q.step8.flex.2weeks": "±2 weeks",
+      "q.step8.flex.month": "±1 month",
+      
+      // Q9: Duration
+      "q.step9.title": "Trip duration 📆",
+      "q.step9.1week": "1 week (5-7 days)",
+      "q.step9.2weeks": "2 weeks (10-14 days)",
+      "q.step9.3weeks": "3 weeks (18-21 days)",
+      "q.step9.custom": "Custom duration",
+      "q.step9.nights": "Exact number of nights",
+      
+      // Q10: Budget
+      "q.step10.title": "Budget per person 💰",
+      "q.step10.desc": "Rough estimate",
+      "q.step10.low": "Low budget (< €1000)",
+      "q.step10.mid": "Medium (€1000-3000)",
+      "q.step10.high": "Comfortable (€3000-5000)",
+      "q.step10.premium": "Premium (> €5000)",
+      "q.step10.exact": "Precise budget",
+      "q.step10.custom.title": "Exact budget per person",
+      "q.step10.total": "Total budget",
+      "q.step10.perperson": "Budget per person",
+      "q.step10.amount": "Amount",
+      "q.step10.currency": "Currency",
+      
+      // Q11: Travel styles
+      "q.step11.title": "Travel styles 🎒",
+      "q.step11.desc": "Select all that apply",
+      "q.step11.backpacker": "Backpacker (hostels, budget)",
+      "q.step11.comfort": "Comfort (3-4⭐ hotels)",
+      "q.step11.premium": "Premium (5⭐ hotels, luxury)",
+      "q.step11.authentic": "Authentic (local, immersion)",
+      "q.step11.classic": "Classic (must-sees)",
+      "q.step11.offbeat": "Off the beaten path",
+      
+      // Q12: Rhythm
+      "q.step12.title": "Trip pace 🕐",
+      "q.step12.slow": "Slow travel (take your time)",
+      "q.step12.balanced": "Balanced (mix relaxation/visits)",
+      "q.step12.intense": "Intense (packed schedule)",
+      
+      // Q13: Flight preference
+      "q.step13.title": "Flight preference ✈️",
+      "q.step13.direct": "Direct only",
+      "q.step13.1stop": "Max 1 layover",
+      "q.step13.any": "Doesn't matter (best price)",
+      
+      // Q14: Luggage
+      "q.step14.title": "Luggage per traveler 🧳",
+      "q.step14.cabin": "Cabin luggage",
+      "q.step14.hold": "Checked luggage",
+      "q.step14.both": "Cabin + Checked",
+      
+      // Q15: Mobility
+      "q.step15.title": "Mobility & Accessibility ♿",
+      "q.step15.desc": "Select all that apply",
+      "q.step15.none": "No constraints",
+      "q.step15.wheelchair": "Wheelchair",
+      "q.step15.walking": "Difficulty walking long distances",
+      "q.step15.elevator": "Need elevator",
+      "q.step15.stairs": "Avoid stairs",
+      
+      // Q16: Accommodation type
+      "q.step16.title": "Accommodation type 🏨",
+      "q.step16.desc": "Choose all that suit you",
+      "q.step16.hotel": "Hotel",
+      "q.step16.airbnb": "Airbnb/Rental",
+      "q.step16.hostel": "Hostel",
+      "q.step16.resort": "Resort/All-inclusive",
+      "q.step16.boutique": "Boutique hotel",
+      "q.step16b.title": "Hotel preferences 🏨",
+      "q.step16b.desc": "Select what interests you",
+      "q.step16b.breakfast": "Breakfast included",
+      "q.step16b.halfboard": "Half-board",
+      "q.step16b.fullboard": "Full-board",
+      "q.step16b.allinc": "All-inclusive",
+      "q.step16b.room": "Room service",
+      
+      // Q17: Comfort
+      "q.step17.title": "Expected comfort level 🛏️",
+      "q.step17.simple": "Simple (basic cleanliness)",
+      "q.step17.standard": "Standard (comfortable)",
+      "q.step17.superior": "Superior (very comfortable)",
+      "q.step17.luxury": "Luxury (5 stars)",
+      
+      // Q18: Neighborhood
+      "q.step18.title": "Accommodation location 📍",
+      "q.step18.center": "City center (easy access)",
+      "q.step18.quiet": "Quiet area (remote)",
+      "q.step18.transport": "Near transport",
+      "q.step18.attractions": "Near attractions",
+      
+      // Q19: Amenities
+      "q.step19.title": "Desired amenities 🏊",
+      "q.step19.desc": "Select all important to you",
+      "q.step19.wifi": "Wi-Fi",
+      "q.step19.pool": "Pool",
+      "q.step19.gym": "Gym",
+      "q.step19.spa": "Spa",
+      "q.step19.restaurant": "On-site restaurant",
+      "q.step19.parking": "Parking",
+      "q.step19.ac": "Air conditioning",
+      "q.step19.kitchen": "Equipped kitchen",
+      
+      // Q20: Constraints
+      "q.step20.title": "Constraints & preferences 🎯",
+      "q.step20.desc": "Select all important options",
+      "q.step20.halal": "Halal",
+      "q.step20.kosher": "Kosher",
+      "q.step20.vege": "Vegetarian",
+      "q.step20.vegan": "Vegan",
+      "q.step20.gluten": "Gluten-free",
+      "q.step20.allergies": "Food allergies",
+      "q.step20.none": "No constraints",
+      
+      // Q21: Additional info
+      "q.step21.title": "Additional information 📝",
+      "q.step21.desc": "Specify your expectations, constraints or special preferences (optional)",
+      "q.step21.placeholder": "E.g.: birthday, food allergies, specific accessibility...",
+      
+      // Q22: Open comments
+      "q.step22.title": "Free text 💭",
+      "q.step22.desc": "Add any comments, questions or useful information (optional)",
+      "q.step22.placeholder": "Share your desires, inspirations, special constraints...",
+      
+      // Q23: Email
+      "q.step23.title": "Last step! 📧",
+      "q.step23.desc": "Where should we send your personalized itinerary?",
+      "q.step23.email": "Your email",
+      "q.step23.name": "Your name (optional)",
+      
+      // Errors & Success
+      "q.error.quota": "Quota reached 🚫",
+      "q.error.quota.desc": "You have reached your quota of 2 questionnaires per day. Come back tomorrow to plan another trip!",
+      "q.error.auth": "Login required 🔒",
+      "q.error.auth.desc": "You must be logged in to submit a questionnaire.",
+      "q.error.validation": "Validation error",
+      "q.error.validation.desc": "Some fields contain invalid data.",
+      "q.error.generic": "Error",
+      "q.error.generic.desc": "An error occurred while submitting the questionnaire. Please try again.",
+      "q.success": "Questionnaire submitted! 🎉",
+      "q.success.desc": "We'll send you your personalized itinerary within 48 hours."
     }
   }
 };
