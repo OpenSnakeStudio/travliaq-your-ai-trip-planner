@@ -37,18 +37,42 @@ export const useFilteredCities = (searchTerm: string, cities: City[] | undefined
     'Berlin','Munich','Hamburg','Cologne','Frankfurt','Stuttgart','Düsseldorf','Dortmund','Leipzig','Bremen','Dresden','Nuremberg','Hanover'
   ]);
 
-  if (!searchTerm) {
+  if (!searchTerm || searchTerm.trim() === '') {
     return cities
-      .slice(0, 50)
+      .slice(0, 100)
       .sort((a, b) => (priorityNames.has(b.name) ? 1 : 0) - (priorityNames.has(a.name) ? 1 : 0));
   }
 
-  const lowerSearch = searchTerm.toLowerCase();
+  const lowerSearch = searchTerm.toLowerCase().trim();
+  
   return cities
-    .filter((city) =>
-      city.search_text.includes(lowerSearch) ||
-      city.name.toLowerCase().includes(lowerSearch) ||
-      city.country.toLowerCase().includes(lowerSearch)
-    )
+    .filter((city) => {
+      const nameMatch = city.name.toLowerCase().includes(lowerSearch);
+      const countryMatch = city.country.toLowerCase().includes(lowerSearch);
+      const searchTextMatch = city.search_text && city.search_text.includes(lowerSearch);
+      
+      return nameMatch || countryMatch || searchTextMatch;
+    })
+    .sort((a, b) => {
+      // Prioritize exact name matches
+      const aExact = a.name.toLowerCase() === lowerSearch;
+      const bExact = b.name.toLowerCase() === lowerSearch;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      
+      // Then prioritize name starts with search
+      const aStarts = a.name.toLowerCase().startsWith(lowerSearch);
+      const bStarts = b.name.toLowerCase().startsWith(lowerSearch);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      
+      // Finally prioritize popular cities
+      const aPriority = priorityNames.has(a.name);
+      const bPriority = priorityNames.has(b.name);
+      if (aPriority && !bPriority) return -1;
+      if (!aPriority && bPriority) return 1;
+      
+      return 0;
+    })
     .slice(0, 100);
 };
