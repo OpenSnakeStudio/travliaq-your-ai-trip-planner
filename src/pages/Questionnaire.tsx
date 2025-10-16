@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -342,6 +343,7 @@ const majorCities = [
 ];
 
 const Questionnaire = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   
   // Load cities from database
@@ -597,8 +599,8 @@ const Questionnaire = () => {
       // CRITICAL: Require authentication before submission
       if (!user) {
         toast({
-          title: "Connexion requise 🔒",
-          description: "Vous devez être connecté pour soumettre un questionnaire.",
+          title: t('questionnaire.connectionRequired'),
+          description: t('questionnaire.mustBeConnected'),
           variant: "destructive",
           duration: 6000
         });
@@ -699,8 +701,8 @@ const Questionnaire = () => {
       triggerCelebration();
       
       toast({
-        title: "Questionnaire envoyé ! 🎉",
-        description: "Nous vous enverrons votre itinéraire personnalisé sous 48h.",
+        title: t('questionnaire.submittedTitle'),
+        description: t('questionnaire.submittedDescription'),
       });
 
       // If user is already authenticated, redirect to home after a few seconds
@@ -723,8 +725,8 @@ const Questionnaire = () => {
       if (error && typeof error === 'object' && 'message' in error && 
           typeof error.message === 'string' && error.message.includes('quota_exceeded')) {
         toast({
-          title: "Quota atteint 🚫",
-          description: "Vous avez atteint votre quota de 2 questionnaires par jour. Revenez demain pour planifier un autre voyage !",
+          title: t('questionnaire.quotaReached'),
+          description: t('questionnaire.quotaExceeded'),
           variant: "destructive",
           duration: 5000
         });
@@ -738,8 +740,8 @@ const Questionnaire = () => {
       if (error && typeof error === 'object' && 'message' in error && 
           typeof error.message === 'string' && error.message.includes('authentication_required')) {
         toast({
-          title: "Connexion requise 🔒",
-          description: "Vous devez être connecté pour soumettre un questionnaire.",
+          title: t('questionnaire.connectionRequired'),
+          description: t('questionnaire.mustBeConnected'),
           variant: "destructive",
           duration: 6000
         });
@@ -749,14 +751,14 @@ const Questionnaire = () => {
       
       if (error instanceof z.ZodError) {
         toast({
-          title: "Erreur de validation",
-          description: error.errors[0]?.message || "Certains champs contiennent des données invalides.",
+          title: t('questionnaire.validationError'),
+          description: error.errors[0]?.message || t('questionnaire.invalidData'),
           variant: "destructive"
         });
       } else {
         toast({
-          title: "Erreur",
-          description: "Une erreur est survenue lors de l'envoi du questionnaire. Veuillez réessayer.",
+          title: t('questionnaire.error'),
+          description: t('questionnaire.submissionError'),
           variant: "destructive"
         });
       }
@@ -802,14 +804,14 @@ const Questionnaire = () => {
       return (
         <div className="space-y-6 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center bg-gradient-to-r from-travliaq-deep-blue to-travliaq-turquoise bg-clip-text text-transparent">
-            Qui voyage ? 👥
+            {t('questionnaire.whoTraveling')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Solo", icon: "🧳" },
-              { label: "Duo", icon: "👥" },
-              { label: "Groupe 3-5", icon: "👨‍👩‍👧" },
-              { label: "Famille (enfants <12)", icon: "👨‍👩‍👧‍👦" }
+              { label: t('questionnaire.solo'), icon: "🧳" },
+              { label: t('questionnaire.duo'), icon: "👥" },
+              { label: t('questionnaire.group35'), icon: "👨‍👩‍👧" },
+              { label: t('questionnaire.family'), icon: "👨‍👩‍👧‍👦" }
             ].map((option) => (
               <Card
                 key={option.label}
@@ -840,7 +842,7 @@ const Questionnaire = () => {
         return (
           <div className="space-y-4 animate-fade-up">
             <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
-              Nombre de personnes (enfants inclus) 👨‍👩‍👧‍👦
+              {t('questionnaire.numberOfPeople')}
             </h2>
             <div className="max-w-xl mx-auto space-y-4">
               <Input
@@ -861,7 +863,7 @@ const Questionnaire = () => {
                   disabled={!answers.numberOfTravelers || answers.numberOfTravelers < 2}
                   className="bg-travliaq-deep-blue"
                 >
-                  Continuer
+                  {t('questionnaire.continue')}
                 </Button>
               </div>
             </div>
@@ -872,13 +874,13 @@ const Questionnaire = () => {
         return (
           <div className="space-y-8 animate-fade-up">
             <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-              Combien de personnes exactement ? 👥
+              {t('questionnaire.howManyPeople')}
             </h2>
             <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto">
               {[
-                { label: "3 personnes", value: 3, icon: "👥" },
-                { label: "4 personnes", value: 4, icon: "👨‍👩‍👧" },
-                { label: "5 personnes", value: 5, icon: "👨‍👩‍👧‍👦" }
+                { label: t('questionnaire.3people'), value: 3, icon: "👥" },
+                { label: t('questionnaire.4people'), value: 4, icon: "👨‍👩‍👧" },
+                { label: t('questionnaire.5people'), value: 5, icon: "👨‍👩‍👧‍👦" }
               ].map((option) => (
                 <Card
                   key={option.value}
@@ -908,12 +910,12 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Tu as déjà une destination en tête ? 🌍
+            {t('questionnaire.destinationInMind')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Oui", icon: "✅" },
-              { label: "Non", icon: "🤔" }
+              { label: t('questionnaire.yes'), icon: "✅" },
+              { label: t('questionnaire.no'), icon: "🤔" }
             ].map((option) => (
               <Card
                 key={option.label}
@@ -939,9 +941,9 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Comment Travliaq peut vous aider ? 🎯
+            {t('questionnaire.howCanHelp')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélection multiple possible</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
               { label: "Vols", icon: "✈️", desc: "Billets d'avion" },
@@ -980,7 +982,7 @@ const Questionnaire = () => {
               disabled={!answers.helpWith || answers.helpWith.length === 0}
               className="bg-travliaq-deep-blue"
             >
-              Continuer
+              {t('questionnaire.continue')}
             </Button>
           </div>
         </div>
@@ -1000,7 +1002,7 @@ const Questionnaire = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-travliaq-deep-blue flex items-center gap-1.5">
-                  D'où pars-tu ? 📍
+                  {t('questionnaire.whereFrom')}
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1010,7 +1012,7 @@ const Questionnaire = () => {
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
                         <p className="text-xs">
-                          Vous pouvez saisir n'importe quelle ville, même si elle n'apparaît pas dans la liste. L'IA comprendra votre point de départ si vous l'orthographiez correctement.
+                          {t('questionnaire.cityTooltip')}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -1026,12 +1028,12 @@ const Questionnaire = () => {
                   {isLoadingLocation ? (
                     <>
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      Détection...
+                      {t('questionnaire.detecting')}
                     </>
                   ) : (
                     <>
                       <MapPin className="mr-1 h-3 w-3" />
-                      Ma position
+                      {t('questionnaire.myPosition')}
                     </>
                   )}
                 </Button>
@@ -1039,7 +1041,7 @@ const Questionnaire = () => {
               <div className="relative">
                 <Input
                   ref={departureInputRef}
-                  placeholder="Ville de départ"
+                  placeholder={t('questionnaire.departureCity')}
                   className="h-12 text-base"
                   value={answers.departureLocation || departureSearch}
                   onChange={(e) => {
@@ -1081,7 +1083,7 @@ const Questionnaire = () => {
             {/* Destination */}
             <div>
               <label className="block text-sm font-medium mb-2 text-travliaq-deep-blue flex items-center gap-1.5">
-                Où vas-tu ? 🌍
+                {t('questionnaire.whereGoing')}
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1100,7 +1102,7 @@ const Questionnaire = () => {
               <div className="relative">
                 <Input
                   ref={cityInputRef}
-                  placeholder="Ville de destination..."
+                  placeholder={t('questionnaire.destinationCity')}
                   className="h-12 text-base"
                   value={answers.destination || citySearch}
                   onChange={(e) => {
@@ -1148,7 +1150,7 @@ const Questionnaire = () => {
                 disabled={!answers.destination || answers.destination.trim() === "" || !answers.departureLocation || answers.departureLocation.trim() === ""}
                 className="bg-travliaq-deep-blue"
               >
-                Continuer
+                {t('questionnaire.continue')}
               </Button>
             </div>
           </div>
@@ -1162,9 +1164,9 @@ const Questionnaire = () => {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
-            Quel type de climat recherches-tu ? 🌡️
+            {t('questionnaire.climatePreference')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélection multiple possible</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {[
               { label: "Chaud & ensoleillé", icon: "☀️", desc: "25-35°C" },
@@ -2526,7 +2528,7 @@ const Questionnaire = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-center gap-4">
             <h1 className="text-xl md:text-2xl font-montserrat font-bold bg-gradient-to-r from-travliaq-deep-blue via-travliaq-turquoise to-travliaq-deep-blue bg-clip-text text-transparent">
-              VOTRE VOYAGE SUR MESURE
+              {t('questionnaire.customTrip')}
             </h1>
             <div className="flex items-center gap-2 bg-gradient-to-r from-travliaq-turquoise/20 to-travliaq-golden-sand/20 px-4 py-2 rounded-full border border-travliaq-turquoise/30 shadow-sm">
               <span className="text-xs text-travliaq-deep-blue/70 font-medium">
@@ -2550,7 +2552,7 @@ const Questionnaire = () => {
             className="mb-3 text-travliaq-deep-blue hover:text-travliaq-turquoise hover:bg-travliaq-turquoise/10 transition-all"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
-            Retour
+            {t('questionnaire.back')}
           </Button>
         )}
 
