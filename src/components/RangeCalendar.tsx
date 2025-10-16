@@ -1,7 +1,8 @@
 import * as React from "react";
 import { addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isSameMonth, isWithinInterval, format, isBefore, type Locale, type Day } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import { fr as frLocale } from "date-fns/locale";
+import { fr as frLocale, enUS as enLocale } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 
@@ -32,10 +33,12 @@ export const RangeCalendar: React.FC<RangeCalendarProps> = ({
   onChange,
   numberOfMonths,
   disabled,
-  locale = frLocale,
+  locale: customLocale,
   weekStartsOn = 1,
   className,
 }) => {
+  const { i18n } = useTranslation();
+  const locale = customLocale || (i18n.language === 'fr' ? frLocale : enLocale);
   const [baseMonth, setBaseMonth] = React.useState<Date>(startOfMonth(new Date()));
   const [isMobile, setIsMobile] = React.useState(false);
 
@@ -118,7 +121,7 @@ export const RangeCalendar: React.FC<RangeCalendarProps> = ({
           type="button"
           className="h-8 w-8 rounded-md border border-border hover:bg-accent flex items-center justify-center"
           onClick={() => setBaseMonth(addMonths(baseMonth, -1))}
-          aria-label="Mois précédent"
+          aria-label={i18n.language === 'fr' ? "Mois précédent" : "Previous month"}
         >
           ‹
         </button>
@@ -126,7 +129,7 @@ export const RangeCalendar: React.FC<RangeCalendarProps> = ({
           type="button"
           className="h-8 w-8 rounded-md border border-border hover:bg-accent flex items-center justify-center"
           onClick={() => setBaseMonth(addMonths(baseMonth, 1))}
-          aria-label="Mois suivant"
+          aria-label={i18n.language === 'fr' ? "Mois suivant" : "Next month"}
         >
           ›
         </button>

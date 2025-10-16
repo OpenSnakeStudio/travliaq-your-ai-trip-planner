@@ -2,7 +2,8 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, startOfWeek, endOfWeek } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface SimpleDatePickerProps {
   selected?: Date;
@@ -11,15 +12,22 @@ interface SimpleDatePickerProps {
 }
 
 export function SimpleDatePicker({ selected, onSelect, minDate = new Date() }: SimpleDatePickerProps) {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === 'fr' ? fr : enUS;
   const [currentMonth, setCurrentMonth] = useState(selected || new Date());
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const startDate = startOfWeek(monthStart, { locale: fr });
-  const endDate = endOfWeek(monthEnd, { locale: fr });
+  const startDate = startOfWeek(monthStart, { locale });
+  const endDate = endOfWeek(monthEnd, { locale });
 
   const days = eachDayOfInterval({ start: startDate, end: endDate });
-  const weekDays = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
+  
+  // Week days - use locale-specific format
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const day = addMonths(startDate, 0);
+    return format(new Date(day.getTime() + i * 24 * 60 * 60 * 1000), 'EEEEEE', { locale });
+  });
 
   const handlePrevMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1));
@@ -47,7 +55,7 @@ export function SimpleDatePicker({ selected, onSelect, minDate = new Date() }: S
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <h3 className="text-base font-semibold text-travliaq-deep-blue">
-          {format(currentMonth, "MMMM yyyy", { locale: fr })}
+          {format(currentMonth, "MMMM yyyy", { locale })}
         </h3>
         <Button
           variant="ghost"

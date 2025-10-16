@@ -1452,13 +1452,13 @@ const Questionnaire = () => {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
-            Quelle souplesse ? 🔄
+            {t('questionnaire.flexibility.souplesse')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "±0j", icon: "🎯" },
-              { label: "±3j", icon: "📅" },
-              { label: "±7j", icon: "🗓️" }
+              { label: t('questionnaire.flexibility.0days'), icon: "🎯" },
+              { label: t('questionnaire.flexibility.3days'), icon: "📅" },
+              { label: t('questionnaire.flexibility.7days'), icon: "🗓️" }
             ].map((option) => (
               <Card
                 key={option.label}
@@ -1519,11 +1519,11 @@ const Questionnaire = () => {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
-            Quelle est votre date de départ approximative ? 📆
+            {t('questionnaire.flexibility.approxDate')}
           </h2>
           <div className="max-w-2xl mx-auto space-y-3">
             <p className="text-center text-sm text-muted-foreground">
-              Cliquez sur une date (cette date servira de référence pour votre flexibilité)
+              {t('questionnaire.flexibility.clickDate')}
             </p>
             
             <div className="flex flex-col items-center gap-4">
@@ -1539,13 +1539,13 @@ const Questionnaire = () => {
               />
 
               {approximateDate && (
-                <div className="flex flex-col items-center gap-3 w-full max-w-md">
-                  <div className="text-center p-4 bg-travliaq-sky-blue/10 rounded-lg border border-travliaq-deep-blue/20 w-full">
-                    <p className="text-lg text-travliaq-deep-blue">
-                      <span className="font-semibold">Date sélectionnée :</span>{" "}
-                      {format(approximateDate, "d MMMM yyyy", { locale: fr })}
-                    </p>
-                  </div>
+                  <div className="flex flex-col items-center gap-3 w-full max-w-md">
+                    <div className="text-center p-4 bg-travliaq-sky-blue/10 rounded-lg border border-travliaq-deep-blue/20 w-full">
+                      <p className="text-lg text-travliaq-deep-blue">
+                        <span className="font-semibold">{t('questionnaire.flexibility.dateSelected')}</span>{" "}
+                        {format(approximateDate, "d MMMM yyyy", { locale: fr })}
+                      </p>
+                    </div>
                   <Button
                     variant="outline"
                     size="sm"
@@ -1663,14 +1663,14 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.budget.excluding')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
+              { label: t('questionnaire.budget.dontKnow'), icon: "🤷" },
+              { label: t('questionnaire.budget.precise'), icon: "🎯" },
               { label: t('questionnaire.budget.less300'), icon: "💵" },
               { label: t('questionnaire.budget.300to600'), icon: "💶" },
               { label: t('questionnaire.budget.600to900'), icon: "💷" },
               { label: t('questionnaire.budget.900to1200'), icon: "💴" },
               { label: t('questionnaire.budget.1200to1800'), icon: "💸" },
-              { label: t('questionnaire.budget.more1800'), icon: "💎" },
-              { label: t('questionnaire.budget.dontKnow'), icon: "🤷" },
-              { label: t('questionnaire.budget.precise'), icon: "🎯" }
+              { label: t('questionnaire.budget.more1800'), icon: "💎" }
             ].map((option) => (
               <Card
                 key={option.label}
@@ -1959,8 +1959,10 @@ const Questionnaire = () => {
     }
     if ((answers.helpWith || []).includes(t('questionnaire.flights'))) stepCounter++;
 
-    // Step 10: Mobilité (multi-choix + exhaustif)
-    if (step === stepCounter) {
+    // Step 10: Mobilité (multi-choix + exhaustif) - SEULEMENT si pas uniquement vols
+    const helpWith = answers.helpWith || [];
+    const onlyFlights = helpWith.length === 1 && helpWith.includes(t('questionnaire.flights'));
+    if (!onlyFlights && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2033,7 +2035,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    stepCounter++;
+    if (!onlyFlights) stepCounter++;
 
     // Step 11: Type hébergement (max 2 + "Peu importe") - SEULEMENT si hébergement sélectionné
     if ((answers.helpWith || []).includes(t('questionnaire.accommodation')) && step === stepCounter) {
