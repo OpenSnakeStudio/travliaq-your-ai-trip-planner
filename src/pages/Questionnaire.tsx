@@ -705,6 +705,21 @@ const Questionnaire = () => {
         console.error("Questionnaire submission error:", error);
       }
       
+      // Check if it's a quota exceeded error
+      if (error && typeof error === 'object' && 'message' in error && 
+          typeof error.message === 'string' && error.message.includes('quota_exceeded')) {
+        toast({
+          title: "Quota atteint 🚫",
+          description: "Vous avez atteint votre quota de 2 questionnaires par jour. Revenez demain pour planifier un autre voyage !",
+          variant: "destructive",
+          duration: 8000
+        });
+        setTimeout(() => {
+          navigate('/');
+        }, 8500);
+        return;
+      }
+      
       if (error instanceof z.ZodError) {
         toast({
           title: "Erreur de validation",

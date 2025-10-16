@@ -90,7 +90,10 @@ const GoogleLoginPopup = ({ onClose, onSuccess }: GoogleLoginPopupProps) => {
             </Button>
 
             <Button
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                window.location.href = '/';
+              }}
               variant="ghost"
               className="w-full text-gray-500 hover:text-gray-700"
               size="lg"

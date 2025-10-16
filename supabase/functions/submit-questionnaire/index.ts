@@ -155,6 +155,36 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
+    console.log('Checking daily quota for:', questionnaireData.email);
+    
+    // Check how many questionnaires this email has submitted in the last 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentSubmissions, error: countError } = await supabase
+      .from('questionnaire_responses')
+      .select('id', { count: 'exact', head: false })
+      .eq('email', questionnaireData.email)
+      .gte('created_at', twentyFourHoursAgo);
+    
+    if (countError) {
+      console.error('Error checking quota:', countError.message);
+      return new Response(
+        JSON.stringify({ error: 'Failed to check submission quota' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Check if user has reached the daily limit of 2 submissions
+    if (recentSubmissions && recentSubmissions.length >= 2) {
+      console.log('Daily quota exceeded for:', questionnaireData.email);
+      return new Response(
+        JSON.stringify({ 
+          error: 'quota_exceeded',
+          message: 'Vous avez atteint votre quota de 2 questionnaires par jour. Revenez demain pour planifier un autre voyage !' 
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('Inserting questionnaire response for:', questionnaireData.email);
     
     // Insert the questionnaire response
