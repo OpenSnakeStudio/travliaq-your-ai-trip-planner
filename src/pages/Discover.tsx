@@ -53,23 +53,23 @@ const Discover = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const filters = [
-    { id: "budget", label: "< 800€", icon: DollarSign, filter: (t: Trip) => {
+    { id: "budget", label: t('discover.filters.budget'), icon: DollarSign, filter: (t: Trip) => {
       const price = parseFloat(t.total_price || t.total_budget || "9999");
       return price < 800;
     }},
-    { id: "group", label: "En groupe", icon: Users, filter: (t: Trip) => 
+    { id: "group", label: t('discover.filters.group'), icon: Users, filter: (t: Trip) => 
       t.travel_style?.toLowerCase().includes("groupe") || t.travel_style?.toLowerCase().includes("group")
     },
-    { id: "adventure", label: "Aventure", icon: Mountain, filter: (t: Trip) => 
+    { id: "adventure", label: t('discover.filters.adventure'), icon: Mountain, filter: (t: Trip) => 
       t.travel_style?.toLowerCase().includes("aventure") || t.travel_style?.toLowerCase().includes("adventure")
     },
-    { id: "nature", label: "Nature", icon: Palmtree, filter: (t: Trip) => 
+    { id: "nature", label: t('discover.filters.nature'), icon: Palmtree, filter: (t: Trip) => 
       t.travel_style?.toLowerCase().includes("nature") || t.destination.toLowerCase().includes("montagne")
     },
-    { id: "culture", label: "Culture", icon: Building2, filter: (t: Trip) => 
+    { id: "culture", label: t('discover.filters.culture'), icon: Building2, filter: (t: Trip) => 
       t.travel_style?.toLowerCase().includes("culture") || t.travel_style?.toLowerCase().includes("découverte")
     },
-    { id: "exploration", label: "Exploration", icon: Compass, filter: (t: Trip) => 
+    { id: "exploration", label: t('discover.filters.exploration'), icon: Compass, filter: (t: Trip) => 
       t.travel_style?.toLowerCase().includes("exploration") || t.travel_style?.toLowerCase().includes("découverte")
     }
   ];
@@ -114,8 +114,8 @@ const Discover = () => {
     } catch (error) {
       console.error("Error fetching trips:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de charger les voyages",
+        title: t('discover.error'),
+        description: t('discover.errorLoading'),
         variant: "destructive",
       });
     } finally {
@@ -130,7 +130,7 @@ const Discover = () => {
   const handleShare = (trip: Trip, platform: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const url = `${window.location.origin}/recommendations/${trip.code}`;
-    const text = `Découvrez ce voyage incroyable : ${trip.destination}`;
+    const text = t('discover.shareText', { destination: trip.destination });
     
     const shareUrls: Record<string, string> = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
@@ -143,8 +143,8 @@ const Discover = () => {
     if (platform === 'copy') {
       navigator.clipboard.writeText(url);
       toast({
-        title: "Lien copié ! 🎉",
-        description: "Le lien du voyage a été copié dans votre presse-papier",
+        title: t('discover.linkCopied'),
+        description: t('discover.linkCopiedDescription'),
       });
     } else {
       window.open(shareUrls[platform], '_blank', 'width=600,height=400');
@@ -184,12 +184,12 @@ const Discover = () => {
           <div className="flex items-center justify-center mb-4">
             <Globe2 className="w-8 h-8 text-travliaq-turquoise animate-pulse mr-3" />
             <h1 className="text-3xl md:text-5xl font-montserrat font-bold bg-gradient-to-r from-travliaq-turquoise via-travliaq-golden-sand to-travliaq-turquoise bg-clip-text text-transparent animate-gradient">
-              DÉCOUVREZ LES VOYAGES
+              {t('discover.title')}
             </h1>
             <Sparkles className="w-8 h-8 text-travliaq-golden-sand animate-pulse ml-3" />
           </div>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            Explorez notre collection de voyages uniques, conçus sur mesure pour des expériences inoubliables
+            {t('discover.subtitle')}
           </p>
         </div>
 
@@ -199,7 +199,7 @@ const Discover = () => {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-travliaq-turquoise group-hover:text-travliaq-golden-sand transition-colors" />
             <Input
               type="text"
-              placeholder="Rechercher une destination, un style de voyage..."
+              placeholder={t('discover.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-12 pr-4 py-5 bg-white/5 border-2 border-travliaq-turquoise/30 rounded-2xl text-white placeholder:text-gray-400 focus:border-travliaq-golden-sand focus:ring-2 focus:ring-travliaq-golden-sand/50 backdrop-blur-sm hover:bg-white/10 transition-all"
@@ -236,7 +236,7 @@ const Discover = () => {
         {filteredTrips.length === 0 ? (
           <div className="text-center py-20">
             <Globe2 className="w-20 h-20 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-xl">Aucun voyage trouvé</p>
+            <p className="text-gray-400 text-xl">{t('discover.noTrips')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -264,7 +264,7 @@ const Discover = () => {
                   })() && (
                     <Badge className="absolute top-4 left-4 bg-travliaq-golden-sand text-black font-bold px-3 py-1 animate-pulse">
                       <Sparkles className="w-3 h-3 mr-1" />
-                      NOUVEAU
+                      {t('discover.newBadge')}
                     </Badge>
                   )}
 
@@ -294,7 +294,7 @@ const Discover = () => {
                         Telegram
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => handleShare(trip, 'copy', e)} className="text-white hover:text-travliaq-turquoise cursor-pointer">
-                        Copier le lien
+                        {t('discover.shareLink')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -312,7 +312,7 @@ const Discover = () => {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center text-travliaq-turquoise">
                       <Clock className="w-4 h-4 mr-2" />
-                      <span>{trip.total_days} jours</span>
+                      <span>{trip.total_days} {t('discover.days')}</span>
                     </div>
                     {trip.average_weather && (
                       <div className="flex items-center text-travliaq-golden-sand">
@@ -331,7 +331,7 @@ const Discover = () => {
 
                   {(trip.total_price || trip.total_budget) && (
                     <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                      <span className="text-gray-400 text-sm">À partir de</span>
+                      <span className="text-gray-400 text-sm">{t('discover.from')}</span>
                       <span className="text-xl font-bold text-travliaq-golden-sand flex items-center">
                         <DollarSign className="w-5 h-5 mr-1" />
                         {trip.total_price || trip.total_budget}
@@ -343,7 +343,7 @@ const Discover = () => {
                     className="w-full bg-gradient-to-r from-travliaq-turquoise to-travliaq-deep-blue hover:from-travliaq-golden-sand hover:to-travliaq-turquoise text-white font-semibold py-2 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-travliaq-turquoise/50 text-sm"
                     onClick={() => handleTripClick(trip.code)}
                   >
-                    Découvrir
+                    {t('discover.discover')}
                     <Sparkles className="w-3 h-3 ml-2" />
                   </Button>
                 </div>
