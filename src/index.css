@@ -166,3 +166,22 @@ All colors MUST be HSL.
   background: hsl(var(--primary) / 0.6);
 }
 
+/* Custom animations for Travliaq */
+@keyframes adventure-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(2deg); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-adventure-float {
+  animation: adventure-float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+

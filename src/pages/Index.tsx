@@ -19,7 +19,7 @@ const Index = () => {
       const timer = setTimeout(() => {
         toast.info(t('toast.login'), {
           duration: 8000,
-          position: "top-right",
+          position: "bottom-right",
           action: {
             label: t('toast.loginButton'),
             onClick: async () => {

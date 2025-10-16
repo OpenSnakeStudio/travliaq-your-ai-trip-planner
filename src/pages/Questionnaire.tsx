@@ -758,8 +758,8 @@ const Questionnaire = () => {
     // Step 1: Qui voyage
     if (step === stepCounter) {
       return (
-        <div className="space-y-4 animate-fade-up">
-          <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
+        <div className="space-y-6 animate-fade-up">
+          <h2 className="text-2xl md:text-3xl font-bold text-center bg-gradient-to-r from-travliaq-deep-blue to-travliaq-turquoise bg-clip-text text-transparent">
             Qui voyage ? 👥
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -771,11 +771,15 @@ const Questionnaire = () => {
             ].map((option) => (
               <Card
                 key={option.label}
-                className="p-6 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
+                className={`p-6 cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${
+                  answers.travelGroup === option.label 
+                    ? 'border-travliaq-turquoise bg-gradient-to-br from-travliaq-turquoise/10 to-travliaq-golden-sand/10 shadow-xl' 
+                    : 'border-transparent hover:border-travliaq-turquoise/50 hover:shadow-lg'
+                }`}
                 onClick={() => handleChoice("travelGroup", option.label)}
               >
                 <div className="flex items-center space-x-4">
-                  <span className="text-4xl">{option.icon}</span>
+                  <span className="text-5xl">{option.icon}</span>
                   <span className="text-lg font-semibold text-travliaq-deep-blue">
                     {option.label}
                   </span>
@@ -2453,32 +2457,36 @@ const Questionnaire = () => {
 
   return (
     <div 
-      className="min-h-screen bg-gradient-to-br from-travliaq-sky-blue via-white to-travliaq-golden-sand/20"
+      className="min-h-screen bg-gradient-to-br from-travliaq-deep-blue/5 via-white to-travliaq-turquoise/10 relative overflow-hidden"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
+      {/* Background decorative elements */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-travliaq-turquoise/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-travliaq-golden-sand/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
+      
       {/* Navigation minimale */}
       <Navigation variant="minimal" />
       
       {/* Progress Bar améliorée */}
-      <div className="fixed top-0 left-0 right-0 h-2 bg-gradient-to-r from-gray-200 to-gray-300 z-50 shadow-sm">
+      <div className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-gray-100 to-gray-200 z-50 shadow-md">
         <div 
-          className="h-full bg-gradient-to-r from-travliaq-deep-blue via-travliaq-turquoise to-travliaq-golden-sand transition-all duration-500 ease-out relative overflow-hidden"
+          className="h-full bg-gradient-to-r from-travliaq-deep-blue via-travliaq-turquoise to-travliaq-golden-sand transition-all duration-500 ease-out relative overflow-hidden shadow-lg"
           style={{ width: `${progress}%` }}
         >
-          <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
         </div>
       </div>
 
       {/* Header ultra-compact */}
-      <div className="pt-20 pb-3 px-4">
+      <div className="pt-20 pb-4 px-4">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-center gap-4">
-            <h1 className="text-lg md:text-xl font-montserrat font-bold text-travliaq-deep-blue">
+            <h1 className="text-xl md:text-2xl font-montserrat font-bold bg-gradient-to-r from-travliaq-deep-blue via-travliaq-turquoise to-travliaq-deep-blue bg-clip-text text-transparent">
               VOTRE VOYAGE SUR MESURE
             </h1>
-            <div className="flex items-center gap-2 bg-travliaq-golden-sand/20 px-3 py-1 rounded-full">
+            <div className="flex items-center gap-2 bg-gradient-to-r from-travliaq-turquoise/20 to-travliaq-golden-sand/20 px-4 py-2 rounded-full border border-travliaq-turquoise/30 shadow-sm">
               <span className="text-xs text-travliaq-deep-blue/70 font-medium">
                 {step}/{totalSteps}
               </span>
@@ -2491,20 +2499,20 @@ const Questionnaire = () => {
       </div>
 
       {/* Content compact */}
-      <div className="max-w-3xl mx-auto px-4 py-2">
+      <div className="max-w-3xl mx-auto px-4 py-2 relative z-10">
         {step > 1 && (
           <Button
             variant="ghost"
             size="sm"
             onClick={prevStep}
-            className="mb-2 text-travliaq-deep-blue hover:text-travliaq-deep-blue/80"
+            className="mb-3 text-travliaq-deep-blue hover:text-travliaq-turquoise hover:bg-travliaq-turquoise/10 transition-all"
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             Retour
           </Button>
         )}
 
-        <div className="bg-white rounded-xl shadow-adventure p-5 md:p-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-travliaq-turquoise/20 p-6 md:p-8 transition-all hover:shadow-[0_20px_60px_-15px_rgba(56,189,248,0.3)]">
           {renderStep()}
         </div>
       </div>
