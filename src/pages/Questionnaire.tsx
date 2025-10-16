@@ -946,9 +946,9 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
-              { label: "Vols", icon: "✈️", desc: "Billets d'avion" },
-              { label: "Hébergement", icon: "🏨", desc: "Hôtels & logements" },
-              { label: "Activités", icon: "🎯", desc: "Visites & expériences" }
+              { label: t('questionnaire.flights'), icon: "✈️", desc: t('questionnaire.flights.desc') },
+              { label: t('questionnaire.accommodation'), icon: "🏨", desc: t('questionnaire.accommodation.desc') },
+              { label: t('questionnaire.activities'), icon: "🎯", desc: t('questionnaire.activities.desc') }
             ].map((option) => {
               const isSelected = (answers.helpWith || []).includes(option.label);
               return (
@@ -1910,13 +1910,13 @@ const Questionnaire = () => {
             {Array.from({ length: getNumberOfTravelers() }).map((_, index) => (
               <div key={index} className="space-y-2">
                 <label className="block text-sm font-medium">
-                  Voyageur {index + 1} {index === 0 && answers.travelGroup === "Duo" ? "👤" : index === 1 && answers.travelGroup === "Duo" ? "👥" : "👤"}
+                  {t('questionnaire.luggage.traveler')} {index + 1} {index === 0 && answers.travelGroup === "Duo" ? "👤" : index === 1 && answers.travelGroup === "Duo" ? "👥" : "👤"}
                 </label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: "Objet personnel", icon: "👜", desc: "Sous le siège" },
-                    { label: "Objet personnel + cabine", icon: "🎒", desc: "Compartiment supérieur" },
-                    { label: "Cabine + soute", icon: "🧳", desc: "Max bagages" }
+                    { label: t('questionnaire.luggage.personalItem'), icon: "👜", desc: t('questionnaire.luggage.personalItem.desc') },
+                    { label: t('questionnaire.luggage.cabin'), icon: "🎒", desc: t('questionnaire.luggage.cabin.desc') },
+                    { label: t('questionnaire.luggage.cabinHold'), icon: "🧳", desc: t('questionnaire.luggage.cabinHold.desc') }
                   ].map((option) => {
                     const isSelected = answers.luggage?.[index] === option.label;
                     return (
@@ -1964,21 +1964,21 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Mobilité sur place 🚗
+            {t('questionnaire.mobility.title')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélection multiple possible</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.mobility.selectMultiple')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Marche/TC principalement", icon: "🚶" },
-              { label: "Taxi/VTC", icon: "🚕" },
-              { label: "Location voiture", icon: "🚗" },
-              { label: "Vélo", icon: "🚲" },
-              { label: "Trottinette électrique", icon: "🛴" },
-              { label: "Moto/scooter", icon: "🏍️" },
-              { label: "Bus touristique", icon: "🚌" },
-              { label: "Train/métro", icon: "🚇" },
-              { label: "Bateau/ferry", icon: "⛴️" },
-              { label: "Transport atypique", icon: "🐪" }
+              { label: t('questionnaire.mobility.publicTransport.full'), icon: "🚶" },
+              { label: t('questionnaire.mobility.taxi.full'), icon: "🚕" },
+              { label: t('questionnaire.mobility.rentalCar.full'), icon: "🚗" },
+              { label: t('questionnaire.mobility.bike.full'), icon: "🚲" },
+              { label: t('questionnaire.mobility.electricScooter'), icon: "🛴" },
+              { label: t('questionnaire.mobility.motorbikeScooter'), icon: "🏍️" },
+              { label: t('questionnaire.mobility.touristBus'), icon: "🚌" },
+              { label: t('questionnaire.mobility.trainMetro'), icon: "🚇" },
+              { label: t('questionnaire.mobility.ferry.full'), icon: "⛴️" },
+              { label: t('questionnaire.mobility.atypical.full'), icon: "🐪" }
             ].map((option) => {
               const isSelected = (answers.mobility || []).includes(option.label);
               return (
@@ -2040,20 +2040,20 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Type d'hébergement 🏨
+            {t('questionnaire.accommodationType.title')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélectionnez 1 ou 2 types</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.accommodationType.select1or2')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Hôtel", icon: "🏨" },
-              { label: "Appartement", icon: "🏠" },
-              { label: "Auberge", icon: "🛏️" },
-              { label: "Maison d'hôtes/riad", icon: "🏡" },
-              { label: "Lodge/eco-stay", icon: "🌿" },
-              { label: "Camping/glamping", icon: "⛺" },
-              { label: "Chambre d'hôtes", icon: "🛋️" },
-              { label: "Resort", icon: "🏖️" },
-              { label: "Peu importe", icon: "🤷" }
+              { label: t('questionnaire.accommodationType.hotel'), icon: "🏨" },
+              { label: t('questionnaire.accommodationType.apartment'), icon: "🏠" },
+              { label: t('questionnaire.accommodationType.hostel'), icon: "🛏️" },
+              { label: t('questionnaire.accommodationType.guesthouse'), icon: "🏡" },
+              { label: t('questionnaire.accommodationType.lodge'), icon: "🌿" },
+              { label: t('questionnaire.accommodationType.camping'), icon: "⛺" },
+              { label: t('questionnaire.accommodationType.bedBreakfast'), icon: "🛋️" },
+              { label: t('questionnaire.accommodationType.resort'), icon: "🏖️" },
+              { label: t('questionnaire.accommodationType.dontMind'), icon: "🤷" }
             ].map((option) => {
               const currentSelection = answers.accommodationType || [];
               const isSelected = currentSelection.includes(option.label);
@@ -2110,7 +2110,7 @@ const Questionnaire = () => {
               disabled={!answers.accommodationType || answers.accommodationType.length === 0}
               className="bg-travliaq-deep-blue"
             >
-              Continuer
+              {t('questionnaire.continue')}
             </Button>
           </div>
         </div>
@@ -2123,19 +2123,19 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Préférences pour l'hôtel 🏨
+            {t('questionnaire.hotelPreferences.title')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélectionnez ce qui vous intéresse</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.hotelPreferences.selectInterested')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Petit-déjeuner inclus", icon: "🥐" },
-              { label: "Demi-pension", icon: "🍽️" },
-              { label: "Pension complète", icon: "🍴" },
-              { label: "All-inclusive", icon: "🍹" },
-              { label: "Room service", icon: "🛎️" },
-              { label: "Minibar", icon: "🍾" },
-              { label: "Vue mer/montagne", icon: "🌅" },
-              { label: "Balcon/terrasse", icon: "🪴" }
+              { label: t('questionnaire.hotelPreferences.breakfast'), icon: "🥐" },
+              { label: t('questionnaire.hotelPreferences.halfBoard'), icon: "🍽️" },
+              { label: t('questionnaire.hotelPreferences.fullBoard'), icon: "🍴" },
+              { label: t('questionnaire.hotelPreferences.allInclusive'), icon: "🍹" },
+              { label: t('questionnaire.hotelPreferences.roomService'), icon: "🛎️" },
+              { label: t('questionnaire.hotelPreferences.minibar'), icon: "🍾" },
+              { label: t('questionnaire.hotelPreferences.view'), icon: "🌅" },
+              { label: t('questionnaire.hotelPreferences.balcony'), icon: "🪴" }
             ].map((option) => {
               const isSelected = (answers.hotelPreferences || []).includes(option.label);
               return (
@@ -2165,7 +2165,7 @@ const Questionnaire = () => {
               onClick={nextStep}
               className="bg-travliaq-deep-blue"
             >
-              Continuer
+              {t('questionnaire.continue')}
             </Button>
           </div>
         </div>
@@ -2178,14 +2178,14 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Confort minimum ⭐
+            {t('questionnaire.comfort.title')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Note ≥7.5", icon: "⭐" },
-              { label: "Note ≥8.0", icon: "⭐⭐" },
-              { label: "Note ≥8.5", icon: "⭐⭐⭐" },
-              { label: "Peu importe", icon: "🤷" }
+              { label: t('questionnaire.comfort.rating75'), icon: "⭐" },
+              { label: t('questionnaire.comfort.rating80'), icon: "⭐⭐" },
+              { label: t('questionnaire.comfort.rating85'), icon: "⭐⭐⭐" },
+              { label: t('questionnaire.comfort.dontMind'), icon: "🤷" }
             ].map((option) => (
               <Card
                 key={option.label}
@@ -2211,14 +2211,14 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Quartier recherché 🗺️
+            {t('questionnaire.neighborhood.title')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Calme", icon: "🌙" },
-              { label: "Central & animé", icon: "🏙️" },
-              { label: "Proche nature/plage", icon: "🏖️" },
-              { label: "Atypique/charme local", icon: "🏘️" }
+              { label: t('questionnaire.neighborhood.quiet'), icon: "🌙" },
+              { label: t('questionnaire.neighborhood.centralLively'), icon: "🏙️" },
+              { label: t('questionnaire.neighborhood.nearNatureBeach'), icon: "🏖️" },
+              { label: t('questionnaire.neighborhood.atypicalCharm'), icon: "🏘️" }
             ].map((option) => (
               <Card
                 key={option.label}
@@ -2244,25 +2244,25 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Équipements souhaités 🛠️
+            {t('questionnaire.amenities.title')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélectionnez tous ceux qui vous importent</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.amenities.selectAll')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Wi-Fi fiable", icon: "📶" },
-              { label: "Climatisation", icon: "❄️" },
-              { label: "Cuisine", icon: "🍳" },
-              { label: "Machine à laver", icon: "🧺" },
-              { label: "Parking", icon: "🅿️" },
-              { label: "Ascenseur", icon: "🛗" },
-              { label: "Réception 24/7", icon: "🔔" },
-              { label: "Proximité lieu de culte", icon: "🛐" },
-              { label: "Lit bébé", icon: "👶" },
-              { label: "Chambre famille", icon: "👨‍👩‍👧‍👦" },
-              { label: "Piscine", icon: "🏊" },
-              { label: "Salle de sport", icon: "💪" },
-              { label: "Spa/jacuzzi", icon: "🧖" },
-              { label: "Jardin/terrasse", icon: "🌳" }
+              { label: t('questionnaire.amenities.reliableWifi'), icon: "📶" },
+              { label: t('questionnaire.amenities.airConditioning'), icon: "❄️" },
+              { label: t('questionnaire.amenities.kitchen'), icon: "🍳" },
+              { label: t('questionnaire.amenities.washingMachine'), icon: "🧺" },
+              { label: t('questionnaire.amenities.parking'), icon: "🅿️" },
+              { label: t('questionnaire.amenities.elevator'), icon: "🛗" },
+              { label: t('questionnaire.amenities.reception24'), icon: "🔔" },
+              { label: t('questionnaire.amenities.nearWorship'), icon: "🛐" },
+              { label: t('questionnaire.amenities.babyCrib'), icon: "👶" },
+              { label: t('questionnaire.amenities.familyRoom'), icon: "👨‍👩‍👧‍👦" },
+              { label: t('questionnaire.amenities.pool'), icon: "🏊" },
+              { label: t('questionnaire.amenities.gym'), icon: "💪" },
+              { label: t('questionnaire.amenities.spa'), icon: "🧖" },
+              { label: t('questionnaire.amenities.gardenTerrace'), icon: "🌳" }
             ].map((option) => {
               const isSelected = (answers.amenities || []).includes(option.label);
               return (
@@ -2292,7 +2292,7 @@ const Questionnaire = () => {
               onClick={nextStep}
               className="bg-travliaq-deep-blue"
             >
-              Continuer
+              {t('questionnaire.continue')}
             </Button>
           </div>
         </div>
@@ -2305,26 +2305,26 @@ const Questionnaire = () => {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            Contraintes & préférences 🎯
+            {t('questionnaire.constraints.title')}
           </h2>
-          <p className="text-center text-muted-foreground">Sélectionnez toutes les options importantes</p>
+          <p className="text-center text-muted-foreground">{t('questionnaire.constraints.selectAllImportant')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: "Halal", icon: "🥙" },
-              { label: "Casher", icon: "✡️" },
-              { label: "Végétarien", icon: "🥗" },
-              { label: "Vegan", icon: "🌱" },
-              { label: "Sans gluten", icon: "🌾" },
-              { label: "Sans porc", icon: "🚫🥓" },
-              { label: "Sans alcool", icon: "🚫🍷" },
-              { label: "Lieux de prière", icon: "🛐" },
-              { label: "Respect traditions bouddhistes", icon: "☸️" },
-              { label: "Accessibilité PMR", icon: "♿" },
-              { label: "Zones sûres", icon: "🛡️" },
-              { label: "Éviter voiture", icon: "🚫🚗" },
-              { label: "Respect traditions locales", icon: "🕊️" },
-              { label: "Allergies alimentaires", icon: "⚠️" },
-              { label: "Peu importe", icon: "🤷" }
+              { label: t('questionnaire.constraints.halal'), icon: "🥙" },
+              { label: t('questionnaire.constraints.kosher'), icon: "✡️" },
+              { label: t('questionnaire.constraints.vegetarian'), icon: "🥗" },
+              { label: t('questionnaire.constraints.vegan'), icon: "🌱" },
+              { label: t('questionnaire.constraints.glutenFree'), icon: "🌾" },
+              { label: t('questionnaire.constraints.noPork'), icon: "🚫🥓" },
+              { label: t('questionnaire.constraints.noAlcohol'), icon: "🚫🍷" },
+              { label: t('questionnaire.constraints.prayerPlaces'), icon: "🛐" },
+              { label: t('questionnaire.constraints.buddhistTraditions'), icon: "☸️" },
+              { label: t('questionnaire.constraints.accessibility'), icon: "♿" },
+              { label: t('questionnaire.constraints.safezones'), icon: "🛡️" },
+              { label: t('questionnaire.constraints.avoidCar'), icon: "🚫🚗" },
+              { label: t('questionnaire.constraints.localTraditions'), icon: "🕊️" },
+              { label: t('questionnaire.constraints.foodAllergies'), icon: "⚠️" },
+              { label: t('questionnaire.constraints.dontMind'), icon: "🤷" }
             ].map((option) => {
               const currentSelection = answers.constraints || [];
               const isSelected = currentSelection.includes(option.label);
@@ -2369,7 +2369,7 @@ const Questionnaire = () => {
               onClick={nextStep}
               className="bg-travliaq-deep-blue"
             >
-              Continuer
+              {t('questionnaire.continue')}
             </Button>
           </div>
         </div>

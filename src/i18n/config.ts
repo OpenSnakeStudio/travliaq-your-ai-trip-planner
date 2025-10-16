@@ -326,6 +326,30 @@ const resources = {
       "q.success": "Questionnaire envoyé ! 🎉",
       "q.success.desc": "Nous vous enverrons votre itinéraire personnalisé sous 48h.",
       
+      // Help with descriptions
+      "questionnaire.flights.desc": "Billets d'avion",
+      "questionnaire.accommodation.desc": "Hôtels & logements",
+      "questionnaire.activities.desc": "Visites & expériences",
+      
+      // Luggage details
+      "questionnaire.luggage.personalItem.desc": "Sous le siège",
+      "questionnaire.luggage.cabin.desc": "Compartiment supérieur",
+      "questionnaire.luggage.hold.desc": "Max bagages",
+      "questionnaire.luggage.cabinHold.desc": "Cabine + Soute",
+      
+      // Mobility options
+      "questionnaire.mobility.publicTransport.full": "Marche/TC principalement",
+      "questionnaire.mobility.rentalCar.full": "Location voiture",
+      "questionnaire.mobility.taxi.full": "Taxi/VTC",
+      "questionnaire.mobility.bike.full": "Vélo",
+      "questionnaire.mobility.walking.full": "À pied",
+      "questionnaire.mobility.atypical.full": "Transport atypique",
+      "questionnaire.mobility.ferry.full": "Bateau/ferry",
+      "questionnaire.mobility.electricScooter": "Trottinette électrique",
+      "questionnaire.mobility.motorbikeScooter": "Moto/scooter",
+      "questionnaire.mobility.touristBus": "Bus touristique",
+      "questionnaire.mobility.trainMetro": "Train/métro",
+      
       // Questionnaire - Additional keys
       "questionnaire.connectionRequired": "Connexion requise 🔒",
       "questionnaire.mustBeConnected": "Vous devez être connecté pour soumettre un questionnaire.",
@@ -934,6 +958,30 @@ const resources = {
       "q.error.generic.desc": "An error occurred while submitting the questionnaire. Please try again.",
       "q.success": "Questionnaire submitted! 🎉",
       "q.success.desc": "We'll send you your personalized itinerary within 48 hours.",
+      
+      // Help with descriptions
+      "questionnaire.flights.desc": "Flight tickets",
+      "questionnaire.accommodation.desc": "Hotels & lodging",
+      "questionnaire.activities.desc": "Visits & experiences",
+      
+      // Luggage details
+      "questionnaire.luggage.personalItem.desc": "Under the seat",
+      "questionnaire.luggage.cabin.desc": "Upper compartment",
+      "questionnaire.luggage.hold.desc": "Max baggage",
+      "questionnaire.luggage.cabinHold.desc": "Cabin + Hold",
+      
+      // Mobility options
+      "questionnaire.mobility.publicTransport.full": "Walking/public transport mainly",
+      "questionnaire.mobility.rentalCar.full": "Rental car",
+      "questionnaire.mobility.taxi.full": "Taxi/Uber",
+      "questionnaire.mobility.bike.full": "Bike",
+      "questionnaire.mobility.walking.full": "Walking",
+      "questionnaire.mobility.atypical.full": "Atypical transport",
+      "questionnaire.mobility.ferry.full": "Boat/ferry",
+      "questionnaire.mobility.electricScooter": "Electric scooter",
+      "questionnaire.mobility.motorbikeScooter": "Motorbike/scooter",
+      "questionnaire.mobility.touristBus": "Tourist bus",
+      "questionnaire.mobility.trainMetro": "Train/metro",
       
       // Questionnaire - Additional keys
       "questionnaire.connectionRequired": "Connection required 🔒",
