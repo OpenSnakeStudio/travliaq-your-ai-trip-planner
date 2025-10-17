@@ -65,31 +65,85 @@ const Blog = () => {
       <Navigation />
       <div className="min-h-screen bg-gradient-subtle">
         {/* Hero Section */}
-        <section className="bg-gradient-hero text-white py-20">
-        <div className="container max-w-6xl mx-auto px-4">
-          <div className="text-center animate-fade-up">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Carnets de Voyage
-            </h1>
-            <p className="text-xl md:text-2xl opacity-90 max-w-2xl mx-auto">
-              Inspirations, conseils d'experts et récits authentiques pour préparer votre prochaine aventure
-            </p>
+        <section className="relative bg-gradient-to-br from-travliaq-turquoise via-travliaq-deep-blue to-travliaq-deep-blue text-white py-24 md:py-32 overflow-hidden">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            {/* Animated gradient orbs */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-travliaq-turquoise/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+            
+            {/* Decorative lines */}
+            <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <div className="absolute bottom-1/4 right-0 w-full h-px bg-gradient-to-r from-transparent via-travliaq-turquoise/30 to-transparent" />
+            
+            {/* Floating icons */}
+            <div className="absolute top-20 right-1/4 text-6xl opacity-10 animate-[float_6s_ease-in-out_infinite]">
+              ✈️
+            </div>
+            <div className="absolute bottom-32 left-1/4 text-5xl opacity-10 animate-[float_8s_ease-in-out_infinite]" style={{ animationDelay: '2s' }}>
+              🗺️
+            </div>
+            <div className="absolute top-1/3 right-1/3 text-4xl opacity-10 animate-[float_7s_ease-in-out_infinite]" style={{ animationDelay: '1s' }}>
+              📸
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Search Section */}
-      <section className="container max-w-6xl mx-auto px-4 py-8">
-        <div className="relative max-w-xl mx-auto">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-          <Input
-            placeholder="Rechercher un article..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 h-14 text-lg"
-          />
-        </div>
-      </section>
+          <div className="container max-w-6xl mx-auto px-4 relative z-10">
+            <div className="text-center space-y-8">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 animate-fade-in">
+                <span className="w-2 h-2 bg-travliaq-turquoise rounded-full animate-pulse" />
+                <span className="text-sm font-medium tracking-wide">Blog de voyage</span>
+              </div>
+
+              {/* Main title */}
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <span className="bg-gradient-to-r from-white via-white to-travliaq-turquoise bg-clip-text text-transparent">
+                  Carnets de Voyage
+                </span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                Inspirations, conseils d'experts et récits authentiques pour préparer votre prochaine aventure
+              </p>
+
+              {/* Decorative divider */}
+              <div className="flex items-center justify-center gap-3 pt-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                <div className="w-12 h-px bg-gradient-to-r from-transparent to-travliaq-turquoise" />
+                <div className="w-2 h-2 rounded-full bg-travliaq-turquoise" />
+                <div className="w-24 h-px bg-travliaq-turquoise" />
+                <div className="w-2 h-2 rounded-full bg-travliaq-turquoise" />
+                <div className="w-12 h-px bg-gradient-to-l from-transparent to-travliaq-turquoise" />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom wave decoration */}
+          <div className="absolute bottom-0 left-0 right-0">
+            <svg className="w-full h-16 md:h-24 text-background" viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="currentColor"/>
+            </svg>
+          </div>
+        </section>
+
+        {/* Search Section */}
+        <section className="container max-w-6xl mx-auto px-4 -mt-8 relative z-20">
+          <div className="max-w-2xl mx-auto">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-travliaq-turquoise to-travliaq-deep-blue rounded-2xl blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
+              <div className="relative bg-background rounded-2xl shadow-2xl border border-border overflow-hidden">
+                <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 transition-colors group-hover:text-travliaq-turquoise" />
+                <Input
+                  placeholder="Rechercher un article..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-14 pr-6 h-16 text-lg border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
 
       {/* Posts Grid */}
       <section className="container max-w-6xl mx-auto px-4 pb-20">
