@@ -23,9 +23,9 @@ const Navigation = ({ variant = 'default' }: NavigationProps) => {
   const isMinimal = variant === 'minimal';
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
-      <div className="container mx-auto flex justify-between items-center">
-        <a href="/">
+    <header className="absolute top-0 left-0 right-0 z-20 p-2 md:p-6">
+      <div className="container mx-auto flex justify-between items-start md:items-center">
+        <a href="/" className="hidden md:block">
           <img src={logo} alt="Logo Travliaq" className="h-16 md:h-20 w-auto" />
         </a>
 
@@ -112,11 +112,11 @@ const Navigation = ({ variant = 'default' }: NavigationProps) => {
         {/* Mobile Navigation */}
         {!isMinimal && (
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild className="md:hidden">
+          <SheetTrigger asChild className="md:hidden ml-auto">
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:text-white/80"
+              className="text-white hover:text-white/80 mt-1"
             >
               <Menu className="h-6 w-6" />
             </Button>

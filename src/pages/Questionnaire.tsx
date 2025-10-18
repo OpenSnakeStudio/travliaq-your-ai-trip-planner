@@ -442,6 +442,7 @@ const Questionnaire = () => {
       total++; // Step 2d: Climat préféré
       total++; // Step 2e: Affinités de voyage
       total++; // Step 2f: Ambiance recherchée
+      total++; // Step 2g: Ville de départ (pour destination flexible)
     }
     
     total++; // Step 3: Dates
@@ -1090,10 +1091,10 @@ const Questionnaire = () => {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p className="text-xs">
-                        Vous pouvez saisir n'importe quelle ville, même si elle n'apparaît pas dans la liste. L'IA comprendra votre destination si vous l'orthographiez correctement.
-                      </p>
-                    </TooltipContent>
+                        <p className="text-xs">
+                          {t('questionnaire.destinationTooltip')}
+                        </p>
+                      </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </label>
@@ -1317,6 +1318,112 @@ const Questionnaire = () => {
                 </div>
               </Card>
             ))}
+          </div>
+        </div>
+      );
+    }
+    if (answers.hasDestination === t('questionnaire.no')) stepCounter++;
+
+    // Step 2g: Ville de départ (si destination flexible)
+    if (answers.hasDestination === t('questionnaire.no') && step === stepCounter) {
+      return (
+        <div className="space-y-4 animate-fade-up">
+          <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
+            {t('questionnaire.whereFrom')}
+          </h2>
+          <div className="max-w-xl mx-auto space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-travliaq-deep-blue flex items-center gap-1.5">
+                  {t('questionnaire.whereFrom')}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" className="inline-flex items-center justify-center">
+                          <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-travliaq-deep-blue transition-colors cursor-help" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          {t('questionnaire.cityTooltip')}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={requestGeolocation}
+                  disabled={isLoadingLocation}
+                  className="text-xs"
+                >
+                  {isLoadingLocation ? (
+                    <>
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                      {t('questionnaire.detecting')}
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="mr-1 h-3 w-3" />
+                      {t('questionnaire.myPosition')}
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div className="relative">
+                <Input
+                  ref={departureInputRef}
+                  placeholder={t('questionnaire.departureCity')}
+                  className="h-12 text-base"
+                  value={answers.departureLocation || departureSearch}
+                  onChange={(e) => {
+                    setDepartureSearch(e.target.value);
+                    setAnswers({ ...answers, departureLocation: e.target.value });
+                    setShowDepartureDropdown(true);
+                  }}
+                  onFocus={() => setShowDepartureDropdown(true)}
+                />
+                {showDepartureDropdown && filteredDepartures.length > 0 && departureSearch && (
+                  <Card className="absolute z-10 w-full mt-2 max-h-60 overflow-y-auto">
+                    <Command>
+                      <CommandList>
+                        <CommandGroup>
+                          {filteredDepartures.slice(0, 15).map((city) => {
+                            const cityDisplay = `${city.name}, ${city.country} ${city.country_code}`;
+                            return (
+                              <CommandItem
+                                key={city.id}
+                                onSelect={() => {
+                                  setAnswers({ ...answers, departureLocation: cityDisplay });
+                                  setDepartureSearch(cityDisplay);
+                                  setShowDepartureDropdown(false);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                {cityDisplay}
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </Card>
+                )}
+              </div>
+            </div>
+
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="hero"
+                size="lg"
+                onClick={nextStep}
+                disabled={!answers.departureLocation || answers.departureLocation.trim() === ''}
+                className="bg-travliaq-deep-blue"
+              >
+                {t('questionnaire.continue')}
+              </Button>
+            </div>
           </div>
         </div>
       );

@@ -49,7 +49,7 @@ export const useFilteredCities = (searchTerm: string, cities: City[] | undefined
     .filter((city) => {
       const nameMatch = city.name.toLowerCase().includes(lowerSearch);
       const countryMatch = city.country.toLowerCase().includes(lowerSearch);
-      const searchTextMatch = city.search_text && city.search_text.includes(lowerSearch);
+      const searchTextMatch = city.search_text && city.search_text.toLowerCase().includes(lowerSearch);
       
       return nameMatch || countryMatch || searchTextMatch;
     })
