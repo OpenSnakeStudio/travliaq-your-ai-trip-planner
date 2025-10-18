@@ -235,7 +235,7 @@ const MapView = ({ days, activeDay, onScrollToDay }: MapViewProps) => {
       shadow-[0_0_15px_rgba(56,189,248,0.1)] bg-gradient-to-br from-travliaq-deep-blue/70 
       to-travliaq-deep-blue/50 backdrop-blur-md
       ${isFullscreen 
-        ? 'fixed inset-0 z-50 !rounded-none' 
+        ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] h-[85vh] max-w-7xl shadow-2xl' 
         : 'w-full'
       }
     `}>
@@ -245,7 +245,7 @@ const MapView = ({ days, activeDay, onScrollToDay }: MapViewProps) => {
         size="icon"
         className="absolute top-4 right-4 z-10 bg-background/90 backdrop-blur-sm hover:bg-background"
         onClick={toggleFullscreen}
-        title={isFullscreen ? "Quitter le plein écran" : "Plein écran"}
+        title={isFullscreen ? "Réduire" : "Agrandir"}
       >
         {isFullscreen ? (
           <Minimize2 className="h-4 w-4" />
@@ -256,7 +256,7 @@ const MapView = ({ days, activeDay, onScrollToDay }: MapViewProps) => {
       
       <div 
         ref={mapContainer} 
-        className={isFullscreen ? "w-full h-screen" : "w-full h-56"} 
+        className={isFullscreen ? "w-full h-full" : "w-full h-56"} 
         style={!isFullscreen ? { minHeight: '224px' } : undefined} 
       />
       <div className="bg-gradient-to-r from-travliaq-deep-blue/90 to-travliaq-deep-blue/80 backdrop-blur-md p-2 border-t border-travliaq-turquoise/20">

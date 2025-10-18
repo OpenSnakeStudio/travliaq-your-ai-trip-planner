@@ -332,8 +332,7 @@ const Discover = () => {
                   {(trip.total_price || trip.total_budget) && (
                     <div className="flex items-center justify-between pt-4 border-t border-white/10">
                       <span className="text-gray-400 text-sm">{t('discover.from')}</span>
-                      <span className="text-xl font-bold text-travliaq-golden-sand flex items-center">
-                        <DollarSign className="w-5 h-5 mr-1" />
+                      <span className="text-xl font-bold text-travliaq-golden-sand">
                         {trip.total_price || trip.total_budget}
                       </span>
                     </div>

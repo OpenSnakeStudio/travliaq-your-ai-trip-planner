@@ -93,19 +93,19 @@ const Blog = () => {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 animate-fade-in">
                 <span className="w-2 h-2 bg-travliaq-turquoise rounded-full animate-pulse" />
-                <span className="text-sm font-medium tracking-wide">Blog de voyage</span>
+                <span className="text-sm font-medium tracking-wide">Découvertes & Aventures</span>
               </div>
 
               {/* Main title */}
               <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <span className="bg-gradient-to-r from-white via-white to-travliaq-turquoise bg-clip-text text-transparent">
-                  Carnets de Voyage
+                  Histoires du Monde
                 </span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                Inspirations, conseils d'experts et récits authentiques pour préparer votre prochaine aventure
+                Récits immersifs, guides inspirants et secrets de destinations pour voyageurs curieux
               </p>
 
               {/* Decorative divider */}
@@ -146,7 +146,7 @@ const Blog = () => {
         </section>
 
       {/* Posts Grid */}
-      <section className="container max-w-6xl mx-auto px-4 pb-20">
+      <section className="container max-w-6xl mx-auto px-4 py-16 pb-20">
         {isLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -173,58 +173,59 @@ const Blog = () => {
             {filteredPosts.map((post, index) => (
               <Card
                 key={post.id}
-                className="overflow-hidden hover:shadow-golden transition-all cursor-pointer group"
+                className="overflow-hidden hover:shadow-2xl hover:shadow-travliaq-turquoise/20 transition-all duration-300 cursor-pointer group border-border/50 hover:border-travliaq-turquoise/50 bg-card/50 backdrop-blur-sm"
                 onClick={() => handlePostClick(post.slug)}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 {post.cover_image ? (
-                  <div className="aspect-video overflow-hidden bg-muted">
+                  <div className="aspect-video overflow-hidden bg-muted relative">
                     <img
                       src={post.cover_image}
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                 ) : (
-                  <div className="aspect-video bg-gradient-accent flex items-center justify-center">
-                    <span className="text-6xl">📝</span>
+                  <div className="aspect-video bg-gradient-to-br from-travliaq-turquoise/20 to-travliaq-deep-blue/20 flex items-center justify-center">
+                    <span className="text-6xl group-hover:scale-110 transition-transform duration-300">📝</span>
                   </div>
                 )}
 
                 <div className="p-6 space-y-4">
-                  <h3 className="text-xl font-bold text-travliaq-deep-blue group-hover:text-travliaq-turquoise transition-colors line-clamp-2">
+                  <h3 className="text-xl font-bold text-foreground group-hover:text-travliaq-turquoise transition-colors line-clamp-2 min-h-[3.5rem]">
                     {post.title}
                   </h3>
 
                   {post.excerpt && (
-                    <p className="text-muted-foreground line-clamp-3">
+                    <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed min-h-[4rem]">
                       {post.excerpt}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t border-border/50">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-4 w-4 text-travliaq-turquoise" />
                       <span>
                         {new Date(post.published_at).toLocaleDateString(
                           "fr-FR",
                           {
                             day: "numeric",
-                            month: "long",
+                            month: "short",
                             year: "numeric",
                           }
                         )}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 text-travliaq-golden-sand">
                       <Eye className="h-4 w-4" />
-                      <span>{post.view_count}</span>
+                      <span className="font-medium">{post.view_count}</span>
                     </div>
                   </div>
 
                   <Button
                     variant="ghost"
-                    className="w-full group-hover:bg-travliaq-turquoise group-hover:text-white transition-all"
+                    className="w-full mt-2 bg-transparent hover:bg-travliaq-turquoise hover:text-white transition-all border border-border/50 group-hover:border-travliaq-turquoise"
                   >
                     Lire l'article
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
