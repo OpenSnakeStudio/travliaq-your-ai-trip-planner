@@ -95,21 +95,32 @@ const Auth = () => {
       setLoading(true);
       
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
           password,
         });
+        
         if (error) {
+          console.error('Erreur de connexion:', error);
+          
           if (error.message.includes('Invalid login credentials')) {
-            throw new Error('Email ou mot de passe incorrect');
+            throw new Error('Email ou mot de passe incorrect. Vérifiez que vous avez bien confirmé votre email si vous venez de vous inscrire.');
+          }
+          if (error.message.includes('Email not confirmed')) {
+            throw new Error('Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte mail.');
           }
           throw error;
         }
+        
+        if (!data.session) {
+          throw new Error('Erreur de session. Veuillez réessayer.');
+        }
+        
         toast.success('Connexion réussie');
         navigate('/');
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
@@ -117,14 +128,23 @@ const Auth = () => {
         });
         
         if (error) {
-          // Cas où l'email existe déjà avec un autre provider (Google)
+          console.error('Erreur d\'inscription:', error);
+          
           if (error.message.includes('already registered') || error.message.includes('User already registered')) {
             throw new Error('Cette adresse email est déjà utilisée. Si vous vous êtes inscrit avec Google, veuillez vous connecter avec Google.');
           }
           throw error;
         }
         
-        toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.');
+        // Vérifier si la confirmation email est requise
+        if (data.user && !data.session) {
+          toast.success('Inscription réussie ! Vérifiez votre email pour confirmer votre compte avant de vous connecter.', {
+            duration: 6000,
+          });
+        } else if (data.session) {
+          toast.success('Inscription réussie ! Connexion automatique...');
+          navigate('/');
+        }
       }
     } catch (error: any) {
       toast.error(error.message || `Erreur lors de ${isLogin ? 'la connexion' : "l'inscription"}`);
