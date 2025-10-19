@@ -90,10 +90,12 @@ Le questionnaire se divise en **5 grandes branches conditionnelles** :
 **Condition d'affichage** : Si `travel_group` = "En famille" OU "Groupe (3-5 personnes)"
 
 **Questions supplémentaires** :
-- **Nombre exact de voyageurs** (champ numérique)
-- **Si Famille** : Détails des enfants avec leurs âges
+- **Détails des voyageurs** : Interface pour ajouter adultes et enfants un par un
+  - Possibilité d'ajouter des adultes
+  - Possibilité d'ajouter des enfants avec leur âge (0-17 ans)
+  - Affichage du décompte total (ex: "2 adultes, 1 enfant")
 
-**Impact sur la suite** : Détermine le nombre de bagages à gérer
+**Impact sur la suite** : Détermine le nombre de bagages à gérer et les besoins spécifiques familiaux
 
 ---
 
@@ -193,18 +195,13 @@ START
   ├─ 1. Qui voyage ? ────────────────────┐
   │    • Solo                             │
   │    • En duo                           │
-  │    • En famille ─────────────┐        │
-  │    • Groupe (3-5) ───────┐   │        │
-  │    • Groupe (6-10)       │   │        │
-  │    • Groupe (10+)        │   │        │
-  │                          │   │        │
-  │    ┌─────────────────────┘   │        │
-  │    │ 1b. Nombre exact        │        │
-  │    └─────────────────────────┘        │
-  │                                       │
-  │    ┌──────────────────────────────────┘
-  │    │ 1c. Détails enfants (âges)
-  │    └──────────────────────────────────┐
+  │    • Groupe (3-5 personnes) ──┐       │
+  │    • En famille ─────────┐    │       │
+  │                          │    │       │
+  │    ┌─────────────────────┘    │       │
+  │    │ 1b. Détails voyageurs    │       │
+  │    │     (nombre exact et âges)│      │
+  │    └──────────────────────────┘       │
   │                                       │
   ├─ 2. Destination en tête ? ────────────┤
   │    • Oui ──────────────┐              │
@@ -355,25 +352,31 @@ START
 - **À quoi ça sert** : Déterminer le profil du groupe et adapter les questions suivantes
 - **Impact** : Déclenche des questions sur le nombre exact de voyageurs et les enfants
 - **Valeurs possibles** :
-  - `"Solo"` : Voyage en solo (1 personne)
-  - `"En duo"` : Voyage à deux (couple ou amis)
-  - `"En famille"` : Voyage en famille → Déclenche questions enfants
-  - `"Groupe (3-5 personnes)"` → Déclenche question nombre exact
-  - `"Groupe (6-10 personnes)"`
-  - `"Groupe (10+ personnes)"`
+  - `"Solo"` : Voyage en solo (1 personne) → Passe directement à l'étape suivante
+  - `"En duo"` (ou "Duo") : Voyage à deux (couple ou amis) → Passe directement à l'étape suivante
+  - `"Groupe (3-5 personnes)"` : Groupe de 3 à 5 personnes → **Déclenche Step 1b** (détails voyageurs)
+  - `"En famille"` : Voyage en famille → **Déclenche Step 1b** (détails voyageurs avec enfants)
+
+#### **travelers** 👥
+- **Type** : Array d'objets `[{ type: 'adult' | 'child', age?: number }]`
+- **Question** : Interface interactive avec deux boutons "Ajouter un adulte" / "Ajouter un enfant"
+- **Affiché si** : `travel_group` = "En famille" OU "Groupe (3-5 personnes)"
+- **À quoi ça sert** : Système moderne de gestion des voyageurs avec distinction adultes/enfants
+- **Exemple** : `[{ "type": "adult" }, { "type": "adult" }, { "type": "child", "age": 8 }]`
+- **Impact** : Calcule automatiquement `number_of_travelers` et extrait `children` pour compatibilité
 
 #### **number_of_travelers** 🔢
 - **Type** : Integer (1-50)
-- **Question** : "Combien de personnes exactement ?"
+- **Généré automatiquement** : `travelers.length` si le système `travelers` est utilisé
 - **Affiché si** : `travel_group` = "En famille" OU "Groupe (3-5 personnes)"
-- **À quoi ça sert** : Connaître le nombre exact pour calculer les prix et les besoins en bagages
+- **À quoi ça sert** : Nombre total de voyageurs pour calculer les prix et les besoins en bagages
 - **Impact** : Détermine le nombre de voyageurs pour la question des bagages
 
 #### **children** 👶
 - **Type** : Array d'objets `[{ age: number }]`
-- **Question** : "Quel est l'âge de vos enfants ?"
+- **Généré automatiquement** : Extrait des `travelers` où `type === 'child'`
 - **Affiché si** : `travel_group` = "En famille"
-- **À quoi ça sert** : Adapter les recommandations aux familles avec enfants (activités kid-friendly, hébergements adaptés)
+- **À quoi ça sert** : Compatibilité avec l'ancien système + Adapter les recommandations aux familles
 - **Contraintes** : Âge entre 0 et 17 ans, maximum 20 enfants
 - **Exemple** : `[{ age: 5 }, { age: 10 }]`
 
@@ -811,8 +814,11 @@ START
 
 ```
 1. Qui voyage ? → "En famille"
-  1b. Nombre exact → 4
-  1c. Âges des enfants → 8 ans et 12 ans
+  1b. Détails voyageurs (Interface interactive) :
+      - Ajouter 2 adultes
+      - Ajouter 1 enfant (âge: 8 ans)
+      - Ajouter 1 enfant (âge: 12 ans)
+      → Badge affiché : "2 adultes, 2 enfants"
 
 2. Destination en tête ? → "Oui"
   2c. Quelle destination ? → "Tokyo, Japon 🇯🇵"
@@ -940,6 +946,12 @@ Voici la structure JSON complète générée par le questionnaire :
   "language": "fr",
   
   "travel_group": "En famille",
+  "travelers": [
+    { "type": "adult" },
+    { "type": "adult" },
+    { "type": "child", "age": 8 },
+    { "type": "child", "age": 12 }
+  ],
   "number_of_travelers": 4,
   "children": [
     { "age": 8 },
