@@ -43,7 +43,6 @@ import { format, startOfToday, addMonths, startOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 import { useCities } from "@/hooks/useCities";
-import { ChildrenDetailsStep } from "@/components/questionnaire/ChildrenDetailsStep";
 import { SecurityStep } from "@/components/questionnaire/SecurityStep";
 import { BiorhythmStep } from "@/components/questionnaire/BiorhythmStep";
 import { TravelersStep } from "@/components/questionnaire/TravelersStep";
@@ -885,18 +884,6 @@ const Questionnaire = () => {
     }
     if (answers.travelGroup === t('questionnaire.family') || answers.travelGroup === t('questionnaire.group35')) stepCounter++;
 
-    // Step 1c: Détails enfants (si Famille)
-    if (answers.travelGroup === t('questionnaire.family') && step === stepCounter) {
-      return (
-        <ChildrenDetailsStep
-          children={answers.children || []}
-          onUpdate={(children) => setAnswers({ ...answers, children })}
-          onNext={nextStep}
-        />
-      );
-    }
-    if (answers.travelGroup === t('questionnaire.family')) stepCounter++;
-
     // Step 2: Destination en tête ?
     if (step === stepCounter) {
       return (
@@ -1158,6 +1145,7 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.affinities.selectUpTo5')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {[
+              { label: t('questionnaire.affinities.dontMind'), icon: "🤷", autoNext: true },
               { label: t('questionnaire.affinities.paradiseBeaches'), icon: "🏖️" },
               { label: t('questionnaire.affinities.historicCities'), icon: "🏛️" },
               { label: t('questionnaire.affinities.natureHiking'), icon: "🥾" },
@@ -1190,11 +1178,11 @@ const Questionnaire = () => {
                   onClick={() => {
                     if (!isDisabled) {
                       handleMultiChoice("travelAffinities", option.label, 5);
-                      // Auto-advance si 5 affinités sont sélectionnées
+                      // Auto-advance si 5 affinités sont sélectionnées OU si "peu importe" est cliqué
                       const updated = (answers.travelAffinities || []).includes(option.label)
                         ? (answers.travelAffinities || []).filter(a => a !== option.label)
                         : [...(answers.travelAffinities || []), option.label];
-                      if (updated.length === 5) {
+                      if (updated.length === 5 || (option as any).autoNext) {
                         setTimeout(nextStep, 300);
                       }
                     }

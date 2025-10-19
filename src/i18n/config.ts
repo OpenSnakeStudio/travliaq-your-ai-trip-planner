@@ -443,6 +443,7 @@ const resources = {
       // Travel affinities
       "questionnaire.affinities.title": "Qu'est-ce qui t'attire le plus ? 🎯",
       "questionnaire.affinities.selectUpTo5": "Sélectionne jusqu'à 5 affinités",
+      "questionnaire.affinities.dontMind": "Peu importe",
       "questionnaire.affinities.paradiseBeaches": "Plages paradisiaques",
       "questionnaire.affinities.historicCities": "Villes historiques",
       "questionnaire.affinities.natureHiking": "Nature & randonnées",
@@ -1124,6 +1125,8 @@ const resources = {
       "questionnaire.luggage.cabinHold.desc": "Cabin + Hold",
       
       // Mobility options
+      "questionnaire.mobility.dontMind": "Don't mind",
+      "questionnaire.mobility.walking": "Walking",
       "questionnaire.mobility.publicTransport.full": "Walking/public transport mainly",
       "questionnaire.mobility.rentalCar.full": "Rental car",
       "questionnaire.mobility.taxi.full": "Taxi/Uber",
@@ -1196,6 +1199,7 @@ const resources = {
       // Travel affinities
       "questionnaire.affinities.title": "What attracts you most? 🎯",
       "questionnaire.affinities.selectUpTo5": "Select up to 5 affinities",
+      "questionnaire.affinities.dontMind": "Don't mind",
       "questionnaire.affinities.paradiseBeaches": "Paradise beaches",
       "questionnaire.affinities.historicCities": "Historic cities",
       "questionnaire.affinities.natureHiking": "Nature & hiking",
@@ -1332,20 +1336,6 @@ const resources = {
       "questionnaire.luggage.hold": "Hold baggage",
       "questionnaire.luggage.cabinHold": "Cabin + Hold",
       
-      // Mobility
-      "questionnaire.mobility.title": "Mobility 🚶",
-      "questionnaire.mobility.selectMultiple": "Multiple selection possible",
-      "questionnaire.mobility.publicTransport": "Public transport",
-      "questionnaire.mobility.rentalCar": "Rental car",
-      "questionnaire.mobility.taxi": "Taxi/Uber",
-      "questionnaire.mobility.bike": "Bicycle",
-      "questionnaire.mobility.walking": "Walking",
-      "questionnaire.mobility.atypical": "Atypical transport",
-      "questionnaire.mobility.atypical.desc": "Tuk-tuk, scooter, etc.",
-      "questionnaire.mobility.ferry": "Boat/ferry",
-      "questionnaire.mobility.incompleteSelection": "Incomplete selection",
-      "questionnaire.mobility.selectOtherTransport": "Please select at least one other mode of transport in addition to atypical transport or boat/ferry.",
-      
       // Accommodation type
       "questionnaire.accommodationType.title": "Accommodation type 🏨",
       "questionnaire.accommodationType.select1or2": "Select 1 or 2 types",
@@ -1370,7 +1360,9 @@ const resources = {
       "questionnaire.hotelPreferences.minibar": "Minibar",
       "questionnaire.hotelPreferences.view": "Sea/mountain view",
       "questionnaire.hotelPreferences.balcony": "Balcony/terrace",
-      
+      "questionnaire.hotelPreferences.dontMind": "Don't mind",
+      "questionnaire.hotelPreferences.concierge": "Concierge service",
+
       // Comfort
       "questionnaire.comfort.title": "Minimum comfort ⭐",
       "questionnaire.comfort.rating75": "Rating ≥7.5",
@@ -1402,7 +1394,8 @@ const resources = {
       "questionnaire.amenities.gym": "Gym",
       "questionnaire.amenities.spa": "Spa/jacuzzi",
       "questionnaire.amenities.gardenTerrace": "Garden/terrace",
-      
+      "questionnaire.amenities.dontMind": "Don't mind",
+
       // Constraints
       "questionnaire.constraints.title": "Constraints & preferences 🎯",
       "questionnaire.constraints.selectAllImportant": "Select all important options",
