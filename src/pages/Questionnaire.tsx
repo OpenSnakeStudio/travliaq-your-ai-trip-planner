@@ -35,7 +35,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, normalizeTravelGroup, normalizeYesNo, normalizeDatesType } from "@/lib/questionnaireValues";
+import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, normalizeTravelGroup, normalizeYesNo, normalizeDatesType } from "@/lib/questionnaireValues";
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1141,20 +1141,20 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             {[
-              { label: t('questionnaire.flights'), icon: "✈️", desc: t('questionnaire.flights.desc') },
-              { label: t('questionnaire.accommodation'), icon: "🏨", desc: t('questionnaire.accommodation.desc') },
-              { label: t('questionnaire.activities'), icon: "🎯", desc: t('questionnaire.activities.desc') }
+              { code: HELP_WITH.FLIGHTS, label: t('questionnaire.flights'), icon: "✈️", desc: t('questionnaire.flights.desc') },
+              { code: HELP_WITH.ACCOMMODATION, label: t('questionnaire.accommodation'), icon: "🏨", desc: t('questionnaire.accommodation.desc') },
+              { code: HELP_WITH.ACTIVITIES, label: t('questionnaire.activities'), icon: "🎯", desc: t('questionnaire.activities.desc') }
             ].map((option) => {
-              const isSelected = (answers.helpWith || []).includes(option.label);
+              const isSelected = (answers.helpWith || []).includes(option.code);
               return (
                 <Card
-                  key={option.label}
+                  key={option.code}
                    className={`p-6 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => handleMultiChoice("helpWith", option.label, undefined, 3)}
+                  onClick={() => handleMultiChoice("helpWith", option.code, undefined, 3)}
                 >
                   <div className="flex flex-col items-center space-y-2">
                     <span className="text-5xl">{option.icon}</span>
