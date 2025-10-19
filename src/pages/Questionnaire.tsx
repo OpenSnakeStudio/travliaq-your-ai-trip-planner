@@ -2112,7 +2112,8 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.mobility.selectMultiple')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: t('questionnaire.mobility.publicTransport.full'), icon: "🚶" },
+              { label: t('questionnaire.mobility.dontMind'), icon: "🤷", autoNext: true },
+              { label: t('questionnaire.mobility.walking'), icon: "🚶" },
               { label: t('questionnaire.mobility.taxi.full'), icon: "🚕" },
               { label: t('questionnaire.mobility.rentalCar.full'), icon: "🚗" },
               { label: t('questionnaire.mobility.bike.full'), icon: "🚲" },
@@ -2132,7 +2133,13 @@ const Questionnaire = () => {
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => handleMultiChoice("mobility", option.label)}
+                  onClick={() => {
+                    handleMultiChoice("mobility", option.label);
+                    // Auto-advance si "peu importe" est cliqué
+                    if (option.autoNext && !(answers.mobility || []).includes(option.label)) {
+                      setTimeout(() => nextStep(), 300);
+                    }
+                  }}
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl">{option.icon}</span>
@@ -2271,6 +2278,7 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.hotelPreferences.selectInterested')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
+              { label: t('questionnaire.hotelPreferences.dontMind'), icon: "🤷", autoNext: true },
               { label: t('questionnaire.hotelPreferences.breakfast'), icon: "🥐" },
               { label: t('questionnaire.hotelPreferences.halfBoard'), icon: "🍽️" },
               { label: t('questionnaire.hotelPreferences.fullBoard'), icon: "🍴" },
@@ -2278,7 +2286,8 @@ const Questionnaire = () => {
               { label: t('questionnaire.hotelPreferences.roomService'), icon: "🛎️" },
               { label: t('questionnaire.hotelPreferences.minibar'), icon: "🍾" },
               { label: t('questionnaire.hotelPreferences.view'), icon: "🌅" },
-              { label: t('questionnaire.hotelPreferences.balcony'), icon: "🪴" }
+              { label: t('questionnaire.hotelPreferences.balcony'), icon: "🪴" },
+              { label: t('questionnaire.hotelPreferences.concierge'), icon: "🎩" }
             ].map((option) => {
               const isSelected = (answers.hotelPreferences || []).includes(option.label);
               return (
@@ -2289,7 +2298,13 @@ const Questionnaire = () => {
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => handleMultiChoice("hotelPreferences", option.label)}
+                  onClick={() => {
+                    handleMultiChoice("hotelPreferences", option.label);
+                    // Auto-advance si "peu importe" est cliqué
+                    if (option.autoNext && !(answers.hotelPreferences || []).includes(option.label)) {
+                      setTimeout(() => nextStep(), 300);
+                    }
+                  }}
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl">{option.icon}</span>
@@ -2392,6 +2407,7 @@ const Questionnaire = () => {
           <p className="text-center text-muted-foreground">{t('questionnaire.amenities.selectAll')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
+              { label: t('questionnaire.amenities.dontMind'), icon: "🤷", autoNext: true },
               { label: t('questionnaire.amenities.reliableWifi'), icon: "📶" },
               { label: t('questionnaire.amenities.airConditioning'), icon: "❄️" },
               { label: t('questionnaire.amenities.kitchen'), icon: "🍳" },
@@ -2399,7 +2415,6 @@ const Questionnaire = () => {
               { label: t('questionnaire.amenities.parking'), icon: "🅿️" },
               { label: t('questionnaire.amenities.elevator'), icon: "🛗" },
               { label: t('questionnaire.amenities.reception24'), icon: "🔔" },
-              { label: t('questionnaire.amenities.nearWorship'), icon: "🛐" },
               { label: t('questionnaire.amenities.babyCrib'), icon: "👶" },
               { label: t('questionnaire.amenities.familyRoom'), icon: "👨‍👩‍👧‍👦" },
               { label: t('questionnaire.amenities.pool'), icon: "🏊" },
@@ -2416,7 +2431,13 @@ const Questionnaire = () => {
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => handleMultiChoice("amenities", option.label)}
+                  onClick={() => {
+                    handleMultiChoice("amenities", option.label);
+                    // Auto-advance si "peu importe" est cliqué
+                    if (option.autoNext && !(answers.amenities || []).includes(option.label)) {
+                      setTimeout(() => nextStep(), 300);
+                    }
+                  }}
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl">{option.icon}</span>

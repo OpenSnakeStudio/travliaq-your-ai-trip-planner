@@ -11,15 +11,20 @@ interface SecurityStepProps {
 export const SecurityStep = ({ security, onUpdate, onNext }: SecurityStepProps) => {
   const { t } = useTranslation();
 
-  const handleToggle = (option: string) => {
+  const handleToggle = (option: string, autoNext: boolean = false) => {
     const updated = security.includes(option)
       ? security.filter(s => s !== option)
       : [...security, option];
     onUpdate(updated);
+    
+    // Si c'est une option qui passe automatiquement à l'étape suivante
+    if (autoNext && !security.includes(option)) {
+      setTimeout(() => onNext(), 300);
+    }
   };
 
   const securityOptions = [
-    { label: t('questionnaire.security.none'), icon: "✅" },
+    { label: t('questionnaire.security.none'), icon: "✅", autoNext: true },
     { label: t('questionnaire.security.crowds'), icon: "👥" },
     { label: t('questionnaire.security.heights'), icon: "🏔️" },
     { label: t('questionnaire.security.tunnels'), icon: "🚇" },
@@ -55,7 +60,7 @@ export const SecurityStep = ({ security, onUpdate, onNext }: SecurityStepProps) 
                   ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                   : "hover:shadow-golden hover:border-travliaq-deep-blue"
               }`}
-              onClick={() => handleToggle(option.label)}
+              onClick={() => handleToggle(option.label, option.autoNext)}
             >
               <div className="flex items-center space-x-4">
                 <span className="text-4xl">{option.icon}</span>

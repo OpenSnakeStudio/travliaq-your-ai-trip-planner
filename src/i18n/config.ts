@@ -369,6 +369,8 @@ const resources = {
       "questionnaire.luggage.cabinHold.desc": "Cabine + Soute",
       
       // Mobility options
+      "questionnaire.mobility.dontMind": "Peu importe",
+      "questionnaire.mobility.walking": "Marche",
       "questionnaire.mobility.publicTransport.full": "Marche/TC principalement",
       "questionnaire.mobility.rentalCar.full": "Location voiture",
       "questionnaire.mobility.taxi.full": "Taxi/VTC",
@@ -584,7 +586,6 @@ const resources = {
       "questionnaire.mobility.rentalCar": "Voiture de location",
       "questionnaire.mobility.taxi": "Taxi/VTC",
       "questionnaire.mobility.bike": "Vélo",
-      "questionnaire.mobility.walking": "À pied",
       "questionnaire.mobility.atypical": "Transport atypique",
       "questionnaire.mobility.atypical.desc": "Tuk-tuk, scooter, etc.",
       "questionnaire.mobility.ferry": "Bateau/ferry",
@@ -607,6 +608,7 @@ const resources = {
       // Hotel preferences
       "questionnaire.hotelPreferences.title": "Préférences pour l'hôtel 🏨",
       "questionnaire.hotelPreferences.selectInterested": "Sélectionne ce qui t'intéresse",
+      "questionnaire.hotelPreferences.dontMind": "Peu importe",
       "questionnaire.hotelPreferences.breakfast": "Petit-déjeuner inclus",
       "questionnaire.hotelPreferences.halfBoard": "Demi-pension",
       "questionnaire.hotelPreferences.fullBoard": "Pension complète",
@@ -615,6 +617,7 @@ const resources = {
       "questionnaire.hotelPreferences.minibar": "Minibar",
       "questionnaire.hotelPreferences.view": "Vue mer/montagne",
       "questionnaire.hotelPreferences.balcony": "Balcon/terrasse",
+      "questionnaire.hotelPreferences.concierge": "Service de conciergerie",
       
       // Comfort
       "questionnaire.comfort.title": "Confort minimum ⭐",
@@ -633,6 +636,7 @@ const resources = {
       // Amenities
       "questionnaire.amenities.title": "Équipements souhaités 🛠️",
       "questionnaire.amenities.selectAll": "Sélectionne tous ceux qui t'importent",
+      "questionnaire.amenities.dontMind": "Peu importe",
       "questionnaire.amenities.reliableWifi": "Wi-Fi fiable",
       "questionnaire.amenities.airConditioning": "Climatisation",
       "questionnaire.amenities.kitchen": "Cuisine",
@@ -640,7 +644,6 @@ const resources = {
       "questionnaire.amenities.parking": "Parking",
       "questionnaire.amenities.elevator": "Ascenseur",
       "questionnaire.amenities.reception24": "Réception 24/7",
-      "questionnaire.amenities.nearWorship": "Proximité lieu de culte",
       "questionnaire.amenities.babyCrib": "Lit bébé",
       "questionnaire.amenities.familyRoom": "Chambre famille",
       "questionnaire.amenities.pool": "Piscine",

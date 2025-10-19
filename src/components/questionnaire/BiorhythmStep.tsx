@@ -11,21 +11,26 @@ interface BiorhythmStepProps {
 export const BiorhythmStep = ({ biorhythm, onUpdate, onNext }: BiorhythmStepProps) => {
   const { t } = useTranslation();
 
-  const handleToggle = (option: string) => {
+  const handleToggle = (option: string, autoNext: boolean = false) => {
     const updated = biorhythm.includes(option)
       ? biorhythm.filter(b => b !== option)
       : [...biorhythm, option];
     onUpdate(updated);
+    
+    // Si c'est une option qui passe automatiquement à l'étape suivante
+    if (autoNext && !biorhythm.includes(option)) {
+      setTimeout(() => onNext(), 300);
+    }
   };
 
   const biorhythmOptions = [
+    { label: t('questionnaire.biorhythm.flexible'), icon: "🔄", autoNext: true },
     { label: t('questionnaire.biorhythm.earlyBird'), icon: "🌅" },
     { label: t('questionnaire.biorhythm.nightOwl'), icon: "🌙" },
     { label: t('questionnaire.biorhythm.naps'), icon: "😴" },
     { label: t('questionnaire.biorhythm.dailyFreeTime'), icon: "⏰" },
     { label: t('questionnaire.biorhythm.earlyTolerant'), icon: "⏰" },
-    { label: t('questionnaire.biorhythm.regularMeals'), icon: "🍽️" },
-    { label: t('questionnaire.biorhythm.flexible'), icon: "🔄" }
+    { label: t('questionnaire.biorhythm.regularMeals'), icon: "🍽️" }
   ];
 
   return (
@@ -53,7 +58,7 @@ export const BiorhythmStep = ({ biorhythm, onUpdate, onNext }: BiorhythmStepProp
                   ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                   : "hover:shadow-golden hover:border-travliaq-deep-blue"
               }`}
-              onClick={() => handleToggle(option.label)}
+              onClick={() => handleToggle(option.label, option.autoNext)}
             >
               <div className="flex items-center space-x-4">
                 <span className="text-4xl">{option.icon}</span>
