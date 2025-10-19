@@ -42,19 +42,27 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { format, startOfToday, addMonths, startOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
-import { useCities, useFilteredCities } from "@/hooks/useCities";
+import { useCities } from "@/hooks/useCities";
 import { ChildrenDetailsStep } from "@/components/questionnaire/ChildrenDetailsStep";
 import { SecurityStep } from "@/components/questionnaire/SecurityStep";
 import { BiorhythmStep } from "@/components/questionnaire/BiorhythmStep";
+import { TravelersStep } from "@/components/questionnaire/TravelersStep";
+import { CitySearch } from "@/components/questionnaire/CitySearch";
 
 type LuggageChoice = {
   [travelerIndex: number]: string;
 };
 
+interface Traveler {
+  type: 'adult' | 'child';
+  age?: number;
+}
+
 type Answer = {
   travelGroup?: string;
   numberOfTravelers?: number;
-  children?: Array<{ age: number }>; // Nouveau: détails des enfants
+  travelers?: Traveler[]; // Nouveau système de voyageurs
+  children?: Array<{ age: number }>; // Ancien système - pour compatibilité
   hasDestination?: string;
   helpWith?: string[]; // Nouvelle question: Comment Travliaq peut aider (vols, hébergement, activités)
   destination?: string;
@@ -356,10 +364,6 @@ const Questionnaire = () => {
   
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Answer>({});
-  const [citySearch, setCitySearch] = useState("");
-  const [showCityDropdown, setShowCityDropdown] = useState(false);
-  const [departureSearch, setDepartureSearch] = useState("");
-  const [showDepartureDropdown, setShowDepartureDropdown] = useState(false);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGoogleLogin, setShowGoogleLogin] = useState(false);
@@ -394,7 +398,6 @@ const Questionnaire = () => {
             if (city && country) {
               const detectedLocation = `${city}, ${country}`;
               setAnswers({ ...answers, departureLocation: detectedLocation });
-              setDepartureSearch(detectedLocation);
               toast({
                 title: "Position détectée",
                 description: `Vous partez de ${detectedLocation}`,
@@ -562,10 +565,8 @@ const Questionnaire = () => {
     return returnDate >= departure;
   };
 
-  const filteredCities = useFilteredCities(citySearch, cities);
-  const filteredDepartures = useFilteredCities(departureSearch, cities);
-
   const getNumberOfTravelers = (): number => {
+    if (answers.travelers && answers.travelers.length > 0) return answers.travelers.length;
     if (answers.numberOfTravelers) return answers.numberOfTravelers;
     
     switch(answers.travelGroup) {
@@ -843,7 +844,13 @@ const Questionnaire = () => {
                     ? 'border-travliaq-turquoise bg-gradient-to-br from-travliaq-turquoise/10 to-travliaq-golden-sand/10 shadow-xl' 
                     : 'border-transparent hover:border-travliaq-turquoise/50 hover:shadow-lg'
                 }`}
-                onClick={() => handleChoice("travelGroup", option.label)}
+                onClick={() => {
+                  handleChoice("travelGroup", option.label);
+                  // Auto-advance pour Solo et Duo
+                  if (option.label === t('questionnaire.solo') || option.label === t('questionnaire.duo')) {
+                    setTimeout(nextStep, 300);
+                  }
+                }}
               >
                 <div className="flex items-center space-x-4">
                   <span className="text-5xl">{option.icon}</span>
@@ -859,72 +866,22 @@ const Questionnaire = () => {
     }
     stepCounter++;
 
-    // Step 1b: Nombre exact de voyageurs (si Famille ou Groupe 3-5)
+    // Step 1b: Nombre exact de voyageurs avec détails (si Famille ou Groupe 3-5)
     if ((answers.travelGroup === t('questionnaire.family') || answers.travelGroup === t('questionnaire.group35')) && step === stepCounter) {
-      if (answers.travelGroup === t('questionnaire.family')) {
-        return (
-          <div className="space-y-4 animate-fade-up">
-            <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
-              {t('questionnaire.numberOfPeople')}
-            </h2>
-            <div className="max-w-xl mx-auto space-y-4">
-              <Input
-                type="number"
-                min="2"
-                max="12"
-                placeholder="Ex: 4"
-                className="h-12 text-base text-center text-2xl"
-                value={answers.numberOfTravelers || ""}
-                onChange={(e) => setAnswers({ ...answers, numberOfTravelers: parseInt(e.target.value) || 0 })}
-                onKeyPress={(e) => handleKeyPress(e, nextStep, !!answers.numberOfTravelers && answers.numberOfTravelers >= 2)}
-              />
-              <div className="flex justify-center">
-                <Button
-                  variant="hero"
-                  size="lg"
-                  onClick={nextStep}
-                  disabled={!answers.numberOfTravelers || answers.numberOfTravelers < 2}
-                  className="bg-travliaq-deep-blue"
-                >
-                  {t('questionnaire.continue')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        );
-      } else {
-        // Groupe 3-5: Choix entre 3, 4 ou 5
-        return (
-          <div className="space-y-8 animate-fade-up">
-            <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-              {t('questionnaire.howManyPeople')}
-            </h2>
-            <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto">
-              {[
-                { label: t('questionnaire.3people'), value: 3, icon: "👥" },
-                { label: t('questionnaire.4people'), value: 4, icon: "👨‍👩‍👧" },
-                { label: t('questionnaire.5people'), value: 5, icon: "👨‍👩‍👧‍👦" }
-              ].map((option) => (
-                <Card
-                  key={option.value}
-                  className="p-6 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
-                  onClick={() => {
-                    setAnswers({ ...answers, numberOfTravelers: option.value });
-                    setTimeout(nextStep, 300);
-                  }}
-                >
-                  <div className="flex flex-col items-center space-y-2">
-                    <span className="text-4xl">{option.icon}</span>
-                    <span className="text-lg font-semibold text-travliaq-deep-blue text-center">
-                      {option.label}
-                    </span>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-      }
+      return (
+        <TravelersStep
+          travelers={answers.travelers || []}
+          onUpdate={(travelers) => {
+            setAnswers({ 
+              ...answers, 
+              travelers,
+              numberOfTravelers: travelers.length,
+              children: travelers.filter(t => t.type === 'child').map(t => ({ age: t.age || 0 }))
+            });
+          }}
+          onNext={nextStep}
+        />
+      );
     }
     if (answers.travelGroup === t('questionnaire.family') || answers.travelGroup === t('questionnaire.group35')) stepCounter++;
 
@@ -1073,46 +1030,13 @@ const Questionnaire = () => {
                   )}
                 </Button>
               </div>
-              <div className="relative">
-                <Input
-                  ref={departureInputRef}
-                  placeholder={t('questionnaire.departureCity')}
-                  className="h-12 text-base"
-                  value={answers.departureLocation || departureSearch}
-                  onChange={(e) => {
-                    setDepartureSearch(e.target.value);
-                    setAnswers({ ...answers, departureLocation: e.target.value });
-                    setShowDepartureDropdown(true);
-                  }}
-                  onFocus={() => setShowDepartureDropdown(true)}
-                />
-                {showDepartureDropdown && filteredDepartures.length > 0 && departureSearch && (
-                  <Card className="absolute z-10 w-full mt-2 max-h-60 overflow-y-auto">
-                    <Command>
-                      <CommandList>
-                        <CommandGroup>
-                          {filteredDepartures.slice(0, 15).map((city) => {
-                            const cityDisplay = `${city.name}, ${city.country} ${city.country_code}`;
-                            return (
-                              <CommandItem
-                                key={city.id}
-                                onSelect={() => {
-                                  setAnswers({ ...answers, departureLocation: cityDisplay });
-                                  setDepartureSearch(cityDisplay);
-                                  setShowDepartureDropdown(false);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                {cityDisplay}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </Card>
-                )}
-              </div>
+              <CitySearch
+                value={answers.departureLocation || ""}
+                onChange={(value) => setAnswers({ ...answers, departureLocation: value })}
+                cities={cities}
+                citiesLoading={citiesLoading}
+                placeholder={t('questionnaire.departureCity')}
+              />
             </div>
 
             {/* Destination */}
@@ -1134,47 +1058,18 @@ const Questionnaire = () => {
                   </Tooltip>
                 </TooltipProvider>
               </label>
-              <div className="relative">
-                <Input
-                  ref={cityInputRef}
-                  placeholder={t('questionnaire.destinationCity')}
-                  className="h-12 text-base"
-                  value={answers.destination || citySearch}
-                  onChange={(e) => {
-                    setCitySearch(e.target.value);
-                    setAnswers({ ...answers, destination: e.target.value });
-                    setShowCityDropdown(true);
-                  }}
-                  onFocus={() => setShowCityDropdown(true)}
-                  onKeyPress={(e) => handleKeyPress(e, nextStep, !!answers.destination && answers.destination.trim() !== "" && !!answers.departureLocation && answers.departureLocation.trim() !== "")}
-                />
-                {showCityDropdown && filteredCities.length > 0 && citySearch && (
-                  <Card className="absolute z-10 w-full mt-2 max-h-60 overflow-y-auto">
-                    <Command>
-                      <CommandList>
-                        <CommandGroup>
-                          {filteredCities.slice(0, 15).map((city) => {
-                            const cityDisplay = `${city.name}, ${city.country} ${city.country_code}`;
-                            return (
-                              <CommandItem
-                                key={city.id}
-                                onSelect={() => {
-                                  setAnswers({ ...answers, destination: cityDisplay });
-                                  setCitySearch(cityDisplay);
-                                  setShowCityDropdown(false);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                {cityDisplay}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </Card>
-                )}
-              </div>
+              <CitySearch
+                value={answers.destination || ""}
+                onChange={(value) => setAnswers({ ...answers, destination: value })}
+                cities={cities}
+                citiesLoading={citiesLoading}
+                placeholder={t('questionnaire.destinationCity')}
+                onEnterPress={() => {
+                  if (answers.destination && answers.destination.trim() !== "" && answers.departureLocation && answers.departureLocation.trim() !== "") {
+                    nextStep();
+                  }
+                }}
+              />
             </div>
 
             <div className="flex justify-center">
@@ -1292,7 +1187,18 @@ const Questionnaire = () => {
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => !isDisabled && handleMultiChoice("travelAffinities", option.label, 5)}
+                  onClick={() => {
+                    if (!isDisabled) {
+                      handleMultiChoice("travelAffinities", option.label, 5);
+                      // Auto-advance si 5 affinités sont sélectionnées
+                      const updated = (answers.travelAffinities || []).includes(option.label)
+                        ? (answers.travelAffinities || []).filter(a => a !== option.label)
+                        : [...(answers.travelAffinities || []), option.label];
+                      if (updated.length === 5) {
+                        setTimeout(nextStep, 300);
+                      }
+                    }
+                  }}
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl">{option.icon}</span>
@@ -1407,46 +1313,13 @@ const Questionnaire = () => {
                   )}
                 </Button>
               </div>
-              <div className="relative">
-                <Input
-                  ref={departureInputRef}
-                  placeholder={t('questionnaire.departureCity')}
-                  className="h-12 text-base"
-                  value={answers.departureLocation || departureSearch}
-                  onChange={(e) => {
-                    setDepartureSearch(e.target.value);
-                    setAnswers({ ...answers, departureLocation: e.target.value });
-                    setShowDepartureDropdown(true);
-                  }}
-                  onFocus={() => setShowDepartureDropdown(true)}
-                />
-                {showDepartureDropdown && filteredDepartures.length > 0 && departureSearch && (
-                  <Card className="absolute z-10 w-full mt-2 max-h-60 overflow-y-auto">
-                    <Command>
-                      <CommandList>
-                        <CommandGroup>
-                          {filteredDepartures.slice(0, 15).map((city) => {
-                            const cityDisplay = `${city.name}, ${city.country} ${city.country_code}`;
-                            return (
-                              <CommandItem
-                                key={city.id}
-                                onSelect={() => {
-                                  setAnswers({ ...answers, departureLocation: cityDisplay });
-                                  setDepartureSearch(cityDisplay);
-                                  setShowDepartureDropdown(false);
-                                }}
-                                className="cursor-pointer"
-                              >
-                                {cityDisplay}
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </Card>
-                )}
-              </div>
+              <CitySearch
+                value={answers.departureLocation || ""}
+                onChange={(value) => setAnswers({ ...answers, departureLocation: value })}
+                cities={cities}
+                citiesLoading={citiesLoading}
+                placeholder={t('questionnaire.departureCity')}
+              />
             </div>
 
             <div className="flex justify-center pt-4">
@@ -1942,7 +1815,18 @@ const Questionnaire = () => {
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
-                  onClick={() => !isDisabled && handleMultiChoice("styles", option.label, 5)}
+                  onClick={() => {
+                    if (!isDisabled) {
+                      handleMultiChoice("styles", option.label, 5);
+                      // Auto-advance si 5 styles sont sélectionnés
+                      const updated = (answers.styles || []).includes(option.label)
+                        ? (answers.styles || []).filter(s => s !== option.label)
+                        : [...(answers.styles || []), option.label];
+                      if (updated.length === 5) {
+                        setTimeout(nextStep, 300);
+                      }
+                    }
+                  }}
                 >
                   <div className="flex items-center space-x-4">
                     <span className="text-3xl">{option.icon}</span>
