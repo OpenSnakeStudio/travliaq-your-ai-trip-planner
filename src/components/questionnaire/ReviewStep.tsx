@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronUp, Edit2, Mail, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { getTravelGroupLabel, getYesNoLabel, getDatesTypeLabel } from "@/lib/questionnaireValues";
 
 interface ReviewStepProps {
   answers: any;
@@ -15,6 +16,47 @@ interface ReviewStepProps {
   onSubmit: () => void;
   isSubmitting: boolean;
 }
+
+// Helper pour formater les valeurs d'affichage
+const formatValue = (value: any, t: any): string => {
+  if (!value) return '';
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'number') return value.toString();
+  return value;
+};
+
+// Helper pour traduire les valeurs des codes internes
+const translateValue = (key: string, value: any, t: any): string => {
+  if (!value) return '';
+  
+  // Codes yes/no
+  if (key === 'hasDestination') {
+    return t(getYesNoLabel(value));
+  }
+  
+  // Codes travel group
+  if (key === 'travelGroup') {
+    return t(getTravelGroupLabel(value));
+  }
+  
+  // Codes dates type
+  if (key === 'datesType') {
+    return t(getDatesTypeLabel(value));
+  }
+  
+  // Codes help_with
+  if (key === 'helpWith' && Array.isArray(value)) {
+    return value.map(v => {
+      const lowerV = v.toLowerCase();
+      if (lowerV === 'flights') return t('questionnaire.flights');
+      if (lowerV === 'accommodation') return t('questionnaire.accommodation');
+      if (lowerV === 'activities') return t('questionnaire.activities');
+      return v;
+    }).join(', ');
+  }
+  
+  return formatValue(value, t);
+};
 
 export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, isSubmitting }: ReviewStepProps) => {
   const { t } = useTranslation();
@@ -32,64 +74,64 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
       id: 'group',
       title: t('questionnaire.review.group'),
       data: [
-        { label: t('questionnaire.travelGroup'), value: answers.travelGroup },
-        { label: t('questionnaire.numberOfTravelers'), value: answers.numberOfTravelers }
+        { key: 'travelGroup', label: t('questionnaire.travelGroup'), value: translateValue('travelGroup', answers.travelGroup, t) },
+        { key: 'numberOfTravelers', label: t('questionnaire.numberOfTravelers'), value: formatValue(answers.numberOfTravelers, t) }
       ]
     },
     {
       id: 'destination',
       title: t('questionnaire.review.destination'),
       data: [
-        { label: t('questionnaire.hasDestination'), value: answers.hasDestination },
-        { label: t('questionnaire.destination'), value: answers.destination },
-        { label: t('questionnaire.departureLocation'), value: answers.departureLocation }
+        { key: 'hasDestination', label: t('questionnaire.hasDestination'), value: translateValue('hasDestination', answers.hasDestination, t) },
+        { key: 'destination', label: t('questionnaire.destination'), value: formatValue(answers.destination, t) },
+        { key: 'departureLocation', label: t('questionnaire.departureLocation'), value: formatValue(answers.departureLocation, t) }
       ]
     },
     {
       id: 'dates',
       title: t('questionnaire.review.dates'),
       data: [
-        { label: t('questionnaire.datesType'), value: answers.datesType },
-        { label: t('questionnaire.departureDate'), value: answers.departureDate },
-        { label: t('questionnaire.returnDate'), value: answers.returnDate },
-        { label: t('questionnaire.duration'), value: answers.duration }
+        { key: 'datesType', label: t('questionnaire.datesType'), value: translateValue('datesType', answers.datesType, t) },
+        { key: 'departureDate', label: t('questionnaire.departureDate'), value: formatValue(answers.departureDate, t) },
+        { key: 'returnDate', label: t('questionnaire.returnDate'), value: formatValue(answers.returnDate, t) },
+        { key: 'duration', label: t('questionnaire.duration'), value: formatValue(answers.duration, t) }
       ]
     },
     {
       id: 'budget',
       title: t('questionnaire.review.budget'),
       data: [
-        { label: t('questionnaire.budget'), value: answers.budget },
-        { label: t('questionnaire.budgetAmount'), value: answers.budgetAmount },
-        { label: t('questionnaire.budgetCurrency'), value: answers.budgetCurrency }
+        { key: 'budget', label: t('questionnaire.budget'), value: formatValue(answers.budget, t) },
+        { key: 'budgetAmount', label: t('questionnaire.budgetAmount'), value: formatValue(answers.budgetAmount, t) },
+        { key: 'budgetCurrency', label: t('questionnaire.budgetCurrency'), value: formatValue(answers.budgetCurrency, t) }
       ]
     },
     {
       id: 'preferences',
       title: t('questionnaire.review.preferences'),
       data: [
-        { label: t('questionnaire.travelAmbiance'), value: answers.travelAmbiance },
-        { label: t('questionnaire.styles'), value: answers.styles?.join(', ') },
-        { label: t('questionnaire.rhythm'), value: answers.rhythm },
-        { label: t('questionnaire.schedulePrefs'), value: answers.schedulePrefs?.join(', ') }
+        { key: 'travelAmbiance', label: t('questionnaire.travelAmbiance'), value: formatValue(answers.travelAmbiance, t) },
+        { key: 'styles', label: t('questionnaire.styles'), value: formatValue(answers.styles, t) },
+        { key: 'rhythm', label: t('questionnaire.rhythm'), value: formatValue(answers.rhythm, t) },
+        { key: 'schedulePrefs', label: t('questionnaire.schedulePrefs'), value: formatValue(answers.schedulePrefs, t) }
       ]
     },
     {
       id: 'accommodation',
       title: t('questionnaire.review.accommodation'),
       data: [
-        { label: t('questionnaire.accommodationType'), value: answers.accommodationType?.join(', ') },
-        { label: t('questionnaire.hotelPreferences'), value: answers.hotelPreferences?.join(', ') },
-        { label: t('questionnaire.comfort'), value: answers.comfort }
+        { key: 'accommodationType', label: t('questionnaire.accommodationType'), value: formatValue(answers.accommodationType, t) },
+        { key: 'hotelPreferences', label: t('questionnaire.hotelPreferences'), value: formatValue(answers.hotelPreferences, t) },
+        { key: 'comfort', label: t('questionnaire.comfort'), value: formatValue(answers.comfort, t) }
       ]
     },
     {
       id: 'constraints',
       title: t('questionnaire.review.constraints'),
       data: [
-        { label: t('questionnaire.security'), value: answers.security?.join(', ') },
-        { label: t('questionnaire.mobility'), value: answers.mobility?.join(', ') },
-        { label: t('questionnaire.constraints'), value: answers.constraints?.join(', ') }
+        { key: 'security', label: t('questionnaire.security'), value: formatValue(answers.security, t) },
+        { key: 'mobility', label: t('questionnaire.mobility'), value: formatValue(answers.mobility, t) },
+        { key: 'constraints', label: t('questionnaire.constraints'), value: formatValue(answers.constraints, t) }
       ]
     }
   ];

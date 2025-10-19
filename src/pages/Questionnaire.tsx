@@ -400,14 +400,14 @@ const Questionnaire = () => {
   useEffect(() => {
     if (!answers || Object.keys(answers).length === 0) return;
     
-    const normalizedAnswers: any = { ...answers };
     let hasChanges = false;
+    const updates: any = {};
     
     // Normaliser travelGroup
     if (answers.travelGroup) {
       const normalized = normalizeTravelGroup(answers.travelGroup);
-      if (normalized !== answers.travelGroup) {
-        normalizedAnswers.travelGroup = normalized;
+      if (normalized && normalized !== answers.travelGroup) {
+        updates.travelGroup = normalized;
         hasChanges = true;
       }
     }
@@ -415,8 +415,8 @@ const Questionnaire = () => {
     // Normaliser hasDestination
     if (answers.hasDestination) {
       const normalized = normalizeYesNo(answers.hasDestination);
-      if (normalized !== answers.hasDestination) {
-        normalizedAnswers.hasDestination = normalized;
+      if (normalized && normalized !== answers.hasDestination) {
+        updates.hasDestination = normalized;
         hasChanges = true;
       }
     }
@@ -424,8 +424,8 @@ const Questionnaire = () => {
     // Normaliser datesType
     if (answers.datesType) {
       const normalized = normalizeDatesType(answers.datesType);
-      if (normalized !== answers.datesType) {
-        normalizedAnswers.datesType = normalized;
+      if (normalized && normalized !== answers.datesType) {
+        updates.datesType = normalized;
         hasChanges = true;
       }
     }
@@ -433,8 +433,8 @@ const Questionnaire = () => {
     // Normaliser hasApproximateDepartureDate
     if (answers.hasApproximateDepartureDate) {
       const normalized = normalizeYesNo(answers.hasApproximateDepartureDate);
-      if (normalized !== answers.hasApproximateDepartureDate) {
-        normalizedAnswers.hasApproximateDepartureDate = normalized;
+      if (normalized && normalized !== answers.hasApproximateDepartureDate) {
+        updates.hasApproximateDepartureDate = normalized;
         hasChanges = true;
       }
     }
@@ -442,22 +442,28 @@ const Questionnaire = () => {
     // Normaliser helpWith array
     if (answers.helpWith && Array.isArray(answers.helpWith)) {
       const normalized = answers.helpWith.map((item: string) => {
-        const lower = item.toLowerCase();
+        const lower = item.toLowerCase().trim();
         if (lower.includes('vol') || lower === 'flights') return 'flights';
-        if (lower.includes('hébergement') || lower === 'accommodation') return 'accommodation';
-        if (lower.includes('activité') || lower === 'activities') return 'activities';
+        if (lower.includes('hébergement') || lower.includes('accommodation')) return 'accommodation';
+        if (lower.includes('activité') || lower.includes('activities')) return 'activities';
         return item;
       });
-      if (JSON.stringify(normalized) !== JSON.stringify(answers.helpWith)) {
-        normalizedAnswers.helpWith = normalized;
+      
+      // Comparer les tableaux de manière sûre
+      const isDifferent = normalized.length !== answers.helpWith.length ||
+        normalized.some((v: string, i: number) => v !== answers.helpWith[i]);
+        
+      if (isDifferent) {
+        updates.helpWith = normalized;
         hasChanges = true;
       }
     }
     
     if (hasChanges) {
-      setAnswers(normalizedAnswers);
+      setAnswers((prev: any) => ({ ...prev, ...updates }));
     }
-  }, [answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, answers.helpWith]);
+    // Ne dépendre que des valeurs brutes, pas de l'objet answers complet
+  }, [answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, JSON.stringify(answers.helpWith)]);
   
   // ⚠️ PROTECTION AUTH: Require authentication to start questionnaire
   useEffect(() => {
@@ -1025,6 +1031,11 @@ const Questionnaire = () => {
 
   const renderStep = () => {
     let stepCounter = 1;
+    
+    // Déclarer les variables helpWith au début pour qu'elles soient disponibles partout
+    const helpWithFlights = answers.helpWith || [];
+    const helpWithAccommodation = answers.helpWith || [];
+    const helpWithActivities = answers.helpWith || [];
 
     // Step 1: Qui voyage
     if (step === stepCounter) {
@@ -1570,7 +1581,7 @@ const Questionnaire = () => {
     stepCounter++;
 
     // Step 3b: Dates fixes - NOUVEAU SYSTEME RANGE
-    if (answers.datesType === t('questionnaire.dates.fixed') && step === stepCounter) {
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FIXED && step === stepCounter) {
       const departureDate = answers.departureDate ? new Date(answers.departureDate) : undefined;
       const returnDate = answers.returnDate ? new Date(answers.returnDate) : undefined;
       
@@ -1658,10 +1669,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.datesType === t('questionnaire.dates.fixed')) stepCounter++;
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FIXED) stepCounter++;
 
     // Step 3c: Flexibilité (si flexible)
-    if (answers.datesType === t('questionnaire.dates.flexible') && step === stepCounter) {
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && step === stepCounter) {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
@@ -1690,10 +1701,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.datesType === t('questionnaire.dates.flexible')) stepCounter++;
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) stepCounter++;
 
     // Step 3d: Date de départ approximative (si flexible)
-    if (answers.datesType === t('questionnaire.dates.flexible') && step === stepCounter) {
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -1721,10 +1732,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.datesType === t('questionnaire.dates.flexible')) stepCounter++;
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) stepCounter++;
 
     // Step 3e: Saisie date approximative (si l'utilisateur a dit "Oui")
-    if (answers.hasApproximateDepartureDate === t('questionnaire.flexibility.hasApproxDate.yes') && step === stepCounter) {
+    if (normalizeYesNo(answers.hasApproximateDepartureDate) === YES_NO.YES && step === stepCounter) {
       const approximateDate = answers.approximateDepartureDate 
         ? new Date(answers.approximateDepartureDate) 
         : undefined;
@@ -1791,10 +1802,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.hasApproximateDepartureDate === t('questionnaire.flexibility.hasApproxDate.yes')) stepCounter++;
+    if (normalizeYesNo(answers.hasApproximateDepartureDate) === YES_NO.YES) stepCounter++;
 
     // Step 4: Durée (only if flexible dates)
-    if (answers.datesType === t('questionnaire.dates.flexible') && step === stepCounter) {
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -1829,7 +1840,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.datesType === t('questionnaire.dates.flexible')) stepCounter++;
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) stepCounter++;
 
     // Step 4b: Nombre exact de nuits (si >14 nuits)
     if (answers.duration === t('questionnaire.duration.more14') && step === stepCounter) {
@@ -1982,7 +1993,9 @@ const Questionnaire = () => {
     if (answers.budgetType === t('questionnaire.budget.precise')) stepCounter++;
 
     // Step 6: Style (max 5 au lieu de 3) - SEULEMENT si destination précise ET activités sélectionnées
-    if (answers.hasDestination === t('questionnaire.yes') && (answers.helpWith || []).includes(t('questionnaire.activities')) && step === stepCounter) {
+    const helpWithForStyle = answers.helpWith || [];
+    const hasActivitiesForStyle = helpWithForStyle.includes('activities');
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.YES && hasActivitiesForStyle && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2051,12 +2064,12 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.hasDestination === t('questionnaire.yes') && (answers.helpWith || []).includes(t('questionnaire.activities'))) stepCounter++;
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.YES && hasActivitiesForStyle) stepCounter++;
 
     // Step 7 removed: replaced by unified RhythmStep later
 
     // Step 8: Vols - SEULEMENT si vols sélectionnés
-    if ((answers.helpWith || []).includes(t('questionnaire.flights')) && step === stepCounter) {
+    if (helpWithFlights.includes('flights') && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2085,10 +2098,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if ((answers.helpWith || []).includes(t('questionnaire.flights'))) stepCounter++;
+    if (helpWithFlights.includes('flights')) stepCounter++;
 
     // Step 9: Bagages par voyageur - AVEC OPTION OBJET PERSONNEL - SEULEMENT si vols sélectionnés
-    if ((answers.helpWith || []).includes(t('questionnaire.flights')) && step === stepCounter) {
+    if (helpWithFlights.includes('flights') && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2148,11 +2161,11 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if ((answers.helpWith || []).includes(t('questionnaire.flights'))) stepCounter++;
+    if (helpWithFlights.includes('flights')) stepCounter++;
 
     // Step 10: Mobilité (multi-choix + exhaustif) - SEULEMENT si pas uniquement vols
-    const helpWith = answers.helpWith || [];
-    const onlyFlights = helpWith.length === 1 && helpWith.includes(t('questionnaire.flights'));
+    const helpWithMobility = answers.helpWith || [];
+    const onlyFlights = helpWithMobility.length === 1 && helpWithMobility.includes('flights');
     if (!onlyFlights && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
@@ -2235,8 +2248,11 @@ const Questionnaire = () => {
     }
     if (!onlyFlights) stepCounter++;
 
+    // Déclarer helpWithAccommodation ici pour qu'elle soit disponible pour tous les steps suivants
+    // (déjà déclaré en haut de renderStep)
+
     // Step 11: Type hébergement (max 2 + "Peu importe") - SEULEMENT si hébergement sélectionné
-    if ((answers.helpWith || []).includes(t('questionnaire.accommodation')) && step === stepCounter) {
+    if (helpWithAccommodation.includes('accommodation') && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2316,10 +2332,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if ((answers.helpWith || []).includes(t('questionnaire.accommodation'))) stepCounter++;
+    if (helpWithAccommodation.includes('accommodation')) stepCounter++;
 
     // Step 11b: Détails hôtel (SI Hôtel est sélectionné ET hébergement sélectionné)
-    if ((answers.helpWith || []).includes(t('questionnaire.accommodation')) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel')) && step === stepCounter) {
+    if (helpWithAccommodation.includes('accommodation') && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel')) && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2518,12 +2534,12 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if ((answers.helpWith || []).includes(t('questionnaire.accommodation'))) stepCounter++;
+    if (helpWithAccommodation.includes('accommodation')) stepCounter++;
 
     // Step 15: Sécurité & Phobies (seulement si hébergement OU activités sélectionnés, pas juste vols)
     const helpWithForSecurity = answers.helpWith || [];
-    const needsAccommodationForSecurity = helpWithForSecurity.includes(t('questionnaire.accommodation'));
-    const needsActivitiesForSecurity = helpWithForSecurity.includes(t('questionnaire.activities'));
+    const needsAccommodationForSecurity = helpWithForSecurity.includes('accommodation');
+    const needsActivitiesForSecurity = helpWithForSecurity.includes('activities');
     const needsSecurityStep = needsAccommodationForSecurity || needsActivitiesForSecurity;
     if (needsSecurityStep && step === stepCounter) {
       return (
