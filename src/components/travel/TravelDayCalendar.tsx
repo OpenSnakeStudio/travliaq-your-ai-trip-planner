@@ -1,6 +1,9 @@
 import { Calendar, Clock } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useRef } from "react";
+import { format, addDays } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 interface Activity {
   id: number;
@@ -19,6 +22,8 @@ interface TravelDayCalendarProps {
 }
 
 const TravelDayCalendar = ({ days, activeDay, startDate = new Date(), onScrollToDay }: TravelDayCalendarProps) => {
+  const { i18n } = useTranslation();
+  const locale = i18n.language === 'fr' ? fr : enUS;
   const activeDayRef = useRef<HTMLDivElement>(null);
   
   const handleActivityClick = (activityId: number) => {
@@ -43,17 +48,22 @@ const TravelDayCalendar = ({ days, activeDay, startDate = new Date(), onScrollTo
 
   // Créer les groupes de jours avec leurs activités
   for (let dayNum = 1; dayNum <= maxDay; dayNum++) {
-    const currentDate = new Date(startDate);
-    currentDate.setDate(currentDate.getDate() + (dayNum - 1));
+    // Utiliser addDays de date-fns pour calculer correctement la date
+    const currentDate = addDays(startDate, dayNum - 1);
     
     const activitiesForDay = days.filter(d => d.day === dayNum);
     
+    // Utiliser date-fns pour formater les dates de manière cohérente
+    const dayOfWeek = format(currentDate, 'EEEE', { locale }); // Jour complet
+    const dayOfMonth = currentDate.getDate();
+    const month = format(currentDate, 'MMMM', { locale }); // Mois complet
+    
     dayGroups.push({
       dayNumber: dayNum,
-      date: new Date(currentDate),
-      dayOfWeek: currentDate.toLocaleDateString('fr-FR', { weekday: 'long' }),
-      dayOfMonth: currentDate.getDate(),
-      month: currentDate.toLocaleDateString('fr-FR', { month: 'long' }),
+      date: currentDate,
+      dayOfWeek,
+      dayOfMonth,
+      month,
       activities: activitiesForDay,
       hasActiveActivity: activitiesForDay.some(a => a.id === activeDay),
     });

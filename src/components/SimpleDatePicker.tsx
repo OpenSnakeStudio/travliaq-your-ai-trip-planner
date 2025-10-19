@@ -16,17 +16,20 @@ export function SimpleDatePicker({ selected, onSelect, minDate = new Date() }: S
   const locale = i18n.language === 'fr' ? fr : enUS;
   const [currentMonth, setCurrentMonth] = useState(selected || new Date());
 
+  const weekStartsOn = i18n.language === 'fr' ? 1 : 0; // Lundi pour français, Dimanche pour anglais
+  
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const startDate = startOfWeek(monthStart, { locale });
-  const endDate = endOfWeek(monthEnd, { locale });
+  const startDate = startOfWeek(monthStart, { locale, weekStartsOn });
+  const endDate = endOfWeek(monthEnd, { locale, weekStartsOn });
 
   const days = eachDayOfInterval({ start: startDate, end: endDate });
   
-  // Week days - use locale-specific format
+  // Week days - use locale-specific format with proper start day
   const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const day = addMonths(startDate, 0);
-    return format(new Date(day.getTime() + i * 24 * 60 * 60 * 1000), 'EEEEEE', { locale });
+    const dayDate = new Date(startDate);
+    dayDate.setDate(startDate.getDate() + i);
+    return format(dayDate, 'EEEEEE', { locale });
   });
 
   const handlePrevMonth = () => {
