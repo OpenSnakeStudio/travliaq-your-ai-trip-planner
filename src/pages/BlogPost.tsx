@@ -72,9 +72,9 @@ const BlogPost = () => {
   if (isLoading) {
     return (
       <>
-        <Navigation theme="light" />
-        <div className="min-h-screen bg-gradient-subtle">
-          <div className="container max-w-4xl mx-auto py-8 px-4">
+      <Navigation theme="light" />
+      <div className="min-h-screen bg-gradient-subtle pt-24 md:pt-28">
+        <div className="container max-w-4xl mx-auto py-8 px-4">
           <div className="animate-pulse space-y-8">
             <div className="h-10 bg-muted rounded w-32" />
             <div className="h-12 bg-muted rounded w-3/4" />
@@ -103,7 +103,7 @@ const BlogPost = () => {
     <>
       <Navigation theme="light" />
       <ReadingProgress />
-      <div className="min-h-screen bg-gradient-subtle">
+      <div className="min-h-screen bg-gradient-subtle pt-24 md:pt-28">
         <div className="container max-w-7xl mx-auto py-8 px-4">
           <Button
             variant="outline"
