@@ -105,6 +105,56 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
         </p>
       </div>
 
+      {/* Email et bouton en ligne */}
+      <Card className="border-[2px] border-travliaq-golden-sand bg-travliaq-golden-sand/5">
+        <div className="p-6">
+          <h3 className="text-lg font-semibold text-travliaq-deep-blue flex items-center gap-2 mb-4">
+            <Mail className="h-5 w-5" />
+            {t('questionnaire.review.contact')}
+          </h3>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <Label htmlFor="review-email" className="text-sm font-medium mb-2 block">
+                {t('questionnaire.email')} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="review-email"
+                type="email"
+                value={email}
+                onChange={(e) => onEmailChange(e.target.value)}
+                placeholder={t('questionnaire.emailPlaceholder')}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('questionnaire.review.emailDesc')}
+              </p>
+            </div>
+            <div className="flex items-end">
+              <Button
+                variant="hero"
+                size="lg"
+                onClick={onSubmit}
+                disabled={isSubmitting || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+                className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90 whitespace-nowrap"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    {t('questionnaire.submitting')}
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-5 w-5" />
+                    {t('questionnaire.submit')}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Sections à valider */}
       <div className="space-y-4">
         {sections.map((section) => (
           <Collapsible
@@ -153,54 +203,6 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
             </Card>
           </Collapsible>
         ))}
-
-        {/* Contact Section - Always open */}
-        <Card className="border-[2px] border-travliaq-golden-sand">
-          <div className="p-4 bg-travliaq-golden-sand/10">
-            <h3 className="text-lg font-semibold text-travliaq-deep-blue flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              {t('questionnaire.review.contact')}
-            </h3>
-          </div>
-          <div className="p-4">
-            <Label htmlFor="review-email" className="text-sm font-medium">
-              {t('questionnaire.email')} <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="review-email"
-              type="email"
-              value={email}
-              onChange={(e) => onEmailChange(e.target.value)}
-              placeholder={t('questionnaire.emailPlaceholder')}
-              className="mt-2"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              {t('questionnaire.review.emailDesc')}
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      <div className="flex justify-center pt-6">
-        <Button
-          variant="hero"
-          size="lg"
-          onClick={onSubmit}
-          disabled={isSubmitting || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
-          className="bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              {t('questionnaire.submitting')}
-            </>
-          ) : (
-            <>
-              <Mail className="mr-2 h-5 w-5" />
-              {t('questionnaire.submit')}
-            </>
-          )}
-        </Button>
       </div>
     </div>
   );

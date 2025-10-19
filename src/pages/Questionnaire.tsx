@@ -613,12 +613,12 @@ const Questionnaire = () => {
     
     total++; // Step 17: Contraintes
     total++; // Step 18: Zone ouverte
-    total++; // Step 19: Email
+    total++; // Step final: Review & confirm
     
     return total;
   };
 
-  const totalSteps = getTotalSteps() + 1; // +1 for Review step
+  const totalSteps = getTotalSteps();
   const progress = (step / totalSteps) * 100;
 
   const nextStep = () => {
