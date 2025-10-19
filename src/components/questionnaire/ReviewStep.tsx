@@ -111,7 +111,7 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
       id: 'budget',
       title: t('questionnaire.review.budget'),
       data: [
-        { key: 'budget', label: t('questionnaire.budget'), value: formatValue(answers.budget, t) },
+        { key: 'budgetPerPerson', label: t('questionnaire.budget'), value: formatValue(answers.budgetPerPerson, t) },
         { key: 'budgetAmount', label: t('questionnaire.budgetAmount'), value: formatValue(answers.budgetAmount, t) },
         { key: 'budgetCurrency', label: t('questionnaire.budgetCurrency'), value: formatValue(answers.budgetCurrency, t) }
       ]

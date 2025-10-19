@@ -80,7 +80,7 @@ type Answer = {
   approximateDepartureDate?: string; // Date approximative si "Oui"
   duration?: string;
   exactNights?: number;
-  budget?: string;
+  budgetPerPerson?: string;
   budgetType?: string;
   budgetAmount?: number;
   budgetCurrency?: string;
@@ -908,7 +908,7 @@ const Questionnaire = () => {
         approximate_departure_date: answers.approximateDepartureDate || null,
         duration: answers.duration || null,
         exact_nights: answers.exactNights || null,
-        budget: answers.budget || null,
+        budget_per_person: answers.budgetPerPerson || null,
         budget_type: answers.budgetType || null,
         budget_amount: answers.budgetAmount || null,
         budget_currency: answers.budgetCurrency || null,
@@ -1922,7 +1922,7 @@ const Questionnaire = () => {
                     setAnswers({ ...answers, budgetType: t('questionnaire.budget.precise') });
                     setTimeout(nextStep, 300);
                   } else {
-                    setAnswers({ ...answers, budget: option.label, budgetType: undefined });
+                    setAnswers({ ...answers, budgetPerPerson: option.label, budgetType: undefined });
                     setTimeout(nextStep, 300);
                   }
                 }}

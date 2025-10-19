@@ -93,9 +93,9 @@ export type Database = {
           amenities: Json | null
           approximate_departure_date: string | null
           biorhythm: Json | null
-          budget: string | null
           budget_amount: number | null
           budget_currency: string | null
+          budget_per_person: string | null
           budget_type: string | null
           children: Json | null
           climate_preference: string | null
@@ -138,9 +138,9 @@ export type Database = {
           amenities?: Json | null
           approximate_departure_date?: string | null
           biorhythm?: Json | null
-          budget?: string | null
           budget_amount?: number | null
           budget_currency?: string | null
+          budget_per_person?: string | null
           budget_type?: string | null
           children?: Json | null
           climate_preference?: string | null
@@ -183,9 +183,9 @@ export type Database = {
           amenities?: Json | null
           approximate_departure_date?: string | null
           biorhythm?: Json | null
-          budget?: string | null
           budget_amount?: number | null
           budget_currency?: string | null
+          budget_per_person?: string | null
           budget_type?: string | null
           children?: Json | null
           climate_preference?: string | null
