@@ -35,6 +35,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
+import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, normalizeTravelGroup, normalizeYesNo, normalizeDatesType } from "@/lib/questionnaireValues";
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -395,6 +396,69 @@ const Questionnaire = () => {
     };
   }, [i18n]);
   
+  // Normaliser automatiquement les réponses pour qu'elles utilisent toujours des codes internes
+  useEffect(() => {
+    if (!answers || Object.keys(answers).length === 0) return;
+    
+    const normalizedAnswers: any = { ...answers };
+    let hasChanges = false;
+    
+    // Normaliser travelGroup
+    if (answers.travelGroup) {
+      const normalized = normalizeTravelGroup(answers.travelGroup);
+      if (normalized !== answers.travelGroup) {
+        normalizedAnswers.travelGroup = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser hasDestination
+    if (answers.hasDestination) {
+      const normalized = normalizeYesNo(answers.hasDestination);
+      if (normalized !== answers.hasDestination) {
+        normalizedAnswers.hasDestination = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser datesType
+    if (answers.datesType) {
+      const normalized = normalizeDatesType(answers.datesType);
+      if (normalized !== answers.datesType) {
+        normalizedAnswers.datesType = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser hasApproximateDepartureDate
+    if (answers.hasApproximateDepartureDate) {
+      const normalized = normalizeYesNo(answers.hasApproximateDepartureDate);
+      if (normalized !== answers.hasApproximateDepartureDate) {
+        normalizedAnswers.hasApproximateDepartureDate = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser helpWith array
+    if (answers.helpWith && Array.isArray(answers.helpWith)) {
+      const normalized = answers.helpWith.map((item: string) => {
+        const lower = item.toLowerCase();
+        if (lower.includes('vol') || lower === 'flights') return 'flights';
+        if (lower.includes('hébergement') || lower === 'accommodation') return 'accommodation';
+        if (lower.includes('activité') || lower === 'activities') return 'activities';
+        return item;
+      });
+      if (JSON.stringify(normalized) !== JSON.stringify(answers.helpWith)) {
+        normalizedAnswers.helpWith = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    if (hasChanges) {
+      setAnswers(normalizedAnswers);
+    }
+  }, [answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, answers.helpWith]);
+  
   // ⚠️ PROTECTION AUTH: Require authentication to start questionnaire
   useEffect(() => {
     if (!loading && !user) {
@@ -456,10 +520,12 @@ const Questionnaire = () => {
   useEffect(() => {
     if (!answers.travelGroup) return;
     
+    const normalizedGroup = normalizeTravelGroup(answers.travelGroup);
     let inferred = answers.numberOfTravelers;
-    if (answers.travelGroup === t('questionnaire.solo')) {
+    
+    if (normalizedGroup === TRAVEL_GROUPS.SOLO) {
       inferred = 1;
-    } else if (answers.travelGroup === t('questionnaire.duo')) {
+    } else if (normalizedGroup === TRAVEL_GROUPS.DUO) {
       inferred = 2;
     } else if (answers.travelers && answers.travelers.length > 0) {
       inferred = answers.travelers.length;
@@ -468,11 +534,12 @@ const Questionnaire = () => {
     if (inferred && inferred !== answers.numberOfTravelers) {
       setAnswers(prev => ({ ...prev, numberOfTravelers: inferred }));
     }
-  }, [answers.travelGroup, answers.travelers, t]);
+  }, [answers.travelGroup, answers.travelers]);
   
   // 🧮 INFERENCE: Auto-calculate duration from exact dates
   useEffect(() => {
-    if (answers.datesType === t('questionnaire.dates.fixed') && 
+    const normalizedDatesType = normalizeDatesType(answers.datesType);
+    if (normalizedDatesType === DATES_TYPE.FIXED && 
         answers.departureDate && 
         answers.returnDate) {
       const start = new Date(answers.departureDate);
@@ -558,14 +625,18 @@ const Questionnaire = () => {
   const getTotalSteps = (): number => {
     let total = 1; // Step 1: Qui voyage
     
-    if (answers.travelGroup === t('questionnaire.family') || answers.travelGroup === t('questionnaire.group35')) total++; // Step 1b: Nombre exact
-    if (answers.travelGroup === t('questionnaire.family')) total++; // Step 1c: Détails enfants
+    const normalizedGroup = normalizeTravelGroup(answers.travelGroup);
+    const normalizedHasDestination = normalizeYesNo(answers.hasDestination);
+    const normalizedDatesType = normalizeDatesType(answers.datesType);
+    
+    if (normalizedGroup === TRAVEL_GROUPS.FAMILY || normalizedGroup === TRAVEL_GROUPS.GROUP35) total++; // Step 1b: Nombre exact
+    if (normalizedGroup === TRAVEL_GROUPS.FAMILY) total++; // Step 1c: Détails enfants
     total++; // Step 2: Destination en tête
     total++; // Step 2b: Comment Travliaq peut aider (vols/hébergement/activités)
     
-    if (answers.hasDestination === t('questionnaire.yes')) {
+    if (normalizedHasDestination === YES_NO.YES) {
       total++; // Step 2c: Quelle destination
-    } else if (answers.hasDestination === t('questionnaire.no')) {
+    } else if (normalizedHasDestination === YES_NO.NO) {
       total++; // Step 2d: Climat préféré
       total++; // Step 2e: Affinités de voyage
       total++; // Step 2f: Ambiance recherchée
@@ -574,12 +645,13 @@ const Questionnaire = () => {
     
     total++; // Step 3: Dates
     
-    if (answers.datesType === t('questionnaire.dates.fixed')) {
+    if (normalizedDatesType === DATES_TYPE.FIXED) {
       total++; // Step 3b: Dates précises
-    } else if (answers.datesType === t('questionnaire.dates.flexible')) {
+    } else if (normalizedDatesType === DATES_TYPE.FLEXIBLE) {
       total++; // Step 3c: Flexibilité
       total++; // Step 3d: Date de départ approximative
-      if (answers.hasApproximateDepartureDate === t('questionnaire.flexibility.hasApproxDate.yes')) total++; // Step 3e: Saisie date approximative
+      const normalizedHasApproxDate = normalizeYesNo(answers.hasApproximateDepartureDate);
+      if (normalizedHasApproxDate === YES_NO.YES) total++; // Step 3e: Saisie date approximative
       total++; // Step 4: Durée
       if (answers.duration === t('questionnaire.duration.more14')) total++; // Step 4b: Nombre exact
     }
@@ -588,12 +660,12 @@ const Questionnaire = () => {
     if (answers.budgetType === t('questionnaire.budget.precise')) total++; // Step 5b: Montant exact
     
     const helpWith = answers.helpWith || [];
-    const needsFlights = helpWith.includes(t('questionnaire.flights'));
-    const needsAccommodation = helpWith.includes(t('questionnaire.accommodation'));
-    const needsActivities = helpWith.includes(t('questionnaire.activities'));
+    const needsFlights = helpWith.includes('flights') || helpWith.includes(t('questionnaire.flights'));
+    const needsAccommodation = helpWith.includes('accommodation') || helpWith.includes(t('questionnaire.accommodation'));
+    const needsActivities = helpWith.includes('activities') || helpWith.includes(t('questionnaire.activities'));
     
     // Step 6: Style (seulement si destination précise ET activités sélectionnées)
-    if (answers.hasDestination === t('questionnaire.yes') && needsActivities) {
+    if (normalizedHasDestination === YES_NO.YES && needsActivities) {
       total++; // Step 6: Style
     }
     
@@ -963,22 +1035,22 @@ const Questionnaire = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
-              { label: t('questionnaire.solo'), icon: "🧳" },
-              { label: t('questionnaire.duo'), icon: "👥" },
-              { label: t('questionnaire.group35'), icon: "👨‍👩‍👧" },
-              { label: t('questionnaire.family'), icon: "👨‍👩‍👧‍👦" }
+              { code: TRAVEL_GROUPS.SOLO, label: t('questionnaire.solo'), icon: "🧳" },
+              { code: TRAVEL_GROUPS.DUO, label: t('questionnaire.duo'), icon: "👥" },
+              { code: TRAVEL_GROUPS.GROUP35, label: t('questionnaire.group35'), icon: "👨‍👩‍👧" },
+              { code: TRAVEL_GROUPS.FAMILY, label: t('questionnaire.family'), icon: "👨‍👩‍👧‍👦" }
             ].map((option) => (
               <Card
-                key={option.label}
+                key={option.code}
                 className={`p-6 cursor-pointer transition-all duration-300 hover:scale-105 border-2 ${
-                  answers.travelGroup === option.label 
+                  normalizeTravelGroup(answers.travelGroup) === option.code
                     ? 'border-travliaq-turquoise bg-gradient-to-br from-travliaq-turquoise/10 to-travliaq-golden-sand/10 shadow-xl' 
                     : 'border-transparent hover:border-travliaq-turquoise/50 hover:shadow-lg'
                 }`}
                 onClick={() => {
-                  handleChoice("travelGroup", option.label);
+                  handleChoice("travelGroup", option.code);
                   // Auto-advance pour Solo et Duo
-                  if (option.label === t('questionnaire.solo') || option.label === t('questionnaire.duo')) {
+                  if (option.code === TRAVEL_GROUPS.SOLO || option.code === TRAVEL_GROUPS.DUO) {
                     setTimeout(nextStep, 300);
                   }
                 }}
@@ -998,7 +1070,8 @@ const Questionnaire = () => {
     stepCounter++;
 
     // Step 1b: Nombre exact de voyageurs avec détails (si Famille ou Groupe 3-5)
-    if ((answers.travelGroup === t('questionnaire.family') || answers.travelGroup === t('questionnaire.group35')) && step === stepCounter) {
+    const normalizedGroup = normalizeTravelGroup(answers.travelGroup);
+    if ((normalizedGroup === TRAVEL_GROUPS.FAMILY || normalizedGroup === TRAVEL_GROUPS.GROUP35) && step === stepCounter) {
       return (
         <TravelersStep
           travelers={answers.travelers || []}
@@ -1102,7 +1175,7 @@ const Questionnaire = () => {
     stepCounter++;
 
     // Step 2c: Destination précise (si Oui)
-    if (answers.hasDestination === t('questionnaire.yes') && step === stepCounter) {
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.YES && step === stepCounter) {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
@@ -1206,10 +1279,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.hasDestination === t('questionnaire.yes')) stepCounter++;
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.YES) stepCounter++;
 
     // Step 2c: Climat préféré (si Non - pas de destination en tête) - MULTI-CHOIX
-    if (answers.hasDestination === t('questionnaire.no') && step === stepCounter) {
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO && step === stepCounter) {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
@@ -1271,10 +1344,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.hasDestination === t('questionnaire.no')) stepCounter++;
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO) stepCounter++;
 
     // Step 2d: Affinités de voyage (si Non - multi-choix)
-    if (answers.hasDestination === t('questionnaire.no') && step === stepCounter) {
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO && step === stepCounter) {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
@@ -1350,10 +1423,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.hasDestination === t('questionnaire.no')) stepCounter++;
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO) stepCounter++;
 
     // Step 2e: Ambiance recherchée (si Non)
-    if (answers.hasDestination === t('questionnaire.no') && step === stepCounter) {
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -1390,10 +1463,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.hasDestination === t('questionnaire.no')) stepCounter++;
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO) stepCounter++;
 
     // Step 2g: Ville de départ (si destination flexible)
-    if (answers.hasDestination === t('questionnaire.no') && step === stepCounter) {
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.NO && step === stepCounter) {
       return (
         <div className="space-y-4 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
