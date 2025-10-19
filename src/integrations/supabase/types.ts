@@ -113,6 +113,8 @@ export type Database = {
           flight_preference: string | null
           has_approximate_departure_date: string | null
           has_destination: string | null
+          help_with: string[] | null
+          hotel_preferences: string[] | null
           id: string
           language: string
           luggage: Json | null
@@ -121,6 +123,7 @@ export type Database = {
           number_of_travelers: number | null
           return_date: string | null
           rhythm: string | null
+          schedule_prefs: string[] | null
           security: Json | null
           styles: Json | null
           travel_affinities: Json | null
@@ -155,6 +158,8 @@ export type Database = {
           flight_preference?: string | null
           has_approximate_departure_date?: string | null
           has_destination?: string | null
+          help_with?: string[] | null
+          hotel_preferences?: string[] | null
           id?: string
           language?: string
           luggage?: Json | null
@@ -163,6 +168,7 @@ export type Database = {
           number_of_travelers?: number | null
           return_date?: string | null
           rhythm?: string | null
+          schedule_prefs?: string[] | null
           security?: Json | null
           styles?: Json | null
           travel_affinities?: Json | null
@@ -197,6 +203,8 @@ export type Database = {
           flight_preference?: string | null
           has_approximate_departure_date?: string | null
           has_destination?: string | null
+          help_with?: string[] | null
+          hotel_preferences?: string[] | null
           id?: string
           language?: string
           luggage?: Json | null
@@ -205,6 +213,7 @@ export type Database = {
           number_of_travelers?: number | null
           return_date?: string | null
           rhythm?: string | null
+          schedule_prefs?: string[] | null
           security?: Json | null
           styles?: Json | null
           travel_affinities?: Json | null

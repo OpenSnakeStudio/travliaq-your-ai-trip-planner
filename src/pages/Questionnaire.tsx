@@ -45,9 +45,10 @@ import { fr } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 import { useCities } from "@/hooks/useCities";
 import { SecurityStep } from "@/components/questionnaire/SecurityStep";
-import { BiorhythmStep } from "@/components/questionnaire/BiorhythmStep";
+import { RhythmStep } from "@/components/questionnaire/RhythmStep";
 import { TravelersStep } from "@/components/questionnaire/TravelersStep";
 import { CitySearch } from "@/components/questionnaire/CitySearch";
+import { ReviewStep } from "@/components/questionnaire/ReviewStep";
 
 type LuggageChoice = {
   [travelerIndex: number]: string;
@@ -64,7 +65,7 @@ type Answer = {
   travelers?: Traveler[]; // Nouveau système de voyageurs
   children?: Array<{ age: number }>; // Ancien système - pour compatibilité
   hasDestination?: string;
-  helpWith?: string[]; // Nouvelle question: Comment Travliaq peut aider (vols, hébergement, activités)
+  helpWith?: string[]; // Comment Travliaq peut aider (vols, hébergement, activités)
   destination?: string;
   departureLocation?: string;
   climatePreference?: string[];
@@ -83,17 +84,17 @@ type Answer = {
   budgetAmount?: number;
   budgetCurrency?: string;
   styles?: string[];
-  rhythm?: string;
+  rhythm?: string; // Nouveau: relaxed | balanced | intense
+  schedulePrefs?: string[]; // Nouveau: early_bird, night_owl, etc.
   flightPreference?: string;
   luggage?: LuggageChoice;
   mobility?: string[];
   accommodationType?: string[];
-  hotelPreferences?: string[];
+  hotelPreferences?: string[]; // Nouveau: all_inclusive, half_board, etc.
   comfort?: string;
   neighborhood?: string;
   amenities?: string[];
-  security?: string[]; // Nouveau: contraintes de sécurité et phobies
-  biorhythm?: string[]; // Nouveau: horloge biologique et habitudes
+  security?: string[]; // Contraintes de sécurité et phobies
   constraints?: string[];
   additionalInfo?: string;
   email?: string;
@@ -376,7 +377,106 @@ const Questionnaire = () => {
   const cityInputRef = useRef<HTMLInputElement>(null);
   const departureInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  // ⚠️ PROTECTION AUTH: Require authentication to start questionnaire
+  useEffect(() => {
+    if (!loading && !user) {
+      toast({
+        title: t('questionnaire.connectionRequired'),
+        description: t('questionnaire.mustBeConnected'),
+        variant: "destructive",
+        duration: 6000
+      });
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate, t, toast]);
+  
+  // 💾 AUTOSAVE: Save draft to localStorage with debounce
+  useEffect(() => {
+    if (!user) return;
+    
+    const timer = setTimeout(() => {
+      const draftKey = `travliaq:qv2:${user.id}`;
+      const draft = {
+        version: 2,
+        timestamp: Date.now(),
+        step,
+        answers
+      };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [answers, step, user]);
+  
+  // 📋 LOAD DRAFT: Restore from localStorage on mount
+  useEffect(() => {
+    if (!user) return;
+    
+    const draftKey = `travliaq:qv2:${user.id}`;
+    const saved = localStorage.getItem(draftKey);
+    
+    if (saved) {
+      try {
+        const draft = JSON.parse(saved);
+        if (draft.version === 2 && draft.answers && draft.step) {
+          const shouldResume = window.confirm(t('questionnaire.resumeDraft'));
+          if (shouldResume) {
+            setAnswers(draft.answers);
+            setStep(draft.step);
+          } else {
+            localStorage.removeItem(draftKey);
+          }
+        }
+      } catch (error) {
+        localStorage.removeItem(draftKey);
+      }
+    }
+  }, [user, t]);
+  
+  // 🧮 INFERENCE: Auto-calculate numberOfTravelers
+  useEffect(() => {
+    if (!answers.travelGroup) return;
+    
+    let inferred = answers.numberOfTravelers;
+    if (answers.travelGroup === t('questionnaire.solo')) {
+      inferred = 1;
+    } else if (answers.travelGroup === t('questionnaire.duo')) {
+      inferred = 2;
+    } else if (answers.travelers && answers.travelers.length > 0) {
+      inferred = answers.travelers.length;
+    }
+    
+    if (inferred && inferred !== answers.numberOfTravelers) {
+      setAnswers(prev => ({ ...prev, numberOfTravelers: inferred }));
+    }
+  }, [answers.travelGroup, answers.travelers, t]);
+  
+  // 🧮 INFERENCE: Auto-calculate duration from exact dates
+  useEffect(() => {
+    if (answers.datesType === t('questionnaire.dates.fixed') && 
+        answers.departureDate && 
+        answers.returnDate) {
+      const start = new Date(answers.departureDate);
+      const end = new Date(answers.returnDate);
+      const diffTime = Math.abs(end.getTime() - start.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Infer duration category
+      let inferredDuration = '';
+      if (diffDays <= 3) inferredDuration = t('questionnaire.duration.1to3');
+      else if (diffDays <= 7) inferredDuration = t('questionnaire.duration.4to7');
+      else if (diffDays <= 14) inferredDuration = t('questionnaire.duration.8to14');
+      else inferredDuration = t('questionnaire.duration.more14');
+      
+      setAnswers(prev => ({ 
+        ...prev, 
+        duration: inferredDuration,
+        exactNights: diffDays
+      }));
+    }
+  }, [answers.datesType, answers.departureDate, answers.returnDate, t]);
 
   // Function to request geolocation
   const requestGeolocation = () => {
@@ -520,7 +620,7 @@ const Questionnaire = () => {
     return total;
   };
 
-  const totalSteps = getTotalSteps();
+  const totalSteps = getTotalSteps() + 1; // +1 for Review step
   const progress = (step / totalSteps) * 100;
 
   const nextStep = () => {
@@ -697,16 +797,18 @@ const Questionnaire = () => {
         budget_currency: answers.budgetCurrency || null,
         styles: answers.styles || null,
         rhythm: answers.rhythm || null,
+        schedule_prefs: answers.schedulePrefs || null,
         flight_preference: answers.flightPreference || null,
         luggage: answers.luggage || null,
         mobility: answers.mobility || null,
         accommodation_type: answers.accommodationType || null,
+        hotel_preferences: answers.hotelPreferences || null,
         comfort: answers.comfort || null,
         neighborhood: answers.neighborhood || null,
         amenities: answers.amenities || null,
         children: answers.children || null,
         security: answers.security || null,
-        biorhythm: answers.biorhythm || null,
+        help_with: answers.helpWith || null,
         constraints: answers.constraints || null,
         additional_info: answers.additionalInfo || null
       };
@@ -2367,12 +2469,14 @@ const Questionnaire = () => {
     }
     if (needsSecurityStep) stepCounter++;
 
-    // Step 16: Horloge biologique (seulement si activités sélectionnées)
+    // Step 16: Rythme & horaires (seulement si activités sélectionnées)
     if (needsActivitiesForSecurity && step === stepCounter) {
       return (
-        <BiorhythmStep
-          biorhythm={answers.biorhythm || []}
-          onUpdate={(biorhythm) => setAnswers({ ...answers, biorhythm })}
+        <RhythmStep
+          rhythm={answers.rhythm || ""}
+          schedulePrefs={answers.schedulePrefs || []}
+          onUpdateRhythm={(rhythm) => setAnswers({ ...answers, rhythm })}
+          onUpdateSchedulePrefs={(schedulePrefs) => setAnswers({ ...answers, schedulePrefs })}
           onNext={nextStep}
         />
       );
@@ -2502,50 +2606,37 @@ const Questionnaire = () => {
     }
     stepCounter++;
 
-    // Step 17: Email (anciennement Step 18, étape "Quelque chose à ajouter" supprimée)
+    // Step final-1: Review & confirm
     if (step === stepCounter) {
       return (
-        <div className="space-y-8 animate-fade-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            {t('questionnaire.email.title')}
-          </h2>
-          <p className="text-center text-muted-foreground">
-            {t('questionnaire.email.description')}
-          </p>
-          <div className="max-w-xl mx-auto space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder={t('questionnaire.email.placeholder')}
-                className="pl-10 h-12 text-base"
-                value={answers.email || ""}
-                onChange={(e) => setAnswers({ ...answers, email: e.target.value })}
-                onKeyPress={(e) => handleKeyPress(e, handleSubmitQuestionnaire, !!answers.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(answers.email))}
-              />
-            </div>
-            <div className="flex justify-center">
-              <Button
-                variant="hero"
-                size="lg"
-                onClick={handleSubmitQuestionnaire}
-                disabled={!answers.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(answers.email) || isSubmitting}
-                className="bg-travliaq-deep-blue"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('questionnaire.email.sending')}
-                  </>
-                ) : (
-                  <>{t('questionnaire.email.send')}</>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <ReviewStep
+          answers={answers}
+          email={answers.email || ""}
+          onEmailChange={(email) => setAnswers({ ...answers, email })}
+          onEdit={(section) => {
+            // Navigate back to the appropriate step based on section
+            const sectionStepMap: Record<string, number> = {
+              'group': 1,
+              'destination': 2,
+              'dates': 3,
+              'budget': 5,
+              'preferences': 6,
+              'accommodation': 11,
+              'constraints': 17
+            };
+            const targetStep = sectionStepMap[section];
+            if (targetStep) {
+              setStep(targetStep);
+            }
+          }}
+          onSubmit={handleSubmitQuestionnaire}
+          isSubmitting={isSubmitting}
+        />
       );
     }
+    stepCounter++;
+
+    // Step final: Email (removed, now part of Review)
 
     return null;
   };
