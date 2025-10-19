@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import i18n from "@/i18n/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -632,6 +633,7 @@ const Questionnaire = () => {
       const questionnaireSchema = z.object({
         user_id: z.string().uuid().nullable(),
         email: z.string().trim().email({ message: "Email invalide" }).max(255, { message: "Email trop long" }),
+        language: z.enum(['fr', 'en']),
         travel_group: z.string().max(100).optional().nullable(),
         number_of_travelers: z.number().int().min(1).max(50).optional().nullable(),
         has_destination: z.string().max(50).optional().nullable(),
@@ -672,6 +674,7 @@ const Questionnaire = () => {
       const responseData = {
         user_id: user?.id || null,
         email: answers.email || "",
+        language: i18n.language === 'en' ? 'en' : 'fr', // Capture the current language
         travel_group: answers.travelGroup || null,
         number_of_travelers: answers.numberOfTravelers || null,
         has_destination: answers.hasDestination || null,

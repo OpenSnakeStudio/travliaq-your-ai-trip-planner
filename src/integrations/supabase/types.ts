@@ -114,6 +114,7 @@ export type Database = {
           has_approximate_departure_date: string | null
           has_destination: string | null
           id: string
+          language: string
           luggage: Json | null
           mobility: Json | null
           neighborhood: string | null
@@ -155,6 +156,7 @@ export type Database = {
           has_approximate_departure_date?: string | null
           has_destination?: string | null
           id?: string
+          language?: string
           luggage?: Json | null
           mobility?: Json | null
           neighborhood?: string | null
@@ -196,6 +198,7 @@ export type Database = {
           has_approximate_departure_date?: string | null
           has_destination?: string | null
           id?: string
+          language?: string
           luggage?: Json | null
           mobility?: Json | null
           neighborhood?: string | null
