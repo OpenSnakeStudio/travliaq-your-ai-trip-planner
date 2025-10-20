@@ -44,7 +44,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { format, startOfToday, addMonths, startOfMonth } from "date-fns";
 import { fr } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
-import { useCities } from "@/hooks/useCities";
 import { SecurityStep } from "@/components/questionnaire/SecurityStep";
 import { RhythmStep } from "@/components/questionnaire/RhythmStep";
 import { TravelersStep } from "@/components/questionnaire/TravelersStep";
@@ -360,9 +359,6 @@ const majorCities = [
 const Questionnaire = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  
-  // Load cities from database
-  const { data: cities, isLoading: citiesLoading } = useCities();
   
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Answer>({});
@@ -1254,8 +1250,6 @@ const Questionnaire = () => {
               <CitySearch
                 value={answers.departureLocation || ""}
                 onChange={(value) => setAnswers({ ...answers, departureLocation: value })}
-                cities={cities}
-                citiesLoading={citiesLoading}
                 placeholder={t('questionnaire.departureCity')}
               />
             </div>
@@ -1282,8 +1276,6 @@ const Questionnaire = () => {
               <CitySearch
                 value={answers.destination || ""}
                 onChange={(value) => setAnswers({ ...answers, destination: value })}
-                cities={cities}
-                citiesLoading={citiesLoading}
                 placeholder={t('questionnaire.destinationCity')}
                 onEnterPress={() => {
                   if (answers.destination && answers.destination.trim() !== "" && answers.departureLocation && answers.departureLocation.trim() !== "") {
@@ -1544,8 +1536,6 @@ const Questionnaire = () => {
               <CitySearch
                 value={answers.departureLocation || ""}
                 onChange={(value) => setAnswers({ ...answers, departureLocation: value })}
-                cities={cities}
-                citiesLoading={citiesLoading}
                 placeholder={t('questionnaire.departureCity')}
               />
             </div>
@@ -2746,41 +2736,9 @@ const Questionnaire = () => {
     return null;
   };
 
-  // Swipe gesture handling for mobile
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
-
-  // Minimum swipe distance (in px)
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-    
-    // Right swipe = go back
-    if (isRightSwipe && step > 1) {
-      prevStep();
-    }
-  };
-
   return (
     <div 
       className="min-h-screen bg-gradient-to-br from-travliaq-deep-blue/5 via-white to-travliaq-turquoise/10 relative overflow-hidden"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
     >
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-travliaq-turquoise/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>

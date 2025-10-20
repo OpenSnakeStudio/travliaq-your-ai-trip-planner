@@ -2,15 +2,13 @@ import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { useFilteredCities, City } from "@/hooks/useCities";
+import { useCitySearch, City } from "@/hooks/useCitySearch";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface CitySearchProps {
   value: string;
   onChange: (value: string) => void;
-  cities: City[] | undefined;
-  citiesLoading: boolean;
   placeholder: string;
   onEnterPress?: () => void;
   autoFocus?: boolean;
@@ -19,8 +17,6 @@ interface CitySearchProps {
 export const CitySearch = ({
   value,
   onChange,
-  cities,
-  citiesLoading,
   placeholder,
   onEnterPress,
   autoFocus = false
@@ -31,7 +27,8 @@ export const CitySearch = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const filteredCities = useFilteredCities(search, cities);
+  // Recherche en temps réel dans la base de données
+  const { data: cities, isLoading: citiesLoading } = useCitySearch(search);
 
   // Sync external value changes
   useEffect(() => {
@@ -97,12 +94,12 @@ export const CitySearch = ({
 
       {showDropdown && !citiesLoading && search.length > 0 && (
         <>
-          {filteredCities.length > 0 ? (
+          {cities && cities.length > 0 ? (
             <Card ref={dropdownRef} className="absolute z-50 w-full mt-2 max-h-60 overflow-y-auto pointer-events-auto">
               <Command>
                 <CommandList>
                   <CommandGroup>
-                    {filteredCities.map((city) => (
+                    {cities.map((city) => (
                       <CommandItem
                         key={city.id}
                         onSelect={() => handleCitySelect(city)}
