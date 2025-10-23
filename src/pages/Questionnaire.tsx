@@ -887,43 +887,43 @@ const Questionnaire = () => {
       const responseData = {
         user_id: user?.id || null,
         email: answers.email || "",
-        language: i18n.language === 'en' ? 'en' : 'fr', // Capture the current language
-        travel_group: answers.travelGroup || null,
-        number_of_travelers: answers.numberOfTravelers || null,
-        has_destination: answers.hasDestination || null,
+        langue: i18n.language === 'en' ? 'en' : 'fr', // Capture the current language
+        groupe_voyage: answers.travelGroup || null,
+        nombre_voyageurs: answers.numberOfTravelers || null,
+        a_destination: answers.hasDestination || null,
         destination: answers.destination || null,
-        departure_location: answers.departureLocation || null,
-        climate_preference: answers.climatePreference || null,
-        travel_affinities: answers.travelAffinities || null,
-        travel_ambiance: answers.travelAmbiance || null,
-        dates_type: answers.datesType || null,
-        departure_date: answers.departureDate || null,
-        return_date: answers.returnDate || null,
-        flexibility: answers.flexibility || null,
-        has_approximate_departure_date: answers.hasApproximateDepartureDate || null,
-        approximate_departure_date: answers.approximateDepartureDate || null,
-        duration: answers.duration || null,
-        exact_nights: answers.exactNights || null,
-        budget_per_person: answers.budgetPerPerson || null,
-        budget_type: answers.budgetType || null,
-        budget_amount: answers.budgetAmount || null,
-        budget_currency: answers.budgetCurrency || null,
+        lieu_depart: answers.departureLocation || null,
+        preference_climat: answers.climatePreference || null,
+        affinites_voyage: answers.travelAffinities || null,
+        ambiance_voyage: answers.travelAmbiance || null,
+        type_dates: answers.datesType || null,
+        date_depart: answers.departureDate || null,
+        date_retour: answers.returnDate || null,
+        flexibilite: answers.flexibility || null,
+        a_date_depart_approximative: answers.hasApproximateDepartureDate || null,
+        date_depart_approximative: answers.approximateDepartureDate || null,
+        duree: answers.duration || null,
+        nuits_exactes: answers.exactNights || null,
+        budget_par_personne: answers.budgetPerPerson || null,
+        type_budget: answers.budgetType || null,
+        montant_budget: answers.budgetAmount || null,
+        devise_budget: answers.budgetCurrency || null,
         styles: answers.styles || null,
-        rhythm: answers.rhythm || null,
-        schedule_prefs: answers.schedulePrefs || null,
-        flight_preference: answers.flightPreference || null,
-        luggage: answers.luggage || null,
-        mobility: answers.mobility || null,
-        accommodation_type: answers.accommodationType || null,
-        hotel_preferences: answers.hotelPreferences || null,
-        comfort: answers.comfort || null,
-        neighborhood: answers.neighborhood || null,
-        amenities: answers.amenities || null,
-        children: answers.children || null,
-        security: answers.security || null,
-        help_with: answers.helpWith || null,
-        constraints: answers.constraints || null,
-        additional_info: answers.additionalInfo || null
+        rythme: answers.rhythm || null,
+        preferences_horaires: answers.schedulePrefs || null,
+        preference_vol: answers.flightPreference || null,
+        bagages: answers.luggage || null,
+        mobilite: answers.mobility || null,
+        type_hebergement: answers.accommodationType || null,
+        preferences_hotel: answers.hotelPreferences || null,
+        confort: answers.comfort || null,
+        quartier: answers.neighborhood || null,
+        equipements: answers.amenities || null,
+        enfants: answers.children || null,
+        securite: answers.security || null,
+        aide_avec: answers.helpWith || null,
+        contraintes: answers.constraints || null,
+        infos_supplementaires: answers.additionalInfo || null
       };
 
       // Validate all inputs before submission
@@ -2699,10 +2699,13 @@ const Questionnaire = () => {
 
     // Step final-1: Review & confirm
     if (step === stepCounter) {
+      // Pré-remplir l'email de l'utilisateur connecté s'il n'a pas encore d'email dans answers
+      const userEmail = user?.email || answers.email || "";
+      
       return (
         <ReviewStep
           answers={answers}
-          email={answers.email || ""}
+          email={userEmail}
           onEmailChange={(email) => setAnswers({ ...answers, email })}
           onEdit={(section) => {
             // Sauvegarder l'étape de review pour y retourner

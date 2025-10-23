@@ -76,8 +76,8 @@ serve(async (req) => {
     }
     
     // Validate numeric fields
-    if (questionnaireData.budget_amount !== undefined && questionnaireData.budget_amount !== null) {
-      const budgetNum = Number(questionnaireData.budget_amount);
+    if (questionnaireData.montant_budget !== undefined && questionnaireData.montant_budget !== null) {
+      const budgetNum = Number(questionnaireData.montant_budget);
       if (isNaN(budgetNum) || budgetNum < 0 || budgetNum > 1000000) {
         return new Response(
           JSON.stringify({ error: 'Invalid budget amount' }),
@@ -86,8 +86,8 @@ serve(async (req) => {
       }
     }
     
-    if (questionnaireData.exact_nights !== undefined && questionnaireData.exact_nights !== null) {
-      const nightsNum = Number(questionnaireData.exact_nights);
+    if (questionnaireData.nuits_exactes !== undefined && questionnaireData.nuits_exactes !== null) {
+      const nightsNum = Number(questionnaireData.nuits_exactes);
       if (isNaN(nightsNum) || nightsNum < 1 || nightsNum > 365 || !Number.isInteger(nightsNum)) {
         return new Response(
           JSON.stringify({ error: 'Invalid number of nights' }),
@@ -96,8 +96,8 @@ serve(async (req) => {
       }
     }
     
-    if (questionnaireData.number_of_travelers !== undefined && questionnaireData.number_of_travelers !== null) {
-      const travelersNum = Number(questionnaireData.number_of_travelers);
+    if (questionnaireData.nombre_voyageurs !== undefined && questionnaireData.nombre_voyageurs !== null) {
+      const travelersNum = Number(questionnaireData.nombre_voyageurs);
       if (isNaN(travelersNum) || travelersNum < 1 || travelersNum > 50 || !Number.isInteger(travelersNum)) {
         return new Response(
           JSON.stringify({ error: 'Invalid number of travelers' }),
@@ -107,7 +107,7 @@ serve(async (req) => {
     }
     
     // Validate text field lengths
-    const textFields = ['departure_location', 'destination', 'neighborhood', 'additional_info', 'open_comments'];
+    const textFields = ['lieu_depart', 'destination', 'quartier', 'infos_supplementaires', 'open_comments'];
     for (const field of textFields) {
       if (questionnaireData[field] && typeof questionnaireData[field] === 'string') {
         if (questionnaireData[field].length > 1000) {
@@ -120,8 +120,8 @@ serve(async (req) => {
     }
     
     // Validate date fields
-    if (questionnaireData.departure_date) {
-      const depDate = new Date(questionnaireData.departure_date);
+    if (questionnaireData.date_depart) {
+      const depDate = new Date(questionnaireData.date_depart);
       if (isNaN(depDate.getTime())) {
         return new Response(
           JSON.stringify({ error: 'Invalid departure date format' }),
@@ -130,8 +130,8 @@ serve(async (req) => {
       }
     }
     
-    if (questionnaireData.return_date) {
-      const retDate = new Date(questionnaireData.return_date);
+    if (questionnaireData.date_retour) {
+      const retDate = new Date(questionnaireData.date_retour);
       if (isNaN(retDate.getTime())) {
         return new Response(
           JSON.stringify({ error: 'Invalid return date format' }),
@@ -140,8 +140,8 @@ serve(async (req) => {
       }
     }
     
-    if (questionnaireData.approximate_departure_date) {
-      const approxDate = new Date(questionnaireData.approximate_departure_date);
+    if (questionnaireData.date_depart_approximative) {
+      const approxDate = new Date(questionnaireData.date_depart_approximative);
       if (isNaN(approxDate.getTime())) {
         return new Response(
           JSON.stringify({ error: 'Invalid approximate departure date format' }),

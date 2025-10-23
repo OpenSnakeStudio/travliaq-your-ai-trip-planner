@@ -88,137 +88,137 @@ export type Database = {
       }
       questionnaire_responses: {
         Row: {
-          accommodation_type: Json | null
-          additional_info: string | null
-          amenities: Json | null
-          approximate_departure_date: string | null
-          biorhythm: Json | null
-          budget_amount: number | null
-          budget_currency: string | null
-          budget_per_person: string | null
-          budget_type: string | null
-          children: Json | null
-          climate_preference: string | null
-          comfort: string | null
-          constraints: Json | null
+          a_date_depart_approximative: string | null
+          a_destination: string | null
+          affinites_voyage: Json | null
+          aide_avec: string[] | null
+          ambiance_voyage: string | null
+          bagages: Json | null
+          biorythme: Json | null
+          budget_par_personne: string | null
+          confort: string | null
+          contraintes: Json | null
           created_at: string
-          dates_type: string | null
-          departure_date: string | null
-          departure_location: string | null
+          date_depart: string | null
+          date_depart_approximative: string | null
+          date_retour: string | null
           destination: string | null
-          duration: string | null
+          devise_budget: string | null
+          duree: string | null
           email: string
-          exact_nights: number | null
-          flexibility: string | null
-          flight_preference: string | null
-          has_approximate_departure_date: string | null
-          has_destination: string | null
-          help_with: string[] | null
-          hotel_preferences: string[] | null
+          enfants: Json | null
+          equipements: Json | null
+          flexibilite: string | null
+          groupe_voyage: string | null
           id: string
-          language: string
-          luggage: Json | null
-          mobility: Json | null
-          neighborhood: string | null
-          number_of_travelers: number | null
-          return_date: string | null
-          rhythm: string | null
-          schedule_prefs: string[] | null
-          security: Json | null
+          infos_supplementaires: string | null
+          langue: string
+          lieu_depart: string | null
+          mobilite: Json | null
+          montant_budget: number | null
+          nombre_voyageurs: number | null
+          nuits_exactes: number | null
+          preference_climat: string | null
+          preference_vol: string | null
+          preferences_horaires: string[] | null
+          preferences_hotel: string[] | null
+          quartier: string | null
+          rythme: string | null
+          securite: Json | null
           styles: Json | null
-          travel_affinities: Json | null
-          travel_ambiance: string | null
-          travel_group: string | null
+          type_budget: string | null
+          type_dates: string | null
+          type_hebergement: Json | null
           updated_at: string
           user_id: string
         }
         Insert: {
-          accommodation_type?: Json | null
-          additional_info?: string | null
-          amenities?: Json | null
-          approximate_departure_date?: string | null
-          biorhythm?: Json | null
-          budget_amount?: number | null
-          budget_currency?: string | null
-          budget_per_person?: string | null
-          budget_type?: string | null
-          children?: Json | null
-          climate_preference?: string | null
-          comfort?: string | null
-          constraints?: Json | null
+          a_date_depart_approximative?: string | null
+          a_destination?: string | null
+          affinites_voyage?: Json | null
+          aide_avec?: string[] | null
+          ambiance_voyage?: string | null
+          bagages?: Json | null
+          biorythme?: Json | null
+          budget_par_personne?: string | null
+          confort?: string | null
+          contraintes?: Json | null
           created_at?: string
-          dates_type?: string | null
-          departure_date?: string | null
-          departure_location?: string | null
+          date_depart?: string | null
+          date_depart_approximative?: string | null
+          date_retour?: string | null
           destination?: string | null
-          duration?: string | null
+          devise_budget?: string | null
+          duree?: string | null
           email: string
-          exact_nights?: number | null
-          flexibility?: string | null
-          flight_preference?: string | null
-          has_approximate_departure_date?: string | null
-          has_destination?: string | null
-          help_with?: string[] | null
-          hotel_preferences?: string[] | null
+          enfants?: Json | null
+          equipements?: Json | null
+          flexibilite?: string | null
+          groupe_voyage?: string | null
           id?: string
-          language?: string
-          luggage?: Json | null
-          mobility?: Json | null
-          neighborhood?: string | null
-          number_of_travelers?: number | null
-          return_date?: string | null
-          rhythm?: string | null
-          schedule_prefs?: string[] | null
-          security?: Json | null
+          infos_supplementaires?: string | null
+          langue?: string
+          lieu_depart?: string | null
+          mobilite?: Json | null
+          montant_budget?: number | null
+          nombre_voyageurs?: number | null
+          nuits_exactes?: number | null
+          preference_climat?: string | null
+          preference_vol?: string | null
+          preferences_horaires?: string[] | null
+          preferences_hotel?: string[] | null
+          quartier?: string | null
+          rythme?: string | null
+          securite?: Json | null
           styles?: Json | null
-          travel_affinities?: Json | null
-          travel_ambiance?: string | null
-          travel_group?: string | null
+          type_budget?: string | null
+          type_dates?: string | null
+          type_hebergement?: Json | null
           updated_at?: string
           user_id: string
         }
         Update: {
-          accommodation_type?: Json | null
-          additional_info?: string | null
-          amenities?: Json | null
-          approximate_departure_date?: string | null
-          biorhythm?: Json | null
-          budget_amount?: number | null
-          budget_currency?: string | null
-          budget_per_person?: string | null
-          budget_type?: string | null
-          children?: Json | null
-          climate_preference?: string | null
-          comfort?: string | null
-          constraints?: Json | null
+          a_date_depart_approximative?: string | null
+          a_destination?: string | null
+          affinites_voyage?: Json | null
+          aide_avec?: string[] | null
+          ambiance_voyage?: string | null
+          bagages?: Json | null
+          biorythme?: Json | null
+          budget_par_personne?: string | null
+          confort?: string | null
+          contraintes?: Json | null
           created_at?: string
-          dates_type?: string | null
-          departure_date?: string | null
-          departure_location?: string | null
+          date_depart?: string | null
+          date_depart_approximative?: string | null
+          date_retour?: string | null
           destination?: string | null
-          duration?: string | null
+          devise_budget?: string | null
+          duree?: string | null
           email?: string
-          exact_nights?: number | null
-          flexibility?: string | null
-          flight_preference?: string | null
-          has_approximate_departure_date?: string | null
-          has_destination?: string | null
-          help_with?: string[] | null
-          hotel_preferences?: string[] | null
+          enfants?: Json | null
+          equipements?: Json | null
+          flexibilite?: string | null
+          groupe_voyage?: string | null
           id?: string
-          language?: string
-          luggage?: Json | null
-          mobility?: Json | null
-          neighborhood?: string | null
-          number_of_travelers?: number | null
-          return_date?: string | null
-          rhythm?: string | null
-          schedule_prefs?: string[] | null
-          security?: Json | null
+          infos_supplementaires?: string | null
+          langue?: string
+          lieu_depart?: string | null
+          mobilite?: Json | null
+          montant_budget?: number | null
+          nombre_voyageurs?: number | null
+          nuits_exactes?: number | null
+          preference_climat?: string | null
+          preference_vol?: string | null
+          preferences_horaires?: string[] | null
+          preferences_hotel?: string[] | null
+          quartier?: string | null
+          rythme?: string | null
+          securite?: Json | null
           styles?: Json | null
-          travel_affinities?: Json | null
-          travel_ambiance?: string | null
-          travel_group?: string | null
+          type_budget?: string | null
+          type_dates?: string | null
+          type_hebergement?: Json | null
           updated_at?: string
           user_id?: string
         }
@@ -452,26 +452,6 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -479,22 +459,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      insert_trip_from_json: {
-        Args: { trip_data: Json }
-        Returns: string
-      }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
+      insert_trip_from_json: { Args: { trip_data: Json }; Returns: string }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "user"
