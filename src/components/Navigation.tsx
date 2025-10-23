@@ -24,7 +24,7 @@ const Navigation = ({ variant = 'default', theme = 'dark' }: NavigationProps) =>
   const closeMenu = () => setIsOpen(false);
   
   const isMinimal = variant === 'minimal';
-  const hideLogo = location.pathname === '/travel-recommendations';
+  const hideLogoOnMobile = location.pathname === '/recommendations';
   
   // Couleurs adaptatives selon le thème
   const textColor = theme === 'light' ? 'text-travliaq-deep-blue' : 'text-white';
@@ -34,7 +34,7 @@ const Navigation = ({ variant = 'default', theme = 'dark' }: NavigationProps) =>
   return (
     <header className={`absolute top-0 left-0 right-0 z-20 p-2 md:p-4 ${bgClass}`}>
       <div className="container mx-auto flex justify-between items-start md:items-center">
-        <a href="/" className={hideLogo ? "hidden md:block" : "md:block"}>
+        <a href="/" className={hideLogoOnMobile ? "hidden md:block" : "block"}>
           <img src={logo} alt="Logo Travliaq" width="72" height="56" className="h-12 md:h-14 w-auto" />
         </a>
 
