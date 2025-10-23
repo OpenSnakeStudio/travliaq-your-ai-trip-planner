@@ -581,6 +581,16 @@ const TravelRecommendations = () => {
             }))}
             activeDay={activeDay}
             onScrollToDay={scrollToDay}
+            activeDayData={regularSteps.find(d => d.id === activeDay) ? {
+              title: regularSteps.find(d => d.id === activeDay)!.title,
+              subtitle: regularSteps.find(d => d.id === activeDay)!.subtitle,
+              why: regularSteps.find(d => d.id === activeDay)!.why,
+              tips: regularSteps.find(d => d.id === activeDay)!.tips,
+              transfer: regularSteps.find(d => d.id === activeDay)!.transfer,
+              weather: regularSteps.find(d => d.id === activeDay)!.weather,
+              duration: regularSteps.find(d => d.id === activeDay)!.duration,
+              price: regularSteps.find(d => d.id === activeDay)!.price,
+            } : undefined}
           />
         </div>
       )}
@@ -688,6 +698,20 @@ const TravelRecommendations = () => {
                   scrollToDay(dayId);
                   setDrawerOpen(false);
                 }}
+                activeDayData={(() => {
+                  const currentActiveDay = activeDay >= 1 && activeDay <= travelData.days.length ? activeDay : 1;
+                  const dayData = travelData.days.find(d => d.id === currentActiveDay);
+                  return dayData ? {
+                    title: dayData.title,
+                    subtitle: dayData.subtitle,
+                    why: dayData.why,
+                    tips: dayData.tips,
+                    transfer: dayData.transfer,
+                    weather: dayData.weather,
+                    duration: dayData.duration,
+                    price: dayData.price,
+                  } : undefined;
+                })()}
               />
             ) : (
               <TravelDayCalendar

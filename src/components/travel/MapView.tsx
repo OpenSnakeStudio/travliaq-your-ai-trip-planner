@@ -13,9 +13,19 @@ interface MapViewProps {
   }>;
   activeDay: number;
   onScrollToDay?: (dayId: number) => void;
+  activeDayData?: {
+    title: string;
+    subtitle?: string;
+    why?: string;
+    tips?: string;
+    transfer?: string;
+    weather?: { icon: string; temp: string; description: string };
+    duration?: string;
+    price?: string | number;
+  };
 }
 
-const MapView = ({ days, activeDay, onScrollToDay }: MapViewProps) => {
+const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: number]: mapboxgl.Marker }>({});
@@ -230,42 +240,159 @@ const MapView = ({ days, activeDay, onScrollToDay }: MapViewProps) => {
   };
 
   return (
-    <div className={`
-      transition-all duration-300 rounded-lg overflow-hidden border border-travliaq-turquoise/20 
-      shadow-[0_0_15px_rgba(56,189,248,0.1)] bg-gradient-to-br from-travliaq-deep-blue/70 
-      to-travliaq-deep-blue/50 backdrop-blur-md
-      ${isFullscreen 
-        ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] h-[85vh] max-w-7xl shadow-2xl' 
-        : 'w-full'
-      }
-    `}>
-      {/* Fullscreen toggle button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="absolute top-4 right-4 z-10 bg-background/90 backdrop-blur-sm hover:bg-background"
-        onClick={toggleFullscreen}
-        title={isFullscreen ? "Réduire" : "Agrandir"}
-      >
-        {isFullscreen ? (
-          <Minimize2 className="h-4 w-4" />
-        ) : (
-          <Maximize2 className="h-4 w-4" />
-        )}
-      </Button>
-      
-      <div 
-        ref={mapContainer} 
-        className={isFullscreen ? "w-full h-full" : "w-full h-56"} 
-        style={!isFullscreen ? { minHeight: '224px' } : undefined} 
-      />
-      <div className="bg-gradient-to-r from-travliaq-deep-blue/90 to-travliaq-deep-blue/80 backdrop-blur-md p-2 border-t border-travliaq-turquoise/20">
-        <p className="font-montserrat text-white text-xs font-semibold truncate">
-          {days.find((d) => d.id === activeDay)?.title || ""}
-        </p>
-        <p className="font-inter text-travliaq-turquoise/80 text-[10px]">Étape {activeDay}</p>
-      </div>
-    </div>
+    <>
+      {/* Normal view */}
+      {!isFullscreen && (
+        <div className="transition-all duration-300 rounded-lg overflow-hidden border border-travliaq-turquoise/20 shadow-[0_0_15px_rgba(56,189,248,0.1)] bg-gradient-to-br from-travliaq-deep-blue/70 to-travliaq-deep-blue/50 backdrop-blur-md w-full">
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute top-4 right-4 z-10 bg-background/90 backdrop-blur-sm hover:bg-background"
+            onClick={toggleFullscreen}
+            title="Agrandir"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </Button>
+          
+          <div 
+            ref={mapContainer} 
+            className="w-full h-56" 
+            style={{ minHeight: '224px' }} 
+          />
+          <div className="bg-gradient-to-r from-travliaq-deep-blue/90 to-travliaq-deep-blue/80 backdrop-blur-md p-2 border-t border-travliaq-turquoise/20">
+            <p className="font-montserrat text-white text-xs font-semibold truncate">
+              {days.find((d) => d.id === activeDay)?.title || ""}
+            </p>
+            <p className="font-inter text-travliaq-turquoise/80 text-[10px]">Étape {activeDay}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Split-screen fullscreen view */}
+      {isFullscreen && (
+        <div className="fixed inset-0 z-50 bg-travliaq-deep-blue/95 backdrop-blur-md flex flex-col">
+          {/* Header with close button */}
+          <div className="flex items-center justify-between p-4 border-b border-travliaq-turquoise/20 bg-gradient-to-r from-travliaq-deep-blue/90 to-travliaq-deep-blue/80">
+            <h2 className="font-montserrat text-white text-lg font-bold">Étape {activeDay}</h2>
+            <Button
+              variant="outline"
+              size="icon"
+              className="bg-background/90 backdrop-blur-sm hover:bg-background"
+              onClick={toggleFullscreen}
+              title="Réduire"
+            >
+              <Minimize2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Split content */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Map section - 50% */}
+            <div className="h-1/2 relative border-b-2 border-travliaq-turquoise/30">
+              <div 
+                ref={mapContainer} 
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* Step details section - 50% */}
+            <div className="h-1/2 overflow-y-auto bg-gradient-to-b from-travliaq-deep-blue/80 to-travliaq-deep-blue/95 backdrop-blur-sm">
+              <div className="p-6 space-y-4">
+                {/* Title */}
+                <div className="space-y-1">
+                  <h3 className="font-montserrat text-2xl font-bold text-white">
+                    {activeDayData?.title}
+                  </h3>
+                  {activeDayData?.subtitle && (
+                    <p className="font-inter text-travliaq-turquoise text-sm">
+                      {activeDayData.subtitle}
+                    </p>
+                  )}
+                </div>
+
+                {/* Weather and Duration */}
+                <div className="flex gap-4 flex-wrap">
+                  {activeDayData?.weather && (
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                      <span className="text-2xl">{activeDayData.weather.icon}</span>
+                      <div>
+                        <p className="font-inter text-white text-sm font-semibold">
+                          {activeDayData.weather.temp}
+                        </p>
+                        <p className="font-inter text-travliaq-turquoise/70 text-xs">
+                          {activeDayData.weather.description}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {activeDayData?.duration && (
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                      <span className="text-xl">⏱️</span>
+                      <p className="font-inter text-white text-sm">
+                        {activeDayData.duration}
+                      </p>
+                    </div>
+                  )}
+                  {activeDayData?.price && (
+                    <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                      <span className="text-xl">💰</span>
+                      <p className="font-inter text-white text-sm">
+                        {activeDayData.price}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Why */}
+                {activeDayData?.why && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">✨</span>
+                      <h4 className="font-montserrat text-white font-semibold">
+                        Pourquoi cette étape
+                      </h4>
+                    </div>
+                    <p className="font-inter text-gray-300 text-sm leading-relaxed pl-7">
+                      {activeDayData.why}
+                    </p>
+                  </div>
+                )}
+
+                {/* Tips */}
+                {activeDayData?.tips && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">💡</span>
+                      <h4 className="font-montserrat text-white font-semibold">
+                        Tips IA
+                      </h4>
+                    </div>
+                    <p className="font-inter text-gray-300 text-sm leading-relaxed pl-7">
+                      {activeDayData.tips}
+                    </p>
+                  </div>
+                )}
+
+                {/* Transfer */}
+                {activeDayData?.transfer && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🚇</span>
+                      <h4 className="font-montserrat text-white font-semibold">
+                        Transfert
+                      </h4>
+                    </div>
+                    <p className="font-inter text-gray-300 text-sm leading-relaxed pl-7">
+                      {activeDayData.transfer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
