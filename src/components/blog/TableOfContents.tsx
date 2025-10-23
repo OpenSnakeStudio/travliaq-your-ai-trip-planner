@@ -56,21 +56,24 @@ export const TableOfContents = ({ content }: { content: string }) => {
   if (headings.length === 0) return null;
 
   const scrollToHeading = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    // Use requestAnimationFrame to avoid forced reflow
+    requestAnimationFrame(() => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
   };
 
   return (
-    <Card className="p-6 sticky top-24">
+    <Card className="p-6 sticky top-24" style={{ contain: "layout" }}>
       <div className="flex items-center gap-2 mb-4">
         <List className="h-5 w-5 text-travliaq-turquoise" />
         <h3 className="font-semibold text-travliaq-deep-blue">
           Table des matières
         </h3>
       </div>
-      <nav className="space-y-2">
+      <nav className="space-y-2" style={{ contain: "layout style" }}>
         {headings.map((heading) => (
           <button
             key={heading.id}
