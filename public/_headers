@@ -1,6 +1,7 @@
 # Cache static assets with hash for 1 year
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
 
 # Cache images for 1 year
 *.jpg
@@ -28,9 +29,11 @@
 # HTML files - no cache, always revalidate
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+  Vary: Accept-Encoding
 
 /
   Cache-Control: public, max-age=0, must-revalidate
+  Vary: Accept-Encoding
 
 # Sitemap and robots - cache for 1 day
 /sitemap.xml
