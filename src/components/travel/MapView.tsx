@@ -34,6 +34,9 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const isMobileFullscreen = isMobile && isFullscreen;
+  const originalParentRef = useRef<HTMLElement | null>(null);
+  const originalNextSiblingRef = useRef<Node | null>(null);
+  const overlayRootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -241,13 +244,19 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
   // Force map resize when fullscreen changes
   useEffect(() => {
     if (!map.current) return;
-    
-    // Resize map when fullscreen state changes
-    const resizeTimer = setTimeout(() => {
-      map.current?.resize();
-    }, 350);
-    
-    return () => clearTimeout(resizeTimer);
+    const doResize = () => map.current?.resize();
+    // Immediate and delayed resizes to handle mobile layout shifts
+    doResize();
+    const r1 = requestAnimationFrame(doResize);
+    const t1 = setTimeout(doResize, 250);
+    const t2 = setTimeout(doResize, 600);
+    const t3 = setTimeout(doResize, 1000);
+    return () => {
+      cancelAnimationFrame(r1);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [isFullscreen, isMobileFullscreen]);
 
   // Keep map sized correctly on viewport/orientation changes
@@ -263,15 +272,59 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
     };
   }, []);
 
+  // Move the map container to a body-level overlay in mobile fullscreen to avoid parent transforms
+  useEffect(() => {
+    const container = mapContainer.current;
+    if (!container) return;
+
+    if (isMobileFullscreen) {
+      // Save original position
+      originalParentRef.current = container.parentElement as HTMLElement | null;
+      originalNextSiblingRef.current = container.nextSibling;
+
+      // Create overlay root if needed
+      if (!overlayRootRef.current) {
+        overlayRootRef.current = document.createElement('div');
+      }
+      const root = overlayRootRef.current;
+      Object.assign(root.style, {
+        position: 'fixed', left: '0', right: '0', top: '0', height: '35svh', zIndex: '100',
+        pointerEvents: 'auto', background: 'transparent'
+      } as CSSStyleDeclaration);
+
+      document.body.appendChild(root);
+      root.appendChild(container);
+      // Ensure map fits new size
+      setTimeout(() => map.current?.resize(), 0);
+      setTimeout(() => map.current?.resize(), 300);
+    } else {
+      // Restore original position
+      const parent = originalParentRef.current;
+      if (parent) {
+        if (originalNextSiblingRef.current) {
+          parent.insertBefore(container, originalNextSiblingRef.current);
+        } else {
+          parent.appendChild(container);
+        }
+      }
+      // Remove overlay root if exists
+      if (overlayRootRef.current?.parentElement) {
+        overlayRootRef.current.parentElement.removeChild(overlayRootRef.current);
+      }
+      overlayRootRef.current = null;
+      setTimeout(() => map.current?.resize(), 0);
+    }
+  }, [isMobileFullscreen]);
+
   return (
     <div className="relative w-full">
       {/* Single persistent map container */}
       <div
         ref={mapContainer}
         className={isMobileFullscreen
-          ? "fixed left-0 right-0 top-0 z-[100]"
+          ? "fixed left-0 right-0 top-0 z-[100] h-[35vh] pointer-events-auto"
           : isFullscreen
-            ? "fixed inset-x-0 top-0 h-1/2 z-50"
+            ? "fixed inset-x-0 top-0 h-1/2 z-50 pointer-events-auto"
             : "w-full h-56 rounded-lg overflow-hidden border border-travliaq-turquoise/20 shadow-[0_0_15px_rgba(56,189,248,0.1)] bg-gradient-to-br from-travliaq-deep-blue/70 to-travliaq-deep-blue/50 backdrop-blur-md"}
         style={isMobileFullscreen ? { height: '35svh' } : !isFullscreen ? { minHeight: '224px' } : undefined}
       />
