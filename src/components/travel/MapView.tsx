@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import { createPortal } from "react-dom";
 import "@/styles/mapbox-overrides.css";
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -272,6 +273,49 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
     };
   }, []);
 
+  // Move the map container to a body-level overlay in mobile fullscreen to avoid parent transforms and fixed positioning bugs
+  useEffect(() => {
+    const container = mapContainer.current;
+    if (!container) return;
+
+    if (isMobileFullscreen) {
+      // Save original position
+      originalParentRef.current = container.parentElement as HTMLElement | null;
+      originalNextSiblingRef.current = container.nextSibling;
+
+      // Create overlay root if needed
+      if (!overlayRootRef.current) {
+        overlayRootRef.current = document.createElement('div');
+      }
+      const root = overlayRootRef.current;
+      Object.assign(root.style, {
+        position: 'fixed', left: '0', right: '0', top: '0', bottom: '0', zIndex: '1000', background: 'transparent'
+      } as CSSStyleDeclaration);
+
+      if (!root.parentElement) document.body.appendChild(root);
+      // Move map container into overlay
+      root.appendChild(container);
+
+      // Ensure map fits new size
+      setTimeout(() => map.current?.resize(), 0);
+      setTimeout(() => map.current?.resize(), 300);
+    } else {
+      // Restore original position
+      const parent = originalParentRef.current;
+      if (parent && container) {
+        if (originalNextSiblingRef.current) {
+          parent.insertBefore(container, originalNextSiblingRef.current);
+        } else {
+          parent.appendChild(container);
+        }
+      }
+      if (overlayRootRef.current?.parentElement) {
+        overlayRootRef.current.parentElement.removeChild(overlayRootRef.current);
+      }
+      overlayRootRef.current = null;
+      setTimeout(() => map.current?.resize(), 0);
+    }
+  }, [isMobileFullscreen]);
 
   // Lock body scroll in mobile split view to prevent layout jumps when steps scroll
   useEffect(() => {
@@ -324,134 +368,268 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
       {isFullscreen && (
         <>
           {isMobile ? (
-            <>
-              {/* Close button floating at the very top */}
-              <Button
-                variant="outline"
-                size="icon"
-                className="fixed top-3 right-3 z-[1010] bg-background/90 backdrop-blur-sm hover:bg-background shadow-xl"
-                onClick={toggleFullscreen}
-                title="Réduire"
-              >
-                <Minimize2 className="h-4 w-4" />
-              </Button>
+            overlayRootRef.current
+              ? createPortal(
+                  <>
+                    {/* Close button floating at the very top (portal) */}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="fixed top-3 right-3 z-[1010] bg-background/90 backdrop-blur-sm hover:bg-background shadow-xl"
+                      onClick={toggleFullscreen}
+                      title="Réduire"
+                    >
+                      <Minimize2 className="h-4 w-4" />
+                    </Button>
 
-              {/* Bottom details panel positioned explicitly from 35svh */}
-              <div 
-                className="fixed left-0 right-0 z-[990] overflow-y-auto bg-gradient-to-b from-travliaq-deep-blue/95 to-travliaq-deep-blue backdrop-blur-sm border-t-2 border-travliaq-turquoise/30 shadow-2xl" 
-                style={{ top: 'calc(35svh)', bottom: 0 }}
-              >
-                <div className="p-6 space-y-5">
-                  {/* Title */}
-                  <div className="space-y-1">
-                    <h3 className="font-montserrat text-3xl font-bold text-white">
-                      {activeDayData?.title}
-                    </h3>
-                    {activeDayData?.subtitle && (
-                      <p className="font-inter text-travliaq-turquoise text-base">
-                        {activeDayData.subtitle}
-                      </p>
-                    )}
-                  </div>
+                    {/* Bottom details panel positioned explicitly from 35svh (portal) */}
+                    <div 
+                      className="fixed left-0 right-0 z-[990] overflow-y-auto bg-gradient-to-b from-travliaq-deep-blue/95 to-travliaq-deep-blue backdrop-blur-sm border-t-2 border-travliaq-turquoise/30 shadow-2xl" 
+                      style={{ top: 'calc(35svh)', bottom: 0 }}
+                    >
+                      <div className="p-6 space-y-5">
+                        {/* Title */}
+                        <div className="space-y-1">
+                          <h3 className="font-montserrat text-3xl font-bold text-white">
+                            {activeDayData?.title}
+                          </h3>
+                          {activeDayData?.subtitle && (
+                            <p className="font-inter text-travliaq-turquoise text-base">
+                              {activeDayData.subtitle}
+                            </p>
+                          )}
+                        </div>
 
-                  {/* Weather and Duration */}
-                  <div className="flex gap-3 flex-wrap">
-                    {activeDayData?.weather && (
-                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
-                        <span className="text-2xl">{activeDayData.weather.icon}</span>
-                        <div>
-                          <p className="font-inter text-white text-base font-semibold">
-                            {activeDayData.weather.temp}
-                          </p>
-                          <p className="font-inter text-travliaq-turquoise/70 text-sm">
-                            {activeDayData.weather.description}
-                          </p>
+                        {/* Weather and Duration */}
+                        <div className="flex gap-3 flex-wrap">
+                          {activeDayData?.weather && (
+                            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                              <span className="text-2xl">{activeDayData.weather.icon}</span>
+                              <div>
+                                <p className="font-inter text-white text-base font-semibold">
+                                  {activeDayData.weather.temp}
+                                </p>
+                                <p className="font-inter text-travliaq-turquoise/70 text-sm">
+                                  {activeDayData.weather.description}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {activeDayData?.duration && (
+                            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                              <span className="text-xl">⏱️</span>
+                              <p className="font-inter text-white text-base">
+                                {activeDayData.duration}
+                              </p>
+                            </div>
+                          )}
+                          {activeDayData?.price && (
+                            <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                              <span className="text-xl">💰</span>
+                              <p className="font-inter text-white text-base">
+                                {activeDayData.price}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Why */}
+                        {activeDayData?.why && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">✨</span>
+                              <h4 className="font-montserrat text-white font-semibold text-lg">
+                                Pourquoi cette étape
+                              </h4>
+                            </div>
+                            <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
+                              {activeDayData.why}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Tips */}
+                        {activeDayData?.tips && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">💡</span>
+                              <h4 className="font-montserrat text-white font-semibold text-lg">
+                                Tips IA
+                              </h4>
+                            </div>
+                            <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
+                              {activeDayData.tips}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Transfer */}
+                        {activeDayData?.transfer && (
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">🚇</span>
+                              <h4 className="font-montserrat text-white font-semibold text-lg">
+                                Transfert
+                              </h4>
+                            </div>
+                            <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
+                              {activeDayData.transfer}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="space-y-3 mt-2">
+                          <h4 className="font-montserrat text-white font-semibold text-lg">Toutes les étapes</h4>
+                          <ol className="space-y-2">
+                            {days.map((d) => (
+                              <li key={d.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => onScrollToDay?.(d.id)}
+                                  className="w-full text-left flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-colors rounded-lg px-3 py-2 border border-travliaq-turquoise/20"
+                                >
+                                  <span className="font-montserrat text-white/90 text-sm">Étape {d.id}</span>
+                                  <span className="font-inter text-travliaq-turquoise/80 text-sm truncate">{d.title}</span>
+                                </button>
+                              </li>
+                            ))}
+                          </ol>
                         </div>
                       </div>
-                    )}
-                    {activeDayData?.duration && (
-                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
-                        <span className="text-xl">⏱️</span>
-                        <p className="font-inter text-white text-base">
-                          {activeDayData.duration}
-                        </p>
+                    </div>
+                  </>,
+                  overlayRootRef.current
+                )
+              : (
+                <>
+                  {/* Close button floating at the very top */}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="fixed top-3 right-3 z-[1010] bg-background/90 backdrop-blur-sm hover:bg-background shadow-xl"
+                    onClick={toggleFullscreen}
+                    title="Réduire"
+                  >
+                    <Minimize2 className="h-4 w-4" />
+                  </Button>
+
+                  {/* Bottom details panel positioned explicitly from 35svh */}
+                  <div 
+                    className="fixed left-0 right-0 z-[990] overflow-y-auto bg-gradient-to-b from-travliaq-deep-blue/95 to-travliaq-deep-blue backdrop-blur-sm border-t-2 border-travliaq-turquoise/30 shadow-2xl" 
+                    style={{ top: 'calc(35svh)', bottom: 0 }}
+                  >
+                    <div className="p-6 space-y-5">
+                      {/* Title */}
+                      <div className="space-y-1">
+                        <h3 className="font-montserrat text-3xl font-bold text-white">
+                          {activeDayData?.title}
+                        </h3>
+                        {activeDayData?.subtitle && (
+                          <p className="font-inter text-travliaq-turquoise text-base">
+                            {activeDayData.subtitle}
+                          </p>
+                        )}
                       </div>
-                    )}
-                    {activeDayData?.price && (
-                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
-                        <span className="text-xl">💰</span>
-                        <p className="font-inter text-white text-base">
-                          {activeDayData.price}
-                        </p>
+
+                      {/* Weather and Duration */}
+                      <div className="flex gap-3 flex-wrap">
+                        {activeDayData?.weather && (
+                          <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                            <span className="text-2xl">{activeDayData.weather.icon}</span>
+                            <div>
+                              <p className="font-inter text-white text-base font-semibold">
+                                {activeDayData.weather.temp}
+                              </p>
+                              <p className="font-inter text-travliaq-turquoise/70 text-sm">
+                                {activeDayData.weather.description}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        {activeDayData?.duration && (
+                          <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                            <span className="text-xl">⏱️</span>
+                            <p className="font-inter text-white text-base">
+                              {activeDayData.duration}
+                            </p>
+                          </div>
+                        )}
+                        {activeDayData?.price && (
+                          <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-travliaq-turquoise/20">
+                            <span className="text-xl">💰</span>
+                            <p className="font-inter text-white text-base">
+                              {activeDayData.price}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
+
+                      {/* Why */}
+                      {activeDayData?.why && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">✨</span>
+                            <h4 className="font-montserrat text-white font-semibold text-lg">
+                              Pourquoi cette étape
+                            </h4>
+                          </div>
+                          <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
+                            {activeDayData.why}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Tips */}
+                      {activeDayData?.tips && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">💡</span>
+                            <h4 className="font-montserrat text-white font-semibold text-lg">
+                              Tips IA
+                            </h4>
+                          </div>
+                          <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
+                            {activeDayData.tips}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Transfer */}
+                      {activeDayData?.transfer && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-2xl">🚇</span>
+                            <h4 className="font-montserrat text-white font-semibold text-lg">
+                              Transfert
+                            </h4>
+                          </div>
+                          <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
+                            {activeDayData.transfer}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="space-y-3 mt-2">
+                        <h4 className="font-montserrat text-white font-semibold text-lg">Toutes les étapes</h4>
+                        <ol className="space-y-2">
+                          {days.map((d) => (
+                            <li key={d.id}>
+                              <button
+                                type="button"
+                                onClick={() => onScrollToDay?.(d.id)}
+                                className="w-full text-left flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-colors rounded-lg px-3 py-2 border border-travliaq-turquoise/20"
+                              >
+                                <span className="font-montserrat text-white/90 text-sm">Étape {d.id}</span>
+                                <span className="font-inter text-travliaq-turquoise/80 text-sm truncate">{d.title}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    </div>
                   </div>
-
-                  {/* Why */}
-                  {activeDayData?.why && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">✨</span>
-                        <h4 className="font-montserrat text-white font-semibold text-lg">
-                          Pourquoi cette étape
-                        </h4>
-                      </div>
-                      <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
-                        {activeDayData.why}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Tips */}
-                  {activeDayData?.tips && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">💡</span>
-                        <h4 className="font-montserrat text-white font-semibold text-lg">
-                          Tips IA
-                        </h4>
-                      </div>
-                      <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
-                        {activeDayData.tips}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Transfer */}
-                  {activeDayData?.transfer && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">🚇</span>
-                        <h4 className="font-montserrat text-white font-semibold text-lg">
-                          Transfert
-                        </h4>
-                      </div>
-                      <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
-                        {activeDayData.transfer}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-3 mt-2">
-                    <h4 className="font-montserrat text-white font-semibold text-lg">Toutes les étapes</h4>
-                    <ol className="space-y-2">
-                      {days.map((d) => (
-                        <li key={d.id}>
-                          <button
-                            type="button"
-                            onClick={() => onScrollToDay?.(d.id)}
-                            className="w-full text-left flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-colors rounded-lg px-3 py-2 border border-travliaq-turquoise/20"
-                          >
-                            <span className="font-montserrat text-white/90 text-sm">Étape {d.id}</span>
-                            <span className="font-inter text-travliaq-turquoise/80 text-sm truncate">{d.title}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
-              </div>
-            </>
+                </>
+              )
           ) : (
             <>
               {/* Dimmed backdrop + header on desktop/tablet */}
