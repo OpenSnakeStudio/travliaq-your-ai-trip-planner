@@ -316,13 +316,26 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
     }
   }, [isMobileFullscreen]);
 
-  return (
+  // Lock body scroll in mobile split view to prevent layout jumps when steps scroll
+  useEffect(() => {
+    if (!isMobileFullscreen) return;
+    const prevOverflow = document.body.style.overflow;
+    const prevTouchAction = (document.body.style as any).touchAction;
+    document.body.style.overflow = 'hidden';
+    (document.body.style as any).touchAction = 'none';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      (document.body.style as any).touchAction = prevTouchAction || '';
+    };
+  }, [isMobileFullscreen]);
+
+   return (
     <div className="relative w-full">
       {/* Single persistent map container */}
       <div
         ref={mapContainer}
         className={isMobileFullscreen
-          ? "fixed left-0 right-0 top-0 z-[100] h-[35vh] pointer-events-auto"
+          ? "fixed left-0 right-0 top-0 z-[100] h-[35vh] w-screen pointer-events-auto"
           : isFullscreen
             ? "fixed inset-x-0 top-0 h-1/2 z-50 pointer-events-auto"
             : "w-full h-56 rounded-lg overflow-hidden border border-travliaq-turquoise/20 shadow-[0_0_15px_rgba(56,189,248,0.1)] bg-gradient-to-br from-travliaq-deep-blue/70 to-travliaq-deep-blue/50 backdrop-blur-md"}
@@ -368,7 +381,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
 
               {/* Bottom details panel positioned explicitly from 35svh */}
               <div 
-                className="fixed left-0 right-0 z-[90] overflow-y-auto bg-gradient-to-b from-travliaq-deep-blue/95 to-travliaq-deep-blue backdrop-blur-sm border-t-2 border-travliaq-turquoise/30 shadow-2xl" 
+                className="fixed left-0 right-0 z-[95] overflow-y-auto bg-gradient-to-b from-travliaq-deep-blue/95 to-travliaq-deep-blue backdrop-blur-sm border-t-2 border-travliaq-turquoise/30 shadow-2xl" 
                 style={{ top: 'calc(35svh)', bottom: 0 }}
               >
                 <div className="p-6 space-y-5">
