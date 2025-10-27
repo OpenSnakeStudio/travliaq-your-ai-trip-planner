@@ -1235,12 +1235,12 @@ const Questionnaire = () => {
     // Step 2b: Comment Travliaq peut vous aider ?
     if (step === stepCounter) {
       return (
-        <div className="space-y-8 animate-fade-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
+        <div className="space-y-3 animate-fade-up">
+          <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.howCanHelp')}
           </h2>
-          <p className="text-center text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <p className="text-center text-sm text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-w-3xl mx-auto">
             {[
               { code: HELP_WITH.FLIGHTS, label: t('questionnaire.flights'), icon: "✈️", desc: t('questionnaire.flights.desc') },
               { code: HELP_WITH.ACCOMMODATION, label: t('questionnaire.accommodation'), icon: "🏨", desc: t('questionnaire.accommodation.desc') },
@@ -1250,19 +1250,19 @@ const Questionnaire = () => {
               return (
                 <Card
                   key={option.code}
-                   className={`p-6 cursor-pointer transition-all hover:scale-105 ${
+                   className={`p-4 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
                   onClick={() => handleMultiChoice("helpWith", option.code, undefined, 3)}
                 >
-                  <div className="flex flex-col items-center space-y-2">
-                    <span className="text-5xl">{option.icon}</span>
-                    <span className="text-lg font-semibold text-travliaq-deep-blue text-center">
+                  <div className="flex flex-col items-center space-y-1.5">
+                    <span className="text-3xl">{option.icon}</span>
+                    <span className="text-base font-semibold text-travliaq-deep-blue text-center">
                       {option.label}
                     </span>
-                    <span className="text-sm text-muted-foreground text-center">
+                    <span className="text-xs text-muted-foreground text-center">
                       {option.desc}
                     </span>
                   </div>
@@ -1270,7 +1270,7 @@ const Questionnaire = () => {
               );
             })}
           </div>
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-2">
             <Button
               variant="hero"
               size="lg"
@@ -1983,12 +1983,12 @@ const Questionnaire = () => {
     // Step 5: Budget
     if (step === stepCounter) {
       return (
-        <div className="space-y-8 animate-fade-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
+        <div className="space-y-3 animate-fade-up">
+          <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.budget.title')}
           </h2>
-          <p className="text-center text-muted-foreground">{t('questionnaire.budget.excluding')}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <p className="text-center text-sm text-muted-foreground">{t('questionnaire.budget.excluding')}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-w-3xl mx-auto">
             {[
               { label: t('questionnaire.budget.dontKnow'), icon: "🤷" },
               { label: t('questionnaire.budget.precise'), icon: "🎯" },
@@ -2001,7 +2001,7 @@ const Questionnaire = () => {
             ].map((option) => (
               <Card
                 key={option.label}
-                className="p-6 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
+                className="p-3 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
                 onClick={() => {
                   if (option.label === t('questionnaire.budget.precise')) {
                     setAnswers({ ...answers, budgetType: t('questionnaire.budget.precise') });
@@ -2012,9 +2012,9 @@ const Questionnaire = () => {
                   }
                 }}
               >
-                <div className="flex items-center space-x-4">
-                  <span className="text-3xl">{option.icon}</span>
-                  <span className="text-lg font-semibold text-travliaq-deep-blue">
+                <div className="flex flex-col items-center space-y-1">
+                  <span className="text-2xl">{option.icon}</span>
+                  <span className="text-xs md:text-sm font-semibold text-travliaq-deep-blue text-center">
                     {option.label}
                   </span>
                 </div>
@@ -2100,12 +2100,12 @@ const Questionnaire = () => {
     const hasActivitiesForStyle = helpWithForStyle.includes('activities');
     if (normalizeYesNo(answers.hasDestination) === YES_NO.YES && hasActivitiesForStyle && step === stepCounter) {
       return (
-        <div className="space-y-8 animate-fade-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
+        <div className="space-y-3 animate-fade-up">
+          <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.styles.title')}
           </h2>
-          <p className="text-center text-muted-foreground">{t('questionnaire.styles.selectUpTo5')}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <p className="text-center text-sm text-muted-foreground">{t('questionnaire.styles.selectUpTo5')}</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-3xl mx-auto">
             {[
               { label: t('questionnaire.styles.nature'), icon: "🌲" },
               { label: t('questionnaire.styles.cultureMuseums'), icon: "🏛️" },
@@ -2123,7 +2123,7 @@ const Questionnaire = () => {
               return (
                 <Card
                   key={option.label}
-                  className={`p-6 cursor-pointer transition-all hover:scale-105 ${
+                  className={`p-3 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : isDisabled
@@ -2143,9 +2143,9 @@ const Questionnaire = () => {
                     }
                   }}
                 >
-                  <div className="flex items-center space-x-4">
-                    <span className="text-3xl">{option.icon}</span>
-                    <span className="text-lg font-semibold text-travliaq-deep-blue">
+                  <div className="flex flex-col items-center space-y-1">
+                    <span className="text-2xl">{option.icon}</span>
+                    <span className="text-xs md:text-sm font-semibold text-travliaq-deep-blue text-center">
                       {option.label}
                     </span>
                   </div>
@@ -2153,7 +2153,7 @@ const Questionnaire = () => {
               );
             })}
           </div>
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-2">
             <Button
               variant="hero"
               size="lg"
