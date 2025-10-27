@@ -1544,11 +1544,11 @@ const Questionnaire = () => {
     // Step 2e: Ambiance recherchée (si Non)
     if (normalizeYesNo(answers.hasDestination) === YES_NO.NO && step === stepCounter) {
       return (
-        <div className="space-y-8 animate-fade-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
+        <div className="space-y-3 md:space-y-8 animate-fade-up">
+          <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.ambiance.title')}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.ambiance.adventureExotic'), icon: "🧭", desc: t('questionnaire.ambiance.adventureExotic.desc') },
               { label: t('questionnaire.ambiance.relaxation'), icon: "🧘", desc: t('questionnaire.ambiance.relaxation.desc') },
@@ -1559,16 +1559,16 @@ const Questionnaire = () => {
             ].map((option) => (
               <Card
                 key={option.label}
-                className="p-6 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
+                className="p-3 md:p-6 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
                 onClick={() => handleChoice("travelAmbiance", option.label)}
               >
-                <div className="flex items-center space-x-4">
-                  <span className="text-4xl">{option.icon}</span>
+                <div className="flex items-center space-x-2 md:space-x-4">
+                  <span className="text-2xl md:text-4xl">{option.icon}</span>
                   <div className="flex flex-col">
-                    <span className="text-lg font-semibold text-travliaq-deep-blue">
+                    <span className="text-xs md:text-lg font-semibold text-travliaq-deep-blue">
                       {option.label}
                     </span>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-[10px] md:text-sm text-muted-foreground">
                       {option.desc}
                     </span>
                   </div>
