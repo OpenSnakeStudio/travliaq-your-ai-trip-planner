@@ -907,7 +907,7 @@ const Questionnaire = () => {
       const responseData = {
         user_id: user?.id || null,
         email: answers.email || "",
-        langue: i18n.language === 'en' ? 'en' : 'fr', // Capture the current language
+        language: i18n.language === 'en' ? 'en' : 'fr', // Capture the current language
         groupe_voyage: answers.travelGroup || null,
         nombre_voyageurs: answers.numberOfTravelers || null,
         a_destination: answers.hasDestination || null,
@@ -2925,7 +2925,7 @@ const Questionnaire = () => {
             variant="outline"
             size="sm"
             onClick={() => setShowResetDialog(true)}
-            className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 h-9 px-3 text-sm"
+            className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 h-9 px-3 text-sm ml-2"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             Repartir de zéro

@@ -223,7 +223,7 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
               ) : (
                 <>
                   <Mail className="mr-2 h-5 w-5" />
-                  {t('questionnaire.submit')}
+                  Créer mon voyage ✈️
                 </>
               )}
             </Button>
