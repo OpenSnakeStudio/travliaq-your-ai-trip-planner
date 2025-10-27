@@ -72,11 +72,29 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
   const { t } = useTranslation();
   
   const [openSections, setOpenSections] = useState<string[]>(['contact']);
+  const [emailError, setEmailError] = useState<string>('');
 
   const toggleSection = (section: string) => {
     setOpenSections(prev => 
       prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
     );
+  };
+
+  // Validation d'email compatible HTML5 et plus robuste
+  const isValidEmail = (email: string): boolean => {
+    if (!email || email.trim().length === 0) return false;
+    // Regex compatible avec la spec HTML5 pour les emails
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    return emailRegex.test(email.trim()) && email.trim().length <= 255;
+  };
+
+  const handleEmailChange = (value: string) => {
+    onEmailChange(value);
+    if (value.trim().length > 0 && !isValidEmail(value)) {
+      setEmailError(t('questionnaire.emailInvalid') || 'Format d\'email invalide');
+    } else {
+      setEmailError('');
+    }
   };
 
   const sections = [
@@ -173,20 +191,29 @@ export const ReviewStep = ({ answers, email, onEmailChange, onEdit, onSubmit, is
                 id="review-email"
                 type="email"
                 value={email}
-                onChange={(e) => onEmailChange(e.target.value)}
+                onChange={(e) => handleEmailChange(e.target.value)}
                 placeholder={t('questionnaire.emailPlaceholder')}
-                className="w-full h-12"
+                className={`w-full h-12 ${emailError ? 'border-red-500 focus:border-red-500' : ''}`}
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? "email-error" : undefined}
               />
-              <p className="text-xs text-muted-foreground">
-                {t('questionnaire.review.emailDesc')}
-              </p>
+              {emailError ? (
+                <p id="email-error" className="text-xs text-red-500 font-medium">
+                  {emailError}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {t('questionnaire.review.emailDesc')}
+                </p>
+              )}
             </div>
             <Button
               variant="hero"
               size="lg"
               onClick={onSubmit}
-              disabled={isSubmitting || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+              disabled={isSubmitting || !isValidEmail(email)}
               className="w-full h-12 bg-travliaq-golden-sand text-travliaq-deep-blue hover:bg-travliaq-golden-sand/90"
+              title={!isValidEmail(email) ? (t('questionnaire.emailInvalid') || 'Veuillez entrer un email valide') : undefined}
             >
               {isSubmitting ? (
                 <>
