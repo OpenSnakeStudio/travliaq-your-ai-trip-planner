@@ -1299,14 +1299,18 @@ const Questionnaire = () => {
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-travliaq-deep-blue flex items-center gap-1.5">
                   {t('questionnaire.whereFrom')}
-                  <TooltipProvider>
+                  <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <button type="button" className="inline-flex items-center justify-center">
-                          <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-travliaq-deep-blue transition-colors cursor-help" />
+                        <button 
+                          type="button" 
+                          className="inline-flex items-center justify-center touch-manipulation"
+                          onClick={(e) => e.preventDefault()}
+                        >
+                          <Info className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground hover:text-travliaq-deep-blue transition-colors cursor-help" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
+                      <TooltipContent className="max-w-xs z-[100]" side="top" sideOffset={8}>
                         <p className="text-xs">
                           {t('questionnaire.cityTooltip')}
                         </p>
@@ -1345,14 +1349,18 @@ const Questionnaire = () => {
             <div>
               <label className="block text-sm font-medium mb-2 text-travliaq-deep-blue flex items-center gap-1.5">
                 {t('questionnaire.whereGoing')}
-                <TooltipProvider>
+                <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <button type="button" className="inline-flex items-center justify-center">
-                        <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-travliaq-deep-blue transition-colors cursor-help" />
+                      <button 
+                        type="button" 
+                        className="inline-flex items-center justify-center touch-manipulation"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <Info className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground hover:text-travliaq-deep-blue transition-colors cursor-help" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-xs">
+                    <TooltipContent className="max-w-xs z-[100]" side="top" sideOffset={8}>
                         <p className="text-xs">
                           {t('questionnaire.destinationTooltip')}
                         </p>
