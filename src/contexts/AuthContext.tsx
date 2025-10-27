@@ -52,7 +52,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Ignorer l'erreur "session_not_found" car l'utilisateur est déjà déconnecté
+      if (error && !error.message?.includes('session_not_found')) {
+        throw error;
+      }
       toast.success('Déconnexion réussie');
     } catch (error) {
       if (import.meta.env.DEV) {
