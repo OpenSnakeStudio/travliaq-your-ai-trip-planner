@@ -29,6 +29,52 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Check idempotency: has this answer_id already been enqueued?
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error('Missing Supabase configuration');
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Server configuration error' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/answer_enqueues?id=eq.${answer_id}`, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    });
+
+    if (!supabaseResponse.ok) {
+      console.error('Failed to check idempotency:', await supabaseResponse.text());
+      return new Response(
+        JSON.stringify({ ok: false, error: 'Failed to check idempotency' }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const existingRecords = await supabaseResponse.json();
+    if (existingRecords && existingRecords.length > 0) {
+      console.log(`[${new Date().toISOString()}] answer_id ${answer_id} already enqueued, skipping`);
+      return new Response(
+        JSON.stringify({ ok: true, message: 'Already enqueued' }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const AWS_REGION = Deno.env.get('AWS_REGION');
     const SQS_QUEUE_URL = Deno.env.get('SQS_QUEUE_URL');
     const AWS_ACCESS_KEY_ID = Deno.env.get('AWS_ACCESS_KEY_ID');
@@ -45,8 +91,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Prepare SQS message
-    const messageBody = JSON.stringify({ answer_id });
+    // Prepare SQS message - minimal payload
+    const messageBody = answer_id;
     
     // AWS Signature V4
     const service = 'sqs';
@@ -133,6 +179,22 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`[${new Date().toISOString()}] Successfully enqueued answer_id: ${answer_id}`);
+    
+    // Record that we enqueued this answer_id
+    const insertResponse = await fetch(`${SUPABASE_URL}/rest/v1/answer_enqueues`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({ id: answer_id }),
+    });
+
+    if (!insertResponse.ok) {
+      console.error('Failed to record enqueue:', await insertResponse.text());
+    }
     
     return new Response(
       JSON.stringify({ ok: true }),
