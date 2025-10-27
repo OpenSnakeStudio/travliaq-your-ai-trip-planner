@@ -2865,8 +2865,8 @@ const Questionnaire = () => {
 
       {/* Content compact */}
       <div className="max-w-3xl mx-auto px-4 py-2 relative z-10">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {step > 1 && (
               <Button
                 variant="ghost"
@@ -2895,7 +2895,7 @@ const Questionnaire = () => {
             )}
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <Button
               variant="outline"
               size="sm"
@@ -2917,7 +2917,7 @@ const Questionnaire = () => {
                   setTimeout(() => navigate('/'), 500);
                 }
               }}
-              className="text-travliaq-deep-blue border-travliaq-deep-blue hover:bg-travliaq-deep-blue hover:text-white transition-all"
+              className="text-travliaq-deep-blue border-travliaq-deep-blue hover:bg-travliaq-deep-blue hover:text-white transition-all flex-1 sm:flex-none whitespace-nowrap"
             >
               {t('questionnaire.saveAndReturn')}
             </Button>
@@ -2926,7 +2926,7 @@ const Questionnaire = () => {
               variant="outline"
               size="sm"
               onClick={() => setShowResetDialog(true)}
-              className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 h-9 px-3 text-sm"
+              className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/50 h-9 px-3 text-sm flex-1 sm:flex-none whitespace-nowrap"
             >
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
               Repartir de zéro
