@@ -746,60 +746,96 @@ const Questionnaire = () => {
   // Validation pour chaque étape avant de continuer
   const canProceedToNextStep = (): boolean => {
     let stepCounter = 0;
-    
+
     // Step 1: Groupe de voyage
     stepCounter++;
     if (step === stepCounter) return !!answers.travelGroup;
-    
-    // Step 2: Destination ou non
+
+    // Step 2: Destination en tête ?
     stepCounter++;
     if (step === stepCounter) return !!answers.hasDestination;
-    
-    // Step 3: Destination (si oui)
-    if (normalizeYesNo(answers.hasDestination) === YES_NO.YES) {
-      stepCounter++;
-      if (step === stepCounter) return !!answers.destination;
-    }
-    
-    // Step 4: Aide souhaitée
+
+    // Step 2b: Comment aider (multi)
     stepCounter++;
     if (step === stepCounter) return !!answers.helpWith && answers.helpWith.length > 0;
-    
-    // Step 5: Type de dates
+
+    const hasDest = normalizeYesNo(answers.hasDestination);
+
+    // Branches selon la destination
+    if (hasDest === YES_NO.YES) {
+      // Step 2c: Trajet (ville départ + destination)
+      stepCounter++;
+      if (step === stepCounter) {
+        return !!answers.destination && !!answers.departureLocation;
+      }
+    } else if (hasDest === YES_NO.NO) {
+      // Step 2c: Climat (multi)
+      stepCounter++;
+      if (step === stepCounter) return !!answers.climatePreference && answers.climatePreference.length > 0;
+
+      // Step 2d: Affinités (multi)
+      stepCounter++;
+      if (step === stepCounter) return !!answers.travelAffinities && answers.travelAffinities.length > 0;
+
+      // Step 2e: Ambiance
+      stepCounter++;
+      if (step === stepCounter) return !!answers.travelAmbiance;
+
+      // Step 2g: Ville de départ
+      stepCounter++;
+      if (step === stepCounter) return !!answers.departureLocation;
+    }
+
+    // Step 3: Type de dates
     stepCounter++;
     if (step === stepCounter) return !!answers.datesType;
-    
-    // Step 6: Dates précises (si fixes)
+
     const normalizedDatesType = normalizeDatesType(answers.datesType);
+
+    // Dates précises
     if (normalizedDatesType === DATES_TYPE.FIXED) {
       stepCounter++;
       if (step === stepCounter) return !!answers.departureDate && !!answers.returnDate;
     }
-    
-    // Step 7: Date approximative (si flexibles)
+
+    // Dates flexibles
     if (normalizedDatesType === DATES_TYPE.FLEXIBLE) {
+      // Avez-vous une période approximative ?
       stepCounter++;
       if (step === stepCounter) return !!answers.hasApproximateDepartureDate;
-      
+
       if (normalizeYesNo(answers.hasApproximateDepartureDate) === YES_NO.YES) {
+        // Vers quand ?
         stepCounter++;
         if (step === stepCounter) return !!answers.approximateDepartureDate;
       }
+
+      // Niveau de flexibilité
+      stepCounter++;
+      if (step === stepCounter) return !!answers.flexibility;
     }
-    
-    // Step 8: Durée
+
+    // Durée
     stepCounter++;
     if (step === stepCounter) return !!answers.duration;
-    
-    // Step 9: Flexibilité
+
+    // Si >14 nuits, exiger le nombre exact
+    if (answers.duration === t('questionnaire.duration.more14')) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.exactNights && (answers.exactNights as number) > 0;
+    }
+
+    // Budget: soit une plage par personne, soit "budget précis"
     stepCounter++;
-    if (step === stepCounter) return !!answers.flexibility;
-    
-    // Step 10: Type de budget
-    stepCounter++;
-    if (step === stepCounter) return !!answers.budgetType;
-    
-    // Les autres étapes sont optionnelles ou ont des validations internes
+    if (step === stepCounter) return !!answers.budgetPerPerson || !!answers.budgetType;
+
+    // Si budget précis, vérifier montant + devise
+    if (answers.budgetType === t('questionnaire.budget.precise')) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.budgetAmount && !!answers.budgetCurrency;
+    }
+
+    // Autres étapes: validation locale ou optionnelles
     return true;
   };
 
