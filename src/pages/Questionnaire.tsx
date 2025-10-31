@@ -37,7 +37,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, normalizeTravelGroup, normalizeYesNo, normalizeDatesType } from "@/lib/questionnaireValues";
+import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, normalizeTravelGroup, normalizeYesNo, normalizeDatesType, normalizeHelpWithArray } from "@/lib/questionnaireValues";
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -450,13 +450,7 @@ const Questionnaire = () => {
     
     // Normaliser helpWith array
     if (answers.helpWith && Array.isArray(answers.helpWith)) {
-      const normalized = answers.helpWith.map((item: string) => {
-        const lower = item.toLowerCase().trim();
-        if (lower.includes('vol') || lower === 'flights') return 'flights';
-        if (lower.includes('hébergement') || lower.includes('accommodation')) return 'accommodation';
-        if (lower.includes('activité') || lower.includes('activities')) return 'activities';
-        return item;
-      });
+      const normalized = normalizeHelpWithArray(answers.helpWith);
       
       // Comparer les tableaux de manière sûre
       const isDifferent = normalized.length !== answers.helpWith.length ||
@@ -2097,7 +2091,7 @@ const Questionnaire = () => {
 
     // Step 6: Style (max 5 au lieu de 3) - SEULEMENT si destination précise ET activités sélectionnées
     const helpWithForStyle = answers.helpWith || [];
-    const hasActivitiesForStyle = helpWithForStyle.includes('activities');
+    const hasActivitiesForStyle = helpWithForStyle.includes(HELP_WITH.ACTIVITIES);
     if (normalizeYesNo(answers.hasDestination) === YES_NO.YES && hasActivitiesForStyle && step === stepCounter) {
       return (
         <div className="space-y-3 animate-fade-up">
@@ -2172,7 +2166,7 @@ const Questionnaire = () => {
     // Step 7 removed: replaced by unified RhythmStep later
 
     // Step 8: Vols - SEULEMENT si vols sélectionnés
-    if (helpWithFlights.includes('flights') && step === stepCounter) {
+    if (helpWithFlights.includes(HELP_WITH.FLIGHTS) && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2201,10 +2195,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (helpWithFlights.includes('flights')) stepCounter++;
+    if (helpWithFlights.includes(HELP_WITH.FLIGHTS)) stepCounter++;
 
     // Step 9: Bagages par voyageur - AVEC OPTION OBJET PERSONNEL - SEULEMENT si vols sélectionnés
-    if (helpWithFlights.includes('flights') && step === stepCounter) {
+    if (helpWithFlights.includes(HELP_WITH.FLIGHTS) && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2264,11 +2258,11 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (helpWithFlights.includes('flights')) stepCounter++;
+    if (helpWithFlights.includes(HELP_WITH.FLIGHTS)) stepCounter++;
 
     // Step 10: Mobilité (multi-choix + exhaustif) - SEULEMENT si pas uniquement vols
     const helpWithMobility = answers.helpWith || [];
-    const onlyFlights = helpWithMobility.length === 1 && helpWithMobility.includes('flights');
+    const onlyFlights = helpWithMobility.length === 1 && helpWithMobility.includes(HELP_WITH.FLIGHTS);
     if (!onlyFlights && step === stepCounter) {
       return (
         <div className="space-y-3 md:space-y-8 animate-fade-up">
@@ -2354,7 +2348,7 @@ const Questionnaire = () => {
     // (déjà déclaré en haut de renderStep)
 
     // Step 11: Type hébergement (max 2 + "Peu importe") - SEULEMENT si hébergement sélectionné
-    if (helpWithAccommodation.includes('accommodation') && step === stepCounter) {
+    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && step === stepCounter) {
       return (
         <div className="space-y-3 md:space-y-8 animate-fade-up">
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2433,10 +2427,10 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (helpWithAccommodation.includes('accommodation')) stepCounter++;
+    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION)) stepCounter++;
 
     // Step 11b: Détails hôtel (SI Hôtel est sélectionné ET hébergement sélectionné)
-    if (helpWithAccommodation.includes('accommodation') && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel')) && step === stepCounter) {
+    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel')) && step === stepCounter) {
       return (
         <div className="space-y-3 md:space-y-8 animate-fade-up">
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2495,7 +2489,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if ((answers.helpWith || []).includes(t('questionnaire.accommodation')) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel'))) stepCounter++;
+    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel'))) stepCounter++;
 
     // Step 12: Confort - SEULEMENT si hébergement sélectionné
     if ((answers.helpWith || []).includes(HELP_WITH.ACCOMMODATION) && step === stepCounter) {

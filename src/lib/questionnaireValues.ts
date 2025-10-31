@@ -69,6 +69,30 @@ export const normalizeDatesType = (value: string | undefined): string | undefine
   return lowerValue;
 };
 
+// Normaliser helpWith - convertir les traductions en codes internes
+export const normalizeHelpWith = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const lowerValue = value.toLowerCase().trim();
+  
+  // Si c'est déjà un code interne
+  if (['flights', 'accommodation', 'activities'].includes(lowerValue)) {
+    return lowerValue;
+  }
+  
+  // Détecter depuis les labels traduits
+  if (lowerValue.includes('vol') || lowerValue.includes('flight')) return 'flights';
+  if (lowerValue.includes('hébergement') || lowerValue.includes('accommodation')) return 'accommodation';
+  if (lowerValue.includes('activité') || lowerValue.includes('activities')) return 'activities';
+  
+  return lowerValue;
+};
+
+// Normaliser un tableau de helpWith
+export const normalizeHelpWithArray = (values: string[] | undefined): string[] => {
+  if (!values || !Array.isArray(values)) return [];
+  return values.map(v => normalizeHelpWith(v)).filter(Boolean) as string[];
+};
+
 // Helper pour obtenir la clé de traduction à partir de la valeur
 export const getTravelGroupLabel = (value: string) => {
   const normalized = normalizeTravelGroup(value);
