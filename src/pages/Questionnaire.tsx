@@ -743,7 +743,77 @@ const Questionnaire = () => {
   const totalSteps = getTotalSteps();
   const progress = (step / totalSteps) * 100;
 
+  // Validation pour chaque étape avant de continuer
+  const canProceedToNextStep = (): boolean => {
+    let stepCounter = 0;
+    
+    // Step 1: Groupe de voyage
+    stepCounter++;
+    if (step === stepCounter) return !!answers.travelGroup;
+    
+    // Step 2: Destination ou non
+    stepCounter++;
+    if (step === stepCounter) return !!answers.hasDestination;
+    
+    // Step 3: Destination (si oui)
+    if (normalizeYesNo(answers.hasDestination) === YES_NO.YES) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.destination;
+    }
+    
+    // Step 4: Aide souhaitée
+    stepCounter++;
+    if (step === stepCounter) return !!answers.helpWith && answers.helpWith.length > 0;
+    
+    // Step 5: Type de dates
+    stepCounter++;
+    if (step === stepCounter) return !!answers.datesType;
+    
+    // Step 6: Dates précises (si fixes)
+    const normalizedDatesType = normalizeDatesType(answers.datesType);
+    if (normalizedDatesType === DATES_TYPE.FIXED) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.departureDate && !!answers.returnDate;
+    }
+    
+    // Step 7: Date approximative (si flexibles)
+    if (normalizedDatesType === DATES_TYPE.FLEXIBLE) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.hasApproximateDepartureDate;
+      
+      if (normalizeYesNo(answers.hasApproximateDepartureDate) === YES_NO.YES) {
+        stepCounter++;
+        if (step === stepCounter) return !!answers.approximateDepartureDate;
+      }
+    }
+    
+    // Step 8: Durée
+    stepCounter++;
+    if (step === stepCounter) return !!answers.duration;
+    
+    // Step 9: Flexibilité
+    stepCounter++;
+    if (step === stepCounter) return !!answers.flexibility;
+    
+    // Step 10: Type de budget
+    stepCounter++;
+    if (step === stepCounter) return !!answers.budgetType;
+    
+    // Les autres étapes sont optionnelles ou ont des validations internes
+    return true;
+  };
+
   const nextStep = () => {
+    // Validation avant de continuer
+    if (!canProceedToNextStep()) {
+      toast({
+        title: t('questionnaire.pleaseAnswer'),
+        description: t('questionnaire.answerRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Si on est en mode édition et qu'on veut retourner au récapitulatif
     if (isEditMode && returnToReviewStep !== null) {
       setStep(returnToReviewStep);

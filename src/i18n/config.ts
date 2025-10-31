@@ -357,6 +357,9 @@ const resources = {
       "q.success": "Questionnaire envoyé ! 🎉",
       "q.success.desc": "Nous vous enverrons votre itinéraire personnalisé sous 48h.",
       
+      "questionnaire.pleaseAnswer": "Réponse requise",
+      "questionnaire.answerRequired": "Veuillez répondre à cette question avant de continuer",
+      
       // Help with descriptions
       "questionnaire.flights.desc": "Billets d'avion",
       "questionnaire.accommodation.desc": "Hôtels & logements",
@@ -1189,6 +1192,9 @@ const resources = {
       "q.error.generic.desc": "An error occurred while submitting the questionnaire. Please try again.",
       "q.success": "Questionnaire submitted! 🎉",
       "q.success.desc": "We'll send you your personalized itinerary within 48 hours.",
+      
+      "questionnaire.pleaseAnswer": "Answer required",
+      "questionnaire.answerRequired": "Please answer this question before continuing",
       
       // Help with descriptions
       "questionnaire.flights.desc": "Flight tickets",

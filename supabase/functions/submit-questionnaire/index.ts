@@ -119,6 +119,39 @@ serve(async (req) => {
       }
     }
     
+    // CRITICAL: Validate that essential fields are present
+    // These fields are required for a complete questionnaire submission
+    const requiredFields = [
+      'groupe_voyage',      // Travel group (who's traveling)
+      'type_dates',         // Date type (fixed/flexible)
+      'duree',              // Duration
+      'aide_avec'           // Help needed (flights, accommodation, activities)
+    ];
+    
+    const missingFields = requiredFields.filter(field => !questionnaireData[field]);
+    if (missingFields.length > 0) {
+      console.log('Missing required fields:', missingFields);
+      return new Response(
+        JSON.stringify({ 
+          error: 'missing_required_fields',
+          message: 'Questionnaire incomplet. Veuillez répondre à toutes les questions obligatoires.',
+          missingFields 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Validate that aide_avec is an array with at least one element
+    if (!Array.isArray(questionnaireData.aide_avec) || questionnaireData.aide_avec.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'invalid_help_with',
+          message: 'Vous devez sélectionner au moins un service (vols, hébergement ou activités).'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Validate date fields
     if (questionnaireData.date_depart) {
       const depDate = new Date(questionnaireData.date_depart);
