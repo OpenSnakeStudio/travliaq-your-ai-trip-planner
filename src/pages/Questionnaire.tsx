@@ -2044,8 +2044,12 @@ const Questionnaire = () => {
     }
     if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) stepCounter++;
 
-    // Step 4b: Nombre exact de nuits (si >14 nuits)
-    if (answers.duration === t('questionnaire.duration.more14') && step === stepCounter) {
+    // Step 4b: Nombre exact de nuits (uniquement si dates FLEXIBLES et >14 nuits)
+    if (
+      normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE &&
+      answers.duration === t('questionnaire.duration.more14') &&
+      step === stepCounter
+    ) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2077,7 +2081,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.duration === t('questionnaire.duration.more14')) stepCounter++;
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && answers.duration === t('questionnaire.duration.more14')) stepCounter++;
 
     // Step 5: Budget
     if (step === stepCounter) {
