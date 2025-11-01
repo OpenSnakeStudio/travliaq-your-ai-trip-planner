@@ -815,14 +815,16 @@ const Questionnaire = () => {
       if (step === stepCounter) return !!answers.flexibility;
     }
 
-    // Durée
-    stepCounter++;
-    if (step === stepCounter) return !!answers.duration;
-
-    // Si >14 nuits, exiger le nombre exact
-    if (answers.duration === t('questionnaire.duration.more14')) {
+    // Durée (seulement si dates flexibles - si dates précises, la durée est calculée automatiquement)
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) {
       stepCounter++;
-      if (step === stepCounter) return !!answers.exactNights && (answers.exactNights as number) > 0;
+      if (step === stepCounter) return !!answers.duration;
+
+      // Si >14 nuits, exiger le nombre exact
+      if (answers.duration === t('questionnaire.duration.more14')) {
+        stepCounter++;
+        if (step === stepCounter) return !!answers.exactNights && (answers.exactNights as number) > 0;
+      }
     }
 
     // Budget: soit une plage par personne, soit "budget précis"
