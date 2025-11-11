@@ -1323,9 +1323,6 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center bg-gradient-to-r from-travliaq-deep-blue to-travliaq-turquoise bg-clip-text text-transparent">
             {t('questionnaire.numberOfPeople')}
           </h2>
-          <p className="text-center text-muted-foreground">
-            Combien de personnes voyagent ?
-          </p>
           <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
             {[3, 4, 5].map((count) => (
               <Card
