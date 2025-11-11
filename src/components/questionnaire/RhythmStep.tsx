@@ -135,12 +135,11 @@ export const RhythmStep = ({
                     className="hidden"
                   />
                   <span className="text-2xl">{option.icon}</span>
-                  <Label 
-                    htmlFor={option.value} 
+                  <span 
                     className={`text-xs font-semibold text-travliaq-deep-blue cursor-pointer text-center ${isDisabled ? 'cursor-not-allowed' : ''}`}
                   >
                     {option.label}
-                  </Label>
+                  </span>
                 </div>
               </Card>
             );
