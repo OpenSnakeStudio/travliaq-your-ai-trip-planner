@@ -840,8 +840,8 @@ const Questionnaire = () => {
     stepCounter++;
     if (step === stepCounter) return !!answers.budgetPerPerson || !!answers.budgetType;
 
-    // Si budget précis, vérifier montant + devise
-    if (answers.budgetType === t('questionnaire.budget.precise')) {
+    // Si budget précis ou >1800€, vérifier montant + devise
+    if (answers.budgetType === t('questionnaire.budget.precise') || answers.budgetType === t('questionnaire.budget.more1800')) {
       stepCounter++;
       if (step === stepCounter) return !!answers.budgetAmount && !!answers.budgetCurrency;
     }
@@ -2228,8 +2228,8 @@ const Questionnaire = () => {
                 key={option.label}
                 className="p-3 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
                 onClick={() => {
-                  if (option.label === t('questionnaire.budget.precise')) {
-                    setAnswers({ ...answers, budgetType: t('questionnaire.budget.precise') });
+                  if (option.label === t('questionnaire.budget.precise') || option.label === t('questionnaire.budget.more1800')) {
+                    setAnswers({ ...answers, budgetType: option.label });
                     setTimeout(() => nextStep(true), 300);
                   } else {
                     setAnswers({ ...answers, budgetPerPerson: option.label, budgetType: undefined });
@@ -2252,7 +2252,7 @@ const Questionnaire = () => {
     stepCounter++;
 
     // Step 5b: Budget précis
-    if (answers.budgetType === t('questionnaire.budget.precise') && step === stepCounter) {
+    if ((answers.budgetType === t('questionnaire.budget.precise') || answers.budgetType === t('questionnaire.budget.more1800')) && step === stepCounter) {
       return (
         <div className="space-y-8 animate-fade-up">
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2320,7 +2320,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (answers.budgetType === t('questionnaire.budget.precise')) stepCounter++;
+    if (answers.budgetType === t('questionnaire.budget.precise') || answers.budgetType === t('questionnaire.budget.more1800')) stepCounter++;
 
     // Step 6: Style (max 5 au lieu de 3) - SEULEMENT si destination précise ET activités sélectionnées
     const helpWithForStyle = answers.helpWith || [];
