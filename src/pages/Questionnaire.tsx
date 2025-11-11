@@ -1388,6 +1388,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.destinationInMind')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Avez-vous déjà une destination précise en tête ou êtes-vous ouvert à nos suggestions ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.yes'), icon: "✅" },
@@ -1419,6 +1422,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.howCanHelp')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Sur quels aspects de votre voyage souhaitez-vous être accompagné ? Sélectionnez tous ceux qui vous intéressent.
+          </p>
           <p className="text-center text-sm text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 max-w-3xl mx-auto">
             {[
@@ -1584,6 +1590,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.climatePreference')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quel type de climat recherchez-vous pour votre voyage ? Plusieurs sélections possibles.
+          </p>
           <p className="text-center text-muted-foreground">{t('questionnaire.multipleSelectionPossible')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {[
@@ -1650,6 +1659,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.affinities.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quels types d'expériences vous attirent le plus en voyage ? Sélectionnez jusqu'à 5 options.
+          </p>
           <p className="text-center text-muted-foreground">{t('questionnaire.affinities.selectUpTo5')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {[
@@ -1740,6 +1752,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.ambiance.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quelle ambiance générale souhaitez-vous pour votre voyage ?
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.ambiance.adventureExotic'), icon: "🧭", desc: t('questionnaire.ambiance.adventureExotic.desc') },
@@ -1780,6 +1795,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.whereFrom')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            De quelle ville partez-vous ? Cela nous permet de trouver les meilleures options de transport.
+          </p>
           <div className="max-w-xl mx-auto space-y-3">
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -1851,6 +1869,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.dates.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Connaissez-vous vos dates exactes de voyage ou préférez-vous rester flexible ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
               { code: DATES_TYPE.FIXED, label: t('questionnaire.dates.fixed'), icon: "📆" },
@@ -1893,6 +1914,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.dates.selectDates')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Sélectionnez votre date de départ puis votre date de retour sur le calendrier.
+          </p>
           <div className="max-w-2xl mx-auto space-y-3">
             <div className="space-y-2">
               <label className="block text-sm font-medium text-travliaq-deep-blue text-center">
@@ -1973,6 +1997,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.flexibility.souplesse')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            De combien de jours pouvez-vous décaler votre voyage pour profiter des meilleures offres ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.flexibility.0days'), icon: "🎯" },
@@ -2005,6 +2032,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.flexibility.hasApproxDate')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Avez-vous une idée de période pour votre départ (par exemple : début avril, courant mai) ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
               { code: YES_NO.YES, label: t('questionnaire.flexibility.hasApproxDate.yes'), icon: "✅" },
@@ -2106,6 +2136,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.duration.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Combien de nuits souhaitez-vous séjourner sur place ?
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 max-w-3xl mx-auto">
             {[
               { label: t('questionnaire.duration.2nights'), icon: "🌙" },
@@ -2148,6 +2181,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.duration.exactNights')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Indiquez le nombre exact de nuits que vous souhaitez (minimum 15 nuits).
+          </p>
           <div className="max-w-xl mx-auto space-y-4">
             <Input
               type="number"
@@ -2183,6 +2219,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.budget.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quel est votre budget total par personne pour ce voyage (vols, hébergement, activités) ?
+          </p>
           <p className="text-center text-sm text-muted-foreground">{t('questionnaire.budget.excluding')}</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-w-3xl mx-auto">
             {[
@@ -2229,6 +2268,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.budget.totalBudget')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Indiquez votre budget exact par personne pour l'ensemble du voyage.
+          </p>
           <p className="text-center text-muted-foreground">{t('questionnaire.budget.entireTrip')}</p>
           <div className="max-w-xl mx-auto space-y-4">
             <div>
@@ -2300,6 +2342,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.styles.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quels sont vos centres d'intérêt pour les activités durant votre séjour ? Sélectionnez jusqu'à 5 options.
+          </p>
           <p className="text-center text-sm text-muted-foreground">{t('questionnaire.styles.selectUpTo5')}</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-3xl mx-auto">
             {[
@@ -2374,6 +2419,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.flights.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Préférez-vous des vols directs ou acceptez-vous les escales pour économiser ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.flights.directOnly'), icon: "✈️" },
@@ -2406,6 +2454,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.luggage.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Sélectionnez le type de bagage pour chaque voyageur (impact sur le prix du vol).
+          </p>
           <p className="text-center text-muted-foreground">
             {getNumberOfTravelers()} {getNumberOfTravelers() > 1 ? t('questionnaire.luggage.travelers_plural') : t('questionnaire.luggage.travelers')}
           </p>
@@ -2471,6 +2522,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.mobility.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Comment souhaitez-vous vous déplacer sur place ? Sélectionnez tous les modes qui vous intéressent.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.mobility.dontMind'), icon: "🤷", autoNext: true },
@@ -2557,6 +2611,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.accommodationType.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quel type d'hébergement recherchez-vous ? Vous pouvez sélectionner jusqu'à 2 options.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.accommodationType.dontMind'), icon: "🤷" },
@@ -2639,6 +2696,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.hotelPreferences.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quels services et prestations souhaitez-vous dans votre hébergement hôtelier ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.hotelPreferences.dontMind'), icon: "🤷", autoNext: true },
@@ -2702,6 +2762,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.comfort.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quel niveau de confort recherchez-vous pour votre hébergement ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.comfort.dontMind'), icon: "🤷", autoNext: true },
@@ -2737,6 +2800,9 @@ const Questionnaire = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.neighborhood.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Dans quel type de quartier préférez-vous séjourner ?
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             {[
               { label: t('questionnaire.neighborhood.quiet'), icon: "🌙" },
@@ -2770,6 +2836,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.amenities.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Quels équipements et services sont importants pour vous dans votre hébergement ?
+          </p>
           <p className="text-center text-sm md:text-base text-muted-foreground">{t('questionnaire.amenities.selectAll')}</p>
           <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
@@ -2868,6 +2937,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.constraints.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Avez-vous des contraintes alimentaires, religieuses, ou d'accessibilité dont nous devrions tenir compte ?
+          </p>
           <p className="text-center text-sm md:text-base text-muted-foreground">{t('questionnaire.constraints.selectAllImportant')}</p>
           <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
@@ -2946,6 +3018,9 @@ const Questionnaire = () => {
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.additionalInfo.title')}
           </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            Y a-t-il d'autres informations importantes que nous devrions connaître pour organiser votre voyage parfait ?
+          </p>
           <p className="text-center text-muted-foreground">
             {t('questionnaire.additionalInfo.description')}
           </p>
