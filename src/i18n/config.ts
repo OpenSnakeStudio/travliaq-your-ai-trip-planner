@@ -447,10 +447,10 @@ const resources = {
       "questionnaire.numberOfPeople": "Nombre de personnes (enfants inclus) 👨‍👩‍👧‍👦",
       "questionnaire.continue": "Continuer",
       "questionnaire.howManyPeople": "Combien de personnes exactement ? 👥",
-      "questionnaire.destinationInMind": "Tu as déjà une destination en tête ? 🌍",
-      "questionnaire.destinationInMind.description": "Avez-vous déjà une destination précise en tête ou êtes-vous ouvert à nos suggestions ?",
-      "questionnaire.howCanHelp": "Comment Travliaq peut t'aider ? 🎯",
-      "questionnaire.howCanHelp.description": "Sur quels aspects de votre voyage souhaitez-vous être accompagné ? Sélectionnez tous ceux qui vous intéressent.",
+      "questionnaire.destinationInMind": "Une destination en tête ? 🌍",
+      "questionnaire.destinationInMind.description": "Ville ou pays de destination",
+      "questionnaire.howCanHelp": "Comment vous aider ? 🎯",
+      "questionnaire.howCanHelp.description": "Sélectionnez les services nécessaires",
       "questionnaire.multipleSelectionPossible": "Sélection multiple possible",
       "questionnaire.solo": "Solo",
       "questionnaire.duo": "Duo",
@@ -465,8 +465,8 @@ const resources = {
       "questionnaire.accommodation": "Hébergement",
       "questionnaire.activities": "Activités",
       "questionnaire.destinationDetails": "Renseigne les détails de ta destination 🌍",
-      "questionnaire.whereFrom": "D'où pars-tu ? 📍",
-      "questionnaire.whereFrom.description": "De quelle ville partez-vous ? Cela nous permet de trouver les meilleures options de transport.",
+      "questionnaire.whereFrom": "Ville de départ ? 📍",
+      "questionnaire.whereFrom.description": "Votre point de départ",
       "questionnaire.cityTooltip": "Tu peux saisir n'importe quelle ville, même si elle n'apparaît pas dans la liste. L'IA comprendra ton point de départ si tu l'orthographies correctement.",
       "questionnaire.detecting": "Détection...",
       "questionnaire.myPosition": "Ma position",
@@ -474,8 +474,8 @@ const resources = {
       "questionnaire.whereGoing": "Où vas-tu ? 🌍",
       "questionnaire.destinationTooltip": "Tu peux saisir n'importe quelle ville, même si elle n'apparaît pas dans la liste. L'IA comprendra ta destination si tu l'orthographies correctement.",
       "questionnaire.destinationCity": "Ville de destination...",
-      "questionnaire.climatePreference": "Quel type de climat recherches-tu ? 🌡️",
-      "questionnaire.climatePreference.description": "Quel type de climat recherchez-vous pour votre voyage ? Plusieurs sélections possibles.",
+      "questionnaire.climatePreference": "Climat préféré ? 🌡️",
+      "questionnaire.climatePreference.description": "Choix multiples possibles",
       "questionnaire.customTrip": "TON VOYAGE SUR MESURE",
       "questionnaire.back": "Retour",
       "questionnaire.backToReview": "Retour au récapitulatif",
@@ -509,8 +509,8 @@ const resources = {
       "questionnaire.climate.dontMind.desc": "Je suis flexible",
       
       // Travel affinities
-      "questionnaire.affinities.title": "Qu'est-ce qui t'attire le plus ? 🎯",
-      "questionnaire.affinities.description": "Quels types d'expériences vous attirent le plus en voyage ? Sélectionnez jusqu'à 5 options.",
+      "questionnaire.affinities.title": "Centres d'intérêt ? 🎯",
+      "questionnaire.affinities.description": "Sélectionnez jusqu'à 5 options",
       "questionnaire.affinities.selectUpTo5": "Sélectionne jusqu'à 5 affinités",
       "questionnaire.affinities.dontMind": "Peu importe",
       "questionnaire.affinities.paradiseBeaches": "Plages paradisiaques",
@@ -531,8 +531,8 @@ const resources = {
       "questionnaire.affinities.islandsArchipelagos": "Îles & archipels",
       
       // Travel ambiance
-      "questionnaire.ambiance.title": "Quelle ambiance recherches-tu ? 🎨",
-      "questionnaire.ambiance.description": "Quelle ambiance générale souhaitez-vous pour votre voyage ?",
+      "questionnaire.ambiance.title": "Ambiance souhaitée ? 🎨",
+      "questionnaire.ambiance.description": "Type de voyage",
       "questionnaire.ambiance.adventureExotic": "Aventure & dépaysement",
       "questionnaire.ambiance.adventureExotic.desc": "Sortir de ma zone de confort",
       "questionnaire.ambiance.relaxation": "Détente & relaxation",
@@ -547,12 +547,12 @@ const resources = {
       "questionnaire.ambiance.familyConviviality.desc": "Moments en famille",
       
       // Dates
-      "questionnaire.dates.title": "Dates de voyage 📅",
-      "questionnaire.dates.description": "Connaissez-vous vos dates exactes de voyage ou préférez-vous rester flexible ?",
+      "questionnaire.dates.title": "Dates de voyage ? 📅",
+      "questionnaire.dates.description": "Dates fixes ou flexibles",
       "questionnaire.dates.fixed": "Dates fixes",
       "questionnaire.dates.flexible": "Je suis flexible",
-      "questionnaire.dates.selectDates": "Sélectionne tes dates de voyage 🗓️",
-      "questionnaire.dates.selectDates.description": "Sélectionnez votre date de départ puis votre date de retour sur le calendrier.",
+      "questionnaire.dates.selectDates": "Sélectionner les dates 🗓️",
+      "questionnaire.dates.selectDates.description": "Date de départ puis de retour",
       "questionnaire.dates.selectRange": "Clique et fais glisser pour sélectionner une plage de dates",
       "questionnaire.dates.selected": "Dates sélectionnées :",
       "questionnaire.dates.departure": "Départ :",
@@ -564,8 +564,8 @@ const resources = {
       "questionnaire.dates.selectedMsg": "Dates sélectionnées !",
       
       // Flexibility
-      "questionnaire.flexibility.title": "Flexibilité des dates ⏰",
-      "questionnaire.flexibility.description": "De combien de jours pouvez-vous décaler votre voyage pour profiter des meilleures offres ?",
+      "questionnaire.flexibility.title": "Flexibilité des dates ? ⏰",
+      "questionnaire.flexibility.description": "Décalage possible pour meilleurs prix",
       "questionnaire.flexibility.souplesse": "Quelle souplesse ? 🔄",
       "questionnaire.flexibility.0days": "±0j",
       "questionnaire.flexibility.3days": "±3j",
@@ -575,8 +575,8 @@ const resources = {
       "questionnaire.flexibility.week": "±1 semaine",
       "questionnaire.flexibility.2weeks": "±2 semaines",
       "questionnaire.flexibility.month": "±1 mois",
-      "questionnaire.flexibility.hasApproxDate": "As-tu une date de départ approximative ? 📅",
-      "questionnaire.flexibility.hasApproxDate.description": "Avez-vous une idée de période pour votre départ (par exemple : début avril, courant mai) ?",
+      "questionnaire.flexibility.hasApproxDate": "Départ approximatif ? 📅",
+      "questionnaire.flexibility.hasApproxDate.description": "Avez-vous une idée du moment ?",
       "questionnaire.flexibility.hasApproxDate.yes": "Oui, j'ai une idée",
       "questionnaire.flexibility.hasApproxDate.no": "Non, pas encore",
       "questionnaire.flexibility.approxDate": "Quelle est ta date de départ approximative ? 📆",
@@ -587,8 +587,8 @@ const resources = {
       "questionnaire.dates.days": "jours",
       
       // Duration
-      "questionnaire.duration.title": "Durée du séjour 🌙",
-      "questionnaire.duration.description": "Combien de nuits souhaitez-vous séjourner sur place ?",
+      "questionnaire.duration.title": "Durée du voyage ? 🌙",
+      "questionnaire.duration.description": "Nombre de nuits",
       "questionnaire.duration.2nights": "2 nuits",
       "questionnaire.duration.3nights": "3 nuits",
       "questionnaire.duration.4nights": "4 nuits",
@@ -598,12 +598,12 @@ const resources = {
       "questionnaire.duration.8to10": "8-10 nuits",
       "questionnaire.duration.11to14": "11-14 nuits",
       "questionnaire.duration.more14": ">14 nuits",
-      "questionnaire.duration.exactNights": "Combien de nuits exactement ? 🌉",
-      "questionnaire.duration.exactNights.description": "Indiquez le nombre exact de nuits que vous souhaitez (minimum 15 nuits).",
+      "questionnaire.duration.exactNights": "Nombre exact de nuits ? 🌉",
+      "questionnaire.duration.exactNights.description": "Minimum 15 nuits",
       
       // Budget
-      "questionnaire.budget.title": "Budget par personne 💰",
-      "questionnaire.budget.description": "Quel est votre budget total par personne pour ce voyage (vols, hébergement, activités) ?",
+      "questionnaire.budget.title": "Budget par personne ? 💰",
+      "questionnaire.budget.description": "Budget total hors achats personnels",
       "questionnaire.budget.excluding": "Hors achats personnels",
       "questionnaire.budget.less300": "<300€",
       "questionnaire.budget.300to600": "300-600€",
@@ -613,15 +613,15 @@ const resources = {
       "questionnaire.budget.more1800": ">1 800€",
       "questionnaire.budget.dontKnow": "Je ne sais pas",
       "questionnaire.budget.precise": "Budget précis",
-      "questionnaire.budget.totalBudget": "Quel est ton budget total ? 💵",
-      "questionnaire.budget.totalBudget.description": "Indiquez votre budget exact par personne pour l'ensemble du voyage.",
+      "questionnaire.budget.totalBudget": "Budget exact ? 💵",
+      "questionnaire.budget.totalBudget.description": "Par personne pour l'ensemble du voyage",
       "questionnaire.budget.entireTrip": "Pour l'ensemble du voyage",
       "questionnaire.budget.amount": "Montant",
       "questionnaire.budget.currency": "Devise",
       
       // Travel styles
-      "questionnaire.styles.title": "Style de voyage 🎨",
-      "questionnaire.styles.description": "Quels sont vos centres d'intérêt pour les activités durant votre séjour ? Sélectionnez jusqu'à 5 options.",
+      "questionnaire.styles.title": "Centres d'intérêt activités ? 🎨",
+      "questionnaire.styles.description": "Sélectionnez jusqu'à 5 options",
       "questionnaire.styles.selectUpTo5": "Sélectionne jusqu'à 5 styles",
       "questionnaire.styles.nature": "Nature",
       "questionnaire.styles.cultureMuseums": "Culture & musées",
@@ -635,8 +635,8 @@ const resources = {
       "questionnaire.styles.nightlife": "Vie nocturne",
       
       // Rhythm
-      "questionnaire.rhythm.title": "Rythme & horaires ⏱️",
-      "questionnaire.rhythm.description": "Choisis le rythme qui te correspond",
+      "questionnaire.rhythm.title": "Rythme souhaité ? ⏱️",
+      "questionnaire.rhythm.description": "Activités par jour",
       "questionnaire.rhythm.selectRhythm": "Sélectionne ton rythme",
       "questionnaire.rhythm.cool": "Cool",
       "questionnaire.rhythm.cool.desc": "1-2 activités/jour",
@@ -660,15 +660,15 @@ const resources = {
       "questionnaire.schedule.flexibleSchedule": "Horaires flexibles",
       
       // Flights
-      "questionnaire.flights.title": "Vols – préférence ✈️",
-      "questionnaire.flights.description": "Préférez-vous des vols directs ou acceptez-vous les escales pour économiser ?",
+      "questionnaire.flights.title": "Préférence vols ? ✈️",
+      "questionnaire.flights.description": "Direct ou avec escales",
       "questionnaire.flights.directOnly": "Direct uniquement",
       "questionnaire.flights.max1Stop": "Max 1 escale",
       "questionnaire.flights.dontMind": "Peu importe",
       
       // Luggage
-      "questionnaire.luggage.title": "Bagages par voyageur 🧳",
-      "questionnaire.luggage.description": "Sélectionnez le type de bagage pour chaque voyageur (impact sur le prix du vol).",
+      "questionnaire.luggage.title": "Bagages par voyageur ? 🧳",
+      "questionnaire.luggage.description": "Impacte le prix des vols",
       "questionnaire.luggage.travelers": "voyageur",
       "questionnaire.luggage.travelers_plural": "voyageurs",
       "questionnaire.luggage.traveler": "Voyageur",
@@ -678,8 +678,8 @@ const resources = {
       "questionnaire.luggage.cabinHold": "Cabine + Soute",
       
       // Mobility
-      "questionnaire.mobility.title": "Mobilité 🚶",
-      "questionnaire.mobility.description": "Comment souhaitez-vous vous déplacer sur place ? Sélectionnez tous les modes qui vous intéressent.",
+      "questionnaire.mobility.title": "Mobilité ? 🚶",
+      "questionnaire.mobility.description": "Modes de transport sur place",
       "questionnaire.mobility.selectMultiple": "Sélection multiple possible",
       "questionnaire.mobility.publicTransport": "Transports en commun",
       "questionnaire.mobility.rentalCar": "Voiture de location",
@@ -692,8 +692,8 @@ const resources = {
       "questionnaire.mobility.selectOtherTransport": "Sélectionne au moins un autre mode de transport en plus du transport atypique ou bateau/ferry.",
       
       // Accommodation type
-      "questionnaire.accommodationType.title": "Type d'hébergement 🏨",
-      "questionnaire.accommodationType.description": "Quel type d'hébergement recherchez-vous ? Vous pouvez sélectionner jusqu'à 2 options.",
+      "questionnaire.accommodationType.title": "Type d'hébergement ? 🏨",
+      "questionnaire.accommodationType.description": "Sélectionnez 1 ou 2 types",
       "questionnaire.accommodationType.select1or2": "Sélectionnez 1 ou 2 types",
       "questionnaire.accommodationType.hotel": "Hôtel",
       "questionnaire.accommodationType.apartment": "Appartement",
@@ -706,8 +706,8 @@ const resources = {
       "questionnaire.accommodationType.dontMind": "Peu importe",
       
       // Hotel preferences
-      "questionnaire.hotelPreferences.title": "Préférences pour l'hôtel 🏨",
-      "questionnaire.hotelPreferences.description": "Quels services et prestations souhaitez-vous dans votre hébergement hôtelier ?",
+      "questionnaire.hotelPreferences.title": "Préférences hôtel ? 🏨",
+      "questionnaire.hotelPreferences.description": "Services et équipements",
       "questionnaire.hotelPreferences.selectInterested": "Sélectionne ce qui t'intéresse",
       "questionnaire.hotelPreferences.dontMind": "Peu importe",
       "questionnaire.hotelPreferences.breakfast": "Petit-déjeuner inclus",
@@ -721,24 +721,24 @@ const resources = {
       "questionnaire.hotelPreferences.concierge": "Service de conciergerie",
       
       // Comfort
-      "questionnaire.comfort.title": "Confort minimum ⭐",
-      "questionnaire.comfort.description": "Quel niveau de confort recherchez-vous pour votre hébergement ?",
+      "questionnaire.comfort.title": "Confort minimum ? ⭐",
+      "questionnaire.comfort.description": "Note minimale souhaitée",
       "questionnaire.comfort.rating75": "Note ≥7.5",
       "questionnaire.comfort.rating80": "Note ≥8.0",
       "questionnaire.comfort.rating85": "Note ≥8.5",
       "questionnaire.comfort.dontMind": "Peu importe",
       
       // Neighborhood
-      "questionnaire.neighborhood.title": "Quartier recherché 🗺️",
-      "questionnaire.neighborhood.description": "Dans quel type de quartier préférez-vous séjourner ?",
+      "questionnaire.neighborhood.title": "Quartier préféré ? 🗺️",
+      "questionnaire.neighborhood.description": "Type d'emplacement",
       "questionnaire.neighborhood.quiet": "Calme",
       "questionnaire.neighborhood.centralLively": "Central & animé",
       "questionnaire.neighborhood.nearNatureBeach": "Proche nature/plage",
       "questionnaire.neighborhood.atypicalCharm": "Atypique/charme local",
       
       // Amenities
-      "questionnaire.amenities.title": "Équipements souhaités 🛠️",
-      "questionnaire.amenities.description": "Quels équipements et services sont importants pour vous dans votre hébergement ?",
+      "questionnaire.amenities.title": "Équipements souhaités ? 🛠️",
+      "questionnaire.amenities.description": "Choix multiples possibles",
       "questionnaire.amenities.selectAll": "Sélectionne tous ceux qui t'importent",
       "questionnaire.amenities.dontMind": "Peu importe",
       "questionnaire.amenities.reliableWifi": "Wi-Fi fiable",
@@ -792,8 +792,8 @@ const resources = {
       "questionnaire.biorhythm.flexible": "Flexible, je m'adapte",
       
       // Constraints
-      "questionnaire.constraints.title": "Contraintes & préférences 🎯",
-      "questionnaire.constraints.description": "Avez-vous des contraintes alimentaires, religieuses, ou d'accessibilité dont nous devrions tenir compte ?",
+      "questionnaire.constraints.title": "Des contraintes ? 🎯",
+      "questionnaire.constraints.description": "Alimentaires, religieuses, accessibilité",
       "questionnaire.constraints.selectAllImportant": "Sélectionne toutes les options importantes",
       "questionnaire.constraints.halal": "Halal",
       "questionnaire.constraints.kosher": "Casher",
@@ -812,9 +812,9 @@ const resources = {
       "questionnaire.constraints.dontMind": "Peu importe",
       
       // Additional info
-      "questionnaire.additionalInfo.title": "Dis-nous l'essentiel en plus 💬",
-      "questionnaire.additionalInfo.description": "Ce qu'on doit absolument respecter (ex: éviter escales, ville à inclure/exclure, allergie, événement à ne pas rater…)",
-      "questionnaire.additionalInfo.descriptionExtended": "Y a-t-il d'autres informations importantes que nous devrions connaître pour organiser votre voyage parfait ?",
+      "questionnaire.additionalInfo.title": "Infos complémentaires ? 💬",
+      "questionnaire.additionalInfo.description": "Précisions importantes à respecter (optionnel)",
+      "questionnaire.additionalInfo.descriptionExtended": "Ex : éviter escales, allergies, événement spécial",
       "questionnaire.additionalInfo.optional": "Zone libre (optionnel)",
       "questionnaire.additionalInfo.placeholder": "Partage tes besoins spécifiques...",
       "questionnaire.additionalInfo.skip": "Passer",
@@ -1310,10 +1310,10 @@ const resources = {
       "questionnaire.numberOfPeople": "Number of people (including children) 👨‍👩‍👧‍👦",
       "questionnaire.continue": "Continue",
       "questionnaire.howManyPeople": "How many people exactly? 👥",
-      "questionnaire.destinationInMind": "Do you already have a destination in mind? 🌍",
-      "questionnaire.destinationInMind.description": "Do you already have a specific destination in mind or are you open to our suggestions?",
-      "questionnaire.howCanHelp": "How can Travliaq help you? 🎯",
-      "questionnaire.howCanHelp.description": "Which aspects of your trip would you like assistance with? Select all that interest you.",
+      "questionnaire.destinationInMind": "Destination in mind? 🌍",
+      "questionnaire.destinationInMind.description": "City or country you want to visit",
+      "questionnaire.howCanHelp": "How can we help? 🎯",
+      "questionnaire.howCanHelp.description": "Select the services you need",
       "questionnaire.multipleSelectionPossible": "Multiple selection possible",
       "questionnaire.solo": "Solo",
       "questionnaire.duo": "Duo",
@@ -1328,8 +1328,8 @@ const resources = {
       "questionnaire.accommodation": "Accommodation",
       "questionnaire.activities": "Activities",
       "questionnaire.destinationDetails": "Enter your destination details 🌍",
-      "questionnaire.whereFrom": "Where are you leaving from? 📍",
-      "questionnaire.whereFrom.description": "Which city are you departing from? This helps us find the best transport options.",
+      "questionnaire.whereFrom": "Departure city? 📍",
+      "questionnaire.whereFrom.description": "Your starting point",
       "questionnaire.cityTooltip": "You can enter any city, even if it doesn't appear in the list. The AI will understand your starting point if you spell it correctly.",
       "questionnaire.detecting": "Detecting...",
       "questionnaire.myPosition": "My position",
@@ -1337,8 +1337,8 @@ const resources = {
       "questionnaire.whereGoing": "Where are you going? 🌍",
       "questionnaire.destinationTooltip": "You can enter any city, even if it doesn't appear in the list. The AI will understand your destination if you spell it correctly.",
       "questionnaire.destinationCity": "Destination city...",
-      "questionnaire.climatePreference": "What type of climate are you looking for? 🌡️",
-      "questionnaire.climatePreference.description": "What type of climate are you looking for on your trip? Multiple selections possible.",
+      "questionnaire.climatePreference": "Preferred climate? 🌡️",
+      "questionnaire.climatePreference.description": "Multiple choices possible",
       "questionnaire.customTrip": "YOUR CUSTOM TRIP",
       "questionnaire.back": "Back",
       "questionnaire.backToReview": "Back to summary",
@@ -1372,8 +1372,8 @@ const resources = {
       "questionnaire.climate.dontMind.desc": "I'm flexible",
       
       // Travel affinities
-      "questionnaire.affinities.title": "What attracts you most? 🎯",
-      "questionnaire.affinities.description": "What types of experiences attract you most when traveling? Select up to 5 options.",
+      "questionnaire.affinities.title": "Travel interests? 🎯",
+      "questionnaire.affinities.description": "Select up to 5 options",
       "questionnaire.affinities.selectUpTo5": "Select up to 5 affinities",
       "questionnaire.affinities.dontMind": "Don't mind",
       "questionnaire.affinities.paradiseBeaches": "Paradise beaches",
@@ -1394,8 +1394,8 @@ const resources = {
       "questionnaire.affinities.islandsArchipelagos": "Islands & archipelagos",
       
       // Travel ambiance
-      "questionnaire.ambiance.title": "What ambiance are you looking for? 🎨",
-      "questionnaire.ambiance.description": "What general atmosphere would you like for your trip?",
+      "questionnaire.ambiance.title": "Desired ambiance? 🎨",
+      "questionnaire.ambiance.description": "Trip atmosphere",
       "questionnaire.ambiance.adventureExotic": "Adventure & exotic",
       "questionnaire.ambiance.adventureExotic.desc": "Get out of my comfort zone",
       "questionnaire.ambiance.relaxation": "Relaxation",
@@ -1410,12 +1410,12 @@ const resources = {
       "questionnaire.ambiance.familyConviviality.desc": "Family moments",
       
       // Dates
-      "questionnaire.dates.title": "Travel dates 📅",
-      "questionnaire.dates.description": "Do you know your exact travel dates or do you prefer to stay flexible?",
+      "questionnaire.dates.title": "Travel dates? 📅",
+      "questionnaire.dates.description": "Fixed or flexible dates",
       "questionnaire.dates.fixed": "Fixed dates",
       "questionnaire.dates.flexible": "I'm flexible",
-      "questionnaire.dates.selectDates": "Select your travel dates 🗓️",
-      "questionnaire.dates.selectDates.description": "Select your departure date then your return date on the calendar.",
+      "questionnaire.dates.selectDates": "Select dates 🗓️",
+      "questionnaire.dates.selectDates.description": "Departure then return date",
       "questionnaire.dates.selectRange": "Click and drag to select a date range",
       "questionnaire.dates.selected": "Selected dates:",
       "questionnaire.dates.departure": "Departure:",
@@ -1427,8 +1427,8 @@ const resources = {
       "questionnaire.dates.selectedMsg": "Dates selected!",
       
       // Flexibility
-      "questionnaire.flexibility.title": "Date flexibility ⏰",
-      "questionnaire.flexibility.description": "How many days can you shift your trip to take advantage of the best deals?",
+      "questionnaire.flexibility.title": "Date flexibility? ⏰",
+      "questionnaire.flexibility.description": "Possible date shift for better prices",
       "questionnaire.flexibility.souplesse": "What flexibility? 🔄",
       "questionnaire.flexibility.0days": "±0d",
       "questionnaire.flexibility.3days": "±3d",
@@ -1438,8 +1438,8 @@ const resources = {
       "questionnaire.flexibility.week": "±1 week",
       "questionnaire.flexibility.2weeks": "±2 weeks",
       "questionnaire.flexibility.month": "±1 month",
-      "questionnaire.flexibility.hasApproxDate": "Do you have an approximate departure date? 📅",
-      "questionnaire.flexibility.hasApproxDate.description": "Do you have an idea of the time period for your departure (for example: early April, mid-May)?",
+      "questionnaire.flexibility.hasApproxDate": "Approximate departure? 📅",
+      "questionnaire.flexibility.hasApproxDate.description": "Do you have a rough idea of when?",
       "questionnaire.flexibility.hasApproxDate.yes": "Yes, I have an idea",
       "questionnaire.flexibility.hasApproxDate.no": "Not yet",
       "questionnaire.flexibility.approxDate": "What is your approximate departure date? 📆",
@@ -1450,8 +1450,8 @@ const resources = {
       "questionnaire.dates.days": "days",
       
       // Duration
-      "questionnaire.duration.title": "Trip duration 🌙",
-      "questionnaire.duration.description": "How many nights would you like to stay?",
+      "questionnaire.duration.title": "Trip duration? 🌙",
+      "questionnaire.duration.description": "Number of nights",
       "questionnaire.duration.2nights": "2 nights",
       "questionnaire.duration.3nights": "3 nights",
       "questionnaire.duration.4nights": "4 nights",
@@ -1461,12 +1461,12 @@ const resources = {
       "questionnaire.duration.8to10": "8-10 nights",
       "questionnaire.duration.11to14": "11-14 nights",
       "questionnaire.duration.more14": ">14 nights",
-      "questionnaire.duration.exactNights": "How many nights exactly? 🌉",
-      "questionnaire.duration.exactNights.description": "Indicate the exact number of nights you would like (minimum 15 nights).",
+      "questionnaire.duration.exactNights": "Exact number of nights? 🌉",
+      "questionnaire.duration.exactNights.description": "Minimum 15 nights",
       
       // Budget
-      "questionnaire.budget.title": "Budget per person 💰",
-      "questionnaire.budget.description": "What is your total budget per person for this trip (flights, accommodation, activities)?",
+      "questionnaire.budget.title": "Budget per person? 💰",
+      "questionnaire.budget.description": "Total budget excluding personal purchases",
       "questionnaire.budget.excluding": "Excluding personal purchases",
       "questionnaire.budget.less300": "<€300",
       "questionnaire.budget.300to600": "€300-600",
@@ -1476,15 +1476,15 @@ const resources = {
       "questionnaire.budget.more1800": ">€1,800",
       "questionnaire.budget.dontKnow": "I don't know",
       "questionnaire.budget.precise": "Precise budget",
-      "questionnaire.budget.totalBudget": "What is your total budget? 💵",
-      "questionnaire.budget.totalBudget.description": "Indicate your exact budget per person for the entire trip.",
+      "questionnaire.budget.totalBudget": "Exact budget? 💵",
+      "questionnaire.budget.totalBudget.description": "Per person for the entire trip",
       "questionnaire.budget.entireTrip": "For the entire trip",
       "questionnaire.budget.amount": "Amount",
       "questionnaire.budget.currency": "Currency",
       
       // Travel styles
-      "questionnaire.styles.title": "Travel style 🎨",
-      "questionnaire.styles.description": "What are your interests for activities during your stay? Select up to 5 options.",
+      "questionnaire.styles.title": "Activity interests? 🎨",
+      "questionnaire.styles.description": "Select up to 5 options",
       "questionnaire.styles.selectUpTo5": "Select up to 5 styles",
       "questionnaire.styles.nature": "Nature",
       "questionnaire.styles.cultureMuseums": "Culture & museums",
@@ -1498,8 +1498,8 @@ const resources = {
       "questionnaire.styles.nightlife": "Nightlife",
       
       // Rhythm
-      "questionnaire.rhythm.title": "Desired pace ⏱️",
-      "questionnaire.rhythm.description": "Choose the pace that suits you",
+      "questionnaire.rhythm.title": "Trip pace? ⏱️",
+      "questionnaire.rhythm.description": "Activities per day",
       "questionnaire.rhythm.selectRhythm": "Select your pace",
       "questionnaire.rhythm.cool": "Cool",
       "questionnaire.rhythm.cool.desc": "1-2 activities/day",
@@ -1523,15 +1523,15 @@ const resources = {
       "questionnaire.schedule.flexibleSchedule": "Flexible schedule",
       
       // Flights
-      "questionnaire.flights.title": "Flights – preference ✈️",
-      "questionnaire.flights.description": "Do you prefer direct flights or are you willing to accept layovers to save money?",
+      "questionnaire.flights.title": "Flight preference? ✈️",
+      "questionnaire.flights.description": "Direct or with layovers",
       "questionnaire.flights.directOnly": "Direct only",
       "questionnaire.flights.max1Stop": "Max 1 stop",
       "questionnaire.flights.dontMind": "Don't mind",
       
       // Luggage
-      "questionnaire.luggage.title": "Luggage per traveler 🧳",
-      "questionnaire.luggage.description": "Select the type of luggage for each traveler (impacts flight price).",
+      "questionnaire.luggage.title": "Luggage per traveler? 🧳",
+      "questionnaire.luggage.description": "Impacts flight price",
       "questionnaire.luggage.travelers": "traveler",
       "questionnaire.luggage.travelers_plural": "travelers",
       "questionnaire.luggage.traveler": "Traveler",
@@ -1541,8 +1541,8 @@ const resources = {
       "questionnaire.luggage.cabinHold": "Cabin + Hold",
       
       // Accommodation type
-      "questionnaire.accommodationType.title": "Accommodation type 🏨",
-      "questionnaire.accommodationType.description": "What type of accommodation are you looking for? You can select up to 2 options.",
+      "questionnaire.accommodationType.title": "Accommodation type? 🏨",
+      "questionnaire.accommodationType.description": "Select 1 or 2 types",
       "questionnaire.accommodationType.select1or2": "Select 1 or 2 types",
       "questionnaire.accommodationType.hotel": "Hotel",
       "questionnaire.accommodationType.apartment": "Apartment",
@@ -1555,8 +1555,8 @@ const resources = {
       "questionnaire.accommodationType.dontMind": "Don't mind",
       
       // Hotel preferences
-      "questionnaire.hotelPreferences.title": "Hotel preferences 🏨",
-      "questionnaire.hotelPreferences.description": "What services and amenities would you like in your hotel accommodation?",
+      "questionnaire.hotelPreferences.title": "Hotel preferences? 🏨",
+      "questionnaire.hotelPreferences.description": "Services and amenities",
       "questionnaire.hotelPreferences.selectInterested": "Select what interests you",
       "questionnaire.hotelPreferences.breakfast": "Breakfast included",
       "questionnaire.hotelPreferences.halfBoard": "Half board",
@@ -1570,24 +1570,24 @@ const resources = {
       "questionnaire.hotelPreferences.concierge": "Concierge service",
 
       // Comfort
-      "questionnaire.comfort.title": "Minimum comfort ⭐",
-      "questionnaire.comfort.description": "What level of comfort are you looking for in your accommodation?",
+      "questionnaire.comfort.title": "Minimum comfort? ⭐",
+      "questionnaire.comfort.description": "Minimum rating required",
       "questionnaire.comfort.rating75": "Rating ≥7.5",
       "questionnaire.comfort.rating80": "Rating ≥8.0",
       "questionnaire.comfort.rating85": "Rating ≥8.5",
       "questionnaire.comfort.dontMind": "Don't mind",
       
       // Neighborhood
-      "questionnaire.neighborhood.title": "Preferred neighborhood 🗺️",
-      "questionnaire.neighborhood.description": "What type of neighborhood do you prefer to stay in?",
+      "questionnaire.neighborhood.title": "Preferred neighborhood? 🗺️",
+      "questionnaire.neighborhood.description": "Location type",
       "questionnaire.neighborhood.quiet": "Quiet",
       "questionnaire.neighborhood.centralLively": "Central & lively",
       "questionnaire.neighborhood.nearNatureBeach": "Near nature/beach",
       "questionnaire.neighborhood.atypicalCharm": "Atypical/local charm",
       
       // Amenities
-      "questionnaire.amenities.title": "Desired amenities 🛠️",
-      "questionnaire.amenities.description": "What amenities and services are important to you in your accommodation?",
+      "questionnaire.amenities.title": "Desired amenities? 🛠️",
+      "questionnaire.amenities.description": "Multiple choices possible",
       "questionnaire.amenities.selectAll": "Select all that matter to you",
       "questionnaire.amenities.reliableWifi": "Reliable Wi-Fi",
       "questionnaire.amenities.airConditioning": "Air conditioning",
@@ -1606,8 +1606,8 @@ const resources = {
       "questionnaire.amenities.dontMind": "Don't mind",
 
       // Constraints
-      "questionnaire.constraints.title": "Constraints & preferences 🎯",
-      "questionnaire.constraints.description": "Do you have any dietary, religious, or accessibility constraints we should be aware of?",
+      "questionnaire.constraints.title": "Any constraints? 🎯",
+      "questionnaire.constraints.description": "Dietary, religious, accessibility",
       "questionnaire.constraints.selectAllImportant": "Select all important options",
       "questionnaire.constraints.halal": "Halal",
       "questionnaire.constraints.kosher": "Kosher",
@@ -1626,9 +1626,9 @@ const resources = {
       "questionnaire.constraints.dontMind": "Don't mind",
       
       // Additional info
-      "questionnaire.additionalInfo.title": "Tell us the essentials 💬",
-      "questionnaire.additionalInfo.description": "What we absolutely must respect (ex: avoid stopovers, city to include/exclude, allergy, event not to miss...)",
-      "questionnaire.additionalInfo.descriptionExtended": "Is there any other important information we should know to organize your perfect trip?",
+      "questionnaire.additionalInfo.title": "Additional info? 💬",
+      "questionnaire.additionalInfo.description": "Important details we should know (optional)",
+      "questionnaire.additionalInfo.descriptionExtended": "Ex: avoid stopovers, allergies, special event",
       "questionnaire.additionalInfo.optional": "Free text (optional)",
       "questionnaire.additionalInfo.placeholder": "Share your specific needs...",
       "questionnaire.additionalInfo.skip": "Skip",
