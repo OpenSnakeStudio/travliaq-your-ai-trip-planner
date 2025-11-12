@@ -27,6 +27,12 @@ export const DATES_TYPE = {
 // ============= CLIMATE PREFERENCES =============
 export const CLIMATE = {
   DONT_MIND: 'dont_mind',
+  HOT_SUNNY: 'hot_sunny',
+  MILD_SWEET: 'mild_sweet',
+  COLD_SNOWY: 'cold_snowy',
+  TROPICAL_HUMID: 'tropical_humid',
+  MOUNTAIN_ALTITUDE: 'mountain_altitude',
+  // Anciens codes gardés pour compatibilité
   HOT: 'hot',
   TEMPERATE: 'temperate',
   COLD: 'cold',
@@ -37,6 +43,23 @@ export const CLIMATE = {
 // ============= TRAVEL AFFINITIES =============
 export const AFFINITIES = {
   DONT_MIND: 'dont_mind',
+  PARADISE_BEACHES: 'paradise_beaches',
+  HISTORIC_CITIES: 'historic_cities',
+  NATURE_HIKING: 'nature_hiking',
+  SKI_WINTER_SPORTS: 'ski_winter_sports',
+  SAFARI_ANIMALS: 'safari_animals',
+  LOCAL_GASTRONOMY: 'local_gastronomy',
+  SHOPPING_FASHION: 'shopping_fashion',
+  FESTIVALS_EVENTS: 'festivals_events',
+  MODERN_ARCHITECTURE: 'modern_architecture',
+  TEMPLES_SPIRITUALITY: 'temples_spirituality',
+  AMUSEMENT_PARKS: 'amusement_parks',
+  DIVING_SNORKELING: 'diving_snorkeling',
+  ROAD_TRIP_FREEDOM: 'road_trip_freedom',
+  VINEYARDS_WINE: 'vineyards_wine',
+  DESERTS_LUNAR: 'deserts_lunar',
+  ISLANDS_ARCHIPELAGOS: 'islands_archipelagos',
+  // Anciens codes gardés pour compatibilité
   BEACH: 'beach',
   MOUNTAIN: 'mountain',
   CITY: 'city',
@@ -49,7 +72,13 @@ export const AFFINITIES = {
 
 // ============= TRAVEL AMBIANCE =============
 export const AMBIANCE = {
+  ADVENTURE_EXOTIC: 'adventure_exotic',
   RELAXATION: 'relaxation',
+  ROMANCE_INTIMACY: 'romance_intimacy',
+  CULTURAL_DISCOVERY: 'cultural_discovery',
+  PARTY_NIGHTLIFE: 'party_nightlife',
+  FAMILY_CONVIVIALITY: 'family_conviviality',
+  // Anciens codes gardés pour compatibilité
   ADVENTURE: 'adventure',
   CULTURE: 'culture',
   PARTY: 'party',
@@ -117,11 +146,27 @@ export const CONSTRAINTS = {
   NO_ALCOHOL: 'no_alcohol',
   PRAYER_PLACES: 'prayer_places',
   BUDDHIST: 'buddhist',
-  ACCESSIBILITY: 'accessibility'
+  ACCESSIBILITY: 'accessibility',
+  SAFE_ZONES: 'safe_zones',
+  AVOID_CAR: 'avoid_car',
+  LOCAL_TRADITIONS: 'local_traditions',
+  FOOD_ALLERGIES: 'food_allergies'
 } as const;
 
 // ============= MOBILITY =============
 export const MOBILITY = {
+  DONT_MIND: 'dont_mind',
+  WALKING: 'walking',
+  TAXI: 'taxi',
+  RENTAL_CAR: 'rental_car',
+  BIKE: 'bike',
+  ELECTRIC_SCOOTER: 'electric_scooter',
+  MOTORBIKE_SCOOTER: 'motorbike_scooter',
+  TOURIST_BUS: 'tourist_bus',
+  TRAIN_METRO: 'train_metro',
+  FERRY: 'ferry',
+  ATYPICAL: 'atypical',
+  // Anciens codes gardés pour compatibilité
   VERY_MOBILE: 'very_mobile',
   MOBILE: 'mobile',
   LIMITED: 'limited',
@@ -160,6 +205,38 @@ export const LUGGAGE = {
   CABIN: 'cabin',
   HOLD: 'hold',
   CABIN_HOLD: 'cabin_hold'
+} as const;
+
+// ============= ACTIVITY STYLES =============
+export const STYLES = {
+  NATURE: 'nature',
+  CULTURE_MUSEUMS: 'culture_museums',
+  FOOD: 'food',
+  BEACH: 'beach',
+  MOUNTAIN_HIKING: 'mountain_hiking',
+  PHOTO_SPOTS: 'photo_spots',
+  LOCAL_MARKETS: 'local_markets',
+  SPORT_OUTDOOR: 'sport_outdoor',
+  WELLNESS_SPA: 'wellness_spa',
+  NIGHTLIFE: 'nightlife'
+} as const;
+
+// ============= AMENITIES =============
+export const AMENITIES = {
+  DONT_MIND: 'dont_mind',
+  RELIABLE_WIFI: 'reliable_wifi',
+  AIR_CONDITIONING: 'air_conditioning',
+  KITCHEN: 'kitchen',
+  WASHING_MACHINE: 'washing_machine',
+  PARKING: 'parking',
+  ELEVATOR: 'elevator',
+  RECEPTION_24: 'reception_24',
+  BABY_CRIB: 'baby_crib',
+  FAMILY_ROOM: 'family_room',
+  POOL: 'pool',
+  GYM: 'gym',
+  SPA: 'spa',
+  GARDEN_TERRACE: 'garden_terrace'
 } as const;
 
 // ============= NORMALISATION FUNCTIONS =============
@@ -220,10 +297,11 @@ export const normalizeClimate = (value: string | undefined): string | undefined 
   
   if (Object.values(CLIMATE).includes(lowerValue as any)) return lowerValue;
   if (lowerValue.includes('importe') || lowerValue.includes("don't mind")) return CLIMATE.DONT_MIND;
-  if (lowerValue.includes('chaud') || lowerValue.includes('hot')) return CLIMATE.HOT;
-  if (lowerValue.includes('tempéré') || lowerValue.includes('temperate')) return CLIMATE.TEMPERATE;
-  if (lowerValue.includes('froid') || lowerValue.includes('cold')) return CLIMATE.COLD;
-  if (lowerValue.includes('tropical')) return CLIMATE.TROPICAL;
+  if (lowerValue.includes('chaud') || lowerValue.includes('hot') || lowerValue.includes('sunny') || lowerValue.includes('ensoleillé')) return CLIMATE.HOT_SUNNY;
+  if (lowerValue.includes('doux') || lowerValue.includes('mild') || lowerValue.includes('tempéré') || lowerValue.includes('temperate')) return CLIMATE.MILD_SWEET;
+  if (lowerValue.includes('froid') || lowerValue.includes('cold') || lowerValue.includes('neig') || lowerValue.includes('snowy')) return CLIMATE.COLD_SNOWY;
+  if (lowerValue.includes('tropical') || lowerValue.includes('humide') || lowerValue.includes('humid')) return CLIMATE.TROPICAL_HUMID;
+  if (lowerValue.includes('montagne') || lowerValue.includes('mountain') || lowerValue.includes('altitude')) return CLIMATE.MOUNTAIN_ALTITUDE;
   if (lowerValue.includes('sec') || lowerValue.includes('dry')) return CLIMATE.DRY;
   
   return lowerValue;
@@ -240,14 +318,27 @@ export const normalizeAffinity = (value: string | undefined): string | undefined
   
   if (Object.values(AFFINITIES).includes(lowerValue as any)) return lowerValue;
   if (lowerValue.includes('importe') || lowerValue.includes("don't mind")) return AFFINITIES.DONT_MIND;
+  if (lowerValue.includes('paradis') || lowerValue.includes('paradise') || (lowerValue.includes('plage') && lowerValue.includes('beach'))) return AFFINITIES.PARADISE_BEACHES;
+  if (lowerValue.includes('historique') || lowerValue.includes('historic') || (lowerValue.includes('ville') && lowerValue.includes('city'))) return AFFINITIES.HISTORIC_CITIES;
+  if (lowerValue.includes('nature') || lowerValue.includes('randonnée') || lowerValue.includes('hiking')) return AFFINITIES.NATURE_HIKING;
+  if (lowerValue.includes('ski') || lowerValue.includes('winter') || lowerValue.includes('sports d\'hiver')) return AFFINITIES.SKI_WINTER_SPORTS;
+  if (lowerValue.includes('safari') || lowerValue.includes('animaux') || lowerValue.includes('animals')) return AFFINITIES.SAFARI_ANIMALS;
+  if (lowerValue.includes('gastronomie') || lowerValue.includes('gastronomy') || lowerValue.includes('locale')) return AFFINITIES.LOCAL_GASTRONOMY;
+  if (lowerValue.includes('shopping') || lowerValue.includes('mode') || lowerValue.includes('fashion')) return AFFINITIES.SHOPPING_FASHION;
+  if (lowerValue.includes('festival') || lowerValue.includes('events') || lowerValue.includes('événements')) return AFFINITIES.FESTIVALS_EVENTS;
+  if (lowerValue.includes('architecture') || lowerValue.includes('moderne') || lowerValue.includes('modern')) return AFFINITIES.MODERN_ARCHITECTURE;
+  if (lowerValue.includes('temple') || lowerValue.includes('spiritualité') || lowerValue.includes('spirituality')) return AFFINITIES.TEMPLES_SPIRITUALITY;
+  if (lowerValue.includes('attraction') || lowerValue.includes('amusement') || lowerValue.includes('parcs')) return AFFINITIES.AMUSEMENT_PARKS;
+  if (lowerValue.includes('plongée') || lowerValue.includes('diving') || lowerValue.includes('snorkeling')) return AFFINITIES.DIVING_SNORKELING;
+  if (lowerValue.includes('road trip') || lowerValue.includes('liberté') || lowerValue.includes('freedom')) return AFFINITIES.ROAD_TRIP_FREEDOM;
+  if (lowerValue.includes('vignoble') || lowerValue.includes('vineyard') || lowerValue.includes('vin') || lowerValue.includes('wine')) return AFFINITIES.VINEYARDS_WINE;
+  if (lowerValue.includes('désert') || lowerValue.includes('desert') || lowerValue.includes('lunaire') || lowerValue.includes('lunar')) return AFFINITIES.DESERTS_LUNAR;
+  if (lowerValue.includes('île') || lowerValue.includes('island') || lowerValue.includes('archipel') || lowerValue.includes('archipelago')) return AFFINITIES.ISLANDS_ARCHIPELAGOS;
+  // Fallbacks vers anciens codes
   if (lowerValue.includes('plage') || lowerValue.includes('beach')) return AFFINITIES.BEACH;
   if (lowerValue.includes('montagne') || lowerValue.includes('mountain')) return AFFINITIES.MOUNTAIN;
   if (lowerValue.includes('ville') || lowerValue.includes('city')) return AFFINITIES.CITY;
   if (lowerValue.includes('campagne') || lowerValue.includes('countryside')) return AFFINITIES.COUNTRYSIDE;
-  if (lowerValue.includes('désert') || lowerValue.includes('desert')) return AFFINITIES.DESERT;
-  if (lowerValue.includes('île') || lowerValue.includes('island')) return AFFINITIES.ISLAND;
-  if (lowerValue.includes('safari')) return AFFINITIES.SAFARI;
-  if (lowerValue.includes('road trip') || lowerValue.includes('circuit')) return AFFINITIES.ROAD_TRIP;
   
   return lowerValue;
 };
@@ -262,15 +353,15 @@ export const normalizeAmbiance = (value: string | undefined): string | undefined
   const lowerValue = value.toLowerCase().trim();
   
   if (Object.values(AMBIANCE).includes(lowerValue as any)) return lowerValue;
+  if (lowerValue.includes('aventure') || lowerValue.includes('adventure') || lowerValue.includes('exotic') || lowerValue.includes('exotique')) return AMBIANCE.ADVENTURE_EXOTIC;
   if (lowerValue.includes('relaxation') || lowerValue.includes('détente')) return AMBIANCE.RELAXATION;
-  if (lowerValue.includes('aventure') || lowerValue.includes('adventure')) return AMBIANCE.ADVENTURE;
-  if (lowerValue.includes('culture')) return AMBIANCE.CULTURE;
-  if (lowerValue.includes('fête') || lowerValue.includes('party')) return AMBIANCE.PARTY;
+  if (lowerValue.includes('romance') || lowerValue.includes('romantique') || lowerValue.includes('intimacy') || lowerValue.includes('intimité')) return AMBIANCE.ROMANCE_INTIMACY;
+  if (lowerValue.includes('culture') || lowerValue.includes('découverte') || lowerValue.includes('discovery')) return AMBIANCE.CULTURAL_DISCOVERY;
+  if (lowerValue.includes('fête') || lowerValue.includes('party') || lowerValue.includes('nightlife') || lowerValue.includes('nocturne')) return AMBIANCE.PARTY_NIGHTLIFE;
+  if (lowerValue.includes('famille') || lowerValue.includes('family') || lowerValue.includes('conviviality') || lowerValue.includes('convivialité')) return AMBIANCE.FAMILY_CONVIVIALITY;
+  // Fallbacks vers anciens codes
   if (lowerValue.includes('sport')) return AMBIANCE.SPORT;
   if (lowerValue.includes('bien-être') || lowerValue.includes('wellness')) return AMBIANCE.WELLNESS;
-  if (lowerValue.includes('romantique') || lowerValue.includes('romantic')) return AMBIANCE.ROMANTIC;
-  if (lowerValue.includes('famille') || lowerValue.includes('family')) return AMBIANCE.FAMILY;
-  if (lowerValue.includes('découverte') || lowerValue.includes('discovery')) return AMBIANCE.DISCOVERY;
   
   return lowerValue;
 };
@@ -353,6 +444,10 @@ export const normalizeConstraint = (value: string | undefined): string | undefin
   if (lowerValue.includes('prière') || lowerValue.includes('prayer')) return CONSTRAINTS.PRAYER_PLACES;
   if (lowerValue.includes('bouddhist') || lowerValue.includes('buddhist')) return CONSTRAINTS.BUDDHIST;
   if (lowerValue.includes('accessibilité') || lowerValue.includes('accessibility')) return CONSTRAINTS.ACCESSIBILITY;
+  if (lowerValue.includes('sécurisée') || lowerValue.includes('safe') || lowerValue.includes('zone')) return CONSTRAINTS.SAFE_ZONES;
+  if (lowerValue.includes('voiture') || lowerValue.includes('car') || lowerValue.includes('avoid')) return CONSTRAINTS.AVOID_CAR;
+  if (lowerValue.includes('tradition') || lowerValue.includes('locale') || lowerValue.includes('local')) return CONSTRAINTS.LOCAL_TRADITIONS;
+  if (lowerValue.includes('allergie') || lowerValue.includes('allerg')) return CONSTRAINTS.FOOD_ALLERGIES;
   
   return lowerValue;
 };
@@ -367,6 +462,18 @@ export const normalizeMobility = (value: string | undefined): string | undefined
   const lowerValue = value.toLowerCase().trim();
   
   if (Object.values(MOBILITY).includes(lowerValue as any)) return lowerValue;
+  if (lowerValue.includes('importe') || lowerValue.includes("don't mind")) return MOBILITY.DONT_MIND;
+  if (lowerValue.includes('marche') || lowerValue.includes('walking') || lowerValue.includes('pied')) return MOBILITY.WALKING;
+  if (lowerValue.includes('taxi')) return MOBILITY.TAXI;
+  if (lowerValue.includes('location') || lowerValue.includes('rental') || (lowerValue.includes('voiture') && lowerValue.includes('location'))) return MOBILITY.RENTAL_CAR;
+  if (lowerValue.includes('vélo') || lowerValue.includes('bike')) return MOBILITY.BIKE;
+  if (lowerValue.includes('trottinette') || lowerValue.includes('electric scooter')) return MOBILITY.ELECTRIC_SCOOTER;
+  if (lowerValue.includes('moto') || lowerValue.includes('motorbike') || lowerValue.includes('scooter')) return MOBILITY.MOTORBIKE_SCOOTER;
+  if (lowerValue.includes('touristique') || lowerValue.includes('tourist') || lowerValue.includes('bus')) return MOBILITY.TOURIST_BUS;
+  if (lowerValue.includes('train') || lowerValue.includes('métro') || lowerValue.includes('metro')) return MOBILITY.TRAIN_METRO;
+  if (lowerValue.includes('ferry') || lowerValue.includes('bateau')) return MOBILITY.FERRY;
+  if (lowerValue.includes('atypique') || lowerValue.includes('atypical')) return MOBILITY.ATYPICAL;
+  // Anciens codes
   if (lowerValue.includes('très mobile') || lowerValue.includes('very mobile')) return MOBILITY.VERY_MOBILE;
   if (lowerValue.includes('mobile') && !lowerValue.includes('très')) return MOBILITY.MOBILE;
   if (lowerValue.includes('limitée') || lowerValue.includes('limited')) return MOBILITY.LIMITED;
@@ -419,6 +526,58 @@ export const normalizeFlightPref = (value: string | undefined): string | undefin
   if (lowerValue.includes('confort') || lowerValue.includes('comfort')) return FLIGHT_PREF.COMFORT;
   
   return lowerValue;
+};
+
+export const normalizeStyle = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const lowerValue = value.toLowerCase().trim();
+  
+  if (Object.values(STYLES).includes(lowerValue as any)) return lowerValue;
+  if (lowerValue.includes('nature')) return STYLES.NATURE;
+  if (lowerValue.includes('culture') || lowerValue.includes('musée') || lowerValue.includes('museum')) return STYLES.CULTURE_MUSEUMS;
+  if (lowerValue.includes('gastronomie') || lowerValue.includes('food') || lowerValue.includes('restaurant')) return STYLES.FOOD;
+  if (lowerValue.includes('plage') || lowerValue.includes('beach')) return STYLES.BEACH;
+  if (lowerValue.includes('montagne') || lowerValue.includes('mountain') || lowerValue.includes('randonnée') || lowerValue.includes('hiking')) return STYLES.MOUNTAIN_HIKING;
+  if (lowerValue.includes('photo')) return STYLES.PHOTO_SPOTS;
+  if (lowerValue.includes('marché') || lowerValue.includes('market') || lowerValue.includes('locaux') || lowerValue.includes('local')) return STYLES.LOCAL_MARKETS;
+  if (lowerValue.includes('sport') || lowerValue.includes('outdoor')) return STYLES.SPORT_OUTDOOR;
+  if (lowerValue.includes('bien-être') || lowerValue.includes('wellness') || lowerValue.includes('spa')) return STYLES.WELLNESS_SPA;
+  if (lowerValue.includes('nightlife') || lowerValue.includes('nuit') || lowerValue.includes('fête')) return STYLES.NIGHTLIFE;
+  
+  return lowerValue;
+};
+
+export const normalizeStylesArray = (values: string[] | undefined): string[] => {
+  if (!values || !Array.isArray(values)) return [];
+  return values.map(v => normalizeStyle(v)).filter(Boolean) as string[];
+};
+
+export const normalizeAmenity = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const lowerValue = value.toLowerCase().trim();
+  
+  if (Object.values(AMENITIES).includes(lowerValue as any)) return lowerValue;
+  if (lowerValue.includes('importe') || lowerValue.includes("don't mind")) return AMENITIES.DONT_MIND;
+  if (lowerValue.includes('wifi')) return AMENITIES.RELIABLE_WIFI;
+  if (lowerValue.includes('climatisation') || lowerValue.includes('air') || lowerValue.includes('conditioning')) return AMENITIES.AIR_CONDITIONING;
+  if (lowerValue.includes('cuisine') || lowerValue.includes('kitchen')) return AMENITIES.KITCHEN;
+  if (lowerValue.includes('linge') || lowerValue.includes('washing') || lowerValue.includes('machine')) return AMENITIES.WASHING_MACHINE;
+  if (lowerValue.includes('parking')) return AMENITIES.PARKING;
+  if (lowerValue.includes('ascenseur') || lowerValue.includes('elevator')) return AMENITIES.ELEVATOR;
+  if (lowerValue.includes('réception') || lowerValue.includes('reception') || lowerValue.includes('24')) return AMENITIES.RECEPTION_24;
+  if (lowerValue.includes('bébé') || lowerValue.includes('baby') || lowerValue.includes('berceau') || lowerValue.includes('crib')) return AMENITIES.BABY_CRIB;
+  if (lowerValue.includes('familiale') || lowerValue.includes('family') || lowerValue.includes('room')) return AMENITIES.FAMILY_ROOM;
+  if (lowerValue.includes('piscine') || lowerValue.includes('pool')) return AMENITIES.POOL;
+  if (lowerValue.includes('gym') || lowerValue.includes('salle de sport')) return AMENITIES.GYM;
+  if (lowerValue.includes('spa')) return AMENITIES.SPA;
+  if (lowerValue.includes('jardin') || lowerValue.includes('garden') || lowerValue.includes('terrasse') || lowerValue.includes('terrace')) return AMENITIES.GARDEN_TERRACE;
+  
+  return lowerValue;
+};
+
+export const normalizeAmenitiesArray = (values: string[] | undefined): string[] => {
+  if (!values || !Array.isArray(values)) return [];
+  return values.map(v => normalizeAmenity(v)).filter(Boolean) as string[];
 };
 
 export const normalizeLuggage = (value: string | undefined): string | undefined => {

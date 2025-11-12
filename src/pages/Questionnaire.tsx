@@ -42,12 +42,14 @@ import {
   HOTEL_PREFERENCES, HOTEL_MEAL_PREFERENCES,
   CLIMATE, AFFINITIES, AMBIANCE, ACCOMMODATION_TYPE, COMFORT,
   CONSTRAINTS, MOBILITY, RHYTHM, SCHEDULE, FLIGHT_PREF, LUGGAGE,
+  STYLES, AMENITIES,
   normalizeTravelGroup, normalizeYesNo, normalizeDatesType, 
   normalizeHelpWithArray, normalizeHotelPreferencesArray,
   normalizeClimateArray, normalizeAffinityArray, normalizeAmbiance,
   normalizeAccommodationTypeArray, normalizeComfort,
   normalizeConstraintsArray, normalizeMobility, normalizeRhythm,
-  normalizeSchedulePrefsArray, normalizeFlightPref, normalizeLuggage
+  normalizeSchedulePrefsArray, normalizeFlightPref, normalizeLuggage,
+  normalizeStylesArray, normalizeAmenitiesArray
 } from "@/lib/questionnaireValues";
 import { logger, questionnaireLogger, LogCategory } from "@/utils/logger";
 import DateRangePicker from "@/components/DateRangePicker";
@@ -618,6 +620,28 @@ const Questionnaire = () => {
       }
     }
     
+    // Normaliser styles array
+    if (answers.styles && Array.isArray(answers.styles)) {
+      const normalized = normalizeStylesArray(answers.styles);
+      const isDifferent = normalized.length !== answers.styles.length ||
+        normalized.some((v: string, i: number) => v !== answers.styles[i]);
+      if (isDifferent) {
+        updates.styles = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser amenities array
+    if (answers.amenities && Array.isArray(answers.amenities)) {
+      const normalized = normalizeAmenitiesArray(answers.amenities);
+      const isDifferent = normalized.length !== answers.amenities.length ||
+        normalized.some((v: string, i: number) => v !== answers.amenities[i]);
+      if (isDifferent) {
+        updates.amenities = normalized;
+        hasChanges = true;
+      }
+    }
+    
     if (hasChanges) {
       setAnswers((prev: any) => ({ ...prev, ...updates }));
     }
@@ -629,7 +653,7 @@ const Questionnaire = () => {
     answers.travelAmbiance, JSON.stringify(answers.accommodationType), answers.comfort,
     JSON.stringify(answers.constraints), JSON.stringify(answers.mobility), answers.rhythm,
     JSON.stringify(answers.schedulePrefs), answers.flightPreference,
-    JSON.stringify(answers.luggage)
+    JSON.stringify(answers.luggage), JSON.stringify(answers.styles), JSON.stringify(answers.amenities)
   ]);
   
   // ⚠️ PROTECTION AUTH: Require authentication to start questionnaire
@@ -2158,14 +2182,14 @@ const Questionnaire = () => {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {[
-              { label: t('questionnaire.climate.dontMind'), icon: "🤷", desc: t('questionnaire.climate.dontMind.desc'), autoNext: true },
-              { label: t('questionnaire.climate.hotSunny'), icon: "☀️", desc: t('questionnaire.climate.hotSunny.desc') },
-              { label: t('questionnaire.climate.mildSweet'), icon: "🌤️", desc: t('questionnaire.climate.mildSweet.desc') },
-              { label: t('questionnaire.climate.coldSnowy'), icon: "❄️", desc: t('questionnaire.climate.coldSnowy.desc') },
-              { label: t('questionnaire.climate.tropicalHumid'), icon: "🌴", desc: t('questionnaire.climate.tropicalHumid.desc') },
-              { label: t('questionnaire.climate.mountainAltitude'), icon: "⛰️", desc: t('questionnaire.climate.mountainAltitude.desc') }
+              { code: CLIMATE.DONT_MIND, label: t('questionnaire.climate.dontMind'), icon: "🤷", desc: t('questionnaire.climate.dontMind.desc'), autoNext: true },
+              { code: CLIMATE.HOT_SUNNY, label: t('questionnaire.climate.hotSunny'), icon: "☀️", desc: t('questionnaire.climate.hotSunny.desc') },
+              { code: CLIMATE.MILD_SWEET, label: t('questionnaire.climate.mildSweet'), icon: "🌤️", desc: t('questionnaire.climate.mildSweet.desc') },
+              { code: CLIMATE.COLD_SNOWY, label: t('questionnaire.climate.coldSnowy'), icon: "❄️", desc: t('questionnaire.climate.coldSnowy.desc') },
+              { code: CLIMATE.TROPICAL_HUMID, label: t('questionnaire.climate.tropicalHumid'), icon: "🌴", desc: t('questionnaire.climate.tropicalHumid.desc') },
+              { code: CLIMATE.MOUNTAIN_ALTITUDE, label: t('questionnaire.climate.mountainAltitude'), icon: "⛰️", desc: t('questionnaire.climate.mountainAltitude.desc') }
             ].map((option) => {
-              const isSelected = (answers.climatePreference || []).includes(option.label);
+              const isSelected = (answers.climatePreference || []).includes(option.code);
               return (
                 <Card
                   key={option.label}
@@ -2177,8 +2201,8 @@ const Questionnaire = () => {
                   onClick={() => {
                     handleMultiChoiceWithDontMind(
                       "climatePreference", 
-                      option.label, 
-                      t('questionnaire.climate.dontMind'),
+                      option.code, 
+                      CLIMATE.DONT_MIND,
                       (option as any).autoNext
                     );
                   }}
@@ -2226,25 +2250,25 @@ const Questionnaire = () => {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
             {[
-              { label: t('questionnaire.affinities.dontMind'), icon: "🤷", autoNext: true },
-              { label: t('questionnaire.affinities.paradiseBeaches'), icon: "🏖️" },
-              { label: t('questionnaire.affinities.historicCities'), icon: "🏛️" },
-              { label: t('questionnaire.affinities.natureHiking'), icon: "🥾" },
-              { label: t('questionnaire.affinities.skiWinterSports'), icon: "⛷️" },
-              { label: t('questionnaire.affinities.safariAnimals'), icon: "🦁" },
-              { label: t('questionnaire.affinities.localGastronomy'), icon: "🍽️" },
-              { label: t('questionnaire.affinities.shoppingFashion'), icon: "🛍️" },
-              { label: t('questionnaire.affinities.festivalsEvents'), icon: "🎭" },
-              { label: t('questionnaire.affinities.modernArchitecture'), icon: "🏙️" },
-              { label: t('questionnaire.affinities.templesSpirituality'), icon: "🕌" },
-              { label: t('questionnaire.affinities.amusementParks'), icon: "🎢" },
-              { label: t('questionnaire.affinities.divingSnorkeling'), icon: "🤿" },
-              { label: t('questionnaire.affinities.roadTripFreedom'), icon: "🚗" },
-              { label: t('questionnaire.affinities.vineyardsWine'), icon: "🍷" },
-              { label: t('questionnaire.affinities.desertsLunar'), icon: "🏜️" },
-              { label: t('questionnaire.affinities.islandsArchipelagos'), icon: "🏝️" }
+              { code: AFFINITIES.DONT_MIND, label: t('questionnaire.affinities.dontMind'), icon: "🤷", autoNext: true },
+              { code: AFFINITIES.PARADISE_BEACHES, label: t('questionnaire.affinities.paradiseBeaches'), icon: "🏖️" },
+              { code: AFFINITIES.HISTORIC_CITIES, label: t('questionnaire.affinities.historicCities'), icon: "🏛️" },
+              { code: AFFINITIES.NATURE_HIKING, label: t('questionnaire.affinities.natureHiking'), icon: "🥾" },
+              { code: AFFINITIES.SKI_WINTER_SPORTS, label: t('questionnaire.affinities.skiWinterSports'), icon: "⛷️" },
+              { code: AFFINITIES.SAFARI_ANIMALS, label: t('questionnaire.affinities.safariAnimals'), icon: "🦁" },
+              { code: AFFINITIES.LOCAL_GASTRONOMY, label: t('questionnaire.affinities.localGastronomy'), icon: "🍽️" },
+              { code: AFFINITIES.SHOPPING_FASHION, label: t('questionnaire.affinities.shoppingFashion'), icon: "🛍️" },
+              { code: AFFINITIES.FESTIVALS_EVENTS, label: t('questionnaire.affinities.festivalsEvents'), icon: "🎭" },
+              { code: AFFINITIES.MODERN_ARCHITECTURE, label: t('questionnaire.affinities.modernArchitecture'), icon: "🏙️" },
+              { code: AFFINITIES.TEMPLES_SPIRITUALITY, label: t('questionnaire.affinities.templesSpirituality'), icon: "🕌" },
+              { code: AFFINITIES.AMUSEMENT_PARKS, label: t('questionnaire.affinities.amusementParks'), icon: "🎢" },
+              { code: AFFINITIES.DIVING_SNORKELING, label: t('questionnaire.affinities.divingSnorkeling'), icon: "🤿" },
+              { code: AFFINITIES.ROAD_TRIP_FREEDOM, label: t('questionnaire.affinities.roadTripFreedom'), icon: "🚗" },
+              { code: AFFINITIES.VINEYARDS_WINE, label: t('questionnaire.affinities.vineyardsWine'), icon: "🍷" },
+              { code: AFFINITIES.DESERTS_LUNAR, label: t('questionnaire.affinities.desertsLunar'), icon: "🏜️" },
+              { code: AFFINITIES.ISLANDS_ARCHIPELAGOS, label: t('questionnaire.affinities.islandsArchipelagos'), icon: "🏝️" }
             ].map((option) => {
-              const isSelected = (answers.travelAffinities || []).includes(option.label);
+              const isSelected = (answers.travelAffinities || []).includes(option.code);
               const isDisabled = !isSelected && (answers.travelAffinities || []).length >= 5;
               return (
                 <Card
@@ -2257,19 +2281,19 @@ const Questionnaire = () => {
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
                   onClick={() => {
-                    if (!isDisabled || option.label === t('questionnaire.affinities.dontMind')) {
+                    if (!isDisabled || option.code === AFFINITIES.DONT_MIND) {
                       // Logique spéciale pour "Peu importe"
-                      if (option.label === t('questionnaire.affinities.dontMind')) {
-                        setAnswers({ ...answers, travelAffinities: [option.label] });
+                      if (option.code === AFFINITIES.DONT_MIND) {
+                        setAnswers({ ...answers, travelAffinities: [option.code] });
                         setTimeout(() => nextStep(true), 300);
                       } else {
                         // Retirer "Peu importe" si présent
                         const current = (answers.travelAffinities || []).filter(
-                          a => a !== t('questionnaire.affinities.dontMind')
+                          a => a !== AFFINITIES.DONT_MIND
                         );
-                        const updated = current.includes(option.label)
-                          ? current.filter(a => a !== option.label)
-                          : current.length < 5 ? [...current, option.label] : current;
+                        const updated = current.includes(option.code)
+                          ? current.filter(a => a !== option.code)
+                          : current.length < 5 ? [...current, option.code] : current;
                         
                         setAnswers({ ...answers, travelAffinities: updated });
                         
@@ -2318,17 +2342,23 @@ const Questionnaire = () => {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
-              { label: t('questionnaire.ambiance.adventureExotic'), icon: "🧭", desc: t('questionnaire.ambiance.adventureExotic.desc') },
-              { label: t('questionnaire.ambiance.relaxation'), icon: "🧘", desc: t('questionnaire.ambiance.relaxation.desc') },
-              { label: t('questionnaire.ambiance.romanceIntimacy'), icon: "💕", desc: t('questionnaire.ambiance.romanceIntimacy.desc') },
-              { label: t('questionnaire.ambiance.culturalDiscovery'), icon: "🎭", desc: t('questionnaire.ambiance.culturalDiscovery.desc') },
-              { label: t('questionnaire.ambiance.partyNightlife'), icon: "🎉", desc: t('questionnaire.ambiance.partyNightlife.desc') },
-              { label: t('questionnaire.ambiance.familyConviviality'), icon: "👨‍👩‍👧‍👦", desc: t('questionnaire.ambiance.familyConviviality.desc') }
-            ].map((option) => (
+              { code: AMBIANCE.ADVENTURE_EXOTIC, label: t('questionnaire.ambiance.adventureExotic'), icon: "🧭", desc: t('questionnaire.ambiance.adventureExotic.desc') },
+              { code: AMBIANCE.RELAXATION, label: t('questionnaire.ambiance.relaxation'), icon: "🧘", desc: t('questionnaire.ambiance.relaxation.desc') },
+              { code: AMBIANCE.ROMANCE_INTIMACY, label: t('questionnaire.ambiance.romanceIntimacy'), icon: "💕", desc: t('questionnaire.ambiance.romanceIntimacy.desc') },
+              { code: AMBIANCE.CULTURAL_DISCOVERY, label: t('questionnaire.ambiance.culturalDiscovery'), icon: "🎭", desc: t('questionnaire.ambiance.culturalDiscovery.desc') },
+              { code: AMBIANCE.PARTY_NIGHTLIFE, label: t('questionnaire.ambiance.partyNightlife'), icon: "🎉", desc: t('questionnaire.ambiance.partyNightlife.desc') },
+              { code: AMBIANCE.FAMILY_CONVIVIALITY, label: t('questionnaire.ambiance.familyConviviality'), icon: "👨‍👩‍👧‍👦", desc: t('questionnaire.ambiance.familyConviviality.desc') }
+            ].map((option) => {
+              const isSelected = normalizeAmbiance(answers.travelAmbiance) === option.code;
+              return (
               <Card
-                key={option.label}
-                className="p-3 md:p-6 cursor-pointer hover:shadow-golden hover:border-travliaq-deep-blue transition-all hover:scale-105"
-                onClick={() => handleChoice("travelAmbiance", option.label)}
+                key={option.code}
+                className={`p-3 md:p-6 cursor-pointer transition-all hover:scale-105 ${
+                  isSelected
+                    ? 'border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105'
+                    : 'hover:shadow-golden hover:border-travliaq-deep-blue'
+                }`}
+                onClick={() => handleChoice("travelAmbiance", option.code)}
               >
                 <div className="flex items-center space-x-2 md:space-x-4">
                   <span className="text-2xl md:text-4xl">{option.icon}</span>
@@ -2342,7 +2372,8 @@ const Questionnaire = () => {
                   </div>
                 </div>
               </Card>
-            ))}
+            );
+            })}
           </div>
         </div>
       );
@@ -2903,18 +2934,18 @@ const Questionnaire = () => {
           </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-w-3xl mx-auto">
             {[
-              { label: t('questionnaire.styles.nature'), icon: "🌲" },
-              { label: t('questionnaire.styles.cultureMuseums'), icon: "🏛️" },
-              { label: t('questionnaire.styles.food'), icon: "🍽️" },
-              { label: t('questionnaire.styles.beach'), icon: "🏖️" },
-              { label: t('questionnaire.styles.mountainHiking'), icon: "⛰️" },
-              { label: t('questionnaire.styles.photoSpots'), icon: "📸" },
-              { label: t('questionnaire.styles.localMarkets'), icon: "🏪" },
-              { label: t('questionnaire.styles.sportOutdoor'), icon: "🚴" },
-              { label: t('questionnaire.styles.wellnessSpa'), icon: "🧘" },
-              { label: t('questionnaire.styles.nightlife'), icon: "🎉" }
+              { code: STYLES.NATURE, label: t('questionnaire.styles.nature'), icon: "🌲" },
+              { code: STYLES.CULTURE_MUSEUMS, label: t('questionnaire.styles.cultureMuseums'), icon: "🏛️" },
+              { code: STYLES.FOOD, label: t('questionnaire.styles.food'), icon: "🍽️" },
+              { code: STYLES.BEACH, label: t('questionnaire.styles.beach'), icon: "🏖️" },
+              { code: STYLES.MOUNTAIN_HIKING, label: t('questionnaire.styles.mountainHiking'), icon: "⛰️" },
+              { code: STYLES.PHOTO_SPOTS, label: t('questionnaire.styles.photoSpots'), icon: "📸" },
+              { code: STYLES.LOCAL_MARKETS, label: t('questionnaire.styles.localMarkets'), icon: "🏪" },
+              { code: STYLES.SPORT_OUTDOOR, label: t('questionnaire.styles.sportOutdoor'), icon: "🚴" },
+              { code: STYLES.WELLNESS_SPA, label: t('questionnaire.styles.wellnessSpa'), icon: "🧘" },
+              { code: STYLES.NIGHTLIFE, label: t('questionnaire.styles.nightlife'), icon: "🎉" }
             ].map((option) => {
-              const isSelected = (answers.styles || []).includes(option.label);
+              const isSelected = (answers.styles || []).includes(option.code);
               const isDisabled = !isSelected && (answers.styles || []).length >= 5;
               return (
                 <Card
@@ -2928,11 +2959,11 @@ const Questionnaire = () => {
                   }`}
                   onClick={() => {
                     if (!isDisabled) {
-                      handleMultiChoice("styles", option.label, 5);
+                      handleMultiChoice("styles", option.code, 5);
                       // Auto-advance si 5 styles sont sélectionnés
-                      const updated = (answers.styles || []).includes(option.label)
-                        ? (answers.styles || []).filter(s => s !== option.label)
-                        : [...(answers.styles || []), option.label];
+                      const updated = (answers.styles || []).includes(option.code)
+                        ? (answers.styles || []).filter(s => s !== option.code)
+                        : [...(answers.styles || []), option.code];
                       if (updated.length === 5) {
                         setTimeout(() => nextStep(true), 300);
                       }
@@ -3084,22 +3115,22 @@ const Questionnaire = () => {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
-              { label: t('questionnaire.mobility.dontMind'), icon: "🤷", autoNext: true },
-              { label: t('questionnaire.mobility.walking'), icon: "🚶" },
-              { label: t('questionnaire.mobility.taxi.full'), icon: "🚕" },
-              { label: t('questionnaire.mobility.rentalCar.full'), icon: "🚗" },
-              { label: t('questionnaire.mobility.bike.full'), icon: "🚲" },
-              { label: t('questionnaire.mobility.electricScooter'), icon: "🛴" },
-              { label: t('questionnaire.mobility.motorbikeScooter'), icon: "🏍️" },
-              { label: t('questionnaire.mobility.touristBus'), icon: "🚌" },
-              { label: t('questionnaire.mobility.trainMetro'), icon: "🚇" },
-              { label: t('questionnaire.mobility.ferry.full'), icon: "⛴️" },
-              { label: t('questionnaire.mobility.atypical.full'), icon: "🐪" }
+              { code: MOBILITY.DONT_MIND, label: t('questionnaire.mobility.dontMind'), icon: "🤷", autoNext: true },
+              { code: MOBILITY.WALKING, label: t('questionnaire.mobility.walking'), icon: "🚶" },
+              { code: MOBILITY.TAXI, label: t('questionnaire.mobility.taxi.full'), icon: "🚕" },
+              { code: MOBILITY.RENTAL_CAR, label: t('questionnaire.mobility.rentalCar.full'), icon: "🚗" },
+              { code: MOBILITY.BIKE, label: t('questionnaire.mobility.bike.full'), icon: "🚲" },
+              { code: MOBILITY.ELECTRIC_SCOOTER, label: t('questionnaire.mobility.electricScooter'), icon: "🛴" },
+              { code: MOBILITY.MOTORBIKE_SCOOTER, label: t('questionnaire.mobility.motorbikeScooter'), icon: "🏍️" },
+              { code: MOBILITY.TOURIST_BUS, label: t('questionnaire.mobility.touristBus'), icon: "🚌" },
+              { code: MOBILITY.TRAIN_METRO, label: t('questionnaire.mobility.trainMetro'), icon: "🚇" },
+              { code: MOBILITY.FERRY, label: t('questionnaire.mobility.ferry.full'), icon: "⛴️" },
+              { code: MOBILITY.ATYPICAL, label: t('questionnaire.mobility.atypical.full'), icon: "🐪" }
             ].map((option) => {
-              const isSelected = (answers.mobility || []).includes(option.label);
+              const isSelected = (answers.mobility || []).includes(option.code);
               return (
                 <Card
-                  key={option.label}
+                  key={option.code}
                   className={`p-2 md:p-4 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
@@ -3108,8 +3139,8 @@ const Questionnaire = () => {
                   onClick={() => {
                     handleMultiChoiceWithDontMind(
                       "mobility", 
-                      option.label, 
-                      t('questionnaire.mobility.dontMind'),
+                      option.code, 
+                      MOBILITY.DONT_MIND,
                       option.autoNext
                     );
                   }}
@@ -3173,24 +3204,24 @@ const Questionnaire = () => {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
             {[
-              { label: t('questionnaire.accommodationType.dontMind'), icon: "🤷" },
-              { label: t('questionnaire.accommodationType.hotel'), icon: "🏨" },
-              { label: t('questionnaire.accommodationType.apartment'), icon: "🏠" },
-              { label: t('questionnaire.accommodationType.hostel'), icon: "🛏️" },
-              { label: t('questionnaire.accommodationType.guesthouse'), icon: "🏡" },
-              { label: t('questionnaire.accommodationType.lodge'), icon: "🌿" },
-              { label: t('questionnaire.accommodationType.camping'), icon: "⛺" },
-              { label: t('questionnaire.accommodationType.bedBreakfast'), icon: "🛋️" },
-              { label: t('questionnaire.accommodationType.resort'), icon: "🏖️" }
+              { code: ACCOMMODATION_TYPE.DONT_MIND, label: t('questionnaire.accommodationType.dontMind'), icon: "🤷" },
+              { code: ACCOMMODATION_TYPE.HOTEL, label: t('questionnaire.accommodationType.hotel'), icon: "🏨" },
+              { code: ACCOMMODATION_TYPE.APARTMENT, label: t('questionnaire.accommodationType.apartment'), icon: "🏠" },
+              { code: ACCOMMODATION_TYPE.HOSTEL, label: t('questionnaire.accommodationType.hostel'), icon: "🛏️" },
+              { code: ACCOMMODATION_TYPE.GUESTHOUSE, label: t('questionnaire.accommodationType.guesthouse'), icon: "🏡" },
+              { code: ACCOMMODATION_TYPE.LODGE, label: t('questionnaire.accommodationType.lodge'), icon: "🌿" },
+              { code: ACCOMMODATION_TYPE.CAMPING, label: t('questionnaire.accommodationType.camping'), icon: "⛺" },
+              { code: ACCOMMODATION_TYPE.BED_BREAKFAST, label: t('questionnaire.accommodationType.bedBreakfast'), icon: "🛋️" },
+              { code: ACCOMMODATION_TYPE.RESORT, label: t('questionnaire.accommodationType.resort'), icon: "🏖️" }
             ].map((option) => {
               const currentSelection = answers.accommodationType || [];
-              const isSelected = currentSelection.includes(option.label);
-              const hasPeuImporte = currentSelection.includes(t('questionnaire.accommodationType.dontMind'));
-              const isDisabled = !isSelected && currentSelection.length >= 2 && option.label !== t('questionnaire.accommodationType.dontMind') && !hasPeuImporte;
+              const isSelected = currentSelection.includes(option.code);
+              const hasPeuImporte = currentSelection.includes(ACCOMMODATION_TYPE.DONT_MIND);
+              const isDisabled = !isSelected && currentSelection.length >= 2 && option.code !== ACCOMMODATION_TYPE.DONT_MIND && !hasPeuImporte;
               
               return (
                 <Card
-                  key={option.label}
+                  key={option.code}
                   className={`p-3 md:p-6 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
@@ -3199,18 +3230,18 @@ const Questionnaire = () => {
                       : "hover:shadow-golden hover:border-travliaq-deep-blue"
                   }`}
                   onClick={() => {
-                    if (option.label === t('questionnaire.accommodationType.dontMind')) {
+                    if (option.code === ACCOMMODATION_TYPE.DONT_MIND) {
                       // "Peu importe" remplace toute autre sélection
-                      setAnswers({ ...answers, accommodationType: [option.label] });
+                      setAnswers({ ...answers, accommodationType: [option.code] });
                       setTimeout(() => nextStep(true), 300);
                     } else if (!isDisabled) {
                       // Si "Peu importe" est déjà sélectionné, le retirer d'abord
-                      const filteredSelection = currentSelection.filter(item => item !== t('questionnaire.accommodationType.dontMind'));
-                      const updated = filteredSelection.includes(option.label)
-                        ? filteredSelection.filter(v => v !== option.label)
+                      const filteredSelection = currentSelection.filter(item => item !== ACCOMMODATION_TYPE.DONT_MIND);
+                      const updated = filteredSelection.includes(option.code)
+                        ? filteredSelection.filter(v => v !== option.code)
                         : filteredSelection.length >= 2
                         ? filteredSelection
-                        : [...filteredSelection, option.label];
+                        : [...filteredSelection, option.code];
                       setAnswers({ ...answers, accommodationType: updated });
                       
                       // Auto-advance if 2 types are selected
