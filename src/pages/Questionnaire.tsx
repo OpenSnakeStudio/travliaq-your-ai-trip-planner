@@ -645,6 +645,18 @@ const Questionnaire = () => {
     }
   }, [answers.departureDate, answers.returnDate]);
 
+  // Helper pour vérifier si l'utilisateur a sélectionné une préférence d'hôtel avec repas
+  const hasHotelMealPreference = (hotelPreferences?: string[]): boolean => {
+    if (!hotelPreferences || hotelPreferences.length === 0) return false;
+    
+    return hotelPreferences.some((pref: string) => {
+      const lowerPref = pref.toLowerCase();
+      return Object.values(HOTEL_MEAL_PREFERENCES).some(mealType => 
+        lowerPref.includes(mealType)
+      );
+    });
+  };
+
   // Calculate dynamic total steps based on user choices
   const getTotalSteps = (): number => {
     let total = 1; // Step 1: Qui voyage
@@ -1064,18 +1076,6 @@ const Questionnaire = () => {
       case t('questionnaire.group35'): return 4; // Default middle
       default: return 1;
     }
-  };
-
-  // Helper pour vérifier si l'utilisateur a sélectionné une préférence d'hôtel avec repas
-  const hasHotelMealPreference = (hotelPreferences?: string[]): boolean => {
-    if (!hotelPreferences || hotelPreferences.length === 0) return false;
-    
-    return hotelPreferences.some((pref: string) => {
-      const lowerPref = pref.toLowerCase();
-      return Object.values(HOTEL_MEAL_PREFERENCES).some(mealType => 
-        lowerPref.includes(mealType)
-      );
-    });
   };
 
   // Celebration animation
