@@ -705,9 +705,10 @@ const Questionnaire = () => {
       total++; // Step 9: Bagages
     }
     
-    // Step 10: Mobilité - SEULEMENT si pas uniquement vols
+    // Step 10: Mobilité - SEULEMENT si pas uniquement vols ET pas uniquement hébergement
     const onlyFlights = helpWith.length === 1 && helpWith.includes(HELP_WITH.FLIGHTS);
-    if (!onlyFlights) {
+    const onlyAccommodation = helpWith.length === 1 && helpWith.includes(HELP_WITH.ACCOMMODATION);
+    if (!onlyFlights && !onlyAccommodation) {
       total++; // Step 10: Mobilité
     }
     
@@ -727,8 +728,8 @@ const Questionnaire = () => {
       total++; // Step 14: Équipements
     }
     
-    // Step 15: Sécurité & Phobies (seulement si hébergement OU activités sélectionnés, pas juste vols)
-    const needsSecurityStep = needsAccommodation || needsActivities;
+    // Step 15: Sécurité & Phobies (seulement si activités sélectionnées, PAS si uniquement hébergement)
+    const needsSecurityStep = needsActivities;
     if (needsSecurityStep) {
       total++; // Step 15: Sécurité
     }
@@ -738,7 +739,21 @@ const Questionnaire = () => {
       total++; // Step 16: Horloge biologique
     }
     
-    total++; // Step 17: Contraintes
+    // Step 17: Contraintes alimentaires - SEULEMENT si hébergement + hôtel + prestation avec repas
+    const hasHotelWithMeals = needsAccommodation && 
+      answers.accommodationType?.some((type: string) => 
+        type.toLowerCase().includes('hôtel') || type.toLowerCase().includes('hotel')
+      ) &&
+      answers.hotelPreferences?.some((pref: string) => 
+        pref.includes('breakfast') || pref.includes('déjeuner') ||
+        pref.includes('half') || pref.includes('demi') ||
+        pref.includes('full') || pref.includes('complète') ||
+        pref.includes('inclusive') || pref.includes('inclusif')
+      );
+    if (hasHotelWithMeals) {
+      total++; // Step 17: Contraintes
+    }
+    
     total++; // Step 18: Zone ouverte
     total++; // Step final: Review & confirm
     
@@ -2507,10 +2522,11 @@ const Questionnaire = () => {
     }
     if (helpWithFlights.includes(HELP_WITH.FLIGHTS)) stepCounter++;
 
-    // Step 10: Mobilité (multi-choix + exhaustif) - SEULEMENT si pas uniquement vols
+    // Step 10: Mobilité (multi-choix + exhaustif) - SEULEMENT si pas uniquement vols ET pas uniquement hébergement
     const helpWithMobility = answers.helpWith || [];
-    const onlyFlights = helpWithMobility.length === 1 && helpWithMobility.includes(HELP_WITH.FLIGHTS);
-    if (!onlyFlights && step === stepCounter) {
+    const onlyFlightsMobility = helpWithMobility.length === 1 && helpWithMobility.includes(HELP_WITH.FLIGHTS);
+    const onlyAccommodationMobility = helpWithMobility.length === 1 && helpWithMobility.includes(HELP_WITH.ACCOMMODATION);
+    if (!onlyFlightsMobility && !onlyAccommodationMobility && step === stepCounter) {
       return (
         <div className="space-y-3 md:space-y-8 animate-fade-up">
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -2593,7 +2609,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (!onlyFlights) stepCounter++;
+    if (!onlyFlightsMobility && !onlyAccommodationMobility) stepCounter++;
 
     // Déclarer helpWithAccommodation ici pour qu'elle soit disponible pour tous les steps suivants
     // (déjà déclaré en haut de renderStep)
@@ -2893,12 +2909,11 @@ const Questionnaire = () => {
     }
     if ((answers.helpWith || []).includes(HELP_WITH.ACCOMMODATION)) stepCounter++;
 
-    // Step 15: Sécurité & Phobies (seulement si hébergement OU activités sélectionnés, pas juste vols)
+    // Step 15: Sécurité & Phobies (seulement si activités sélectionnées, PAS si uniquement hébergement)
     const helpWithForSecurity = answers.helpWith || [];
-    const needsAccommodationForSecurity = helpWithForSecurity.includes(HELP_WITH.ACCOMMODATION);
     const needsActivitiesForSecurity = helpWithForSecurity.includes(HELP_WITH.ACTIVITIES);
-    const needsSecurityStep = needsAccommodationForSecurity || needsActivitiesForSecurity;
-    if (needsSecurityStep && step === stepCounter) {
+    const needsSecurityStepRender = needsActivitiesForSecurity;
+    if (needsSecurityStepRender && step === stepCounter) {
       return (
         <SecurityStep
           security={answers.security || []}
@@ -2907,7 +2922,7 @@ const Questionnaire = () => {
         />
       );
     }
-    if (needsSecurityStep) stepCounter++;
+    if (needsSecurityStepRender) stepCounter++;
 
     // Step 16: Rythme & horaires (seulement si activités sélectionnées)
     if (needsActivitiesForSecurity && step === stepCounter) {
@@ -2923,8 +2938,21 @@ const Questionnaire = () => {
     }
     if (needsActivitiesForSecurity) stepCounter++;
 
-    // Step 17: Contraintes & préférences (plus laïc et inclusif)
-    if (step === stepCounter) {
+    // Step 17: Contraintes alimentaires - SEULEMENT si hébergement + hôtel + prestation avec repas
+    const helpWithForConstraints = answers.helpWith || [];
+    const needsAccommodationForConstraints = helpWithForConstraints.includes(HELP_WITH.ACCOMMODATION);
+    const hasHotelInType = (answers.accommodationType || []).some((type: string) => 
+      type.toLowerCase().includes('hôtel') || type.toLowerCase().includes('hotel')
+    );
+    const hasMealPreference = (answers.hotelPreferences || []).some((pref: string) => 
+      pref.includes('breakfast') || pref.includes('déjeuner') ||
+      pref.includes('half') || pref.includes('demi') ||
+      pref.includes('full') || pref.includes('complète') ||
+      pref.includes('inclusive') || pref.includes('inclusif')
+    );
+    const shouldShowConstraints = needsAccommodationForConstraints && hasHotelInType && hasMealPreference;
+    
+    if (shouldShowConstraints && step === stepCounter) {
       return (
         <div className="space-y-3 md:space-y-8 animate-fade-up">
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -3001,9 +3029,9 @@ const Questionnaire = () => {
         </div>
       );
     }
-    stepCounter++;
+    if (shouldShowConstraints) stepCounter++;
 
-    // Step 16: Zone ouverte - SANS LIMITE DE CARACTÈRES
+    // Step 18: Zone ouverte - SANS LIMITE DE CARACTÈRES
     if (step === stepCounter) {
       return (
         <div className="space-y-4 animate-fade-up">
