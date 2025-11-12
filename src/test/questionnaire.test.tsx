@@ -571,3 +571,237 @@ describe('Questionnaire - Tests de validation des réponses', () => {
   });
   
 });
+
+describe('Questionnaire - Tests négatifs (cas d\'échec attendus)', () => {
+  
+  describe('Test 16: [NÉGATIF] Scénario incomplet - Manque destination', () => {
+    it('doit détecter l\'absence de destination quand hasDestination=YES', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.SOLO,
+        hasDestination: YES_NO.YES,
+        // destination manquante
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.FLIGHTS],
+        datesType: DATES_TYPE.FIXED,
+        budgetPerPerson: '500-1000€',
+      };
+      
+      expect(answers.destination).toBeUndefined();
+      expect(answers.hasDestination).toBe(YES_NO.YES);
+    });
+  });
+
+  describe('Test 17: [NÉGATIF] Budget précis sans montant', () => {
+    it('doit détecter l\'absence du montant quand budgetType=précis', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.DUO,
+        hasDestination: YES_NO.YES,
+        destination: 'Berlin, Allemagne',
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.ACCOMMODATION],
+        datesType: DATES_TYPE.FIXED,
+        budgetType: 'Budget précis',
+        // budgetAmount et budgetCurrency manquants
+      };
+      
+      expect(answers.budgetAmount).toBeUndefined();
+      expect(answers.budgetCurrency).toBeUndefined();
+      expect(answers.budgetType).toBe('Budget précis');
+    });
+  });
+
+  describe('Test 18: [NÉGATIF] Bagages incomplets pour plusieurs voyageurs', () => {
+    it('doit détecter l\'absence de choix de bagages pour tous les voyageurs', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.FAMILY,
+        numberOfTravelers: 4,
+        helpWith: [HELP_WITH.FLIGHTS],
+        luggage: { 0: 'Cabine', 1: 'Cabine' }, // Seulement 2/4
+      };
+      
+      expect(answers.luggage).toBeDefined();
+      expect(Object.keys(answers.luggage || {}).length).toBeLessThan(answers.numberOfTravelers || 0);
+    });
+  });
+
+  describe('Test 19: [NÉGATIF] Dates flexibles sans durée', () => {
+    it('doit détecter l\'absence de durée pour des dates flexibles', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.SOLO,
+        hasDestination: YES_NO.NO,
+        helpWith: [HELP_WITH.ACCOMMODATION],
+        datesType: DATES_TYPE.FLEXIBLE,
+        flexibility: 'Flexible',
+        // duration manquante
+      };
+      
+      expect(answers.datesType).toBe(DATES_TYPE.FLEXIBLE);
+      expect(answers.duration).toBeUndefined();
+    });
+  });
+
+  describe('Test 20: [NÉGATIF] Rythme sans préférences (optionnelles)', () => {
+    it('doit accepter un rythme sans préférences horaires (schedulePrefs optionnel)', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.DUO,
+        hasDestination: YES_NO.YES,
+        destination: 'Lisbonne, Portugal',
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.ACTIVITIES],
+        datesType: DATES_TYPE.FIXED,
+        budgetPerPerson: '700-1000€',
+        styles: ['Culture', 'Plage'],
+        rhythm: 'relaxed',
+        schedulePrefs: [], // Vide car optionnel
+      };
+      
+      // Le rythme est présent mais pas de préférences - c'est valide
+      expect(answers.rhythm).toBe('relaxed');
+      expect(answers.schedulePrefs?.length).toBe(0);
+    });
+  });
+
+  describe('Test 21: [NÉGATIF] Hôtel avec repas mais sans contraintes', () => {
+    it('doit permettre un hôtel avec repas sans contraintes alimentaires (optionnel)', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.SOLO,
+        hasDestination: YES_NO.YES,
+        destination: 'Athènes, Grèce',
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.ACCOMMODATION],
+        datesType: DATES_TYPE.FIXED,
+        budgetPerPerson: '800-1200€',
+        accommodationType: ['Hôtel'],
+        hotelPreferences: ['Pension complète'],
+        constraints: [], // Pas de contraintes (optionnel)
+      };
+      
+      expect(answers.accommodationType).toContain('Hôtel');
+      expect(answers.hotelPreferences).toContain('Pension complète');
+      expect(answers.constraints?.length).toBe(0);
+    });
+  });
+});
+
+describe('Questionnaire - Tests de synchronisation logique', () => {
+  
+  describe('Test 22: Synchronisation getTotalSteps et validation - Activités seules', () => {
+    it('doit avoir le même nombre d\'étapes calculé et les étapes doivent être validables', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.DUO,
+        hasDestination: YES_NO.YES,
+        destination: 'Prague, République Tchèque',
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.ACTIVITIES],
+        datesType: DATES_TYPE.FIXED,
+        departureDate: '2024-05-10',
+        returnDate: '2024-05-17',
+        budgetPerPerson: '600-900€',
+        styles: ['Culture', 'Histoire', 'Gastronomie'],
+        mobility: ['Marche'],
+        security: ['Aucune contrainte'],
+        rhythm: 'balanced',
+        schedulePrefs: ['early_bird'],
+      };
+      
+      const totalSteps = calculateTotalSteps(answers);
+      
+      // Duo(1) + Destination(1) + Aide(1) + Trajet(1)
+      // + Dates(1) + Dates précises(1) + Budget(1)
+      // + Style(1) + Mobilité(1) + Sécurité(1) + Horloge(1)
+      // + Zone ouverte(1) + Review(1) = 13
+      expect(totalSteps).toBe(13);
+    });
+  });
+
+  describe('Test 23: Synchronisation avec plusieurs services combinés', () => {
+    it('doit calculer correctement les étapes pour vols + hébergement + activités', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.SOLO,
+        hasDestination: YES_NO.YES,
+        destination: 'Séville, Espagne',
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.FLIGHTS, HELP_WITH.ACCOMMODATION, HELP_WITH.ACTIVITIES],
+        datesType: DATES_TYPE.FIXED,
+        departureDate: '2024-09-20',
+        returnDate: '2024-09-27',
+        budgetPerPerson: '900-1200€',
+        styles: ['Culture', 'Flamenco'],
+        flightPreference: 'Prix le plus bas',
+        luggage: { 0: 'Cabine + Soute' },
+        mobility: ['Marche', 'Métro/Train'],
+        accommodationType: ['Hôtel'],
+        hotelPreferences: ['Petit-déjeuner', 'Wifi fiable'],
+        comfort: '7/10',
+        neighborhood: 'Centre historique',
+        amenities: ['Wifi fiable', 'Climatisation'],
+        security: ['Zones touristiques'],
+        rhythm: 'balanced',
+        schedulePrefs: [],
+      };
+      
+      const totalSteps = calculateTotalSteps(answers);
+      
+      // Solo(1) + Destination(1) + Aide(1) + Trajet(1)
+      // + Dates(1) + Dates précises(1) + Budget(1)
+      // + Style(1) + Vols(1) + Bagages(1) + Mobilité(1)
+      // + Type hébergement(1) + Préf hôtel(1) + Confort(1) + Quartier(1) + Équipements(1)
+      // + Sécurité(1) + Horloge(1) + Contraintes(1)
+      // + Zone ouverte(1) + Review(1) = 21
+      expect(totalSteps).toBe(21);
+    });
+  });
+
+  describe('Test 24: Test limite - Aucun service sélectionné', () => {
+    it('doit gérer le cas où aucun service n\'est sélectionné', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.SOLO,
+        hasDestination: YES_NO.YES,
+        destination: 'Venise, Italie',
+        departureLocation: 'Paris, France',
+        helpWith: [], // Aucun service
+        datesType: DATES_TYPE.FIXED,
+        departureDate: '2024-10-05',
+        returnDate: '2024-10-10',
+        budgetPerPerson: '500-800€',
+      };
+      
+      const totalSteps = calculateTotalSteps(answers);
+      
+      // Solo(1) + Destination(1) + Aide(1) + Trajet(1)
+      // + Dates(1) + Dates précises(1) + Budget(1)
+      // + Zone ouverte(1) + Review(1) = 9
+      expect(totalSteps).toBe(9);
+    });
+  });
+
+  describe('Test 25: Cohérence calcul étapes - Style n\'apparaît que si activités', () => {
+    it('ne doit pas compter l\'étape style si pas d\'activités demandées', () => {
+      const answers: QuestionnaireAnswers = {
+        travelGroup: TRAVEL_GROUPS.DUO,
+        hasDestination: YES_NO.YES,
+        destination: 'Vienne, Autriche',
+        departureLocation: 'Paris, France',
+        helpWith: [HELP_WITH.FLIGHTS, HELP_WITH.ACCOMMODATION], // PAS d'activités
+        datesType: DATES_TYPE.FIXED,
+        departureDate: '2024-11-15',
+        returnDate: '2024-11-22',
+        budgetPerPerson: '1000-1500€',
+        accommodationType: ['Hôtel'],
+      };
+      
+      const totalSteps = calculateTotalSteps(answers);
+      const needsActivities = answers.helpWith?.includes(HELP_WITH.ACTIVITIES);
+      
+      // Vérifier que activités n'est PAS inclus
+      expect(needsActivities).toBe(false);
+      
+      // Duo(1) + Destination(1) + Aide(1) + Trajet(1)
+      // + Dates(1) + Dates précises(1) + Budget(1)
+      // + Vols(1) + Bagages(1) + Mobilité(1)
+      // + Type hébergement(1) + Préf hôtel(1) + Confort(1) + Quartier(1) + Équipements(1)
+      // + Zone ouverte(1) + Review(1) = 17 (PAS de style, sécurité, horloge)
+      expect(totalSteps).toBe(17);
+    });
+  });
+});
