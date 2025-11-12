@@ -7,7 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { lazy, Suspense } from "react";
 import { usePageTracking } from "@/hooks/usePageTracking";
 
-// Lazy load pages for code splitting
+const SentryTest = lazy(() => import("./pages/SentryTest"));
 const Index = lazy(() => import("./pages/Index"));
 const CGV = lazy(() => import("./pages/CGV"));
 const Questionnaire = lazy(() => import("./pages/Questionnaire"));
@@ -35,6 +35,7 @@ const AppContent = () => {
               <Route path="/cgv" element={<CGV />} />
               <Route path="/questionnaire" element={<Questionnaire />} />
               <Route path="/questionnaire-v2" element={<QuestionnaireV2 />} />
+              <Route path="/sentry-test" element={<SentryTest />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/admin/blog" element={<AdminBlog />} />

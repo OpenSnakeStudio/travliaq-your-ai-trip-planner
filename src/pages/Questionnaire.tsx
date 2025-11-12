@@ -811,6 +811,12 @@ const Questionnaire = () => {
       helpWith: answers.helpWith,
       datesType: answers.datesType,
       numberOfTravelers: answers.numberOfTravelers,
+      travelers: answers.travelers ? {
+        count: answers.travelers.length,
+        adults: answers.travelers.filter(t => t.type === 'adult').length,
+        children: answers.travelers.filter(t => t.type === 'child').length,
+        childrenAges: answers.travelers.filter(t => t.type === 'child').map(t => t.age),
+      } : undefined,
       security: answers.security,
       rhythm: answers.rhythm,
       schedulePrefs: answers.schedulePrefs,
@@ -820,6 +826,34 @@ const Questionnaire = () => {
       hotelPreferences: answers.hotelPreferences,
       // Pas de données sensibles (email, noms, etc.)
     };
+  };
+
+  // Fonction pour obtenir le nom de l'étape (pour le logging)
+  const getStepName = (stepNum: number): string => {
+    const stepNames: { [key: number]: string } = {
+      1: 'Groupe de voyage',
+      2: 'Nombre de personnes',
+      3: 'Destination en tête',
+      4: 'Comment aider',
+      5: 'Trajet/Climat',
+      6: 'Type de dates',
+      7: 'Budget',
+      8: 'Style',
+      9: 'Vols',
+      10: 'Bagages',
+      11: 'Mobilité',
+      12: 'Type hébergement',
+      13: 'Préférences hôtel',
+      14: 'Confort',
+      15: 'Quartier',
+      16: 'Équipements',
+      17: 'Sécurité',
+      18: 'Rythme',
+      19: 'Contraintes',
+      20: 'Zone ouverte',
+      21: 'Récapitulatif',
+    };
+    return stepNames[stepNum] || `Étape ${stepNum}`;
   };
 
   // Validation pour chaque étape avant de continuer
@@ -835,6 +869,26 @@ const Questionnaire = () => {
     if (normalizedGroup === TRAVEL_GROUPS.FAMILY || normalizedGroup === TRAVEL_GROUPS.GROUP35) {
       stepCounter++;
       if (step === stepCounter) {
+        // Validation spécifique pour FAMILLE avec le système travelers
+        if (normalizedGroup === TRAVEL_GROUPS.FAMILY && answers.travelers) {
+          const adults = answers.travelers.filter(t => t.type === 'adult').length;
+          const children = answers.travelers.filter(t => t.type === 'child');
+          
+          // Au moins 1 adulte obligatoire
+          if (adults === 0) {
+            return false;
+          }
+          
+          // Tous les enfants doivent avoir un âge valide
+          const invalidChildren = children.filter(c => !c.age || c.age <= 0 || c.age > 17);
+          if (invalidChildren.length > 0) {
+            return false;
+          }
+          
+          return answers.travelers.length > 0;
+        }
+        
+        // Validation simple pour GROUPE 3-5
         return !!answers.numberOfTravelers && answers.numberOfTravelers > 0;
       }
     }
@@ -1032,11 +1086,38 @@ const Questionnaire = () => {
       // CRITICAL: Logger comme ERREUR dans Sentry avec contexte complet
       const debugContext = getStepDebugContext();
       
+      // Déterminer le message d'erreur spécifique
+      let errorMessage = `Utilisateur bloqué à l'étape ${step}/${totalSteps}`;
+      let userMessage = t('questionnaire.answerRequired');
+      
+      // Messages d'erreur spécifiques pour l'étape "Nombre de personnes"
+      const normalizedGroup = normalizeTravelGroup(answers.travelGroup);
+      if ((normalizedGroup === TRAVEL_GROUPS.FAMILY || normalizedGroup === TRAVEL_GROUPS.GROUP35) && step === 2) {
+        if (normalizedGroup === TRAVEL_GROUPS.FAMILY && answers.travelers) {
+          const adults = answers.travelers.filter(t => t.type === 'adult').length;
+          const children = answers.travelers.filter(t => t.type === 'child');
+          const invalidChildren = children.filter(c => !c.age || c.age <= 0 || c.age > 17);
+          
+          if (adults === 0) {
+            errorMessage = `Validation échouée: Aucun adulte dans le groupe (enfants: ${children.length})`;
+            userMessage = 'Au moins un adulte est requis pour voyager';
+          } else if (invalidChildren.length > 0) {
+            errorMessage = `Validation échouée: ${invalidChildren.length} enfant(s) sans âge valide`;
+            userMessage = 'Veuillez renseigner l\'âge de tous les enfants (1-17 ans)';
+          } else if (answers.travelers.length === 0) {
+            errorMessage = 'Validation échouée: Aucun voyageur ajouté';
+            userMessage = 'Veuillez ajouter au moins un voyageur';
+          }
+        }
+      }
+      
       logger.error('Validation questionnaire échouée - Utilisateur bloqué', {
         category: LogCategory.VALIDATION,
-        error: new Error(`Validation failed at step ${step}/${totalSteps}`),
+        error: new Error(errorMessage),
         metadata: {
           ...debugContext,
+          errorType: 'validation_failed',
+          stepName: getStepName(step),
           userAgent: navigator.userAgent,
           viewport: `${window.innerWidth}x${window.innerHeight}`,
           language: i18n.language,
@@ -1048,12 +1129,12 @@ const Questionnaire = () => {
       questionnaireLogger.logValidationError(
         step, 
         'step_validation_blocked', 
-        `Utilisateur bloqué à l'étape ${step}/${totalSteps} - Validation impossible`
+        errorMessage
       );
       
       toast({
         title: t('questionnaire.pleaseAnswer'),
-        description: t('questionnaire.answerRequired'),
+        description: userMessage,
         variant: "destructive",
       });
       return;
