@@ -680,10 +680,11 @@ const Questionnaire = () => {
     }
     
     total++; // Step 5: Budget
-    // Check for precise budget type
+    // Check for precise budget type or >1800€
     if (answers.budgetType && (
       answers.budgetType.toLowerCase().includes('précis') ||
-      answers.budgetType.toLowerCase().includes('precise')
+      answers.budgetType.toLowerCase().includes('precise') ||
+      answers.budgetType.includes('1800')
     )) {
       total++; // Step 5b: Montant exact
     }
@@ -704,7 +705,11 @@ const Questionnaire = () => {
       total++; // Step 9: Bagages
     }
     
-    total++; // Step 10: Mobilité
+    // Step 10: Mobilité - SEULEMENT si pas uniquement vols
+    const onlyFlights = helpWith.length === 1 && helpWith.includes(HELP_WITH.FLIGHTS);
+    if (!onlyFlights) {
+      total++; // Step 10: Mobilité
+    }
     
     // Step 11-14: Hébergement (seulement si hébergement sélectionné)
     if (needsAccommodation) {
