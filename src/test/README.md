@@ -2,14 +2,13 @@
 
 ## 📋 Vue d'ensemble
 
-Cette suite de tests professionnels vérifie la cohérence et la logique du questionnaire Travliaq, avec un focus particulier sur la synchronisation entre les fonctions critiques `getTotalSteps()`, `canProceedToNextStep()` et `renderStep()`.
+Cette suite de tests professionnels vérifie la cohérence, la logique et l'intégrité des données du questionnaire Travliaq, avec un focus particulier sur la synchronisation entre les fonctions critiques et la normalisation des données.
 
-## 🎯 Objectifs des tests
+## 🎯 Fichiers de tests
 
-1. **Cohérence du comptage des étapes** : Vérifier que le nombre d'étapes calculé correspond exactement au parcours utilisateur
-2. **Validation des scénarios** : Tester tous les chemins possibles du questionnaire
-3. **Logique conditionnelle** : S'assurer que les questions apparaissent ou disparaissent selon les bonnes conditions
-4. **Prévention des régressions** : Détecter immédiatement toute modification qui casse la logique
+1. **`questionnaire.test.tsx`** : Tests de validation de tous les flux utilisateurs possibles
+2. **`questionnaire-submission.test.tsx`** : Tests de normalisation et soumission des données
+3. **`questionnaire-data-integrity.test.tsx`** : Tests d'intégrité des constantes et codes internes
 
 ## 📦 Installation
 
@@ -46,64 +45,89 @@ npm run test:coverage
 ```
 Génère un rapport HTML de couverture dans `coverage/index.html`.
 
+### Tests spécifiques
+```bash
+# Tests de soumission uniquement
+npm run test -- questionnaire-submission
+
+# Tests d'intégrité uniquement
+npm run test -- questionnaire-data-integrity
+
+# Tests de logique uniquement
+npm run test -- questionnaire.test
+```
+
 ## 📊 Tests disponibles
 
-### Tests de cohérence et logique (12 tests)
+### 1. Tests de logique et cohérence (questionnaire.test.tsx)
 
-1. **Test 1 : Solo avec destination et tous services** (21 étapes)
-   - Vérifie le parcours complet maximal pour un voyageur solo
+Suite de 12 tests vérifiant tous les flux utilisateurs possibles :
 
-2. **Test 2 : Duo sans destination avec dates flexibles** (17 étapes)
-   - Teste le parcours sans destination précise
+1. **Solo avec destination et tous services** (21 étapes)
+2. **Duo sans destination avec dates flexibles** (17 étapes)
+3. **Famille avec hébergement uniquement** (14 étapes)
+4. **Groupe avec budget >1800€** (19 étapes)
+5. **Activités uniquement** (13 étapes)
+6. **Vols uniquement** (11 étapes)
+7. **Dates flexibles >14 nuits** (19 étapes)
+8. **Hôtel avec repas** (15 étapes)
+9. **Hôtel sans repas** (14 étapes)
+10. **Scénario complet maximal** (27 étapes)
+11. **Hébergement seul** (13 étapes)
+12. **Activités sans hébergement** (13 étapes)
 
-3. **Test 3 : Famille avec hébergement uniquement** (14 étapes)
-   - Valide le parcours famille avec un seul service
++ 3 tests de validation des données
 
-4. **Test 4 : Groupe avec budget >1800€** (19 étapes)
-   - Vérifie l'étape additionnelle pour budget précis
+### 2. Tests de normalisation (questionnaire-submission.test.tsx)
 
-5. **Test 5 : Activités uniquement** (13 étapes)
-   - Teste le parcours minimal avec activités
+Tests vérifiant la normalisation des données du questionnaire :
 
-6. **Test 6 : Vols uniquement** (11 étapes)
-   - Vérifie le parcours le plus court possible
+✅ **Groupe de voyage** : `SOLO`, `DUO`, `GROUP35`, `FAMILY`
+✅ **Services demandés** : `FLIGHTS`, `ACCOMMODATION`, `ACTIVITIES`
+✅ **Préférences climatiques** : 6 options + "peu importe"
+✅ **Affinités de voyage** : 17 types d'activités + "peu importe"
+✅ **Ambiance recherchée** : 6 types d'ambiance
+✅ **Styles d'activités** : 10 styles différents
+✅ **Mobilité** : 11 moyens de transport + "peu importe"
+✅ **Type d'hébergement** : 9 types + "peu importe"
+✅ **Équipements** : 13 équipements + "peu importe"
+✅ **Contraintes** : 15 types de contraintes
+✅ **Niveau de confort** : 5 niveaux
+✅ **Rythme** : 3 rythmes
+✅ **Préférences horaires** : 6 préférences
+✅ **Préférences de vol** : 5 options
+✅ **Bagages** : 4 options
 
-7. **Test 7 : Dates flexibles >14 nuits** (19 étapes)
-   - Valide l'étape de saisie du nombre exact de nuits
+**Objectifs** :
+- Vérifier que toutes les valeurs sont normalisées en codes internes
+- Garantir l'indépendance linguistique (FR/EN produisent les mêmes codes)
+- Valider la structure complète des données de soumission
+- S'assurer que tous les champs requis sont présents
 
-8. **Test 8 : Hôtel avec repas** (15 étapes)
-   - Vérifie que les contraintes alimentaires apparaissent
+### 3. Tests d'intégrité (questionnaire-data-integrity.test.tsx)
 
-9. **Test 9 : Hôtel sans repas** (14 étapes)
-   - Confirme que les contraintes n'apparaissent PAS
+Tests vérifiant l'intégrité des constantes :
 
-10. **Test 10 : Scénario complet maximal** (27 étapes)
-    - Teste le parcours le plus long avec toutes les options
+- **Constantes complètes** : Toutes les options sont définies
+- **Pas de doublons** : Valeurs uniques dans chaque groupe
+- **Format snake_case** : Respect de la convention de nommage
+- **Nombre d'options** : Chaque catégorie a le bon nombre d'options
+- **Compatibilité arrière** : Les anciens codes restent disponibles
 
-11. **Test 11 : Hébergement seul (pas de mobilité)** (13 étapes)
-    - Vérifie que mobilité ne s'affiche pas
+**Objectifs** :
+- Détecter immédiatement les codes manquants ou mal formatés
+- Documenter les valeurs acceptées
+- Garantir la cohérence des données en base
 
-12. **Test 12 : Activités sans hébergement** (13 étapes)
-    - Confirme que sécurité et horloge s'affichent
-
-### Tests de validation (3 tests)
-
-13. **Test 13 : Champs obligatoires**
-    - Détecte les réponses manquantes
-
-14. **Test 14 : Cohérence dates flexibles**
-    - Valide la structure des dates flexibles
-
-15. **Test 15 : Structure voyageurs famille**
-    - Vérifie les données adultes/enfants
-
-## 🔍 Structure du fichier de test
+## 🔍 Structure des fichiers de test
 
 ```typescript
 src/test/
-├── setup.ts              # Configuration globale des tests
-├── questionnaire.test.tsx # Suite complète de tests
-└── README.md             # Ce fichier
+├── setup.ts                              # Configuration globale des tests
+├── questionnaire.test.tsx                # Tests de logique et flux utilisateurs
+├── questionnaire-submission.test.tsx     # Tests de normalisation des données
+├── questionnaire-data-integrity.test.tsx # Tests d'intégrité des constantes
+└── README.md                             # Ce fichier
 ```
 
 ## 🎨 Bonnes pratiques
