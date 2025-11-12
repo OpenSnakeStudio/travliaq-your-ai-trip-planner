@@ -37,16 +37,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, normalizeTravelGroup, normalizeYesNo, normalizeDatesType, normalizeHelpWithArray } from "@/lib/questionnaireValues";
+import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, HOTEL_PREFERENCES, HOTEL_MEAL_PREFERENCES, normalizeTravelGroup, normalizeYesNo, normalizeDatesType, normalizeHelpWithArray, normalizeHotelPreferencesArray } from "@/lib/questionnaireValues";
 import { logger, questionnaireLogger, LogCategory } from "@/utils/logger";
-
-// Constantes pour les préférences d'hôtel avec repas (pour validation robuste)
-const HOTEL_MEAL_PREFERENCES = {
-  BREAKFAST: 'breakfast',
-  HALF_BOARD: 'half',
-  FULL_BOARD: 'full',
-  ALL_INCLUSIVE: 'inclusive'
-} as const;
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -480,11 +472,25 @@ const Questionnaire = () => {
       }
     }
     
+    // Normaliser hotelPreferences array
+    if (answers.hotelPreferences && Array.isArray(answers.hotelPreferences)) {
+      const normalized = normalizeHotelPreferencesArray(answers.hotelPreferences);
+      
+      // Comparer les tableaux de manière sûre
+      const isDifferent = normalized.length !== answers.hotelPreferences.length ||
+        normalized.some((v: string, i: number) => v !== answers.hotelPreferences[i]);
+        
+      if (isDifferent) {
+        updates.hotelPreferences = normalized;
+        hasChanges = true;
+      }
+    }
+    
     if (hasChanges) {
       setAnswers((prev: any) => ({ ...prev, ...updates }));
     }
     // Ne dépendre que des valeurs brutes, pas de l'objet answers complet
-  }, [answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, JSON.stringify(answers.helpWith)]);
+  }, [answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, JSON.stringify(answers.helpWith), JSON.stringify(answers.hotelPreferences)]);
   
   // ⚠️ PROTECTION AUTH: Require authentication to start questionnaire
   useEffect(() => {
@@ -670,12 +676,10 @@ const Questionnaire = () => {
   const hasHotelMealPreference = (hotelPreferences?: string[]): boolean => {
     if (!hotelPreferences || hotelPreferences.length === 0) return false;
     
-    return hotelPreferences.some((pref: string) => {
-      const lowerPref = pref.toLowerCase();
-      return Object.values(HOTEL_MEAL_PREFERENCES).some(mealType => 
-        lowerPref.includes(mealType)
-      );
-    });
+    // Vérifier si au moins une des préférences est une option de repas
+    return hotelPreferences.some((pref: string) => 
+      (HOTEL_MEAL_PREFERENCES as readonly string[]).includes(pref)
+    );
   };
 
   // Calculate dynamic total steps based on user choices
@@ -3093,6 +3097,19 @@ const Questionnaire = () => {
 
     // Step 11b: Détails hôtel (SI Hôtel est sélectionné ET hébergement sélectionné)
     if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel')) && step === stepCounter) {
+      const hotelOptions = [
+        { code: HOTEL_PREFERENCES.DONT_MIND, label: t('questionnaire.hotelPreferences.dontMind'), icon: "🤷", autoNext: true },
+        { code: HOTEL_PREFERENCES.BREAKFAST, label: t('questionnaire.hotelPreferences.breakfast'), icon: "🥐" },
+        { code: HOTEL_PREFERENCES.HALF_BOARD, label: t('questionnaire.hotelPreferences.halfBoard'), icon: "🍽️" },
+        { code: HOTEL_PREFERENCES.FULL_BOARD, label: t('questionnaire.hotelPreferences.fullBoard'), icon: "🍴" },
+        { code: HOTEL_PREFERENCES.ALL_INCLUSIVE, label: t('questionnaire.hotelPreferences.allInclusive'), icon: "🍹" },
+        { code: HOTEL_PREFERENCES.ROOM_SERVICE, label: t('questionnaire.hotelPreferences.roomService'), icon: "🛎️" },
+        { code: HOTEL_PREFERENCES.MINIBAR, label: t('questionnaire.hotelPreferences.minibar'), icon: "🍾" },
+        { code: HOTEL_PREFERENCES.VIEW, label: t('questionnaire.hotelPreferences.view'), icon: "🌅" },
+        { code: HOTEL_PREFERENCES.BALCONY, label: t('questionnaire.hotelPreferences.balcony'), icon: "🪴" },
+        { code: HOTEL_PREFERENCES.CONCIERGE, label: t('questionnaire.hotelPreferences.concierge'), icon: "🎩" }
+      ];
+      
       return (
         <div className="space-y-3 md:space-y-8 animate-fade-up">
           <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
@@ -3102,22 +3119,11 @@ const Questionnaire = () => {
             {t('questionnaire.hotelPreferences.description')}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 max-w-2xl mx-auto">
-            {[
-              { label: t('questionnaire.hotelPreferences.dontMind'), icon: "🤷", autoNext: true },
-              { label: t('questionnaire.hotelPreferences.breakfast'), icon: "🥐" },
-              { label: t('questionnaire.hotelPreferences.halfBoard'), icon: "🍽️" },
-              { label: t('questionnaire.hotelPreferences.fullBoard'), icon: "🍴" },
-              { label: t('questionnaire.hotelPreferences.allInclusive'), icon: "🍹" },
-              { label: t('questionnaire.hotelPreferences.roomService'), icon: "🛎️" },
-              { label: t('questionnaire.hotelPreferences.minibar'), icon: "🍾" },
-              { label: t('questionnaire.hotelPreferences.view'), icon: "🌅" },
-              { label: t('questionnaire.hotelPreferences.balcony'), icon: "🪴" },
-              { label: t('questionnaire.hotelPreferences.concierge'), icon: "🎩" }
-            ].map((option) => {
-              const isSelected = (answers.hotelPreferences || []).includes(option.label);
+            {hotelOptions.map((option) => {
+              const isSelected = (answers.hotelPreferences || []).includes(option.code);
               return (
                 <Card
-                  key={option.label}
+                  key={option.code}
                   className={`p-2 md:p-4 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
@@ -3126,8 +3132,8 @@ const Questionnaire = () => {
                   onClick={() => {
                     handleMultiChoiceWithDontMind(
                       "hotelPreferences", 
-                      option.label, 
-                      t('questionnaire.hotelPreferences.dontMind'),
+                      option.code, 
+                      HOTEL_PREFERENCES.DONT_MIND,
                       option.autoNext
                     );
                   }}
