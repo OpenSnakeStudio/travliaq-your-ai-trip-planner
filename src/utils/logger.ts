@@ -39,19 +39,42 @@ interface LogContext {
 
 /**
  * Nettoie les données sensibles avant l'envoi à Sentry
+ * Protection contre les références circulaires
  */
-function sanitizeData(data: any): any {
+function sanitizeData(data: any, seen = new WeakSet()): any {
+  // Gérer les valeurs primitives et null/undefined
   if (!data || typeof data !== 'object') return data;
   
-  const sensitiveFields = ['email', 'password', 'token', 'creditCard', 'ssn', 'phone'];
-  const sanitized = { ...data };
+  // Détecter les références circulaires
+  if (seen.has(data)) {
+    return '[Circular Reference]';
+  }
   
-  for (const key in sanitized) {
-    if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
-      sanitized[key] = '[REDACTED]';
-    } else if (typeof sanitized[key] === 'object') {
-      sanitized[key] = sanitizeData(sanitized[key]);
+  // Marquer cet objet comme visité
+  seen.add(data);
+  
+  // Gérer les tableaux
+  if (Array.isArray(data)) {
+    return data.map(item => sanitizeData(item, seen));
+  }
+  
+  const sensitiveFields = ['email', 'password', 'token', 'creditCard', 'ssn', 'phone'];
+  const sanitized: Record<string, any> = {};
+  
+  try {
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+          sanitized[key] = '[REDACTED]';
+        } else if (typeof data[key] === 'object' && data[key] !== null) {
+          sanitized[key] = sanitizeData(data[key], seen);
+        } else {
+          sanitized[key] = data[key];
+        }
+      }
     }
+  } catch (error) {
+    return '[Sanitization Error]';
   }
   
   return sanitized;
