@@ -7,6 +7,7 @@ import "./i18n/config";
 
 Sentry.init({
   dsn: "https://1b9edfe2871f3976f2bb29233636e5c4@o4510257788616704.ingest.de.sentry.io/4510262563045456",
+  tunnel: `${window.location.origin}/functions/v1/sentry-tunnel`,
   
   // Intégrations avancées
   integrations: [

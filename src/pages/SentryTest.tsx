@@ -197,8 +197,8 @@ export default function SentryTest() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-travliaq-sand/30 via-white to-travliaq-sand/20">
-      <Navigation />
-      <main className="w-full">
+      <Navigation theme="light" />
+      <main className="w-full pt-20 md:pt-24">
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-travliaq-deep-blue mb-4">
@@ -236,7 +236,7 @@ export default function SentryTest() {
               <p className="text-sm text-muted-foreground mb-4">
                 Envoie un avertissement à Sentry
               </p>
-              <Button onClick={sendWarningTest} variant="outline" className="w-full border-orange-500 text-orange-500 hover:bg-orange-50">
+              <Button onClick={sendWarningTest} variant="outline" className="w-full">
                 Envoyer Warning
               </Button>
             </Card>
@@ -249,7 +249,7 @@ export default function SentryTest() {
               <p className="text-sm text-muted-foreground mb-4">
                 Envoie un log informatif à Sentry
               </p>
-              <Button onClick={sendInfoTest} variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
+              <Button onClick={sendInfoTest} variant="outline" className="w-full">
                 Envoyer Info
               </Button>
             </Card>
@@ -262,7 +262,7 @@ export default function SentryTest() {
               <p className="text-sm text-muted-foreground mb-4">
                 Simule une erreur de validation du questionnaire
               </p>
-              <Button onClick={sendValidationError} className="w-full bg-purple-500 hover:bg-purple-600">
+              <Button onClick={sendValidationError} variant="secondary" className="w-full">
                 Erreur Validation
               </Button>
             </Card>
@@ -275,7 +275,7 @@ export default function SentryTest() {
               <p className="text-sm text-muted-foreground mb-4">
                 Appelle directement Sentry.captureException et force un flush
               </p>
-              <Button onClick={sendCaptureException} className="w-full bg-emerald-600 hover:bg-emerald-700">
+              <Button onClick={sendCaptureException} className="w-full">
                 Envoyer via captureException
               </Button>
             </Card>
