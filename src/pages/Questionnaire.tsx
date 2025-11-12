@@ -38,6 +38,14 @@ import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
 import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, normalizeTravelGroup, normalizeYesNo, normalizeDatesType, normalizeHelpWithArray } from "@/lib/questionnaireValues";
+
+// Constantes pour les préférences d'hôtel avec repas (pour validation robuste)
+const HOTEL_MEAL_PREFERENCES = {
+  BREAKFAST: 'breakfast',
+  HALF_BOARD: 'half',
+  FULL_BOARD: 'full',
+  ALL_INCLUSIVE: 'inclusive'
+} as const;
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -665,9 +673,11 @@ const Questionnaire = () => {
       total++; // Step 3b: Dates précises
     } else if (normalizedDatesType === DATES_TYPE.FLEXIBLE) {
       total++; // Step 3c: Flexibilité
-      total++; // Step 3d: Date de départ approximative
+      // Step 3d: Question "Avez-vous une période approximative ?"
+      total++; 
+      // Step 3e: Saisie date approximative (SEULEMENT si YES)
       const normalizedHasApproxDate = normalizeYesNo(answers.hasApproximateDepartureDate);
-      if (normalizedHasApproxDate === YES_NO.YES) total++; // Step 3e: Saisie date approximative
+      if (normalizedHasApproxDate === YES_NO.YES) total++; 
       total++; // Step 4: Durée
       // Check for "Plus de 14 jours" in duration
       if (answers.duration && (
@@ -744,12 +754,7 @@ const Questionnaire = () => {
       answers.accommodationType?.some((type: string) => 
         type.toLowerCase().includes('hôtel') || type.toLowerCase().includes('hotel')
       ) &&
-      answers.hotelPreferences?.some((pref: string) => 
-        pref.includes('breakfast') || pref.includes('déjeuner') ||
-        pref.includes('half') || pref.includes('demi') ||
-        pref.includes('full') || pref.includes('complète') ||
-        pref.includes('inclusive') || pref.includes('inclusif')
-      );
+      hasHotelMealPreference(answers.hotelPreferences);
     if (hasHotelWithMeals) {
       total++; // Step 17: Contraintes
     }
@@ -866,7 +871,102 @@ const Questionnaire = () => {
       if (step === stepCounter) return !!answers.budgetAmount && !!answers.budgetCurrency;
     }
 
-    // Autres étapes: validation locale ou optionnelles
+    // Validation des étapes suivantes selon les services sélectionnés
+    const helpWith = answers.helpWith || [];
+    const needsFlights = helpWith.includes(HELP_WITH.FLIGHTS);
+    const needsAccommodation = helpWith.includes(HELP_WITH.ACCOMMODATION);
+    const needsActivities = helpWith.includes(HELP_WITH.ACTIVITIES);
+    const hasDestForValidation = normalizeYesNo(answers.hasDestination);
+
+    // Step 6: Style (seulement si destination précise ET activités)
+    if (hasDestForValidation === YES_NO.YES && needsActivities) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.styles && answers.styles.length > 0;
+    }
+
+    // Step 8: Préférence de vol (si vols sélectionnés)
+    if (needsFlights) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.flightPreference;
+    }
+
+    // Step 9: Bagages (si vols sélectionnés)
+    if (needsFlights) {
+      stepCounter++;
+      if (step === stepCounter) {
+        const numberOfTravelers = getNumberOfTravelers();
+        return !!answers.luggage && Object.keys(answers.luggage).length === numberOfTravelers;
+      }
+    }
+
+    // Step 10: Mobilité (si pas uniquement vols ET pas uniquement hébergement)
+    const onlyFlights = helpWith.length === 1 && helpWith.includes(HELP_WITH.FLIGHTS);
+    const onlyAccommodation = helpWith.length === 1 && helpWith.includes(HELP_WITH.ACCOMMODATION);
+    if (!onlyFlights && !onlyAccommodation) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.mobility && answers.mobility.length > 0;
+    }
+
+    // Step 11: Type d'hébergement (si hébergement sélectionné)
+    if (needsAccommodation) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.accommodationType && answers.accommodationType.length > 0;
+    }
+
+    // Step 11b: Préférences hôtel (si hôtel sélectionné)
+    if (needsAccommodation && answers.accommodationType?.some(type => 
+      type.toLowerCase().includes('hôtel') || type.toLowerCase().includes('hotel')
+    )) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.hotelPreferences && answers.hotelPreferences.length > 0;
+    }
+
+    // Step 12: Confort (si hébergement sélectionné)
+    if (needsAccommodation) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.comfort;
+    }
+
+    // Step 13: Quartier (si hébergement sélectionné)
+    if (needsAccommodation) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.neighborhood;
+    }
+
+    // Step 14: Équipements (si hébergement sélectionné)
+    if (needsAccommodation) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.amenities && answers.amenities.length > 0;
+    }
+
+    // Step 15: Sécurité (seulement si activités)
+    if (needsActivities) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.security && answers.security.length > 0;
+    }
+
+    // Step 16: Horloge biologique (seulement si activités)
+    if (needsActivities) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.rhythm && !!answers.schedulePrefs && answers.schedulePrefs.length > 0;
+    }
+
+    // Step 17: Contraintes (si hébergement + hôtel + repas)
+    const hasHotelWithMealsValidation = needsAccommodation && 
+      answers.accommodationType?.some(type => 
+        type.toLowerCase().includes('hôtel') || type.toLowerCase().includes('hotel')
+      ) &&
+      hasHotelMealPreference(answers.hotelPreferences);
+    if (hasHotelWithMealsValidation) {
+      stepCounter++;
+      if (step === stepCounter) return !!answers.constraints && answers.constraints.length > 0;
+    }
+
+    // Step 18: Zone ouverte (optionnel, pas de validation)
+    stepCounter++;
+    if (step === stepCounter) return true;
+
+    // Step final: Review (pas de validation nécessaire)
     return true;
   };
 
@@ -964,6 +1064,18 @@ const Questionnaire = () => {
       case t('questionnaire.group35'): return 4; // Default middle
       default: return 1;
     }
+  };
+
+  // Helper pour vérifier si l'utilisateur a sélectionné une préférence d'hôtel avec repas
+  const hasHotelMealPreference = (hotelPreferences?: string[]): boolean => {
+    if (!hotelPreferences || hotelPreferences.length === 0) return false;
+    
+    return hotelPreferences.some((pref: string) => {
+      const lowerPref = pref.toLowerCase();
+      return Object.values(HOTEL_MEAL_PREFERENCES).some(mealType => 
+        lowerPref.includes(mealType)
+      );
+    });
   };
 
   // Celebration animation
@@ -2944,12 +3056,7 @@ const Questionnaire = () => {
     const hasHotelInType = (answers.accommodationType || []).some((type: string) => 
       type.toLowerCase().includes('hôtel') || type.toLowerCase().includes('hotel')
     );
-    const hasMealPreference = (answers.hotelPreferences || []).some((pref: string) => 
-      pref.includes('breakfast') || pref.includes('déjeuner') ||
-      pref.includes('half') || pref.includes('demi') ||
-      pref.includes('full') || pref.includes('complète') ||
-      pref.includes('inclusive') || pref.includes('inclusif')
-    );
+    const hasMealPreference = hasHotelMealPreference(answers.hotelPreferences);
     const shouldShowConstraints = needsAccommodationForConstraints && hasHotelInType && hasMealPreference;
     
     if (shouldShowConstraints && step === stepCounter) {
