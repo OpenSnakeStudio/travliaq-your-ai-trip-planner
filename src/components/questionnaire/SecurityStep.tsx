@@ -12,15 +12,31 @@ export const SecurityStep = ({ security, onUpdate, onNext }: SecurityStepProps) 
   const { t } = useTranslation();
 
   const handleToggle = (option: string, autoNext: boolean = false) => {
-    const updated = security.includes(option)
-      ? security.filter(s => s !== option)
-      : [...security, option];
-    onUpdate(updated);
+    const dontMindOption = t('questionnaire.security.none');
     
-    // Si c'est une option qui passe automatiquement à l'étape suivante
-    if (autoNext && !security.includes(option)) {
-      setTimeout(() => onNext(), 300);
+    // Si on clique sur "peu importe", désélectionner tout le reste
+    if (option === dontMindOption) {
+      const updated = security.includes(option) ? [] : [option];
+      onUpdate(updated);
+      
+      // Auto-advance si on vient de sélectionner "peu importe"
+      if (!security.includes(option) && autoNext) {
+        setTimeout(() => onNext(), 300);
+      }
+      return;
     }
+    
+    // Si "peu importe" est sélectionné et qu'on clique sur autre chose, le désélectionner
+    const currentSelection = security.includes(dontMindOption) 
+      ? security.filter(s => s !== dontMindOption)
+      : security;
+    
+    // Toggle l'option sélectionnée
+    const updated = currentSelection.includes(option)
+      ? currentSelection.filter(s => s !== option)
+      : [...currentSelection, option];
+    
+    onUpdate(updated);
   };
 
   const securityOptions = [

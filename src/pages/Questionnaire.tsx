@@ -3137,7 +3137,7 @@ const Questionnaire = () => {
         <SecurityStep
           security={answers.security || []}
           onUpdate={(security) => setAnswers({ ...answers, security })}
-          onNext={nextStep}
+          onNext={() => nextStep(true)}
         />
       );
     }
