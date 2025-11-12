@@ -1287,13 +1287,23 @@ const Questionnaire = () => {
   };
 
   const getNumberOfTravelers = (): number => {
-    if (answers.travelers && answers.travelers.length > 0) return answers.travelers.length;
-    if (answers.numberOfTravelers) return answers.numberOfTravelers;
+    // Priorité 1: Si on a une liste détaillée de voyageurs (adultes + enfants), utiliser sa longueur
+    if (answers.travelers && answers.travelers.length > 0) {
+      return answers.travelers.length;
+    }
     
-    switch(answers.travelGroup) {
-      case t('questionnaire.solo'): return 1;
-      case t('questionnaire.duo'): return 2;
-      case t('questionnaire.group35'): return 4; // Default middle
+    // Priorité 2: Si on a un nombre explicite de voyageurs
+    if (answers.numberOfTravelers && typeof answers.numberOfTravelers === 'number') {
+      return answers.numberOfTravelers;
+    }
+    
+    // Priorité 3: Inférer depuis le groupe de voyage (en utilisant les CODES INTERNES normalisés)
+    const normalizedGroup = normalizeTravelGroup(answers.travelGroup);
+    switch(normalizedGroup) {
+      case TRAVEL_GROUPS.SOLO: return 1;
+      case TRAVEL_GROUPS.DUO: return 2;
+      case TRAVEL_GROUPS.GROUP35: return 4; // Valeur médiane par défaut
+      case TRAVEL_GROUPS.FAMILY: return 4; // Valeur médiane par défaut
       default: return 1;
     }
   };
@@ -2868,7 +2878,7 @@ const Questionnaire = () => {
             {Array.from({ length: getNumberOfTravelers() }).map((_, index) => (
               <div key={index} className="space-y-2">
                 <label className="block text-sm font-medium">
-                  {t('questionnaire.luggage.traveler')} {index + 1} {index === 0 && answers.travelGroup === t('questionnaire.duo') ? "👤" : index === 1 && answers.travelGroup === t('questionnaire.duo') ? "👥" : "👤"}
+                  {t('questionnaire.luggage.traveler')} {index + 1} {index === 0 && normalizeTravelGroup(answers.travelGroup) === TRAVEL_GROUPS.DUO ? "👤" : index === 1 && normalizeTravelGroup(answers.travelGroup) === TRAVEL_GROUPS.DUO ? "👥" : "👤"}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
