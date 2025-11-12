@@ -37,7 +37,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import GoogleLoginPopup from "@/components/GoogleLoginPopup";
 import Navigation from "@/components/Navigation";
 import { z } from "zod";
-import { TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, HOTEL_PREFERENCES, HOTEL_MEAL_PREFERENCES, normalizeTravelGroup, normalizeYesNo, normalizeDatesType, normalizeHelpWithArray, normalizeHotelPreferencesArray } from "@/lib/questionnaireValues";
+import { 
+  TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, 
+  HOTEL_PREFERENCES, HOTEL_MEAL_PREFERENCES,
+  CLIMATE, AFFINITIES, AMBIANCE, ACCOMMODATION_TYPE, COMFORT,
+  CONSTRAINTS, MOBILITY, RHYTHM, SCHEDULE, FLIGHT_PREF, LUGGAGE,
+  normalizeTravelGroup, normalizeYesNo, normalizeDatesType, 
+  normalizeHelpWithArray, normalizeHotelPreferencesArray,
+  normalizeClimateArray, normalizeAffinityArray, normalizeAmbiance,
+  normalizeAccommodationTypeArray, normalizeComfort,
+  normalizeConstraintsArray, normalizeMobility, normalizeRhythm,
+  normalizeSchedulePrefsArray, normalizeFlightPref, normalizeLuggage
+} from "@/lib/questionnaireValues";
 import { logger, questionnaireLogger, LogCategory } from "@/utils/logger";
 import DateRangePicker from "@/components/DateRangePicker";
 import { SimpleDatePicker } from "@/components/SimpleDatePicker";
@@ -486,11 +497,140 @@ const Questionnaire = () => {
       }
     }
     
+    // Normaliser climatePreference array
+    if (answers.climatePreference && Array.isArray(answers.climatePreference)) {
+      const normalized = normalizeClimateArray(answers.climatePreference);
+      const isDifferent = normalized.length !== answers.climatePreference.length ||
+        normalized.some((v: string, i: number) => v !== answers.climatePreference[i]);
+      if (isDifferent) {
+        updates.climatePreference = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser travelAffinities array
+    if (answers.travelAffinities && Array.isArray(answers.travelAffinities)) {
+      const normalized = normalizeAffinityArray(answers.travelAffinities);
+      const isDifferent = normalized.length !== answers.travelAffinities.length ||
+        normalized.some((v: string, i: number) => v !== answers.travelAffinities[i]);
+      if (isDifferent) {
+        updates.travelAffinities = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser travelAmbiance (single value)
+    if (answers.travelAmbiance) {
+      const normalized = normalizeAmbiance(answers.travelAmbiance);
+      if (normalized && normalized !== answers.travelAmbiance) {
+        updates.travelAmbiance = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser accommodationType array
+    if (answers.accommodationType && Array.isArray(answers.accommodationType)) {
+      const normalized = normalizeAccommodationTypeArray(answers.accommodationType);
+      const isDifferent = normalized.length !== answers.accommodationType.length ||
+        normalized.some((v: string, i: number) => v !== answers.accommodationType[i]);
+      if (isDifferent) {
+        updates.accommodationType = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser comfort (single value)
+    if (answers.comfort) {
+      const normalized = normalizeComfort(answers.comfort);
+      if (normalized && normalized !== answers.comfort) {
+        updates.comfort = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser constraints array
+    if (answers.constraints && Array.isArray(answers.constraints)) {
+      const normalized = normalizeConstraintsArray(answers.constraints);
+      const isDifferent = normalized.length !== answers.constraints.length ||
+        normalized.some((v: string, i: number) => v !== answers.constraints[i]);
+      if (isDifferent) {
+        updates.constraints = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser mobility array
+    if (answers.mobility && Array.isArray(answers.mobility)) {
+      const normalized = answers.mobility.map(v => normalizeMobility(v)).filter(Boolean) as string[];
+      const isDifferent = normalized.length !== answers.mobility.length ||
+        normalized.some((v: string, i: number) => v !== answers.mobility[i]);
+      if (isDifferent) {
+        updates.mobility = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser rhythm (single value)
+    if (answers.rhythm) {
+      const normalized = normalizeRhythm(answers.rhythm);
+      if (normalized && normalized !== answers.rhythm) {
+        updates.rhythm = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser schedulePrefs array
+    if (answers.schedulePrefs && Array.isArray(answers.schedulePrefs)) {
+      const normalized = normalizeSchedulePrefsArray(answers.schedulePrefs);
+      const isDifferent = normalized.length !== answers.schedulePrefs.length ||
+        normalized.some((v: string, i: number) => v !== answers.schedulePrefs[i]);
+      if (isDifferent) {
+        updates.schedulePrefs = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser flightPreference (single value)
+    if (answers.flightPreference) {
+      const normalized = normalizeFlightPref(answers.flightPreference);
+      if (normalized && normalized !== answers.flightPreference) {
+        updates.flightPreference = normalized;
+        hasChanges = true;
+      }
+    }
+    
+    // Normaliser luggage object (chaque valeur individuellement)
+    if (answers.luggage && typeof answers.luggage === 'object') {
+      const normalizedLuggage: Record<number, string> = {};
+      let luggageChanged = false;
+      
+      for (const [key, value] of Object.entries(answers.luggage)) {
+        const normalized = normalizeLuggage(value as string);
+        if (normalized) {
+          normalizedLuggage[Number(key)] = normalized;
+          if (normalized !== value) luggageChanged = true;
+        }
+      }
+      
+      if (luggageChanged) {
+        updates.luggage = normalizedLuggage;
+        hasChanges = true;
+      }
+    }
+    
     if (hasChanges) {
       setAnswers((prev: any) => ({ ...prev, ...updates }));
     }
     // Ne dépendre que des valeurs brutes, pas de l'objet answers complet
-  }, [answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, JSON.stringify(answers.helpWith), JSON.stringify(answers.hotelPreferences)]);
+  }, [
+    answers.travelGroup, answers.hasDestination, answers.datesType, answers.hasApproximateDepartureDate, 
+    JSON.stringify(answers.helpWith), JSON.stringify(answers.hotelPreferences),
+    JSON.stringify(answers.climatePreference), JSON.stringify(answers.travelAffinities),
+    answers.travelAmbiance, JSON.stringify(answers.accommodationType), answers.comfort,
+    JSON.stringify(answers.constraints), JSON.stringify(answers.mobility), answers.rhythm,
+    JSON.stringify(answers.schedulePrefs), answers.flightPreference,
+    JSON.stringify(answers.luggage)
+  ]);
   
   // ⚠️ PROTECTION AUTH: Require authentication to start questionnaire
   useEffect(() => {
