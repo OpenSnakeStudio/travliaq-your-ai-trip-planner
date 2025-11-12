@@ -24,7 +24,7 @@ const resources = {
 
       // How it works
       "howItWorks.title": "Comment ça marche ?",
-      "howItWorks.description": "Travliaq simplifie ton voyage en 4 étapes :",
+      "howItWorks.description": "simplifie ton voyage en 4 étapes :",
       "howItWorks.step1": "Tu indiques tes envies (destination, budget, style).",
       "howItWorks.step2": "Nous comparons en temps réel vols, hébergements et activités (prix, météo, distances).",
       "howItWorks.step3":
