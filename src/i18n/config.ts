@@ -507,6 +507,8 @@ const resources = {
       "questionnaire.travelers.childLabel": "Enfant",
       "questionnaire.travelers.childAge": "Âge de l'enfant",
       "questionnaire.travelers.agePlaceholder": "Âge",
+      "questionnaire.travelers.childNeedsAdult": "Un enfant doit être accompagné d'au moins un adulte",
+      "questionnaire.travelers.childMinAge": "L'âge minimum d'un enfant est 1 an",
 
       // Climate options
       "questionnaire.climate.hotSunny": "Chaud & ensoleillé",
@@ -1386,6 +1388,8 @@ const resources = {
       "questionnaire.travelers.childLabel": "Child",
       "questionnaire.travelers.childAge": "Child's age",
       "questionnaire.travelers.agePlaceholder": "Age",
+      "questionnaire.travelers.childNeedsAdult": "A child must be accompanied by at least one adult",
+      "questionnaire.travelers.childMinAge": "The minimum age for a child is 1 year",
 
       // Climate options
       "questionnaire.climate.hotSunny": "Hot & sunny",

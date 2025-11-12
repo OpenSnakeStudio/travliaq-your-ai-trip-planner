@@ -20,7 +20,7 @@ export const TravelersStep = ({ travelers, onUpdate, onNext }: TravelersStepProp
   const { t } = useTranslation();
 
   const addTraveler = (type: 'adult' | 'child') => {
-    const newTraveler: Traveler = type === 'child' ? { type, age: 0 } : { type };
+    const newTraveler: Traveler = type === 'child' ? { type, age: 1 } : { type };
     onUpdate([...travelers, newTraveler]);
   };
 
@@ -38,6 +38,11 @@ export const TravelersStep = ({ travelers, onUpdate, onNext }: TravelersStepProp
   const adultCount = travelers.filter(t => t.type === 'adult').length;
   const childCount = travelers.filter(t => t.type === 'child').length;
 
+  // Validation rules
+  const hasChildWithoutAdult = childCount > 0 && adultCount === 0;
+  const hasChildWithInvalidAge = travelers.some(t => t.type === 'child' && (!t.age || t.age < 1));
+  const canContinue = travelers.length > 0 && !hasChildWithoutAdult && !hasChildWithInvalidAge;
+
   return (
     <div className="space-y-6 animate-fade-up">
       <div className="text-center space-y-2">
@@ -47,6 +52,16 @@ export const TravelersStep = ({ travelers, onUpdate, onNext }: TravelersStepProp
         <p className="text-muted-foreground">
           {t('questionnaire.travelers.addTravelers')}
         </p>
+        {hasChildWithoutAdult && (
+          <p className="text-sm text-red-500 font-medium">
+            {t('questionnaire.travelers.childNeedsAdult')}
+          </p>
+        )}
+        {hasChildWithInvalidAge && (
+          <p className="text-sm text-red-500 font-medium">
+            {t('questionnaire.travelers.childMinAge')}
+          </p>
+        )}
         <div className="flex justify-center gap-4 mt-4">
           <Badge variant="secondary" className="text-lg px-4 py-2">
             <Users className="mr-2 h-4 w-4" />
@@ -112,10 +127,13 @@ export const TravelersStep = ({ travelers, onUpdate, onNext }: TravelersStepProp
                         </label>
                         <Input
                           type="number"
-                          min="0"
+                          min="1"
                           max="17"
-                          value={traveler.age || 0}
-                          onChange={(e) => updateTravelerAge(index, parseInt(e.target.value) || 0)}
+                          value={traveler.age || 1}
+                          onChange={(e) => {
+                            const age = parseInt(e.target.value) || 1;
+                            updateTravelerAge(index, Math.max(1, Math.min(17, age)));
+                          }}
                           className="w-24"
                           placeholder={t('questionnaire.travelers.agePlaceholder')}
                         />
@@ -142,7 +160,7 @@ export const TravelersStep = ({ travelers, onUpdate, onNext }: TravelersStepProp
           variant="hero"
           size="lg"
           onClick={onNext}
-          disabled={travelers.length === 0}
+          disabled={!canContinue}
           className="bg-travliaq-deep-blue"
         >
           {t('questionnaire.continue')}
