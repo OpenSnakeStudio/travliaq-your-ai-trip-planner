@@ -1002,7 +1002,7 @@ const Questionnaire = () => {
     // Step 16: Horloge biologique (seulement si activités)
     if (needsActivities) {
       stepCounter++;
-      if (step === stepCounter) return !!answers.rhythm && !!answers.schedulePrefs && answers.schedulePrefs.length > 0;
+      if (step === stepCounter) return !!answers.rhythm;
     }
 
     // Step 17: Contraintes (si hébergement + hôtel + repas)
@@ -3243,7 +3243,7 @@ const Questionnaire = () => {
           schedulePrefs={answers.schedulePrefs || []}
           onUpdateRhythm={(rhythm) => setAnswers({ ...answers, rhythm })}
           onUpdateSchedulePrefs={(schedulePrefs) => setAnswers({ ...answers, schedulePrefs })}
-          onNext={nextStep}
+          onNext={() => nextStep(true)}
         />
       );
     }
