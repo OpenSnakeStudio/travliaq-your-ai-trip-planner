@@ -2241,14 +2241,14 @@ const Questionnaire = () => {
     // Step 2d: Affinités de voyage (si Non - multi-choix)
     if (normalizeYesNo(answers.hasDestination) === YES_NO.NO && step === stepCounter) {
       return (
-        <div className="space-y-4 animate-fade-up">
+        <div className="space-y-3 animate-fade-up">
           <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
             {t('questionnaire.affinities.title')}
           </h2>
           <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
             {t('questionnaire.affinities.description')}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 max-w-4xl mx-auto">
             {[
               { code: AFFINITIES.DONT_MIND, label: t('questionnaire.affinities.dontMind'), icon: "🤷", autoNext: true },
               { code: AFFINITIES.PARADISE_BEACHES, label: t('questionnaire.affinities.paradiseBeaches'), icon: "🏖️" },
@@ -2266,14 +2266,29 @@ const Questionnaire = () => {
               { code: AFFINITIES.ROAD_TRIP_FREEDOM, label: t('questionnaire.affinities.roadTripFreedom'), icon: "🚗" },
               { code: AFFINITIES.VINEYARDS_WINE, label: t('questionnaire.affinities.vineyardsWine'), icon: "🍷" },
               { code: AFFINITIES.DESERTS_LUNAR, label: t('questionnaire.affinities.desertsLunar'), icon: "🏜️" },
-              { code: AFFINITIES.ISLANDS_ARCHIPELAGOS, label: t('questionnaire.affinities.islandsArchipelagos'), icon: "🏝️" }
+              { code: AFFINITIES.ISLANDS_ARCHIPELAGOS, label: t('questionnaire.affinities.islandsArchipelagos'), icon: "🏝️" },
+              { code: AFFINITIES.YOGA_WELLNESS, label: t('questionnaire.affinities.yogaWellness'), icon: "🧘" },
+              { code: AFFINITIES.PHOTOGRAPHY, label: t('questionnaire.affinities.photography'), icon: "📸" },
+              { code: AFFINITIES.ART_MUSEUMS, label: t('questionnaire.affinities.artMuseums'), icon: "🎨" },
+              { code: AFFINITIES.WATER_SPORTS, label: t('questionnaire.affinities.waterSports'), icon: "🏄" },
+              { code: AFFINITIES.CLIMBING, label: t('questionnaire.affinities.climbing'), icon: "🧗" },
+              { code: AFFINITIES.CYCLING, label: t('questionnaire.affinities.cycling'), icon: "🚴" },
+              { code: AFFINITIES.BIRDWATCHING, label: t('questionnaire.affinities.birdwatching'), icon: "🦜" },
+              { code: AFFINITIES.FISHING, label: t('questionnaire.affinities.fishing'), icon: "🎣" },
+              { code: AFFINITIES.GOLF, label: t('questionnaire.affinities.golf'), icon: "⛳" },
+              { code: AFFINITIES.SPAS_THERMAL, label: t('questionnaire.affinities.spasThermal'), icon: "♨️" },
+              { code: AFFINITIES.CRUISES, label: t('questionnaire.affinities.cruises'), icon: "🛳️" },
+              { code: AFFINITIES.LEGENDARY_TRAINS, label: t('questionnaire.affinities.legendaryTrains'), icon: "🚂" },
+              { code: AFFINITIES.LOCAL_MARKETS, label: t('questionnaire.affinities.localMarkets'), icon: "🛒" },
+              { code: AFFINITIES.NIGHTLIFE, label: t('questionnaire.affinities.nightlife'), icon: "🌃" },
+              { code: AFFINITIES.CONCERTS_SHOWS, label: t('questionnaire.affinities.concertsShows'), icon: "🎪" }
             ].map((option) => {
               const isSelected = (answers.travelAffinities || []).includes(option.code);
               const isDisabled = !isSelected && (answers.travelAffinities || []).length >= 5;
               return (
                 <Card
                   key={option.label}
-                  className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                  className={`p-2 md:p-3 cursor-pointer transition-all hover:scale-105 ${
                     isSelected 
                       ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                       : isDisabled
@@ -2304,9 +2319,9 @@ const Questionnaire = () => {
                     }
                   }}
                 >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-3xl">{option.icon}</span>
-                    <span className="text-base font-semibold text-travliaq-deep-blue">
+                  <div className="flex flex-col items-center justify-center space-y-1 text-center">
+                    <span className="text-2xl md:text-3xl">{option.icon}</span>
+                    <span className="text-xs md:text-sm font-semibold text-travliaq-deep-blue leading-tight">
                       {option.label}
                     </span>
                   </div>
@@ -2314,7 +2329,7 @@ const Questionnaire = () => {
               );
             })}
           </div>
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-3">
             <Button
               variant="hero"
               size="lg"
