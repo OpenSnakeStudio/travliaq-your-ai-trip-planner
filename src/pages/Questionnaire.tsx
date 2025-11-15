@@ -3278,7 +3278,12 @@ const Questionnaire = () => {
     if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION)) stepCounter++;
 
     // Step 11b: Détails hôtel (SI Hôtel est sélectionné ET hébergement sélectionné)
-    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel')) && step === stepCounter) {
+    const hasHotelInAccommodation = (answers.accommodationType || []).some(type => 
+      type === ACCOMMODATION_TYPE.HOTEL || 
+      type.toLowerCase().includes('hôtel') || 
+      type.toLowerCase().includes('hotel')
+    );
+    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && hasHotelInAccommodation && step === stepCounter) {
       const hotelOptions = [
         { code: HOTEL_PREFERENCES.DONT_MIND, label: t('questionnaire.hotelPreferences.dontMind'), icon: "🤷", autoNext: true },
         { code: HOTEL_PREFERENCES.BREAKFAST, label: t('questionnaire.hotelPreferences.breakfast'), icon: "🥐" },
@@ -3343,7 +3348,7 @@ const Questionnaire = () => {
         </div>
       );
     }
-    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && (answers.accommodationType || []).includes(t('questionnaire.accommodationType.hotel'))) stepCounter++;
+    if (helpWithAccommodation.includes(HELP_WITH.ACCOMMODATION) && hasHotelInAccommodation) stepCounter++;
 
     // Step 12: Confort - SEULEMENT si hébergement sélectionné
     if ((answers.helpWith || []).includes(HELP_WITH.ACCOMMODATION) && step === stepCounter) {
