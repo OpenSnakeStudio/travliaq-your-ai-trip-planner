@@ -880,13 +880,21 @@ const Questionnaire = () => {
       const normalizedHasApproxDate = normalizeYesNo(answers.hasApproximateDepartureDate);
       if (normalizedHasApproxDate === YES_NO.YES) total++; 
       total++; // Step 5: Durée
-      // Check for "Plus de 14 jours" in duration
-      if (answers.duration && (
-        answers.duration.includes('14') || 
-        answers.duration.toLowerCase().includes('more') ||
-        answers.duration.toLowerCase().includes('plus')
-      )) {
-        total++; // Step 5b: Nombre exact
+      // Check for "8-10", "11-14" or "Plus de 14 jours" in duration
+      if (answers.duration) {
+        const dur = answers.duration.toLowerCase();
+        // Check for 8-10 nights
+        if (dur.includes('8') && dur.includes('10')) {
+          total++; // Step 5b: Préciser 8, 9 ou 10
+        }
+        // Check for 11-14 nights
+        else if (dur.includes('11') && dur.includes('14')) {
+          total++; // Step 5b: Préciser 11, 12, 13 ou 14
+        }
+        // Check for >14 nights
+        else if (dur.includes('14') && (dur.includes('>') || dur.includes('more') || dur.includes('plus'))) {
+          total++; // Step 5b: Nombre exact (>14)
+        }
       }
     }
     
@@ -1129,6 +1137,24 @@ const Questionnaire = () => {
     if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) {
       stepCounter++;
       if (step === stepCounter) return !!answers.duration;
+
+      // Si 8-10 nuits, exiger le nombre exact (8, 9 ou 10)
+      if (answers.duration === t('questionnaire.duration.8to10')) {
+        stepCounter++;
+        if (step === stepCounter) {
+          return !!answers.exactNights && 
+                 (answers.exactNights === 8 || answers.exactNights === 9 || answers.exactNights === 10);
+        }
+      }
+
+      // Si 11-14 nuits, exiger le nombre exact (11, 12, 13 ou 14)
+      if (answers.duration === t('questionnaire.duration.11to14')) {
+        stepCounter++;
+        if (step === stepCounter) {
+          return !!answers.exactNights && 
+                 (answers.exactNights >= 11 && answers.exactNights <= 14);
+        }
+      }
 
       // Si >14 nuits, exiger le nombre exact
       if (answers.duration === t('questionnaire.duration.more14')) {
@@ -2780,7 +2806,106 @@ const Questionnaire = () => {
     }
     if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE) stepCounter++;
 
-    // Step 4b: Nombre exact de nuits (uniquement si dates FLEXIBLES et >14 nuits)
+    // Step 4b: Préciser 8, 9 ou 10 nuits (si 8-10 sélectionné)
+    if (
+      normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE &&
+      answers.duration === t('questionnaire.duration.8to10') &&
+      step === stepCounter
+    ) {
+      return (
+        <div className="space-y-3 md:space-y-8 animate-fade-up">
+          <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
+            {t('questionnaire.duration.specify8to10')}
+          </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            {t('questionnaire.duration.specify8to10.description')}
+          </p>
+          <div className="grid grid-cols-3 gap-2 md:gap-4 max-w-2xl mx-auto">
+            {[
+              { nights: 8, label: t('questionnaire.duration.8nights'), icon: "🛏️" },
+              { nights: 9, label: t('questionnaire.duration.9nights'), icon: "🛏️" },
+              { nights: 10, label: t('questionnaire.duration.10nights'), icon: "🛏️" }
+            ].map((option) => {
+              const isSelected = answers.exactNights === option.nights;
+              return (
+                <Card
+                  key={option.nights}
+                  className={`p-3 md:p-6 cursor-pointer transition-all hover:scale-105 ${
+                    isSelected 
+                      ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
+                      : "hover:shadow-golden hover:border-travliaq-deep-blue"
+                  }`}
+                  onClick={() => {
+                    setAnswers({ ...answers, exactNights: option.nights });
+                    setTimeout(() => nextStep(true), 300);
+                  }}
+                >
+                  <div className="flex flex-col items-center space-y-1 md:space-y-2">
+                    <span className="text-2xl md:text-3xl">{option.icon}</span>
+                    <span className="text-center font-semibold text-travliaq-deep-blue text-sm md:text-base">
+                      {option.label}
+                    </span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && answers.duration === t('questionnaire.duration.8to10')) stepCounter++;
+
+    // Step 4c: Préciser 11, 12, 13 ou 14 nuits (si 11-14 sélectionné)
+    if (
+      normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE &&
+      answers.duration === t('questionnaire.duration.11to14') &&
+      step === stepCounter
+    ) {
+      return (
+        <div className="space-y-3 md:space-y-8 animate-fade-up">
+          <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
+            {t('questionnaire.duration.specify11to14')}
+          </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
+            {t('questionnaire.duration.specify11to14.description')}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 max-w-3xl mx-auto">
+            {[
+              { nights: 11, label: t('questionnaire.duration.11nights'), icon: "🛏️" },
+              { nights: 12, label: t('questionnaire.duration.12nights'), icon: "🛏️" },
+              { nights: 13, label: t('questionnaire.duration.13nights'), icon: "🛏️" },
+              { nights: 14, label: t('questionnaire.duration.14nights'), icon: "🛏️" }
+            ].map((option) => {
+              const isSelected = answers.exactNights === option.nights;
+              return (
+                <Card
+                  key={option.nights}
+                  className={`p-3 md:p-6 cursor-pointer transition-all hover:scale-105 ${
+                    isSelected 
+                      ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
+                      : "hover:shadow-golden hover:border-travliaq-deep-blue"
+                  }`}
+                  onClick={() => {
+                    setAnswers({ ...answers, exactNights: option.nights });
+                    setTimeout(() => nextStep(true), 300);
+                  }}
+                >
+                  <div className="flex flex-col items-center space-y-1 md:space-y-2">
+                    <span className="text-2xl md:text-3xl">{option.icon}</span>
+                    <span className="text-center font-semibold text-travliaq-deep-blue text-sm md:text-base">
+                      {option.label}
+                    </span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && answers.duration === t('questionnaire.duration.11to14')) stepCounter++;
+
+    // Step 4d: Nombre exact de nuits (uniquement si dates FLEXIBLES et >14 nuits)
     if (
       normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE &&
       answers.duration === t('questionnaire.duration.more14') &&
