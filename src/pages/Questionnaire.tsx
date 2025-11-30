@@ -859,6 +859,8 @@ const Questionnaire = () => {
     const normalizedHasDestination = normalizeYesNo(answers.hasDestination);
     const normalizedDatesType = normalizeDatesType(answers.datesType);
     
+    console.log('[getTotalSteps] Starting count:', { normalizedGroup, normalizedHasDestination, normalizedDatesType });
+    
     if (normalizedGroup === TRAVEL_GROUPS.FAMILY || normalizedGroup === TRAVEL_GROUPS.GROUP35) total++; // Step 1b: Nombre exact
     if (normalizedGroup === TRAVEL_GROUPS.FAMILY) total++; // Step 1c: Détails enfants
     total++; // Step 2: Comment Travliaq peut aider (vols/hébergement/activités)
@@ -957,6 +959,7 @@ const Questionnaire = () => {
     total++; // Step 18: Zone ouverte
     total++; // Step final: Review & confirm
     
+    console.log('[getTotalSteps] Final total:', total);
     return total;
   };
 
@@ -1859,6 +1862,8 @@ const Questionnaire = () => {
     const helpWithFlights = answers.helpWith || [];
     const helpWithAccommodation = answers.helpWith || [];
     const helpWithActivities = answers.helpWith || [];
+    
+    console.log('[renderStep] Starting with step:', step, 'stepCounter:', stepCounter);
 
     // Step 1: Qui voyage
     if (step === stepCounter) {
@@ -3812,6 +3817,8 @@ const Questionnaire = () => {
       );
     }
     stepCounter++;
+    
+    console.log('[renderStep] Before review - stepCounter:', stepCounter, 'current step:', step);
 
     // Step final: Review & confirm
     if (step === stepCounter) {
