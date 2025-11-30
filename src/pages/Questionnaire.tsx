@@ -4009,17 +4009,16 @@ const Questionnaire = () => {
             {/* Action buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white/50 backdrop-blur-sm rounded-xl p-3 border border-border/30">
               <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
-                {step > 1 && (
-                  <AnimatedButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={prevStep}
-                    className="text-travliaq-deep-blue hover:text-travliaq-turquoise hover:bg-travliaq-turquoise/10 transition-all"
-                  >
-                    <ChevronLeft className="mr-1 h-4 w-4" />
-                    {t('questionnaire.back')}
-                  </AnimatedButton>
-                )}
+                <AnimatedButton
+                  variant="ghost"
+                  size="sm"
+                  onClick={step > 1 ? prevStep : undefined}
+                  disabled={step === 1}
+                  className="text-travliaq-deep-blue hover:text-travliaq-turquoise hover:bg-travliaq-turquoise/10 transition-all"
+                >
+                  <ChevronLeft className="mr-1 h-4 w-4" />
+                  {t('questionnaire.back')}
+                </AnimatedButton>
                 
                 {isEditMode && returnToReviewStep !== null && (
                   <AnimatedButton
