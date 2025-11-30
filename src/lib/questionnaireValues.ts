@@ -216,6 +216,19 @@ export const LUGGAGE = {
   CABIN_HOLD: 'cabin_hold'
 } as const;
 
+// ============= DURATION =============
+export const DURATION = {
+  TWO_NIGHTS: '2nights',
+  THREE_NIGHTS: '3nights',
+  FOUR_NIGHTS: '4nights',
+  FIVE_NIGHTS: '5nights',
+  SIX_NIGHTS: '6nights',
+  SEVEN_NIGHTS: '7nights',
+  EIGHT_TO_TEN: '8to10',
+  ELEVEN_TO_FOURTEEN: '11to14',
+  MORE_THAN_FOURTEEN: 'more14'
+} as const;
+
 // ============= ACTIVITY STYLES =============
 export const STYLES = {
   NATURE: 'nature',
@@ -482,13 +495,13 @@ export const normalizeMobility = (value: string | undefined): string | undefined
   if (lowerValue.includes('train') || lowerValue.includes('métro') || lowerValue.includes('metro')) return MOBILITY.TRAIN_METRO;
   if (lowerValue.includes('ferry') || lowerValue.includes('bateau')) return MOBILITY.FERRY;
   if (lowerValue.includes('atypique') || lowerValue.includes('atypical')) return MOBILITY.ATYPICAL;
-  // Anciens codes
-  if (lowerValue.includes('très mobile') || lowerValue.includes('very mobile')) return MOBILITY.VERY_MOBILE;
-  if (lowerValue.includes('mobile') && !lowerValue.includes('très')) return MOBILITY.MOBILE;
-  if (lowerValue.includes('limitée') || lowerValue.includes('limited')) return MOBILITY.LIMITED;
-  if (lowerValue.includes('fauteuil') || lowerValue.includes('wheelchair')) return MOBILITY.WHEELCHAIR;
   
   return lowerValue;
+};
+
+export const normalizeMobilityArray = (values: string[] | undefined): string[] => {
+  if (!values || !Array.isArray(values)) return [];
+  return values.map(v => normalizeMobility(v)).filter(Boolean) as string[];
 };
 
 export const normalizeRhythm = (value: string | undefined): string | undefined => {
@@ -600,6 +613,34 @@ export const normalizeLuggage = (value: string | undefined): string | undefined 
   if ((lowerValue.includes('cabine') && lowerValue.includes('soute')) || (lowerValue.includes('cabin') && lowerValue.includes('hold'))) return LUGGAGE.CABIN_HOLD;
   
   return lowerValue;
+};
+
+export const normalizeDuration = (value: string | undefined): string | undefined => {
+  if (!value) return undefined;
+  const lowerValue = value.toLowerCase().trim();
+  
+  // Already internal codes
+  if (Object.values(DURATION).includes(lowerValue as any)) return lowerValue;
+  
+  // Translation keys
+  if (lowerValue.includes('questionnaire.duration.1to3') || lowerValue === '1-3') return DURATION.TWO_NIGHTS;
+  if (lowerValue.includes('questionnaire.duration.4to7') || lowerValue === '4-7') return DURATION.FIVE_NIGHTS;
+  if (lowerValue.includes('questionnaire.duration.8to14') || lowerValue === '8-14') return DURATION.EIGHT_TO_TEN;
+  
+  // Specific nights (translated values)
+  if (lowerValue.includes('2') && (lowerValue.includes('night') || lowerValue.includes('nuit'))) return DURATION.TWO_NIGHTS;
+  if (lowerValue.includes('3') && (lowerValue.includes('night') || lowerValue.includes('nuit'))) return DURATION.THREE_NIGHTS;
+  if (lowerValue.includes('4') && (lowerValue.includes('night') || lowerValue.includes('nuit'))) return DURATION.FOUR_NIGHTS;
+  if (lowerValue.includes('5') && (lowerValue.includes('night') || lowerValue.includes('nuit'))) return DURATION.FIVE_NIGHTS;
+  if (lowerValue.includes('6') && (lowerValue.includes('night') || lowerValue.includes('nuit'))) return DURATION.SIX_NIGHTS;
+  if (lowerValue.includes('7') && (lowerValue.includes('night') || lowerValue.includes('nuit'))) return DURATION.SEVEN_NIGHTS;
+  
+  // Ranges
+  if ((lowerValue.includes('8') && lowerValue.includes('10')) || lowerValue.includes('8to10') || lowerValue.includes('8-10')) return DURATION.EIGHT_TO_TEN;
+  if ((lowerValue.includes('11') && lowerValue.includes('14')) || lowerValue.includes('11to14') || lowerValue.includes('11-14')) return DURATION.ELEVEN_TO_FOURTEEN;
+  if (lowerValue.includes('>14') || lowerValue.includes('more14') || lowerValue.includes('plus de 14') || lowerValue.includes('more than 14')) return DURATION.MORE_THAN_FOURTEEN;
+  
+  return value;
 };
 
 // ============= LABEL GETTERS (pour affichage depuis codes) =============

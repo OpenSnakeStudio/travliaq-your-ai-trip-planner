@@ -42,15 +42,15 @@ import {
   TRAVEL_GROUPS, YES_NO, DATES_TYPE, HELP_WITH, 
   HOTEL_PREFERENCES, HOTEL_MEAL_PREFERENCES,
   CLIMATE, AFFINITIES, AMBIANCE, ACCOMMODATION_TYPE, COMFORT,
-  CONSTRAINTS, MOBILITY, RHYTHM, SCHEDULE, FLIGHT_PREF, LUGGAGE,
+  CONSTRAINTS, MOBILITY, RHYTHM, SCHEDULE, FLIGHT_PREF, LUGGAGE, DURATION,
   STYLES, AMENITIES,
   normalizeTravelGroup, normalizeYesNo, normalizeDatesType, 
   normalizeHelpWithArray, normalizeHotelPreferencesArray,
   normalizeClimateArray, normalizeAffinityArray, normalizeAmbiance,
   normalizeAccommodationTypeArray, normalizeComfort,
-  normalizeConstraintsArray, normalizeMobility, normalizeRhythm,
+  normalizeConstraintsArray, normalizeMobilityArray, normalizeRhythm,
   normalizeSchedulePrefsArray, normalizeFlightPref, normalizeLuggage,
-  normalizeStylesArray, normalizeAmenitiesArray
+  normalizeStylesArray, normalizeAmenitiesArray, normalizeDuration
 } from "@/lib/questionnaireValues";
 import { logger, questionnaireLogger, LogCategory } from "@/utils/logger";
 import DateRangePicker from "@/components/DateRangePicker";
@@ -568,7 +568,7 @@ const Questionnaire = () => {
     
     // Normaliser mobility array
     if (answers.mobility && Array.isArray(answers.mobility)) {
-      const normalized = answers.mobility.map(v => normalizeMobility(v)).filter(Boolean) as string[];
+      const normalized = normalizeMobilityArray(answers.mobility);
       const isDifferent = normalized.length !== answers.mobility.length ||
         normalized.some((v: string, i: number) => v !== answers.mobility[i]);
       if (isDifferent) {
@@ -1579,41 +1579,41 @@ const Questionnaire = () => {
         user_id: user?.id || null,
         email: answers.email || "",
         langue: i18n.language === 'en' ? 'en' : 'fr', // Capture the current language
-        groupe_voyage: answers.travelGroup || "",
+        groupe_voyage: normalizeTravelGroup(answers.travelGroup) || "",
         nombre_voyageurs: answers.numberOfTravelers || getNumberOfTravelers(),
-        a_destination: answers.hasDestination || null,
+        a_destination: normalizeYesNo(answers.hasDestination) || null,
         destination: answers.destination || null,
         lieu_depart: answers.departureLocation || null,
         preference_climat: answers.climatePreference || null,
         affinites_voyage: answers.travelAffinities || null,
         ambiance_voyage: answers.travelAmbiance || null,
-        type_dates: answers.datesType || "",
+        type_dates: normalizeDatesType(answers.datesType) || "",
         date_depart: answers.departureDate || null,
         date_retour: answers.returnDate || null,
         flexibilite: answers.flexibility || null,
         a_date_depart_approximative: answers.hasApproximateDepartureDate || null,
         date_depart_approximative: answers.approximateDepartureDate || null,
-        duree: answers.duration || "",
+        duree: normalizeDuration(answers.duration) || "",
         nuits_exactes: answers.exactNights || null,
         budget_par_personne: answers.budgetPerPerson || null,
         type_budget: answers.budgetType || null,
         montant_budget: answers.budgetAmount || null,
         devise_budget: answers.budgetCurrency || null,
-        styles: answers.styles || null,
-        rythme: answers.rhythm || null,
-        preferences_horaires: answers.schedulePrefs || null,
-        preference_vol: answers.flightPreference || null,
+        styles: normalizeStylesArray(answers.styles) || null,
+        rythme: normalizeRhythm(answers.rhythm) || null,
+        preferences_horaires: normalizeSchedulePrefsArray(answers.schedulePrefs) || null,
+        preference_vol: normalizeFlightPref(answers.flightPreference) || null,
         bagages: answers.luggage || null,
-        mobilite: answers.mobility || null,
-        type_hebergement: answers.accommodationType || null,
-        preferences_hotel: answers.hotelPreferences || null,
-        confort: answers.comfort || null,
+        mobilite: normalizeMobilityArray(answers.mobility) || null,
+        type_hebergement: normalizeAccommodationTypeArray(answers.accommodationType) || null,
+        preferences_hotel: normalizeHotelPreferencesArray(answers.hotelPreferences) || null,
+        confort: normalizeComfort(answers.comfort) || null,
         quartier: answers.neighborhood || null,
-        equipements: answers.amenities || null,
+        equipements: normalizeAmenitiesArray(answers.amenities) || null,
         enfants: answers.children || null,
         securite: answers.security || null,
-        aide_avec: answers.helpWith || [],
-        contraintes: answers.constraints || null,
+        aide_avec: normalizeHelpWithArray(answers.helpWith) || [],
+        contraintes: normalizeConstraintsArray(answers.constraints) || null,
         infos_supplementaires: answers.additionalInfo || null
       };
 
