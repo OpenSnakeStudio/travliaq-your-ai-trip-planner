@@ -16,6 +16,7 @@ import {
   Bed, 
   Plane, 
   ChevronLeft,
+  ArrowLeft,
   Mail,
   User,
   Loader2,
@@ -2777,6 +2778,19 @@ const Questionnaire = () => {
         return (
           <QuestionTransition step={step}>
             <div className="space-y-3 md:space-y-8">
+              <div className="flex justify-between items-center mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAnswers({ ...answers, duration: undefined, exactNights: undefined });
+                  }}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Modifier la durée
+                </Button>
+              </div>
               <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
                 {t('questionnaire.duration.specify8to10')}
               </h2>
@@ -2799,7 +2813,7 @@ const Questionnaire = () => {
                           : "hover:shadow-golden hover:border-travliaq-deep-blue"
                       }`}
                       onClick={() => {
-                        setAnswers({ ...answers, exactNights: option.nights });
+                        setAnswers({ ...answers, exactNights: option.nights, duration: t('questionnaire.duration.8to10') });
                         setTimeout(() => nextStep(true), 300);
                       }}
                     >
@@ -2823,6 +2837,19 @@ const Questionnaire = () => {
         return (
           <QuestionTransition step={step}>
             <div className="space-y-3 md:space-y-8">
+              <div className="flex justify-between items-center mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAnswers({ ...answers, duration: undefined, exactNights: undefined });
+                  }}
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Modifier la durée
+                </Button>
+              </div>
               <h2 className="text-xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
                 {t('questionnaire.duration.specify11to14')}
               </h2>
@@ -2846,7 +2873,7 @@ const Questionnaire = () => {
                           : "hover:shadow-golden hover:border-travliaq-deep-blue"
                       }`}
                       onClick={() => {
-                        setAnswers({ ...answers, exactNights: option.nights });
+                        setAnswers({ ...answers, exactNights: option.nights, duration: t('questionnaire.duration.11to14') });
                         setTimeout(() => nextStep(true), 300);
                       }}
                     >
