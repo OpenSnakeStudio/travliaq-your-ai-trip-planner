@@ -1137,7 +1137,7 @@ const QuestionnaireV2 = () => {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t-2">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t-2">
             <Button
               onClick={prevSection}
               disabled={currentSection === 0}
@@ -1146,34 +1146,30 @@ const QuestionnaireV2 = () => {
               className="gap-2"
             >
               <ArrowLeft className="w-5 h-5" />
-              Précédent
+              Retour
             </Button>
 
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Section {currentSection + 1} / {totalSections}
-              </p>
+            <div className="flex items-center gap-3">
+              {currentSection < totalSections - 1 ? (
+                <Button
+                  onClick={nextSection}
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                >
+                  Suivant
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  Envoyer
+                </Button>
+              )}
             </div>
-
-            {currentSection < totalSections - 1 ? (
-              <Button
-                onClick={nextSection}
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-              >
-                Suivant
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-              >
-                <CheckCircle2 className="w-5 h-5" />
-                Envoyer
-              </Button>
-            )}
           </div>
         </div>
       </div>
