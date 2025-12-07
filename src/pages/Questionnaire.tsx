@@ -71,6 +71,7 @@ import { ProgressBar } from "@/components/questionnaire/ProgressBar";
 import { QuestionTransition } from "@/components/questionnaire/QuestionTransition";
 import { AnimatedCard } from "@/components/questionnaire/AnimatedCard";
 import { AnimatedButton } from "@/components/questionnaire/AnimatedButton";
+import { BudgetSlider } from "@/components/questionnaire/BudgetSlider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -900,15 +901,7 @@ const Questionnaire = () => {
       }
     }
     
-    total++; // Step 6: Budget
-    // Check for precise budget type or >1800€
-    if (answers.budgetType && (
-      answers.budgetType.toLowerCase().includes('précis') ||
-      answers.budgetType.toLowerCase().includes('precise') ||
-      answers.budgetType.includes('1800')
-    )) {
-      total++; // Step 6b: Montant exact
-    }
+    total++; // Step 6: Budget (slider unique)
     
     const helpWith = answers.helpWith || [];
     const needsFlights = helpWith.includes(HELP_WITH.FLIGHTS);
@@ -1140,15 +1133,9 @@ const Questionnaire = () => {
       }
     }
 
-    // Budget: soit une plage par personne, soit "budget précis"
+    // Budget: slider avec valeur obligatoire
     stepCounter++;
-    if (step === stepCounter) return !!answers.budgetPerPerson || !!answers.budgetType;
-
-    // Si budget précis ou >1800€, vérifier montant + devise
-    if (answers.budgetType === t('questionnaire.budget.precise') || answers.budgetType === t('questionnaire.budget.more1800')) {
-      stepCounter++;
-      if (step === stepCounter) return !!answers.budgetAmount && !!answers.budgetCurrency;
-    }
+    if (step === stepCounter) return !!answers.budgetAmount && answers.budgetAmount >= 300;
 
     // Validation des étapes suivantes selon les services sélectionnés
     const helpWith = answers.helpWith || [];
@@ -2991,109 +2978,48 @@ const Questionnaire = () => {
     }
     if (normalizeDatesType(answers.datesType) === DATES_TYPE.FLEXIBLE && answers.duration === t('questionnaire.duration.more14')) stepCounter++;
 
-    // Step 5: Budget
+    // Step 5: Budget avec slider
     if (step === stepCounter) {
       return (
         <QuestionTransition step={step}>
-          <div className="space-y-3">
+          <div className="space-y-6">
             <h2 className="text-xl md:text-2xl font-bold text-center text-travliaq-deep-blue">
               {t('questionnaire.budget.title')}
             </h2>
             <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
-              {t('questionnaire.budget.description')}
+              {t('questionnaire.budget.sliderDescription')}
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-w-3xl mx-auto">
-              {[
-                { label: t('questionnaire.budget.dontKnow'), icon: "🤷" },
-                { label: t('questionnaire.budget.precise'), icon: "🎯" },
-                { label: t('questionnaire.budget.less300'), icon: "💵" },
-                { label: t('questionnaire.budget.300to600'), icon: "💶" },
-                { label: t('questionnaire.budget.600to900'), icon: "💷" },
-                { label: t('questionnaire.budget.900to1200'), icon: "💴" },
-                { label: t('questionnaire.budget.1200to1800'), icon: "💸" },
-                { label: t('questionnaire.budget.more1800'), icon: "💎" }
-              ].map((option) => {
-                const isSelected = answers.budgetPerPerson === option.label || answers.budgetType === option.label;
-                return (
-                  <Card
-                    key={option.label}
-                    className={`p-3 cursor-pointer transition-all hover:scale-105 ${
-                      isSelected 
-                        ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
-                        : "hover:shadow-golden hover:border-travliaq-deep-blue"
-                    }`}
-                    onClick={() => {
-                      if (option.label === t('questionnaire.budget.precise') || option.label === t('questionnaire.budget.more1800')) {
-                        setAnswers({ ...answers, budgetType: option.label });
-                        setTimeout(() => nextStep(true), 300);
-                      } else {
-                        setAnswers({ ...answers, budgetPerPerson: option.label, budgetType: undefined });
-                        setTimeout(() => nextStep(true), 300);
-                      }
-                    }}
-                  >
-                    <div className="flex flex-col items-center space-y-1">
-                      <span className="text-2xl">{option.icon}</span>
-                      <span className="text-xs md:text-sm font-semibold text-travliaq-deep-blue text-center">
-                        {option.label}
-                      </span>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </QuestionTransition>
-      );
-    }
-    stepCounter++;
-
-    // Step 5b: Budget précis
-    if ((answers.budgetType === t('questionnaire.budget.precise') || answers.budgetType === t('questionnaire.budget.more1800')) && step === stepCounter) {
-      return (
-        <div className="space-y-8 animate-fade-up">
-          <h2 className="text-2xl md:text-3xl font-bold text-center text-travliaq-deep-blue">
-            {t('questionnaire.budget.totalBudget')}
-          </h2>
-          <p className="text-sm text-muted-foreground text-center max-w-xl mx-auto">
-            {t('questionnaire.budget.totalBudget.description')}
-          </p>
-          <div className="max-w-xl mx-auto space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">{t('questionnaire.budget.amount')}</label>
-              <Input
-                type="number"
-                min="0"
-                step="50"
-                placeholder="Ex: 2500"
-                className="h-12 text-base text-center text-2xl"
-                value={answers.budgetAmount || ""}
-                onChange={(e) => setAnswers({ ...answers, budgetAmount: parseInt(e.target.value) || 0 })}
-                onKeyPress={(e) => handleKeyPress(e, nextStep, !!answers.budgetAmount && !!answers.budgetCurrency)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">{t('questionnaire.budget.currency')}</label>
-              <div className="grid grid-cols-3 gap-4">
+            
+            {/* Budget Slider */}
+            <BudgetSlider
+              value={answers.budgetAmount || 1000}
+              onChange={(value) => setAnswers({ ...answers, budgetAmount: value, budgetPerPerson: `${value}€` })}
+              currency={answers.budgetCurrency || "EUR"}
+            />
+            
+            {/* Currency selection */}
+            <div className="max-w-md mx-auto">
+              <label className="block text-sm font-medium mb-3 text-center">{t('questionnaire.budget.currency')}</label>
+              <div className="grid grid-cols-3 gap-3">
                 {[
                   { label: "EUR", icon: "€" },
                   { label: "USD", icon: "$" },
                   { label: "GBP", icon: "£" }
                 ].map((currency) => {
-                  const isSelected = answers.budgetCurrency === currency.label;
+                  const isSelected = (answers.budgetCurrency || "EUR") === currency.label;
                   return (
                     <Card
                       key={currency.label}
-                      className={`p-4 cursor-pointer transition-all hover:scale-105 ${
+                      className={`p-3 cursor-pointer transition-all hover:scale-105 ${
                         isSelected 
                           ? "border-[3px] border-travliaq-turquoise bg-travliaq-turquoise/15 shadow-golden scale-105" 
                           : "hover:shadow-golden hover:border-travliaq-deep-blue"
                       }`}
                       onClick={() => setAnswers({ ...answers, budgetCurrency: currency.label })}
                     >
-                      <div className="flex flex-col items-center space-y-2">
-                        <span className="text-3xl">{currency.icon}</span>
-                        <span className="font-semibold text-travliaq-deep-blue">
+                      <div className="flex flex-col items-center space-y-1">
+                        <span className="text-2xl">{currency.icon}</span>
+                        <span className="font-semibold text-travliaq-deep-blue text-sm">
                           {currency.label}
                         </span>
                       </div>
@@ -3102,22 +3028,23 @@ const Questionnaire = () => {
                 })}
               </div>
             </div>
-            <div className="flex justify-center">
+            
+            {/* Continue button */}
+            <div className="flex justify-center pt-4">
               <Button
                 variant="hero"
                 size="lg"
                 onClick={() => nextStep()}
-                disabled={!answers.budgetAmount || !answers.budgetCurrency}
                 className="bg-travliaq-deep-blue"
               >
                 {t('questionnaire.continue')}
               </Button>
             </div>
           </div>
-        </div>
+        </QuestionTransition>
       );
     }
-    if (answers.budgetType === t('questionnaire.budget.precise') || answers.budgetType === t('questionnaire.budget.more1800')) stepCounter++;
+    stepCounter++;
 
     // ========== FLIGHTS PHASE ==========
     

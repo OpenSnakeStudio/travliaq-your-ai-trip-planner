@@ -300,8 +300,8 @@ serve(async (req) => {
       }
     };
     
-    // Run enqueue task in background
-    EdgeRuntime.waitUntil(enqueueTask());
+    // Run enqueue task in background (fire and forget)
+    enqueueTask().catch(err => console.error('Background enqueue failed:', err));
     
     return new Response(
       JSON.stringify({ data }),
