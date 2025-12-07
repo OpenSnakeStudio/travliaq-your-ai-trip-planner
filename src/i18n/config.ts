@@ -783,6 +783,8 @@ const resources = {
       "questionnaire.budget.entireTrip": "Pour l'ensemble du voyage",
       "questionnaire.budget.amount": "Montant",
       "questionnaire.budget.currency": "Devise",
+      "questionnaire.budget.enterPrecise": "Saisir un budget précis",
+      "questionnaire.budget.backToSlider": "Retour au curseur",
 
       // Travel styles
       "questionnaire.styles.title": "Centres d'intérêt activités ? 🎨",
@@ -1815,6 +1817,8 @@ const resources = {
       "questionnaire.budget.entireTrip": "For the entire trip",
       "questionnaire.budget.amount": "Amount",
       "questionnaire.budget.currency": "Currency",
+      "questionnaire.budget.enterPrecise": "Enter a precise budget",
+      "questionnaire.budget.backToSlider": "Back to slider",
 
       // Travel styles
       "questionnaire.styles.title": "Activity interests? 🎨",
