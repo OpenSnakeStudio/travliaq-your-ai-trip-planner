@@ -20,6 +20,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const TravelRecommendations = lazy(() => import("./pages/TravelRecommendations"));
+const TripDetails = lazy(() => import("./pages/TripDetails"));
 const Booking = lazy(() => import("./pages/Booking"));
 const Discover = lazy(() => import("./pages/Discover"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -47,6 +48,8 @@ const AppContent = () => {
               <Route path="/discover" element={<Discover />} />
               <Route path="/recommendations" element={<TravelRecommendations />} />
               <Route path="/recommendations/:code" element={<TravelRecommendations />} />
+              <Route path="/trip-details/:code" element={<TripDetails />} />
+              <Route path="/trip-details" element={<TripDetails />} />
               <Route path="/booking" element={<Booking />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

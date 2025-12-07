@@ -48,7 +48,7 @@ const FooterSummary = ({
 
   const handleBooking = () => {
     if (tripCode) {
-      navigate(`/booking?code=${encodeURIComponent(tripCode)}`);
+      navigate(`/trip-details/${encodeURIComponent(tripCode)}`);
     }
   };
 
