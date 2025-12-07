@@ -8,7 +8,7 @@ interface BudgetSliderProps {
   currency?: string;
 }
 
-// Define budget steps with progressive increments
+// Define budget steps with progressive increments (max +200€)
 const generateBudgetSteps = (): number[] => {
   const steps: number[] = [];
   
@@ -22,13 +22,8 @@ const generateBudgetSteps = (): number[] => {
     steps.push(i);
   }
   
-  // 2000€ to 5000€: +200€ increments (skip 2000 as it's already added)
-  for (let i = 2200; i <= 5000; i += 200) {
-    steps.push(i);
-  }
-  
-  // 5000€ to 10000€: +500€ increments (skip 5000 as it's already added)
-  for (let i = 5500; i <= 10000; i += 500) {
+  // 2000€ to 10000€: +200€ increments (skip 2000 as it's already added)
+  for (let i = 2200; i <= 10000; i += 200) {
     steps.push(i);
   }
   
@@ -102,24 +97,24 @@ export const BudgetSlider = ({ value, onChange, currency = "EUR" }: BudgetSlider
   }, []);
   
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-8">
+    <div className="w-full max-w-2xl mx-auto space-y-6">
       {/* Current value display */}
       <div className="text-center">
         <div className="inline-flex items-baseline gap-1 bg-gradient-to-r from-travliaq-deep-blue to-travliaq-turquoise bg-clip-text">
-          <span className="text-5xl md:text-6xl font-bold text-transparent">
+          <span className="text-4xl md:text-5xl font-bold text-transparent">
             {formatBudget(currentValue)}
           </span>
-          <span className="text-3xl md:text-4xl font-semibold text-travliaq-turquoise">
+          <span className="text-2xl md:text-3xl font-semibold text-travliaq-turquoise">
             {getCurrencySymbol(currency)}
           </span>
         </div>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="text-sm text-muted-foreground mt-1">
           {t('questionnaire.budget.perPerson')}
         </p>
       </div>
       
       {/* Slider */}
-      <div className="px-4 py-6">
+      <div className="px-4 py-4">
         <Slider
           value={[sliderIndex]}
           onValueChange={handleSliderChange}
@@ -130,7 +125,7 @@ export const BudgetSlider = ({ value, onChange, currency = "EUR" }: BudgetSlider
         />
         
         {/* Markers */}
-        <div className="relative mt-4 h-6">
+        <div className="relative mt-3 h-5">
           {markers.map((marker) => (
             <div
               key={marker.value}
@@ -146,7 +141,7 @@ export const BudgetSlider = ({ value, onChange, currency = "EUR" }: BudgetSlider
       </div>
       
       {/* Range info */}
-      <div className="flex justify-between text-sm text-muted-foreground px-2">
+      <div className="flex justify-between text-xs text-muted-foreground px-2">
         <span>300{getCurrencySymbol(currency)}</span>
         <span>10 000{getCurrencySymbol(currency)}</span>
       </div>
