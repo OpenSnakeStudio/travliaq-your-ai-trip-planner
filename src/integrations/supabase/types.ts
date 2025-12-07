@@ -349,6 +349,131 @@ export type Database = {
           },
         ]
       }
+      trip_summaries: {
+        Row: {
+          activities_summary: string[] | null
+          average_weather: string | null
+          budget_currency: string | null
+          country_code: string | null
+          created_at: string | null
+          destination: string
+          destination_en: string | null
+          end_date: string | null
+          flight_duration: string | null
+          flight_from: string | null
+          flight_to: string | null
+          gallery_urls: string[] | null
+          generated_at: string | null
+          hotel_name: string | null
+          hotel_rating: number | null
+          id: string
+          main_image_url: string | null
+          persona: string | null
+          pipeline_status: string | null
+          price_activities: number | null
+          price_flights: number | null
+          price_hotels: number | null
+          questionnaire_id: string
+          rhythm: string | null
+          run_id: string | null
+          start_date: string | null
+          steps_count: number | null
+          summary_paragraph: string | null
+          total_days: number | null
+          total_nights: number | null
+          total_price: number | null
+          travel_style: string | null
+          travelers_count: number | null
+          trip_code: string | null
+          updated_at: string | null
+          user_email: string
+        }
+        Insert: {
+          activities_summary?: string[] | null
+          average_weather?: string | null
+          budget_currency?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          destination: string
+          destination_en?: string | null
+          end_date?: string | null
+          flight_duration?: string | null
+          flight_from?: string | null
+          flight_to?: string | null
+          gallery_urls?: string[] | null
+          generated_at?: string | null
+          hotel_name?: string | null
+          hotel_rating?: number | null
+          id?: string
+          main_image_url?: string | null
+          persona?: string | null
+          pipeline_status?: string | null
+          price_activities?: number | null
+          price_flights?: number | null
+          price_hotels?: number | null
+          questionnaire_id: string
+          rhythm?: string | null
+          run_id?: string | null
+          start_date?: string | null
+          steps_count?: number | null
+          summary_paragraph?: string | null
+          total_days?: number | null
+          total_nights?: number | null
+          total_price?: number | null
+          travel_style?: string | null
+          travelers_count?: number | null
+          trip_code?: string | null
+          updated_at?: string | null
+          user_email: string
+        }
+        Update: {
+          activities_summary?: string[] | null
+          average_weather?: string | null
+          budget_currency?: string | null
+          country_code?: string | null
+          created_at?: string | null
+          destination?: string
+          destination_en?: string | null
+          end_date?: string | null
+          flight_duration?: string | null
+          flight_from?: string | null
+          flight_to?: string | null
+          gallery_urls?: string[] | null
+          generated_at?: string | null
+          hotel_name?: string | null
+          hotel_rating?: number | null
+          id?: string
+          main_image_url?: string | null
+          persona?: string | null
+          pipeline_status?: string | null
+          price_activities?: number | null
+          price_flights?: number | null
+          price_hotels?: number | null
+          questionnaire_id?: string
+          rhythm?: string | null
+          run_id?: string | null
+          start_date?: string | null
+          steps_count?: number | null
+          summary_paragraph?: string | null
+          total_days?: number | null
+          total_nights?: number | null
+          total_price?: number | null
+          travel_style?: string | null
+          travelers_count?: number | null
+          trip_code?: string | null
+          updated_at?: string | null
+          user_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_summaries_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: true
+            referencedRelation: "questionnaire_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trips: {
         Row: {
           average_weather: string | null

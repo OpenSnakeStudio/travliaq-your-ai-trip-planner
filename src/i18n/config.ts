@@ -767,6 +767,8 @@ const resources = {
       // Budget
       "questionnaire.budget.title": "Budget par personne ? 💰",
       "questionnaire.budget.description": "Budget total hors achats personnels",
+      "questionnaire.budget.sliderDescription": "Déplace le curseur pour définir ton budget par personne",
+      "questionnaire.budget.perPerson": "par personne",
       "questionnaire.budget.excluding": "Hors achats personnels",
       "questionnaire.budget.less300": "<300€",
       "questionnaire.budget.300to600": "300-600€",
@@ -1797,6 +1799,8 @@ const resources = {
       // Budget
       "questionnaire.budget.title": "Budget per person? 💰",
       "questionnaire.budget.description": "Total budget excluding personal purchases",
+      "questionnaire.budget.sliderDescription": "Move the slider to set your budget per person",
+      "questionnaire.budget.perPerson": "per person",
       "questionnaire.budget.excluding": "Excluding personal purchases",
       "questionnaire.budget.less300": "<€300",
       "questionnaire.budget.300to600": "€300-600",
