@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Cloud, Sun, CloudRain, ChevronDown, CalendarDays, Plane, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Cloud, Sun, CloudRain, ChevronDown, Plane, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   format,
@@ -34,6 +34,10 @@ interface PlannerCalendarProps {
   dateRange?: DateRange;
   onDateRangeChange: (range: DateRange) => void;
   dayData?: Record<string, DayData>;
+  showPrices?: boolean;
+  showWeather?: boolean;
+  onShowPricesChange?: (show: boolean) => void;
+  onShowWeatherChange?: (show: boolean) => void;
 }
 
 // Mock data for demo
@@ -78,12 +82,37 @@ export default function PlannerCalendar({
   dateRange,
   onDateRangeChange,
   dayData: externalDayData,
+  showPrices: externalShowPrices,
+  showWeather: externalShowWeather,
+  onShowPricesChange,
+  onShowWeatherChange,
 }: PlannerCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [showPrices, setShowPrices] = useState(true);
-  const [showWeather, setShowWeather] = useState(false);
+  // Use external state if provided, otherwise use local state
+  const [localShowPrices, setLocalShowPrices] = useState(false);
+  const [localShowWeather, setLocalShowWeather] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectingReturn, setSelectingReturn] = useState(false);
+  
+  // Determine which state to use
+  const showPrices = externalShowPrices !== undefined ? externalShowPrices : localShowPrices;
+  const showWeather = externalShowWeather !== undefined ? externalShowWeather : localShowWeather;
+  
+  const handleShowPricesChange = (value: boolean) => {
+    if (onShowPricesChange) {
+      onShowPricesChange(value);
+    } else {
+      setLocalShowPrices(value);
+    }
+  };
+  
+  const handleShowWeatherChange = (value: boolean) => {
+    if (onShowWeatherChange) {
+      onShowWeatherChange(value);
+    } else {
+      setLocalShowWeather(value);
+    }
+  };
 
   const dayData = useMemo(() => {
     return externalDayData || generateMockData(currentMonth);
@@ -190,23 +219,12 @@ export default function PlannerCalendar({
 
   return (
     <div className="w-full space-y-3">
-      {/* Selection indicator */}
-      <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/20">
-        <CalendarDays className="h-4 w-4 text-primary" />
-        <span className="text-xs text-muted-foreground">
-          {!dateRange?.from
-            ? "Sélectionnez une date de départ"
-            : !dateRange?.to
-            ? "Sélectionnez une date de retour"
-            : "Dates sélectionnées"}
-        </span>
-      </div>
 
       {/* Display options - Checkboxes */}
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 cursor-pointer">
           <div
-            onClick={() => setShowPrices(!showPrices)}
+            onClick={() => handleShowPricesChange(!showPrices)}
             className={cn(
               "h-4 w-4 rounded border transition-all flex items-center justify-center",
               showPrices
@@ -220,7 +238,7 @@ export default function PlannerCalendar({
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <div
-            onClick={() => setShowWeather(!showWeather)}
+            onClick={() => handleShowWeatherChange(!showWeather)}
             className={cn(
               "h-4 w-4 rounded border transition-all flex items-center justify-center",
               showWeather

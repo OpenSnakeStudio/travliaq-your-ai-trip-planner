@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import PlannerMap from "@/components/planner/PlannerMap";
-import PlannerPanel from "@/components/planner/PlannerPanel";
+import PlannerPanel, { FlightRoutePoint } from "@/components/planner/PlannerPanel";
 import PlannerCard from "@/components/planner/PlannerCard";
 import PlannerChat from "@/components/planner/PlannerChat";
 import PlannerTopBar from "@/components/planner/PlannerTopBar";
@@ -28,6 +28,7 @@ const TravelPlanner = () => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([2.3522, 48.8566]); // Paris
   const [mapZoom, setMapZoom] = useState(12);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
+  const [flightRoutes, setFlightRoutes] = useState<FlightRoutePoint[]>([]);
 
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab);
@@ -92,6 +93,7 @@ const TravelPlanner = () => {
                 zoom={mapZoom}
                 onPinClick={handlePinClick}
                 selectedPinId={selectedPin?.id}
+                flightRoutes={flightRoutes}
               />
 
               {/* Overlay tabs */}
@@ -107,6 +109,7 @@ const TravelPlanner = () => {
                   setMapCenter(center);
                   setMapZoom(zoom);
                 }}
+                onFlightRoutesChange={setFlightRoutes}
               />
 
               {/* Floating card on map */}

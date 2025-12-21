@@ -148,6 +148,9 @@ export default function FlightRouteBuilder({
   tripType = "roundtrip",
 }: FlightRouteBuilderProps) {
   const [activeLegCalendar, setActiveLegCalendar] = useState<string | null>(null);
+  // Persist calendar display preferences
+  const [showPrices, setShowPrices] = useState(false);
+  const [showWeather, setShowWeather] = useState(false);
 
   const updateLeg = (id: string, updates: Partial<FlightLeg>) => {
     onLegsChange(
@@ -298,6 +301,10 @@ export default function FlightRouteBuilder({
                   ? { from: leg.date, to: leg.returnDate } 
                   : { from: leg.date, to: leg.date }}
                 onDateRangeChange={(range) => handleDateSelect(leg.id, range)}
+                showPrices={showPrices}
+                showWeather={showWeather}
+                onShowPricesChange={setShowPrices}
+                onShowWeatherChange={setShowWeather}
               />
             </div>
           )}
