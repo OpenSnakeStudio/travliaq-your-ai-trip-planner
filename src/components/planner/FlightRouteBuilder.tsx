@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Plus, X, CalendarDays, ArrowLeftRight } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Plus, X, ArrowLeftRight, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar } from "@/components/ui/calendar";
+import PlannerCalendar from "./PlannerCalendar";
+import { useCitySearch, City } from "@/hooks/useCitySearch";
 import {
   Popover,
   PopoverContent,
@@ -23,11 +24,105 @@ interface FlightRouteBuilderProps {
   maxLegs?: number;
 }
 
+interface CityInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  icon?: "from" | "to";
+}
+
+function CityInput({ value, onChange, placeholder, icon }: CityInputProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const { data: cities = [], isLoading } = useCitySearch(search, isOpen);
+
+  useEffect(() => {
+    setSearch(value);
+  }, [value]);
+
+  const handleSelect = (city: City) => {
+    onChange(`${city.name}, ${city.country}`);
+    setSearch(`${city.name}, ${city.country}`);
+    setIsOpen(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearch(newValue);
+    onChange(newValue);
+    if (!isOpen && newValue.length >= 2) {
+      setIsOpen(true);
+    }
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          {icon === "from" && (
+            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+          )}
+          {icon === "to" && (
+            <MapPin className="h-3 w-3 text-primary shrink-0" />
+          )}
+          <input
+            ref={inputRef}
+            type="text"
+            value={search}
+            onChange={handleInputChange}
+            onFocus={() => search.length >= 2 && setIsOpen(true)}
+            placeholder={placeholder}
+            className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none"
+          />
+        </div>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-64 p-0 max-h-60 overflow-y-auto" 
+        align="start"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        {isLoading ? (
+          <div className="p-3 text-xs text-muted-foreground text-center">
+            Recherche...
+          </div>
+        ) : cities.length === 0 ? (
+          <div className="p-3 text-xs text-muted-foreground text-center">
+            {search.length < 2 ? "Tapez au moins 2 caractères" : "Aucune ville trouvée"}
+          </div>
+        ) : (
+          <div className="py-1">
+            {cities.slice(0, 8).map((city) => (
+              <button
+                key={city.id}
+                onClick={() => handleSelect(city)}
+                className="w-full px-3 py-2 text-left hover:bg-muted/50 transition-colors flex items-center gap-2"
+              >
+                <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs font-medium text-foreground truncate">
+                    {city.name}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground truncate">
+                    {city.country}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function FlightRouteBuilder({
   legs,
   onLegsChange,
   maxLegs = 4,
 }: FlightRouteBuilderProps) {
+  const [activeLegCalendar, setActiveLegCalendar] = useState<string | null>(null);
+
   const updateLeg = (id: string, updates: Partial<FlightLeg>) => {
     onLegsChange(
       legs.map((leg) => (leg.id === id ? { ...leg, ...updates } : leg))
@@ -59,83 +154,84 @@ export default function FlightRouteBuilder({
   const removeLeg = (id: string) => {
     if (legs.length <= 1) return;
     onLegsChange(legs.filter((leg) => leg.id !== id));
+    if (activeLegCalendar === id) {
+      setActiveLegCalendar(null);
+    }
+  };
+
+  const handleDateSelect = (legId: string, range: { from?: Date; to?: Date }) => {
+    if (range.from) {
+      updateLeg(legId, { date: range.from });
+      setActiveLegCalendar(null);
+    }
   };
 
   return (
     <div className="space-y-2">
       {legs.map((leg, index) => (
-        <div
-          key={leg.id}
-          className="flex items-center gap-1.5 p-2 rounded-lg border border-border/40 bg-muted/20"
-        >
-          {/* From city */}
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
-            <input
-              type="text"
+        <div key={leg.id} className="space-y-2">
+          <div className="flex items-center gap-1.5 p-2.5 rounded-xl border border-border/40 bg-muted/20">
+            {/* From city */}
+            <CityInput
               value={leg.from}
-              onChange={(e) => updateLeg(leg.id, { from: e.target.value })}
+              onChange={(value) => updateLeg(leg.id, { from: value })}
               placeholder={index === 0 ? "D'où partez-vous ?" : "Départ"}
-              className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none"
+              icon="from"
             />
-          </div>
 
-          {/* Swap button */}
-          <button
-            onClick={() => swapCities(leg.id)}
-            className="p-1 rounded-full border border-border/40 hover:bg-muted/40 transition-colors shrink-0"
-          >
-            <ArrowLeftRight className="h-3 w-3 text-muted-foreground" />
-          </button>
-
-          {/* To city */}
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary/60 shrink-0" />
-            <input
-              type="text"
-              value={leg.to}
-              onChange={(e) => updateLeg(leg.id, { to: e.target.value })}
-              placeholder="Où allez-vous ?"
-              className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none"
-            />
-          </div>
-
-          {/* Date picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={cn(
-                  "flex items-center gap-1.5 px-2 py-1 rounded border border-border/40 hover:bg-muted/40 transition-colors shrink-0 text-xs",
-                  leg.date ? "text-foreground" : "text-muted-foreground"
-                )}
-              >
-                <CalendarDays className="h-3 w-3" />
-                <span className="whitespace-nowrap">
-                  {leg.date
-                    ? format(leg.date, "EEE d MMM", { locale: fr })
-                    : "Date"}
-                </span>
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar
-                mode="single"
-                selected={leg.date}
-                onSelect={(date) => updateLeg(leg.id, { date: date || undefined })}
-                locale={fr}
-                className="p-3 pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Remove button */}
-          {legs.length > 1 && (
+            {/* Swap button */}
             <button
-              onClick={() => removeLeg(leg.id)}
-              className="p-1 hover:text-destructive transition-colors shrink-0"
+              onClick={() => swapCities(leg.id)}
+              className="p-1.5 rounded-full border border-border/40 hover:bg-muted/40 transition-colors shrink-0"
             >
-              <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              <ArrowLeftRight className="h-3 w-3 text-muted-foreground" />
             </button>
+
+            {/* To city */}
+            <CityInput
+              value={leg.to}
+              onChange={(value) => updateLeg(leg.id, { to: value })}
+              placeholder="Où allez-vous ?"
+              icon="to"
+            />
+
+            {/* Date picker trigger */}
+            <button
+              onClick={() => setActiveLegCalendar(activeLegCalendar === leg.id ? null : leg.id)}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-colors shrink-0 text-xs",
+                activeLegCalendar === leg.id
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/40 hover:bg-muted/40",
+                leg.date ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              <span className="whitespace-nowrap">
+                {leg.date
+                  ? format(leg.date, "EEE d MMM", { locale: fr })
+                  : "Date"}
+              </span>
+            </button>
+
+            {/* Remove button */}
+            {legs.length > 1 && (
+              <button
+                onClick={() => removeLeg(leg.id)}
+                className="p-1.5 hover:text-destructive transition-colors shrink-0"
+              >
+                <X className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+              </button>
+            )}
+          </div>
+
+          {/* Calendar for this leg */}
+          {activeLegCalendar === leg.id && (
+            <div className="p-3 rounded-xl border border-border/40 bg-card">
+              <PlannerCalendar
+                dateRange={{ from: leg.date, to: leg.date }}
+                onDateRangeChange={(range) => handleDateSelect(leg.id, range)}
+              />
+            </div>
           )}
         </div>
       ))}
@@ -144,7 +240,7 @@ export default function FlightRouteBuilder({
       {legs.length < maxLegs && (
         <button
           onClick={addLeg}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
         >
           <Plus className="h-3 w-3" />
           Ajouter un vol

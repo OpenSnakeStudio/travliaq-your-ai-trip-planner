@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import PlannerMap from "@/components/planner/PlannerMap";
 import PlannerPanel from "@/components/planner/PlannerPanel";
 import PlannerCard from "@/components/planner/PlannerCard";
@@ -31,7 +32,7 @@ const TravelPlanner = () => {
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab);
     setSelectedPin(null);
-    setIsPanelVisible(true); // Réouvre le panneau quand on change d'onglet
+    setIsPanelVisible(true);
   }, []);
 
   const handlePinClick = useCallback((pin: MapPin) => {
@@ -58,54 +59,63 @@ const TravelPlanner = () => {
         <link rel="canonical" href="/planner" />
       </Helmet>
 
-      <div className="h-[100svh] w-full grid grid-cols-[500px_1fr] overflow-hidden bg-background">
-        {/* Left: Chat */}
-        <PlannerChat
-          onAction={(action) => {
-            if (action.type === "tab") setActiveTab(action.tab);
-            if (action.type === "zoom") {
-              setMapCenter(action.center);
-              setMapZoom(action.zoom);
-            }
-            if (action.type === "tabAndZoom") {
-              setActiveTab(action.tab);
-              setMapCenter(action.center);
-              setMapZoom(action.zoom);
-            }
-            setSelectedPin(null);
-          }}
-        />
+      <div className="h-[100svh] w-full overflow-hidden bg-background">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* Left: Chat - resizable */}
+          <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+            <PlannerChat
+              onAction={(action) => {
+                if (action.type === "tab") setActiveTab(action.tab);
+                if (action.type === "zoom") {
+                  setMapCenter(action.center);
+                  setMapZoom(action.zoom);
+                }
+                if (action.type === "tabAndZoom") {
+                  setActiveTab(action.tab);
+                  setMapCenter(action.center);
+                  setMapZoom(action.zoom);
+                }
+                setSelectedPin(null);
+              }}
+            />
+          </ResizablePanel>
 
-        {/* Right: Map workspace */}
-        <main className="relative overflow-hidden pt-12">
-          <PlannerMap
-            activeTab={activeTab}
-            center={mapCenter}
-            zoom={mapZoom}
-            onPinClick={handlePinClick}
-            selectedPinId={selectedPin?.id}
-          />
+          {/* Resize handle */}
+          <ResizableHandle withHandle className="bg-border/50 hover:bg-primary/30 transition-colors" />
 
-          {/* Overlay tabs */}
-          <PlannerTopBar activeTab={activeTab} onTabChange={handleTabChange} />
+          {/* Right: Map workspace - resizable */}
+          <ResizablePanel defaultSize={65} minSize={40}>
+            <main className="relative h-full overflow-hidden pt-12">
+              <PlannerMap
+                activeTab={activeTab}
+                center={mapCenter}
+                zoom={mapZoom}
+                onPinClick={handlePinClick}
+                selectedPinId={selectedPin?.id}
+              />
 
-          {/* Overlay panel (positioned to avoid tabs) */}
-          <PlannerPanel
-            activeTab={activeTab}
-            layout="overlay"
-            isVisible={isPanelVisible}
-            onClose={() => setIsPanelVisible(false)}
-            onMapMove={(center, zoom) => {
-              setMapCenter(center);
-              setMapZoom(zoom);
-            }}
-          />
+              {/* Overlay tabs */}
+              <PlannerTopBar activeTab={activeTab} onTabChange={handleTabChange} />
 
-          {/* Floating card on map */}
-          {selectedPin && (
-            <PlannerCard pin={selectedPin} onClose={handleCloseCard} onAddToTrip={handleAddToTrip} />
-          )}
-        </main>
+              {/* Overlay panel */}
+              <PlannerPanel
+                activeTab={activeTab}
+                layout="overlay"
+                isVisible={isPanelVisible}
+                onClose={() => setIsPanelVisible(false)}
+                onMapMove={(center, zoom) => {
+                  setMapCenter(center);
+                  setMapZoom(zoom);
+                }}
+              />
+
+              {/* Floating card on map */}
+              {selectedPin && (
+                <PlannerCard pin={selectedPin} onClose={handleCloseCard} onAddToTrip={handleAddToTrip} />
+              )}
+            </main>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </>
   );
