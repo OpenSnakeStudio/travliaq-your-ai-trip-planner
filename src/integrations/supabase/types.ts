@@ -367,6 +367,7 @@ export type Database = {
           hotel_name: string | null
           hotel_rating: number | null
           id: string
+          language: string | null
           main_image_url: string | null
           persona: string | null
           pipeline_status: string | null
@@ -405,6 +406,7 @@ export type Database = {
           hotel_name?: string | null
           hotel_rating?: number | null
           id?: string
+          language?: string | null
           main_image_url?: string | null
           persona?: string | null
           pipeline_status?: string | null
@@ -443,6 +445,7 @@ export type Database = {
           hotel_name?: string | null
           hotel_rating?: number | null
           id?: string
+          language?: string | null
           main_image_url?: string | null
           persona?: string | null
           pipeline_status?: string | null
