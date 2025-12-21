@@ -6,12 +6,19 @@ import { Slider } from "@/components/ui/slider";
 import PlannerCalendar from "./PlannerCalendar";
 import FlightRouteBuilder, { FlightLeg } from "./FlightRouteBuilder";
 
+export interface FlightRoutePoint {
+  city: string;
+  lat?: number;
+  lng?: number;
+}
+
 interface PlannerPanelProps {
   activeTab: TabType;
   onMapMove: (center: [number, number], zoom: number) => void;
   layout?: "sidebar" | "overlay";
   onClose?: () => void;
   isVisible?: boolean;
+  onFlightRoutesChange?: (routes: FlightRoutePoint[]) => void;
 }
 
 const tabLabels: Record<TabType, string> = {
@@ -21,7 +28,7 @@ const tabLabels: Record<TabType, string> = {
   preferences: "Préférences",
 };
 
-const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true }: PlannerPanelProps) => {
+const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange }: PlannerPanelProps) => {
   if (!isVisible && layout === "overlay") return null;
 
   const wrapperClass =
@@ -50,7 +57,7 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
           </div>
         )}
         <div className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]">
-          {activeTab === "flights" && <FlightsPanel onMapMove={onMapMove} />}
+          {activeTab === "flights" && <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} />}
           {activeTab === "activities" && <ActivitiesPanel />}
           {activeTab === "stays" && <StaysPanel />}
           {activeTab === "preferences" && <PreferencesPanel />}
@@ -111,7 +118,10 @@ interface FlightOptions {
 }
 
 // Flights Panel
-const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoom: number) => void }) => {
+const FlightsPanel = ({ onMapMove, onFlightRoutesChange }: { 
+  onMapMove: (center: [number, number], zoom: number) => void;
+  onFlightRoutesChange?: (routes: FlightRoutePoint[]) => void;
+}) => {
   const [tripType, setTripType] = useState<"roundtrip" | "oneway" | "multi">("roundtrip");
   const [legs, setLegs] = useState<FlightLeg[]>([
     { id: crypto.randomUUID(), from: "", to: "", date: undefined, returnDate: undefined },
@@ -126,6 +136,23 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
     includeNearbyAirports: false,
     noEveningFlights: false,
   });
+
+  // Notify parent of route changes when legs change
+  const handleLegsChange = (newLegs: FlightLeg[]) => {
+    setLegs(newLegs);
+    if (onFlightRoutesChange) {
+      const routes: FlightRoutePoint[] = [];
+      newLegs.forEach((leg) => {
+        if (leg.from) routes.push({ city: leg.from });
+        if (leg.to) routes.push({ city: leg.to });
+      });
+      // Remove duplicates
+      const uniqueRoutes = routes.filter((route, index, self) =>
+        index === self.findIndex((r) => r.city === route.city)
+      );
+      onFlightRoutesChange(uniqueRoutes);
+    }
+  };
 
   const addPassenger = () => {
     setPassengers([...passengers, { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 1, checkedBags: 0 }]);
@@ -209,7 +236,7 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
       {/* Route Builder */}
       <FlightRouteBuilder
         legs={legs}
-        onLegsChange={setLegs}
+        onLegsChange={handleLegsChange}
         maxLegs={getMaxLegs()}
         tripType={tripType}
       />

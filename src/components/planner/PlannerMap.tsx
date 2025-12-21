@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/mapbox-overrides.css";
 import type { TabType, MapPin } from "@/pages/TravelPlanner";
+import type { FlightRoutePoint } from "./PlannerPanel";
 
 // Mock data for pins
 const mockFlightPins: MapPin[] = [
@@ -27,18 +28,95 @@ const mockStayPins: MapPin[] = [
   { id: "hotel4", type: "stays", lat: 48.8738, lng: 2.2950, title: "Renaissance Arc", subtitle: "4 étoiles", price: 280, rating: 4.5 },
 ];
 
+// City coordinates mapping (common cities)
+const cityCoordinates: Record<string, { lat: number; lng: number }> = {
+  "paris": { lat: 48.8566, lng: 2.3522 },
+  "new york": { lat: 40.7128, lng: -74.0060 },
+  "london": { lat: 51.5074, lng: -0.1278 },
+  "tokyo": { lat: 35.6762, lng: 139.6503 },
+  "sydney": { lat: -33.8688, lng: 151.2093 },
+  "dubai": { lat: 25.2048, lng: 55.2708 },
+  "rome": { lat: 41.9028, lng: 12.4964 },
+  "barcelona": { lat: 41.3851, lng: 2.1734 },
+  "amsterdam": { lat: 52.3676, lng: 4.9041 },
+  "berlin": { lat: 52.5200, lng: 13.4050 },
+  "madrid": { lat: 40.4168, lng: -3.7038 },
+  "lisbon": { lat: 38.7223, lng: -9.1393 },
+  "bangkok": { lat: 13.7563, lng: 100.5018 },
+  "singapore": { lat: 1.3521, lng: 103.8198 },
+  "hong kong": { lat: 22.3193, lng: 114.1694 },
+  "los angeles": { lat: 34.0522, lng: -118.2437 },
+  "san francisco": { lat: 37.7749, lng: -122.4194 },
+  "miami": { lat: 25.7617, lng: -80.1918 },
+  "montreal": { lat: 45.5017, lng: -73.5673 },
+  "toronto": { lat: 43.6532, lng: -79.3832 },
+  "vancouver": { lat: 49.2827, lng: -123.1207 },
+  "mexico city": { lat: 19.4326, lng: -99.1332 },
+  "buenos aires": { lat: -34.6037, lng: -58.3816 },
+  "sao paulo": { lat: -23.5505, lng: -46.6333 },
+  "rio de janeiro": { lat: -22.9068, lng: -43.1729 },
+  "cairo": { lat: 30.0444, lng: 31.2357 },
+  "cape town": { lat: -33.9249, lng: 18.4241 },
+  "marrakech": { lat: 31.6295, lng: -7.9811 },
+  "casablanca": { lat: 33.5731, lng: -7.5898 },
+  "nice": { lat: 43.7102, lng: 7.2620 },
+  "marseille": { lat: 43.2965, lng: 5.3698 },
+  "lyon": { lat: 45.7640, lng: 4.8357 },
+  "bordeaux": { lat: 44.8378, lng: -0.5792 },
+  "toulouse": { lat: 43.6047, lng: 1.4442 },
+  "nantes": { lat: 47.2184, lng: -1.5536 },
+  "lille": { lat: 50.6292, lng: 3.0573 },
+  "strasbourg": { lat: 48.5734, lng: 7.7521 },
+  "munich": { lat: 48.1351, lng: 11.5820 },
+  "frankfurt": { lat: 50.1109, lng: 8.6821 },
+  "vienna": { lat: 48.2082, lng: 16.3738 },
+  "prague": { lat: 50.0755, lng: 14.4378 },
+  "budapest": { lat: 47.4979, lng: 19.0402 },
+  "warsaw": { lat: 52.2297, lng: 21.0122 },
+  "athens": { lat: 37.9838, lng: 23.7275 },
+  "istanbul": { lat: 41.0082, lng: 28.9784 },
+  "moscow": { lat: 55.7558, lng: 37.6173 },
+  "stockholm": { lat: 59.3293, lng: 18.0686 },
+  "oslo": { lat: 59.9139, lng: 10.7522 },
+  "copenhagen": { lat: 55.6761, lng: 12.5683 },
+  "helsinki": { lat: 60.1699, lng: 24.9384 },
+  "dublin": { lat: 53.3498, lng: -6.2603 },
+  "edinburgh": { lat: 55.9533, lng: -3.1883 },
+  "brussels": { lat: 50.8503, lng: 4.3517 },
+  "zurich": { lat: 47.3769, lng: 8.5417 },
+  "geneva": { lat: 46.2044, lng: 6.1432 },
+  "milan": { lat: 45.4642, lng: 9.1900 },
+  "venice": { lat: 45.4408, lng: 12.3155 },
+  "florence": { lat: 43.7696, lng: 11.2558 },
+  "naples": { lat: 40.8518, lng: 14.2681 },
+  "bali": { lat: -8.3405, lng: 115.0920 },
+  "phuket": { lat: 7.8804, lng: 98.3923 },
+  "seoul": { lat: 37.5665, lng: 126.9780 },
+  "beijing": { lat: 39.9042, lng: 116.4074 },
+  "shanghai": { lat: 31.2304, lng: 121.4737 },
+  "delhi": { lat: 28.6139, lng: 77.2090 },
+  "mumbai": { lat: 19.0760, lng: 72.8777 },
+};
+
+function getCityCoords(cityName: string): { lat: number; lng: number } | null {
+  const normalizedCity = cityName.toLowerCase().split(",")[0].trim();
+  return cityCoordinates[normalizedCity] || null;
+}
+
 interface PlannerMapProps {
   activeTab: TabType;
   center: [number, number];
   zoom: number;
   onPinClick: (pin: MapPin) => void;
   selectedPinId?: string;
+  flightRoutes?: FlightRoutePoint[];
 }
 
-const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId }: PlannerMapProps) => {
+const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [] }: PlannerMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const routeMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Get pins based on active tab
@@ -111,7 +189,6 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId }: Plan
         justify-content: center;
         cursor: pointer;
         box-shadow: 0 10px 25px -10px hsl(var(--foreground) / 0.25);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
         font-size: 12px;
         font-weight: 700;
         color: ${pin.id === selectedPinId ? "hsl(var(--primary-foreground))" : "hsl(var(--foreground))"};
@@ -129,14 +206,6 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId }: Plan
         el.textContent = "🏨";
       }
 
-      el.addEventListener("mouseenter", () => {
-        el.style.transform = "scale(1.1)";
-      });
-
-      el.addEventListener("mouseleave", () => {
-        el.style.transform = "scale(1)";
-      });
-
       el.addEventListener("click", () => {
         onPinClick(pin);
       });
@@ -148,59 +217,132 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId }: Plan
       markersRef.current.push(marker);
     });
 
-    // Draw flight routes if on flights tab
-    if (activeTab === "flights" && map.current.getSource("route")) {
-      map.current.removeLayer("route");
-      map.current.removeSource("route");
-    }
+    // Clean up old mock flight routes
+    mockFlightPins.forEach((destPin) => {
+      const sourceId = `route-${destPin.id}`;
+      if (map.current?.getSource(sourceId)) {
+        if (map.current.getLayer(sourceId)) {
+          map.current.removeLayer(sourceId);
+        }
+        map.current.removeSource(sourceId);
+      }
+    });
+  }, [activeTab, mapLoaded, selectedPinId, onPinClick, getPinsForTab]);
 
-    if (activeTab === "flights") {
-      const parisPin = mockFlightPins.find((p) => p.id === "cdg");
-      if (parisPin) {
-        mockFlightPins
-          .filter((p) => p.id !== "cdg")
-          .forEach((destPin) => {
-            const sourceId = `route-${destPin.id}`;
-            
-            if (map.current?.getSource(sourceId)) {
-              map.current.removeLayer(sourceId);
-              map.current.removeSource(sourceId);
-            }
+  // Draw dynamic flight routes from user input
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
 
-            map.current?.addSource(sourceId, {
-              type: "geojson",
-              data: {
-                type: "Feature",
-                properties: {},
-                geometry: {
-                  type: "LineString",
-                  coordinates: [
-                    [parisPin.lng, parisPin.lat],
-                    [destPin.lng, destPin.lat],
-                  ],
-                },
-              },
-            });
+    // Clear previous route markers
+    routeMarkersRef.current.forEach((marker) => marker.remove());
+    routeMarkersRef.current = [];
 
-            map.current?.addLayer({
-              id: sourceId,
-              type: "line",
-              source: sourceId,
-              layout: {
-                "line-join": "round",
-                "line-cap": "round",
-              },
-              paint: {
-                "line-color": "hsl(193, 100%, 42%)",
-                "line-width": 2,
-                "line-dasharray": [2, 4],
-                "line-opacity": 0.6,
-              },
-            });
-          });
+    // Remove previous dynamic routes
+    for (let i = 0; i < 10; i++) {
+      const sourceId = `dynamic-route-${i}`;
+      if (map.current.getSource(sourceId)) {
+        if (map.current.getLayer(sourceId)) {
+          map.current.removeLayer(sourceId);
+        }
+        map.current.removeSource(sourceId);
       }
     }
-  }, [activeTab, mapLoaded, selectedPinId, onPinClick, getPinsForTab]);
+
+    // Get coordinates for each route point
+    const routePoints = flightRoutes
+      .map((route) => {
+        const coords = getCityCoords(route.city);
+        return coords ? { ...route, ...coords } : null;
+      })
+      .filter((p): p is FlightRoutePoint & { lat: number; lng: number } => p !== null);
+
+    if (routePoints.length === 0) return;
+
+    // Create markers for each point with numbering
+    routePoints.forEach((point, index) => {
+      const el = document.createElement("div");
+      el.className = "route-marker";
+      el.style.cssText = `
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
+        background: hsl(var(--primary));
+        border: 3px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-size: 12px;
+        font-weight: 700;
+        color: hsl(var(--primary-foreground));
+        user-select: none;
+        z-index: 10;
+      `;
+      el.textContent = `${index + 1}`;
+
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([point.lng, point.lat])
+        .addTo(map.current!);
+
+      routeMarkersRef.current.push(marker);
+    });
+
+    // Draw lines between consecutive points
+    for (let i = 0; i < routePoints.length - 1; i++) {
+      const from = routePoints[i];
+      const to = routePoints[i + 1];
+      const sourceId = `dynamic-route-${i}`;
+
+      map.current.addSource(sourceId, {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [from.lng, from.lat],
+              [to.lng, to.lat],
+            ],
+          },
+        },
+      });
+
+      map.current.addLayer({
+        id: sourceId,
+        type: "line",
+        source: sourceId,
+        layout: {
+          "line-join": "round",
+          "line-cap": "round",
+        },
+        paint: {
+          "line-color": "hsl(var(--primary))",
+          "line-width": 3,
+          "line-dasharray": [2, 2],
+          "line-opacity": 0.8,
+        },
+      });
+    }
+
+    // Fit map to show all points if we have at least 2
+    if (routePoints.length >= 2) {
+      const bounds = new mapboxgl.LngLatBounds();
+      routePoints.forEach((point) => {
+        bounds.extend([point.lng, point.lat]);
+      });
+      map.current.fitBounds(bounds, {
+        padding: { top: 100, bottom: 100, left: 450, right: 50 },
+        maxZoom: 6,
+      });
+    } else if (routePoints.length === 1) {
+      map.current.flyTo({
+        center: [routePoints[0].lng, routePoints[0].lat],
+        zoom: 5,
+      });
+    }
+  }, [flightRoutes, mapLoaded]);
 
   // Update map center/zoom
   useEffect(() => {
