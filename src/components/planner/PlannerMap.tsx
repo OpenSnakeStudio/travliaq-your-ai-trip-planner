@@ -104,6 +104,13 @@ function getCityCoords(cityName: string): { lat: number; lng: number } | null {
   return cityCoordinates[normalizedCity] || null;
 }
 
+function cssHsl(varName: string, fallbackHsl = "222.2 47.4% 11.2%") {
+  // shadcn tokens are stored as: "H S% L%" (no hsl())
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  const hsl = raw || fallbackHsl;
+  return `hsl(${hsl})`;
+}
+
 interface PlannerMapProps {
   activeTab: TabType;
   center: [number, number];
@@ -334,6 +341,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         },
       });
 
+      const routeColor = cssHsl("--primary", "221.2 83.2% 53.3%");
+
       map.current.addLayer({
         id: sourceId,
         type: "line",
@@ -343,10 +352,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           "line-cap": "round",
         },
         paint: {
-          "line-color": "hsl(var(--primary))",
+          "line-color": routeColor,
           "line-width": 3,
           "line-dasharray": [2, 2],
-          "line-opacity": 0.8,
+          "line-opacity": 0.85,
         },
       });
     }
