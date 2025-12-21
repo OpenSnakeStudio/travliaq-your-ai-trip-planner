@@ -26,7 +26,7 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
 
   const wrapperClass =
     layout === "overlay"
-      ? "pointer-events-none absolute top-16 left-4 bottom-4 w-[320px] z-10"
+      ? "pointer-events-none absolute top-16 left-4 bottom-4 w-[380px] z-10"
       : "w-80 lg:w-96 border-l border-border bg-card overflow-y-auto themed-scroll shrink-0";
 
   const innerClass = layout === "overlay" ? "pointer-events-auto h-full overflow-y-auto themed-scroll" : "";
