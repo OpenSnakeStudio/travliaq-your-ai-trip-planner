@@ -1,4 +1,4 @@
-import { Building2, MapPin, Plane, Settings2 } from "lucide-react";
+import { Plane, Compass, Bed, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType } from "@/pages/TravelPlanner";
 import logo from "@/assets/logo-travliaq.png";
@@ -10,9 +10,9 @@ interface PlannerTopBarProps {
 
 const tabs: { id: TabType; icon: React.ElementType }[] = [
   { id: "flights", icon: Plane },
-  { id: "activities", icon: MapPin },
-  { id: "stays", icon: Building2 },
-  { id: "preferences", icon: Settings2 },
+  { id: "activities", icon: Compass },
+  { id: "stays", icon: Bed },
+  { id: "preferences", icon: SlidersHorizontal },
 ];
 
 export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarProps) {
