@@ -36,16 +36,20 @@ interface CityInputProps {
 function CityInput({ value, onChange, placeholder, icon }: CityInputProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState(value);
+  const [previousValue, setPreviousValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: cities = [], isLoading } = useCitySearch(search, isOpen);
 
   useEffect(() => {
     setSearch(value);
+    setPreviousValue(value);
   }, [value]);
 
   const handleSelect = (city: City) => {
-    onChange(`${city.name}, ${city.country}`);
-    setSearch(`${city.name}, ${city.country}`);
+    const newValue = `${city.name}, ${city.country}`;
+    onChange(newValue);
+    setSearch(newValue);
+    setPreviousValue(newValue);
     setIsOpen(false);
   };
 
@@ -56,6 +60,24 @@ function CityInput({ value, onChange, placeholder, icon }: CityInputProps) {
     if (!isOpen && newValue.length >= 2) {
       setIsOpen(true);
     }
+  };
+
+  const handleFocus = () => {
+    // Clear input on focus if there's a value, to allow easy retyping
+    if (value) {
+      setSearch("");
+      setIsOpen(true);
+    }
+  };
+
+  const handleBlur = () => {
+    // Restore previous value if user didn't type anything
+    setTimeout(() => {
+      if (search === "" && previousValue) {
+        setSearch(previousValue);
+        onChange(previousValue);
+      }
+    }, 200);
   };
 
   return (
@@ -73,7 +95,8 @@ function CityInput({ value, onChange, placeholder, icon }: CityInputProps) {
             type="text"
             value={search}
             onChange={handleInputChange}
-            onFocus={() => search.length >= 2 && setIsOpen(true)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder={placeholder}
             className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none"
           />
