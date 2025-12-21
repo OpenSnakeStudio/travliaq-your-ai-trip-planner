@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { HelmetProvider } from "react-helmet-async";
 import { lazy, Suspense } from "react";
 import { usePageTracking } from "@/hooks/usePageTracking";
 
@@ -23,6 +24,7 @@ const TravelRecommendations = lazy(() => import("./pages/TravelRecommendations")
 const TripDetails = lazy(() => import("./pages/TripDetails"));
 const Booking = lazy(() => import("./pages/Booking"));
 const Discover = lazy(() => import("./pages/Discover"));
+const TravelCoPilot = lazy(() => import("./pages/TravelCoPilot"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -51,6 +53,7 @@ const AppContent = () => {
               <Route path="/trip-details/:code" element={<TripDetails />} />
               <Route path="/trip-details" element={<TripDetails />} />
               <Route path="/booking" element={<Booking />} />
+              <Route path="/copilot" element={<TravelCoPilot />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -59,17 +62,19 @@ const AppContent = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
