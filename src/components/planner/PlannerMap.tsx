@@ -62,12 +62,12 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId }: Plan
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: "mapbox://styles/mapbox/light-v11",
+      style: "mapbox://styles/mapbox/outdoors-v12",
       center: [center[0], center[1]],
       zoom: zoom,
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), "top-left");
+    map.current.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
     map.current.on("load", () => {
       setMapLoaded(true);
