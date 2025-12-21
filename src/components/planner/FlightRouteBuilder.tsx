@@ -177,7 +177,7 @@ export default function FlightRouteBuilder({
             <CityInput
               value={leg.from}
               onChange={(value) => updateLeg(leg.id, { from: value })}
-              placeholder={index === 0 ? "D'où partez-vous ?" : "Départ"}
+              placeholder="Départ"
               icon="from"
             />
 
@@ -192,8 +192,10 @@ export default function FlightRouteBuilder({
             {/* To city */}
             <CityInput
               value={leg.to}
-              onChange={(value) => updateLeg(leg.id, { to: value })}
-              placeholder="Où allez-vous ?"
+              onChange={(value) => {
+                updateLeg(leg.id, { to: value });
+              }}
+              placeholder="Destination"
               icon="to"
             />
 

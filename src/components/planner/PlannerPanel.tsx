@@ -100,6 +100,14 @@ interface Passenger {
   baggage: "personal" | "cabin" | "checked";
 }
 
+// Flight options
+interface FlightOptions {
+  directOnly: boolean;
+  flexibleDates: boolean;
+  includeNearbyAirports: boolean;
+  preferredAirline: boolean;
+}
+
 // Flights Panel
 const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoom: number) => void }) => {
   const [tripType, setTripType] = useState<"roundtrip" | "oneway" | "multi">("roundtrip");
@@ -110,8 +118,13 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
     { id: crypto.randomUUID(), type: "adult", baggage: "cabin" },
   ]);
   const [travelClass, setTravelClass] = useState<"economy" | "business" | "first">("economy");
-  const [directOnly, setDirectOnly] = useState(false);
   const [departureTime, setDepartureTime] = useState<"morning" | "afternoon" | "evening" | null>(null);
+  const [options, setOptions] = useState<FlightOptions>({
+    directOnly: false,
+    flexibleDates: false,
+    includeNearbyAirports: false,
+    preferredAirline: false,
+  });
 
   const addPassenger = () => {
     setPassengers([...passengers, { id: crypto.randomUUID(), type: "adult", baggage: "cabin" }]);
@@ -127,12 +140,22 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
     setPassengers(passengers.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
+  const toggleOption = (key: keyof FlightOptions) => {
+    setOptions(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   // Determine max legs based on trip type
   const getMaxLegs = () => {
     if (tripType === "oneway") return 1;
     if (tripType === "roundtrip") return 2;
     return 5; // multi-destinations
   };
+
+  const baggageOptions = [
+    { id: "personal", label: "🎒", title: "Personnel" },
+    { id: "cabin", label: "🧳", title: "Cabine" },
+    { id: "checked", label: "🛄", title: "Soute" },
+  ];
 
   return (
     <div className="space-y-5">
@@ -191,7 +214,7 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
             onClick={addPassenger}
             className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
           >
-            + Ajouter un passager
+            + Ajouter
           </button>
         </div>
         
@@ -199,30 +222,54 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
           {passengers.map((passenger, index) => (
             <div 
               key={passenger.id} 
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/30"
+              className="flex items-center gap-2 p-2 rounded-xl bg-muted/20 border border-border/30"
             >
-              <span className="text-xs text-muted-foreground min-w-[20px]">{index + 1}.</span>
+              <span className="text-xs text-muted-foreground min-w-[18px]">{index + 1}.</span>
               
-              {/* Type selector */}
-              <select
-                value={passenger.type}
-                onChange={(e) => updatePassenger(passenger.id, { type: e.target.value as Passenger["type"] })}
-                className="bg-muted/40 border border-border/30 rounded-lg px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-              >
-                <option value="adult">Adulte</option>
-                <option value="child">Enfant</option>
-              </select>
+              {/* Type toggle buttons */}
+              <div className="flex items-center gap-0.5 p-0.5 rounded-lg bg-muted/40">
+                <button
+                  onClick={() => updatePassenger(passenger.id, { type: "adult" })}
+                  className={cn(
+                    "px-2 py-1 rounded text-[10px] font-medium transition-all",
+                    passenger.type === "adult" 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Adulte
+                </button>
+                <button
+                  onClick={() => updatePassenger(passenger.id, { type: "child" })}
+                  className={cn(
+                    "px-2 py-1 rounded text-[10px] font-medium transition-all",
+                    passenger.type === "child" 
+                      ? "bg-background text-foreground shadow-sm" 
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Enfant
+                </button>
+              </div>
 
-              {/* Baggage selector */}
-              <select
-                value={passenger.baggage}
-                onChange={(e) => updatePassenger(passenger.id, { baggage: e.target.value as Passenger["baggage"] })}
-                className="flex-1 bg-muted/40 border border-border/30 rounded-lg px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
-              >
-                <option value="personal">Objet personnel</option>
-                <option value="cabin">Bagage cabine</option>
-                <option value="checked">Bagage en soute</option>
-              </select>
+              {/* Baggage buttons with emojis */}
+              <div className="flex items-center gap-1 flex-1">
+                {baggageOptions.map((bag) => (
+                  <button
+                    key={bag.id}
+                    onClick={() => updatePassenger(passenger.id, { baggage: bag.id as Passenger["baggage"] })}
+                    title={bag.title}
+                    className={cn(
+                      "flex-1 py-1 rounded-lg text-sm transition-all text-center",
+                      passenger.baggage === bag.id
+                        ? "bg-primary/15 border border-primary/40"
+                        : "bg-muted/30 border border-border/30 hover:bg-muted/50"
+                    )}
+                  >
+                    {bag.label}
+                  </button>
+                ))}
+              </div>
 
               {/* Remove button */}
               {passengers.length > 1 && (
@@ -289,19 +336,32 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
         </div>
       </div>
 
-      {/* Direct Flights Toggle */}
-      <button
-        onClick={() => setDirectOnly(!directOnly)}
-        className={cn(
-          "w-full py-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2",
-          directOnly
-            ? "bg-primary/10 text-primary border border-primary/30"
-            : "bg-muted/20 text-muted-foreground border border-border/30 hover:bg-muted/40 hover:text-foreground"
-        )}
-      >
-        <Plane className="h-3.5 w-3.5" />
-        Vols directs uniquement
-      </button>
+      {/* Options Section */}
+      <div className="space-y-2">
+        <span className="text-xs font-medium text-foreground">Options</span>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { key: "directOnly" as const, label: "Vols directs", icon: "✈️" },
+            { key: "flexibleDates" as const, label: "Dates flexibles", icon: "📅" },
+            { key: "includeNearbyAirports" as const, label: "Aéroports proches", icon: "📍" },
+            { key: "preferredAirline" as const, label: "Compagnie préférée", icon: "⭐" },
+          ].map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => toggleOption(opt.key)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-all",
+                options[opt.key]
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "bg-muted/20 text-muted-foreground border border-border/30 hover:bg-muted/40 hover:text-foreground"
+              )}
+            >
+              <span>{opt.icon}</span>
+              <span className="font-medium">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
