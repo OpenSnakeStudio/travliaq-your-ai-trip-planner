@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Send, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 export type ChatQuickAction =
   | { type: "tab"; tab: "flights" | "activities" | "stays" | "preferences" }
@@ -108,7 +107,20 @@ export default function PlannerChat({ onAction }: PlannerChatProps) {
   };
 
   return (
-    <aside className="h-full w-full border-r border-border bg-card flex flex-col">
+    <aside className="h-full w-full border-r border-primary/10 bg-gradient-to-b from-secondary to-secondary/95 flex flex-col">
+      {/* Header with AI branding */}
+      <header className="px-5 py-4 border-b border-primary/10">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-adventure">
+            <Sparkles className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="font-montserrat font-bold text-secondary-foreground">Assistant voyage</h2>
+            <p className="text-xs text-secondary-foreground/60">Propulsé par IA</p>
+          </div>
+        </div>
+      </header>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto themed-scroll p-4 space-y-3">
         {messages.map((m) => (
@@ -117,8 +129,8 @@ export default function PlannerChat({ onAction }: PlannerChatProps) {
               className={cn(
                 "rounded-2xl px-4 py-3 text-sm leading-relaxed",
                 m.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-adventure"
+                  : "bg-secondary-foreground/10 text-secondary-foreground backdrop-blur-sm border border-primary/10"
               )}
             >
               {m.text}
@@ -132,30 +144,13 @@ export default function PlannerChat({ onAction }: PlannerChatProps) {
                     href={link.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="block rounded-xl bg-background border border-border p-3 hover:bg-muted/50 transition-colors"
+                    className="block rounded-xl bg-secondary-foreground/5 border border-primary/10 p-3 hover:bg-secondary-foreground/10 transition-colors"
                   >
-                    <div className="text-sm font-medium text-foreground">{link.title}</div>
-                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{link.snippet}</div>
+                    <div className="text-sm font-medium text-secondary-foreground">{link.title}</div>
+                    <div className="text-xs text-secondary-foreground/60 mt-1 line-clamp-2">{link.snippet}</div>
                     <div className="text-xs text-primary mt-1 truncate">{link.url}</div>
                   </a>
                 ))}
-                <div className="flex gap-2 mt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onAction({ type: "tab", tab: "activities" })}
-                  >
-                    <Sparkles className="h-4 w-4 mr-1.5" />
-                    Activités
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onAction({ type: "tab", tab: "flights" })}
-                  >
-                    Vols
-                  </Button>
-                </div>
               </div>
             )}
           </div>
@@ -163,14 +158,14 @@ export default function PlannerChat({ onAction }: PlannerChatProps) {
       </div>
 
       {/* Input */}
-      <footer className="p-3 border-t border-border bg-card/80">
-        <div className="flex items-end gap-2">
+      <footer className="p-4 border-t border-primary/10 bg-secondary/80 backdrop-blur-sm">
+        <div className="flex items-end gap-3">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ex: Je veux aller à New York..."
+            placeholder="Où voulez-vous voyager ?"
             rows={1}
-            className="min-h-[44px] max-h-24 flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className="min-h-[48px] max-h-24 flex-1 resize-none rounded-xl border border-primary/20 bg-secondary-foreground/5 px-4 py-3 text-sm text-secondary-foreground placeholder:text-secondary-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -181,7 +176,7 @@ export default function PlannerChat({ onAction }: PlannerChatProps) {
           <button
             type="button"
             onClick={send}
-            className="h-11 w-11 shrink-0 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition-opacity"
+            className="h-12 w-12 shrink-0 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center hover:shadow-glow transition-all duration-300"
             aria-label="Envoyer"
           >
             <Send className="h-4 w-4" />

@@ -1,5 +1,4 @@
-import { Building2, MapPin, Plane, Settings2, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Building2, MapPin, Plane, Settings2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType } from "@/pages/TravelPlanner";
 
@@ -17,18 +16,9 @@ const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
 
 export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarProps) {
   return (
-    <div className="pointer-events-none absolute top-4 left-4 right-4 z-20 flex items-start justify-between">
-      {/* Back button */}
-      <Link
-        to="/"
-        className="pointer-events-auto flex items-center gap-2 h-10 px-4 rounded-full border border-border bg-card/95 backdrop-blur-lg shadow-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        <span className="hidden sm:inline">Retour</span>
-      </Link>
-
-      {/* Tabs - centered */}
-      <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card/95 backdrop-blur-lg shadow-lg px-1.5 py-1.5">
+    <div className="pointer-events-none absolute top-4 left-8 z-20">
+      {/* Tabs - positioned left with travel/AI aesthetic */}
+      <div className="pointer-events-auto inline-flex items-center gap-1 rounded-2xl bg-secondary/90 backdrop-blur-xl shadow-deep px-2 py-2 border border-primary/20">
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
@@ -38,10 +28,10 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
               key={t.id}
               onClick={() => onTabChange(t.id)}
               className={cn(
-                "h-9 px-4 rounded-full text-sm font-medium flex items-center gap-2 transition-all duration-200",
+                "h-10 px-5 rounded-xl text-sm font-medium flex items-center gap-2.5 transition-all duration-300",
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-adventure"
-                  : "text-foreground hover:bg-muted"
+                  ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-glow"
+                  : "text-secondary-foreground/80 hover:text-secondary-foreground hover:bg-secondary-foreground/10"
               )}
             >
               <Icon className="h-4 w-4" />
@@ -50,9 +40,6 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
           );
         })}
       </div>
-
-      {/* Spacer for balance */}
-      <div className="w-24" />
     </div>
   );
 }

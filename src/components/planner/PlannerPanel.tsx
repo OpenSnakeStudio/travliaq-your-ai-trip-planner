@@ -15,10 +15,10 @@ interface PlannerPanelProps {
 const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar" }: PlannerPanelProps) => {
   const wrapperClass =
     layout === "overlay"
-      ? "pointer-events-none absolute top-20 right-4 bottom-4 w-[320px] rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-deep overflow-hidden z-10"
+      ? "pointer-events-none absolute top-20 left-8 bottom-4 w-[340px] rounded-2xl border border-primary/20 bg-card/95 backdrop-blur-xl shadow-deep overflow-hidden z-10"
       : "w-80 lg:w-96 border-l border-border bg-card overflow-y-auto themed-scroll shrink-0";
 
-  const innerClass = layout === "overlay" ? "pointer-events-auto h-full overflow-y-auto themed-scroll p-4" : "p-4";
+  const innerClass = layout === "overlay" ? "pointer-events-auto h-full overflow-y-auto themed-scroll p-5" : "p-5";
 
   return (
     <aside className={wrapperClass} aria-label="Panneau de filtres">

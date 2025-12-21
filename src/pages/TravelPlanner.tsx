@@ -56,7 +56,7 @@ const TravelPlanner = () => {
         <link rel="canonical" href="/planner" />
       </Helmet>
 
-      <div className="h-[100svh] w-full grid grid-cols-[420px_1fr] overflow-hidden bg-background">
+      <div className="h-[100svh] w-full grid grid-cols-[460px_1fr] overflow-hidden bg-background">
         {/* Left: Chat */}
         <PlannerChat
           onAction={(action) => {
