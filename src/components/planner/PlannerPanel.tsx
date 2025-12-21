@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Calendar, Users, Armchair, Filter, Clock, Sun, Moon, DollarSign, Sliders, X } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Plane, MapPin, Building2, Star, Clock, Wifi, Car, Coffee, Wind, X, Heart, Utensils, TreePine, Palette, Waves, Dumbbell, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType } from "@/pages/TravelPlanner";
 import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { fr } from "date-fns/locale";
 
 interface PlannerPanelProps {
   activeTab: TabType;
@@ -36,15 +36,15 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
       <div className={cn(innerClass, layout === "overlay" && "rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg overflow-hidden")}>
         {/* Header with close button */}
         {layout === "overlay" && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-muted/30">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
             <h2 className="font-medium text-foreground text-sm">{tabLabels[activeTab]}</h2>
             {onClose && (
               <button
                 onClick={onClose}
-                className="h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 aria-label="Fermer le panneau"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
@@ -60,126 +60,159 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
   );
 };
 
+// Section Header Component
+const SectionHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
+  <div className="flex items-center gap-2 mb-3">
+    <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center">
+      <Icon className="h-3.5 w-3.5 text-primary" />
+    </div>
+    <span className="text-sm font-medium text-foreground">{title}</span>
+  </div>
+);
+
+// Chip Button Component
+const ChipButton = ({ 
+  children, 
+  selected, 
+  onClick 
+}: { 
+  children: React.ReactNode; 
+  selected?: boolean; 
+  onClick?: () => void;
+}) => (
+  <button
+    onClick={onClick}
+    className={cn(
+      "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
+      selected
+        ? "bg-primary text-primary-foreground shadow-sm"
+        : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+    )}
+  >
+    {children}
+  </button>
+);
+
 // Flights Panel
 const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoom: number) => void }) => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [passengers, setPassengers] = useState(2);
   const [travelClass, setTravelClass] = useState<"economy" | "business" | "first">("economy");
   const [directOnly, setDirectOnly] = useState(false);
-
-  const priceCalendar = [
-    { day: 15, price: 120, cheapest: false },
-    { day: 16, price: 95, cheapest: true },
-    { day: 17, price: 110, cheapest: false },
-    { day: 18, price: 145, cheapest: false },
-    { day: 19, price: 98, cheapest: true },
-    { day: 20, price: 130, cheapest: false },
-    { day: 21, price: 140, cheapest: false },
-  ];
+  const [departureTime, setDepartureTime] = useState<"morning" | "afternoon" | "evening" | null>(null);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Calendar */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4 flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          Calendrier des prix
-        </h3>
-        <div className="grid grid-cols-7 gap-1">
-          {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-            <div key={i} className="text-center text-xs text-muted-foreground py-1">
-              {d}
-            </div>
-          ))}
-          {priceCalendar.map((item) => (
+        <SectionHeader icon={CalendarIcon} title="Date de départ" />
+        <div className="rounded-xl border border-border/50 bg-muted/20 overflow-hidden">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={setSelectedDate}
+            locale={fr}
+            className="w-full pointer-events-auto"
+            classNames={{
+              months: "flex flex-col",
+              month: "space-y-2",
+              caption: "flex justify-center pt-1 relative items-center px-8",
+              caption_label: "text-xs font-medium",
+              nav: "space-x-1 flex items-center",
+              nav_button: "h-6 w-6 bg-transparent p-0 opacity-50 hover:opacity-100 rounded-md hover:bg-muted",
+              nav_button_previous: "absolute left-1",
+              nav_button_next: "absolute right-1",
+              table: "w-full border-collapse",
+              head_row: "flex justify-around",
+              head_cell: "text-muted-foreground rounded-md w-8 font-normal text-[10px] uppercase",
+              row: "flex w-full mt-1 justify-around",
+              cell: "h-7 w-7 text-center text-xs p-0 relative",
+              day: "h-7 w-7 p-0 font-normal rounded-md hover:bg-primary/10 transition-colors",
+              day_range_end: "day-range-end",
+              day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
+              day_today: "bg-accent text-accent-foreground",
+              day_outside: "opacity-30",
+              day_disabled: "opacity-30",
+              day_hidden: "invisible",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Passengers */}
+      <div>
+        <SectionHeader icon={Users} title="Voyageurs" />
+        <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/30">
+          <span className="text-sm text-foreground">Passagers</span>
+          <div className="flex items-center gap-3">
             <button
-              key={item.day}
-              className={cn(
-                "aspect-square rounded-lg flex flex-col items-center justify-center text-xs transition-all",
-                item.cheapest
-                  ? "bg-primary/10 border-2 border-primary text-primary font-semibold"
-                  : "bg-muted hover:bg-muted/80 text-foreground"
-              )}
+              onClick={() => setPassengers(Math.max(1, passengers - 1))}
+              className="h-7 w-7 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center text-foreground transition-colors"
             >
-              <span>{item.day}</span>
-              <span className="text-[10px]">{item.price}€</span>
+              −
             </button>
-          ))}
+            <span className="text-sm font-semibold w-4 text-center">{passengers}</span>
+            <button
+              onClick={() => setPassengers(passengers + 1)}
+              className="h-7 w-7 rounded-full bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center transition-colors"
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="font-montserrat font-bold text-foreground flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          Voyageurs
-        </h3>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setPassengers(Math.max(1, passengers - 1))}
-            className="h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
-          >
-            -
-          </button>
-          <span className="text-lg font-semibold w-8 text-center">{passengers}</span>
-          <button
-            onClick={() => setPassengers(passengers + 1)}
-            className="h-10 w-10 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
-          >
-            +
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-montserrat font-bold text-foreground flex items-center gap-2">
-          <Armchair className="h-5 w-5 text-primary" />
-          Classe
-        </h3>
-        <div className="flex gap-2">
+      {/* Class */}
+      <div>
+        <SectionHeader icon={Plane} title="Classe" />
+        <div className="flex gap-1.5">
           {[
-            { id: "economy", label: "Éco" },
+            { id: "economy", label: "Économique" },
             { id: "business", label: "Affaires" },
             { id: "first", label: "Première" },
           ].map((c) => (
-            <button
+            <ChipButton
               key={c.id}
+              selected={travelClass === c.id}
               onClick={() => setTravelClass(c.id as typeof travelClass)}
-              className={cn(
-                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
-                travelClass === c.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
             >
               {c.label}
-            </button>
+            </ChipButton>
           ))}
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="font-montserrat font-bold text-foreground flex items-center gap-2">
-          <Filter className="h-5 w-5 text-primary" />
-          Filtres
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-3">
-            <Checkbox
-              id="direct"
-              checked={directOnly}
-              onCheckedChange={(c) => setDirectOnly(!!c)}
-            />
-            <Label htmlFor="direct" className="text-sm">Vols directs uniquement</Label>
+      {/* Filters */}
+      <div>
+        <SectionHeader icon={Clock} title="Horaires" />
+        <div className="space-y-2">
+          <div className="flex gap-1.5 flex-wrap">
+            {[
+              { id: "morning", label: "Matin", time: "6h-12h" },
+              { id: "afternoon", label: "Après-midi", time: "12h-18h" },
+              { id: "evening", label: "Soir", time: "18h-00h" },
+            ].map((t) => (
+              <ChipButton
+                key={t.id}
+                selected={departureTime === t.id}
+                onClick={() => setDepartureTime(departureTime === t.id ? null : t.id as typeof departureTime)}
+              >
+                {t.label}
+              </ChipButton>
+            ))}
           </div>
-          <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground">Heure de départ</Label>
-            <div className="flex gap-2">
-              <button className="flex-1 py-2 px-3 rounded-lg bg-muted text-sm flex items-center justify-center gap-1 hover:bg-muted/80">
-                <Sun className="h-4 w-4" /> Matin
-              </button>
-              <button className="flex-1 py-2 px-3 rounded-lg bg-muted text-sm flex items-center justify-center gap-1 hover:bg-muted/80">
-                <Moon className="h-4 w-4" /> Soir
-              </button>
-            </div>
-          </div>
+          <button
+            onClick={() => setDirectOnly(!directOnly)}
+            className={cn(
+              "w-full p-2.5 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2",
+              directOnly
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
+            )}
+          >
+            <Plane className="h-3.5 w-3.5" />
+            Vols directs uniquement
+          </button>
         </div>
       </div>
     </div>
@@ -188,100 +221,121 @@ const FlightsPanel = ({ onMapMove }: { onMapMove: (center: [number, number], zoo
 
 // Activities Panel
 const ActivitiesPanel = () => {
-  const [budgetRange, setBudgetRange] = useState([0, 100]);
-  const [activityTypes, setActivityTypes] = useState<string[]>(["culture", "outdoor"]);
+  const [budgetRange, setBudgetRange] = useState([0, 150]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(["culture"]);
+  const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
 
   const types = [
-    { id: "culture", label: "Culture", emoji: "🏛️" },
-    { id: "outdoor", label: "Plein air", emoji: "🌲" },
-    { id: "food", label: "Gastronomie", emoji: "🍽️" },
-    { id: "nightlife", label: "Vie nocturne", emoji: "🌙" },
-    { id: "shopping", label: "Shopping", emoji: "🛍️" },
+    { id: "culture", label: "Culture", icon: Palette },
+    { id: "outdoor", label: "Nature", icon: TreePine },
+    { id: "food", label: "Gastronomie", icon: Utensils },
+    { id: "wellness", label: "Bien-être", icon: Sparkles },
   ];
 
   const toggleType = (id: string) => {
-    setActivityTypes((prev) =>
+    setSelectedTypes((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
     );
   };
 
+  const suggestions = [
+    { title: "Tour Eiffel", duration: "2h", price: 28, rating: 4.8, image: "🗼" },
+    { title: "Croisière Seine", duration: "1h30", price: 15, rating: 4.6, image: "🚢" },
+    { title: "Montmartre", duration: "3h", price: 0, rating: 4.7, image: "🎨" },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Types */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4 flex items-center gap-2">
-          <Filter className="h-5 w-5 text-primary" />
-          Type d'activité
-        </h3>
-        <div className="flex flex-wrap gap-2">
-          {types.map((type) => (
-            <button
-              key={type.id}
-              onClick={() => toggleType(type.id)}
-              className={cn(
-                "py-2 px-4 rounded-full text-sm font-medium transition-all flex items-center gap-2",
-                activityTypes.includes(type.id)
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <span>{type.emoji}</span>
-              {type.label}
-            </button>
-          ))}
+        <SectionHeader icon={MapPin} title="Type d'activité" />
+        <div className="grid grid-cols-2 gap-2">
+          {types.map((type) => {
+            const Icon = type.icon;
+            const isSelected = selectedTypes.includes(type.id);
+            return (
+              <button
+                key={type.id}
+                onClick={() => toggleType(type.id)}
+                className={cn(
+                  "p-3 rounded-xl text-xs font-medium transition-all flex items-center gap-2",
+                  isSelected
+                    ? "bg-primary/10 text-primary border border-primary/30"
+                    : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {type.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
+      {/* Duration */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4 flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" />
-          Durée
-        </h3>
-        <div className="flex gap-2">
-          {["< 2h", "2-4h", "> 4h"].map((d) => (
-            <button
-              key={d}
-              className="flex-1 py-2 px-3 rounded-lg bg-muted text-sm hover:bg-muted/80 transition-colors"
-            >
-              {d}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4 flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-primary" />
-          Budget
-        </h3>
-        <Slider
-          value={budgetRange}
-          onValueChange={setBudgetRange}
-          max={200}
-          step={10}
-          className="w-full"
-        />
-        <div className="flex justify-between text-sm text-muted-foreground mt-2">
-          <span>{budgetRange[0]}€</span>
-          <span>{budgetRange[1]}€</span>
-        </div>
-      </div>
-
-      <div className="pt-4 border-t border-border">
-        <h4 className="font-semibold text-foreground mb-3">Suggestions</h4>
-        <div className="space-y-3">
+        <SectionHeader icon={Clock} title="Durée" />
+        <div className="flex gap-1.5">
           {[
-            { title: "Tour Eiffel", duration: "2h", price: "28€" },
-            { title: "Croisière Seine", duration: "1h30", price: "15€" },
-            { title: "Montmartre", duration: "3h", price: "Gratuit" },
-          ].map((item) => (
+            { id: "short", label: "< 2h" },
+            { id: "medium", label: "2-4h" },
+            { id: "long", label: "> 4h" },
+          ].map((d) => (
+            <ChipButton
+              key={d.id}
+              selected={selectedDuration === d.id}
+              onClick={() => setSelectedDuration(selectedDuration === d.id ? null : d.id)}
+            >
+              {d.label}
+            </ChipButton>
+          ))}
+        </div>
+      </div>
+
+      {/* Budget */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <SectionHeader icon={Star} title="Budget" />
+          <span className="text-xs text-primary font-medium">
+            {budgetRange[0]}€ - {budgetRange[1]}€
+          </span>
+        </div>
+        <div className="px-1">
+          <Slider
+            value={budgetRange}
+            onValueChange={setBudgetRange}
+            max={200}
+            step={10}
+            className="w-full"
+          />
+        </div>
+      </div>
+
+      {/* Suggestions */}
+      <div className="pt-3 border-t border-border/30">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Suggestions</span>
+        <div className="mt-3 space-y-2">
+          {suggestions.map((item) => (
             <div
               key={item.title}
-              className="p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+              className="p-3 rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors cursor-pointer border border-border/20 group"
             >
-              <div className="font-medium text-foreground">{item.title}</div>
-              <div className="text-sm text-muted-foreground flex gap-3">
-                <span>{item.duration}</span>
-                <span>{item.price}</span>
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">{item.image}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-foreground">{item.title}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-muted-foreground">{item.duration}</span>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs font-medium text-primary">
+                      {item.price === 0 ? "Gratuit" : `${item.price}€`}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  {item.rating}
+                </div>
               </div>
             </div>
           ))}
@@ -293,72 +347,118 @@ const ActivitiesPanel = () => {
 
 // Stays Panel
 const StaysPanel = () => {
-  const [priceRange, setPriceRange] = useState([50, 300]);
-  const [rating, setRating] = useState(3);
+  const [priceRange, setPriceRange] = useState([50, 250]);
+  const [rating, setRating] = useState<number | null>(4);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(["hotel"]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+  const stayTypes = [
+    { id: "hotel", label: "Hôtel", icon: Building2 },
+    { id: "apartment", label: "Appartement", icon: Building2 },
+    { id: "hostel", label: "Auberge", icon: Building2 },
+  ];
+
+  const amenities = [
+    { id: "wifi", label: "WiFi", icon: Wifi },
+    { id: "parking", label: "Parking", icon: Car },
+    { id: "breakfast", label: "Petit-déj", icon: Coffee },
+    { id: "ac", label: "Clim", icon: Wind },
+  ];
+
+  const toggleType = (id: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAmenity = (id: string) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
+    );
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Price Range */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4 flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-primary" />
-          Budget par nuit
-        </h3>
-        <Slider
-          value={priceRange}
-          onValueChange={setPriceRange}
-          max={1000}
-          step={25}
-          className="w-full"
-        />
-        <div className="flex justify-between text-sm text-muted-foreground mt-2">
-          <span>{priceRange[0]}€</span>
-          <span>{priceRange[1]}€</span>
+        <div className="flex items-center justify-between mb-3">
+          <SectionHeader icon={Building2} title="Budget / nuit" />
+          <span className="text-xs text-primary font-medium">
+            {priceRange[0]}€ - {priceRange[1]}€
+          </span>
+        </div>
+        <div className="px-1">
+          <Slider
+            value={priceRange}
+            onValueChange={setPriceRange}
+            max={500}
+            step={25}
+            className="w-full"
+          />
         </div>
       </div>
 
+      {/* Rating */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4">Note minimum</h3>
-        <div className="flex gap-2">
+        <SectionHeader icon={Star} title="Note minimum" />
+        <div className="flex gap-1.5">
           {[3, 3.5, 4, 4.5].map((r) => (
             <button
               key={r}
-              onClick={() => setRating(r)}
+              onClick={() => setRating(rating === r ? null : r)}
               className={cn(
-                "flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all",
+                "flex-1 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1",
                 rating === r
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
               )}
             >
-              {r}+ ⭐
+              <Star className={cn("h-3 w-3", rating === r ? "fill-primary" : "")} />
+              {r}+
             </button>
           ))}
         </div>
       </div>
 
+      {/* Type */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4">Type d'hébergement</h3>
-        <div className="space-y-2">
-          {["Hôtel", "Appartement", "Auberge", "Villa"].map((type) => (
-            <div key={type} className="flex items-center space-x-3">
-              <Checkbox id={type} />
-              <Label htmlFor={type}>{type}</Label>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-4">Équipements</h3>
-        <div className="flex flex-wrap gap-2">
-          {["WiFi", "Piscine", "Parking", "Petit-déj", "Climatisation"].map((eq) => (
-            <button
-              key={eq}
-              className="py-1.5 px-3 rounded-full bg-muted text-sm text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+        <SectionHeader icon={Building2} title="Type" />
+        <div className="flex gap-1.5 flex-wrap">
+          {stayTypes.map((type) => (
+            <ChipButton
+              key={type.id}
+              selected={selectedTypes.includes(type.id)}
+              onClick={() => toggleType(type.id)}
             >
-              {eq}
-            </button>
+              {type.label}
+            </ChipButton>
           ))}
+        </div>
+      </div>
+
+      {/* Amenities */}
+      <div>
+        <SectionHeader icon={Sparkles} title="Équipements" />
+        <div className="grid grid-cols-2 gap-2">
+          {amenities.map((amenity) => {
+            const Icon = amenity.icon;
+            const isSelected = selectedAmenities.includes(amenity.id);
+            return (
+              <button
+                key={amenity.id}
+                onClick={() => toggleAmenity(amenity.id)}
+                className={cn(
+                  "p-2.5 rounded-xl text-xs font-medium transition-all flex items-center gap-2",
+                  isSelected
+                    ? "bg-primary/10 text-primary border border-primary/30"
+                    : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {amenity.label}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -368,23 +468,31 @@ const StaysPanel = () => {
 // Preferences Panel
 const PreferencesPanel = () => {
   const [pace, setPace] = useState<"relaxed" | "moderate" | "intense">("moderate");
-  const [budgetSensitivity, setBudgetSensitivity] = useState(50);
+  const [budgetLevel, setBudgetLevel] = useState(50);
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(["culture", "food"]);
+  const [travelStyle, setTravelStyle] = useState<string>("couple");
+
+  const interests = [
+    { id: "culture", label: "Culture", icon: Palette },
+    { id: "nature", label: "Nature", icon: TreePine },
+    { id: "food", label: "Gastronomie", icon: Utensils },
+    { id: "beach", label: "Plage", icon: Waves },
+    { id: "wellness", label: "Bien-être", icon: Heart },
+    { id: "sport", label: "Sport", icon: Dumbbell },
+  ];
+
+  const toggleInterest = (id: string) => {
+    setSelectedInterests((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Pace */}
       <div>
-        <h3 className="font-montserrat font-bold text-foreground mb-2 flex items-center gap-2">
-          <Sliders className="h-5 w-5 text-primary" />
-          Vos préférences
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Ces réglages affectent les recommandations sur la carte.
-        </p>
-      </div>
-
-      <div>
-        <Label className="font-semibold">Rythme de voyage</Label>
-        <div className="flex gap-2 mt-2">
+        <SectionHeader icon={Clock} title="Rythme de voyage" />
+        <div className="grid grid-cols-3 gap-2">
           {[
             { id: "relaxed", label: "Détente", emoji: "🧘" },
             { id: "moderate", label: "Modéré", emoji: "🚶" },
@@ -394,10 +502,10 @@ const PreferencesPanel = () => {
               key={p.id}
               onClick={() => setPace(p.id as typeof pace)}
               className={cn(
-                "flex-1 py-3 px-3 rounded-lg text-sm font-medium transition-all flex flex-col items-center gap-1",
+                "py-3 rounded-xl text-xs font-medium transition-all flex flex-col items-center gap-1.5",
                 pace === p.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:text-foreground"
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
               )}
             >
               <span className="text-lg">{p.emoji}</span>
@@ -407,50 +515,73 @@ const PreferencesPanel = () => {
         </div>
       </div>
 
+      {/* Budget Sensitivity */}
       <div>
-        <Label className="font-semibold">Sensibilité au budget</Label>
-        <p className="text-sm text-muted-foreground mb-3">
-          Économique ← → Premium
-        </p>
-        <Slider
-          value={[budgetSensitivity]}
-          onValueChange={([v]) => setBudgetSensitivity(v)}
-          max={100}
-          step={10}
-          className="w-full"
-        />
-      </div>
-
-      <div>
-        <Label className="font-semibold">Centres d'intérêt</Label>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {[
-            { label: "Histoire", emoji: "🏛️" },
-            { label: "Nature", emoji: "🌿" },
-            { label: "Art", emoji: "🎨" },
-            { label: "Gastronomie", emoji: "🍷" },
-            { label: "Sport", emoji: "⚽" },
-            { label: "Plage", emoji: "🏖️" },
-          ].map((interest) => (
-            <button
-              key={interest.label}
-              className="py-2 px-4 rounded-full bg-muted text-sm hover:bg-primary hover:text-primary-foreground transition-all"
-            >
-              {interest.emoji} {interest.label}
-            </button>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <SectionHeader icon={Star} title="Niveau de confort" />
+          <span className="text-xs text-muted-foreground">
+            {budgetLevel < 33 ? "Économique" : budgetLevel < 66 ? "Confort" : "Premium"}
+          </span>
+        </div>
+        <div className="px-1">
+          <Slider
+            value={[budgetLevel]}
+            onValueChange={([v]) => setBudgetLevel(v)}
+            max={100}
+            step={1}
+            className="w-full"
+          />
         </div>
       </div>
 
+      {/* Interests */}
       <div>
-        <Label className="font-semibold">Style de voyage</Label>
-        <div className="grid grid-cols-2 gap-2 mt-2">
-          {["Solo", "Couple", "Famille", "Amis"].map((style) => (
+        <SectionHeader icon={Heart} title="Centres d'intérêt" />
+        <div className="grid grid-cols-3 gap-2">
+          {interests.map((interest) => {
+            const Icon = interest.icon;
+            const isSelected = selectedInterests.includes(interest.id);
+            return (
+              <button
+                key={interest.id}
+                onClick={() => toggleInterest(interest.id)}
+                className={cn(
+                  "py-2.5 rounded-xl text-xs font-medium transition-all flex flex-col items-center gap-1.5",
+                  isSelected
+                    ? "bg-primary/10 text-primary border border-primary/30"
+                    : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {interest.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Travel Style */}
+      <div>
+        <SectionHeader icon={Users} title="Style de voyage" />
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: "solo", label: "Solo", emoji: "🧑" },
+            { id: "couple", label: "Couple", emoji: "💑" },
+            { id: "family", label: "Famille", emoji: "👨‍👩‍👧" },
+            { id: "friends", label: "Amis", emoji: "👯" },
+          ].map((style) => (
             <button
-              key={style}
-              className="py-3 rounded-lg bg-muted text-sm hover:bg-primary hover:text-primary-foreground transition-all"
+              key={style.id}
+              onClick={() => setTravelStyle(style.id)}
+              className={cn(
+                "py-3 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-2",
+                travelStyle === style.id
+                  ? "bg-primary/10 text-primary border border-primary/30"
+                  : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50"
+              )}
             >
-              {style}
+              <span>{style.emoji}</span>
+              {style.label}
             </button>
           ))}
         </div>
