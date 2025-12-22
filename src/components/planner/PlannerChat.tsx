@@ -7,7 +7,17 @@ import logo from "@/assets/logo-travliaq.png";
 export type ChatQuickAction =
   | { type: "tab"; tab: "flights" | "activities" | "stays" | "preferences" }
   | { type: "zoom"; center: [number, number]; zoom: number }
-  | { type: "tabAndZoom"; tab: "flights" | "activities" | "stays" | "preferences"; center: [number, number]; zoom: number };
+  | { type: "tabAndZoom"; tab: "flights" | "activities" | "stays" | "preferences"; center: [number, number]; zoom: number }
+  | { type: "updateFlight"; flightData: FlightFormData };
+
+export interface FlightFormData {
+  from?: string;
+  to?: string;
+  departureDate?: string;
+  returnDate?: string;
+  passengers?: number;
+  tripType?: "roundtrip" | "oneway" | "multi";
+}
 
 interface ChatMessage {
   id: string;
@@ -150,8 +160,26 @@ export default function PlannerChat({ onAction }: PlannerChatProps) {
       const rawContent = data?.content || "Désolé, je n'ai pas pu répondre.";
       const { cleanContent, action } = parseAction(rawContent);
 
-      // Trigger map/tab action if present
-      if (action) {
+      // Handle flight data from AI
+      if (data?.flightData) {
+        // First open the flights panel and zoom if destination is known
+        const destCity = data.flightData.to;
+        if (destCity) {
+          const coords = getCityCoords(destCity.toLowerCase().split(",")[0].trim());
+          if (coords) {
+            onAction({ type: "tabAndZoom", tab: "flights", center: coords, zoom: 8 });
+          } else {
+            onAction({ type: "tab", tab: "flights" });
+          }
+        } else {
+          onAction({ type: "tab", tab: "flights" });
+        }
+        
+        // Then update the flight form
+        onAction({ type: "updateFlight", flightData: data.flightData });
+      }
+      // Trigger map/tab action if present (and no flight data already handled)
+      else if (action) {
         onAction(action);
       }
 

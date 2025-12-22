@@ -1,10 +1,10 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import PlannerMap from "@/components/planner/PlannerMap";
 import PlannerPanel, { FlightRoutePoint } from "@/components/planner/PlannerPanel";
 import PlannerCard from "@/components/planner/PlannerCard";
-import PlannerChat from "@/components/planner/PlannerChat";
+import PlannerChat, { FlightFormData } from "@/components/planner/PlannerChat";
 import PlannerTopBar from "@/components/planner/PlannerTopBar";
 
 export type TabType = "flights" | "activities" | "stays" | "preferences";
@@ -30,6 +30,7 @@ const TravelPlanner = () => {
   const [isPanelVisible, setIsPanelVisible] = useState(false); // No panel at start
   const [flightRoutes, setFlightRoutes] = useState<FlightRoutePoint[]>([]);
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
+  const [flightFormData, setFlightFormData] = useState<FlightFormData | null>(null);
 
   const handleTabChange = useCallback((tab: TabType) => {
     // Toggle: if clicking on the same tab and panel is visible, close it
@@ -72,7 +73,10 @@ const TravelPlanner = () => {
           <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
             <PlannerChat
               onAction={(action) => {
-                if (action.type === "tab") setActiveTab(action.tab);
+                if (action.type === "tab") {
+                  setActiveTab(action.tab);
+                  setIsPanelVisible(true);
+                }
                 if (action.type === "zoom") {
                   setMapCenter(action.center);
                   setMapZoom(action.zoom);
@@ -81,6 +85,11 @@ const TravelPlanner = () => {
                   setActiveTab(action.tab);
                   setMapCenter(action.center);
                   setMapZoom(action.zoom);
+                  setIsPanelVisible(true);
+                }
+                if (action.type === "updateFlight") {
+                  setFlightFormData(action.flightData);
+                  setIsPanelVisible(true);
                 }
                 setSelectedPin(null);
               }}
@@ -119,6 +128,8 @@ const TravelPlanner = () => {
                   setMapZoom(zoom);
                 }}
                 onFlightRoutesChange={setFlightRoutes}
+                flightFormData={flightFormData}
+                onFlightFormDataConsumed={() => setFlightFormData(null)}
               />
 
               {/* Floating card on map */}

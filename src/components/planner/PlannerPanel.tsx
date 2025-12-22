@@ -12,6 +12,15 @@ export interface FlightRoutePoint {
   lng?: number;
 }
 
+export interface FlightFormData {
+  from?: string;
+  to?: string;
+  departureDate?: string;
+  returnDate?: string;
+  passengers?: number;
+  tripType?: "roundtrip" | "oneway" | "multi";
+}
+
 interface PlannerPanelProps {
   activeTab: TabType;
   onMapMove: (center: [number, number], zoom: number) => void;
@@ -19,6 +28,8 @@ interface PlannerPanelProps {
   onClose?: () => void;
   isVisible?: boolean;
   onFlightRoutesChange?: (routes: FlightRoutePoint[]) => void;
+  flightFormData?: FlightFormData | null;
+  onFlightFormDataConsumed?: () => void;
 }
 
 const tabLabels: Record<TabType, string> = {
@@ -28,7 +39,7 @@ const tabLabels: Record<TabType, string> = {
   preferences: "Préférences",
 };
 
-const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange }: PlannerPanelProps) => {
+const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed }: PlannerPanelProps) => {
   if (!isVisible && layout === "overlay") return null;
 
   const wrapperClass =
@@ -57,7 +68,7 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
           </div>
         )}
         <div className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]">
-          {activeTab === "flights" && <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} />}
+          {activeTab === "flights" && <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} flightFormData={flightFormData} onFlightFormDataConsumed={onFlightFormDataConsumed} />}
           {activeTab === "activities" && <ActivitiesPanel />}
           {activeTab === "stays" && <StaysPanel />}
           {activeTab === "preferences" && <PreferencesPanel />}
@@ -118,9 +129,11 @@ interface FlightOptions {
 }
 
 // Flights Panel
-const FlightsPanel = ({ onMapMove, onFlightRoutesChange }: { 
+const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed }: { 
   onMapMove: (center: [number, number], zoom: number) => void;
   onFlightRoutesChange?: (routes: FlightRoutePoint[]) => void;
+  flightFormData?: FlightFormData | null;
+  onFlightFormDataConsumed?: () => void;
 }) => {
   const [tripType, setTripType] = useState<"roundtrip" | "oneway" | "multi">("roundtrip");
   const [legs, setLegs] = useState<FlightLeg[]>([
@@ -136,6 +149,48 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange }: {
     includeNearbyAirports: false,
     noEveningFlights: false,
   });
+
+  // Apply flight form data from chat AI
+  useEffect(() => {
+    if (!flightFormData) return;
+
+    // Update trip type if specified
+    if (flightFormData.tripType) {
+      setTripType(flightFormData.tripType);
+    } else if (flightFormData.returnDate) {
+      setTripType("roundtrip");
+    } else if (flightFormData.departureDate && !flightFormData.returnDate) {
+      setTripType("oneway");
+    }
+
+    // Update legs with the extracted data
+    setLegs((prev) => {
+      const newLeg = { ...prev[0] };
+      if (flightFormData.from) newLeg.from = flightFormData.from;
+      if (flightFormData.to) newLeg.to = flightFormData.to;
+      if (flightFormData.departureDate) newLeg.date = new Date(flightFormData.departureDate);
+      if (flightFormData.returnDate) newLeg.returnDate = new Date(flightFormData.returnDate);
+      return [newLeg];
+    });
+
+    // Update passengers if specified
+    if (flightFormData.passengers && flightFormData.passengers > 0) {
+      const newPassengers: Passenger[] = [];
+      for (let i = 0; i < flightFormData.passengers; i++) {
+        newPassengers.push({
+          id: crypto.randomUUID(),
+          type: "adult",
+          personalItems: 1,
+          cabinBags: 1,
+          checkedBags: 0,
+        });
+      }
+      setPassengers(newPassengers);
+    }
+
+    // Mark as consumed
+    onFlightFormDataConsumed?.();
+  }, [flightFormData, onFlightFormDataConsumed]);
 
   // Detect user's city from IP on mount
   useEffect(() => {
