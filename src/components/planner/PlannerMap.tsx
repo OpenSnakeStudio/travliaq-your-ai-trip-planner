@@ -236,18 +236,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const [mapLoaded, setMapLoaded] = useState(false);
   const hasAnimatedRef = useRef(false);
 
-  // Get pins based on active tab
+  // Get pins based on active tab - returns empty by default (no pins shown initially)
   const getPinsForTab = useCallback((tab: TabType): MapPin[] => {
-    switch (tab) {
-      case "flights":
-        return mockFlightPins;
-      case "activities":
-        return mockActivityPins;
-      case "stays":
-        return mockStayPins;
-      default:
-        return [];
-    }
+    // By default, show no pins at all - only show when explicitly triggered by user action
+    return [];
   }, []);
 
   // Initialize map
@@ -292,8 +284,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            // Large offset to the right (+20 degrees) to leave space for widget panel
-            const offsetLng = position.coords.longitude + 20;
+            // Very large offset to the right (+35 degrees) to leave ample space for widget panel
+            const offsetLng = position.coords.longitude + 35;
             map.current?.flyTo({
               center: [offsetLng, position.coords.latitude],
               zoom: 4, // Continental scale
@@ -303,9 +295,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
             setTimeout(() => onAnimationComplete?.(), 3000);
           },
           () => {
-            // Fallback to Europe with large offset to right
+            // Fallback to Europe with very large offset to right
             map.current?.flyTo({
-              center: [25, 48], // Much more to the right
+              center: [40, 48], // Far to the right
               zoom: 4,
               duration: 3000,
               essential: true,
@@ -315,9 +307,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           { timeout: 5000 }
         );
       } else {
-        // Fallback to Europe with offset
+        // Fallback to Europe with large offset
         map.current?.flyTo({
-          center: [25, 48],
+          center: [40, 48],
           zoom: 4,
           duration: 3000,
           essential: true,
