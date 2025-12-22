@@ -283,44 +283,40 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     // Add left padding to visually shift the globe to the right (leave space for widget)
     map.current.setPadding({ left: 350, top: 0, right: 0, bottom: 0 });
 
-    // Wait a moment for the globe to be visible, then animate to user location
-    const timer = setTimeout(() => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            map.current?.flyTo({
-              center: [position.coords.longitude, position.coords.latitude],
-              zoom: 4, // Continental scale
-              duration: 3000,
-              essential: true,
-            });
-            setTimeout(() => onAnimationComplete?.(), 3000);
-          },
-          () => {
-            // Fallback to Europe
-            map.current?.flyTo({
-              center: [10, 48],
-              zoom: 4,
-              duration: 3000,
-              essential: true,
-            });
-            setTimeout(() => onAnimationComplete?.(), 3000);
-          },
-          { timeout: 5000 }
-        );
-      } else {
-        // Fallback to Europe
-        map.current?.flyTo({
-          center: [10, 48],
-          zoom: 4,
-          duration: 3000,
-          essential: true,
-        });
-        setTimeout(() => onAnimationComplete?.(), 3000);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    // Start animation immediately - no delay
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          map.current?.flyTo({
+            center: [position.coords.longitude, position.coords.latitude],
+            zoom: 5.5, // Closer zoom for better view
+            duration: 1800, // Faster animation
+            essential: true,
+          });
+          setTimeout(() => onAnimationComplete?.(), 1800);
+        },
+        () => {
+          // Fallback to Europe
+          map.current?.flyTo({
+            center: [10, 48],
+            zoom: 5.5,
+            duration: 1800,
+            essential: true,
+          });
+          setTimeout(() => onAnimationComplete?.(), 1800);
+        },
+        { timeout: 3000 }
+      );
+    } else {
+      // Fallback to Europe
+      map.current?.flyTo({
+        center: [10, 48],
+        zoom: 5.5,
+        duration: 1800,
+        essential: true,
+      });
+      setTimeout(() => onAnimationComplete?.(), 1800);
+    }
   }, [mapLoaded, animateToUserLocation, onAnimationComplete]);
 
   // Adjust map padding based on panel visibility
