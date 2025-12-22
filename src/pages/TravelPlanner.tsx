@@ -102,6 +102,7 @@ const TravelPlanner = () => {
                 flightRoutes={flightRoutes}
                 animateToUserLocation={!initialAnimationDone}
                 onAnimationComplete={() => setInitialAnimationDone(true)}
+                isPanelOpen={isPanelVisible}
               />
 
               {/* Overlay tabs */}

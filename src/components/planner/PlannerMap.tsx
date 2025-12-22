@@ -226,9 +226,10 @@ interface PlannerMapProps {
   flightRoutes?: FlightRoutePoint[];
   animateToUserLocation?: boolean;
   onAnimationComplete?: () => void;
+  isPanelOpen?: boolean;
 }
 
-const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete }: PlannerMapProps) => {
+const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete, isPanelOpen = false }: PlannerMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -321,6 +322,18 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     return () => clearTimeout(timer);
   }, [mapLoaded, animateToUserLocation, onAnimationComplete]);
+
+  // Adjust map padding based on panel visibility
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    // Animate padding change when panel opens/closes
+    const leftPadding = isPanelOpen ? 450 : 350;
+    map.current.easeTo({
+      padding: { left: leftPadding, top: 0, right: 0, bottom: 0 },
+      duration: 300,
+    });
+  }, [isPanelOpen, mapLoaded]);
 
   // Resize map when container size changes (panel resize)
   useEffect(() => {
