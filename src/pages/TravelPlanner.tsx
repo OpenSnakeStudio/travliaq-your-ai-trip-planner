@@ -47,6 +47,7 @@ const TravelPlanner = () => {
   const [flightFormData, setFlightFormData] = useState<FlightFormData | null>(null);
   const [selectedAirport, setSelectedAirport] = useState<SelectedAirport | null>(null);
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [triggerFlightSearch, setTriggerFlightSearch] = useState(false);
   const chatRef = useRef<PlannerChatRef>(null);
 
   const handleTabChange = useCallback((tab: TabType) => {
@@ -84,6 +85,10 @@ const TravelPlanner = () => {
 
   const handleAskDualAirportChoice = useCallback((choices: DualAirportChoice) => {
     chatRef.current?.askDualAirportChoice(choices);
+  }, []);
+
+  const handleSearchReady = useCallback((from: string, to: string) => {
+    chatRef.current?.offerFlightSearch(from, to);
   }, []);
 
   return (
@@ -177,6 +182,9 @@ const TravelPlanner = () => {
                 selectedAirport={selectedAirport}
                 onSelectedAirportConsumed={() => setSelectedAirport(null)}
                 onUserLocationDetected={setUserLocation}
+                onSearchReady={handleSearchReady}
+                triggerSearch={triggerFlightSearch}
+                onSearchTriggered={() => setTriggerFlightSearch(false)}
               />
 
               {/* Floating card on map */}
