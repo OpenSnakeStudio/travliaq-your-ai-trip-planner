@@ -48,6 +48,7 @@ function LocationTypeIcon({ type }: { type: LocationType }) {
 
 function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: CityInputProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [search, setSearch] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
   const justSelectedRef = useRef(false);
@@ -69,6 +70,7 @@ function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: Ci
       setSearch(location.name);
       onChange(location.name, location);
       setIsOpen(false);
+      setIsFocused(false);
       inputRef.current?.blur();
       
       // Trigger the country selection callback
@@ -78,6 +80,7 @@ function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: Ci
       setSearch(location.display_name);
       onChange(location.display_name, location);
       setIsOpen(false);
+      setIsFocused(false);
       inputRef.current?.blur();
     }
   };
@@ -93,15 +96,20 @@ function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: Ci
 
   const handleFocus = () => {
     setSearch("");
+    setIsFocused(true);
     setIsOpen(true);
   };
 
   const handleBlur = () => {
+    setIsFocused(false);
     if (justSelectedRef.current) return;
     if (search.trim() === "" && value) {
       setSearch(value);
     }
   };
+
+  // Only show placeholder when not focused and no value
+  const showPlaceholder = !isFocused && !search;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -120,7 +128,7 @@ function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: Ci
             onChange={handleInputChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={placeholder}
+            placeholder={showPlaceholder ? placeholder : ""}
             className="flex-1 min-w-0 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
