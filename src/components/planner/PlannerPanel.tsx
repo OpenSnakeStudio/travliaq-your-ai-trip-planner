@@ -445,48 +445,79 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
     setLegs(newLegs);
 
     // Sync with flight memory for map display
-    const firstLeg = newLegs[0];
-    if (firstLeg) {
-      const memoryUpdate: Parameters<typeof updateMemory>[0] = {};
+    if (tripType === "multi") {
+      // For multi-destination, sync all legs to memory
+      const memoryLegs = newLegs.map((leg) => ({
+        id: leg.id,
+        departure: leg.fromLocation ? {
+          city: leg.fromLocation.type === 'airport' ? (leg.fromLocation.name?.split(' ')[0] || undefined) : leg.fromLocation.name,
+          airport: leg.fromLocation.type === 'airport' ? leg.fromLocation.name : undefined,
+          iata: leg.fromLocation.iata,
+          lat: leg.fromLocation.lat,
+          lng: leg.fromLocation.lng,
+          country: leg.fromLocation.country_name,
+          countryCode: leg.fromLocation.country_code,
+        } : null,
+        arrival: leg.toLocation ? {
+          city: leg.toLocation.type === 'airport' ? (leg.toLocation.name?.split(' ')[0] || undefined) : leg.toLocation.name,
+          airport: leg.toLocation.type === 'airport' ? leg.toLocation.name : undefined,
+          iata: leg.toLocation.iata,
+          lat: leg.toLocation.lat,
+          lng: leg.toLocation.lng,
+          country: leg.toLocation.country_name,
+          countryCode: leg.toLocation.country_code,
+        } : null,
+        date: leg.date || null,
+      }));
       
-      // Sync departure
-      if (firstLeg.fromLocation) {
-        const loc = firstLeg.fromLocation;
-        memoryUpdate.departure = {
-          city: loc.type === 'airport' ? undefined : loc.name,
-          airport: loc.type === 'airport' ? loc.name : undefined,
-          iata: loc.iata,
-          lat: loc.lat,
-          lng: loc.lng,
-          country: loc.country_name,
-          countryCode: loc.country_code,
+      updateMemory({ 
+        tripType: "multi",
+        legs: memoryLegs,
+      });
+    } else {
+      // For roundtrip/oneway, sync first leg to departure/arrival
+      const firstLeg = newLegs[0];
+      if (firstLeg) {
+        const memoryUpdate: Parameters<typeof updateMemory>[0] = {
+          tripType,
         };
-      }
-      
-      // Sync arrival
-      if (firstLeg.toLocation) {
-        const loc = firstLeg.toLocation;
-        memoryUpdate.arrival = {
-          city: loc.type === 'airport' ? undefined : loc.name,
-          airport: loc.type === 'airport' ? loc.name : undefined,
-          iata: loc.iata,
-          lat: loc.lat,
-          lng: loc.lng,
-          country: loc.country_name,
-          countryCode: loc.country_code,
-        };
-      }
-      
-      // Sync dates
-      if (firstLeg.date) {
-        memoryUpdate.departureDate = firstLeg.date;
-      }
-      if (firstLeg.returnDate) {
-        memoryUpdate.returnDate = firstLeg.returnDate;
-      }
-      
-      // Only update if we have changes
-      if (Object.keys(memoryUpdate).length > 0) {
+        
+        // Sync departure
+        if (firstLeg.fromLocation) {
+          const loc = firstLeg.fromLocation;
+          memoryUpdate.departure = {
+            city: loc.type === 'airport' ? undefined : loc.name,
+            airport: loc.type === 'airport' ? loc.name : undefined,
+            iata: loc.iata,
+            lat: loc.lat,
+            lng: loc.lng,
+            country: loc.country_name,
+            countryCode: loc.country_code,
+          };
+        }
+        
+        // Sync arrival
+        if (firstLeg.toLocation) {
+          const loc = firstLeg.toLocation;
+          memoryUpdate.arrival = {
+            city: loc.type === 'airport' ? undefined : loc.name,
+            airport: loc.type === 'airport' ? loc.name : undefined,
+            iata: loc.iata,
+            lat: loc.lat,
+            lng: loc.lng,
+            country: loc.country_name,
+            countryCode: loc.country_code,
+          };
+        }
+        
+        // Sync dates
+        if (firstLeg.date) {
+          memoryUpdate.departureDate = firstLeg.date;
+        }
+        if (firstLeg.returnDate) {
+          memoryUpdate.returnDate = firstLeg.returnDate;
+        }
+        
         updateMemory(memoryUpdate);
       }
     }
@@ -500,7 +531,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
       const fromLoc = leg.fromLocation;
       const toLoc = leg.toLocation;
 
-      // Add origin (only for first leg)
+      // Add origin (only for first leg or if different from previous destination)
       if (idx === 0 && fromLoc && fromLoc.lat && fromLoc.lng) {
         sequence.push({ 
           city: leg.from || fromLoc.display_name, 
@@ -509,7 +540,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
         });
       }
 
-      // Add destination
+      // Add destination for each leg
       if (toLoc && toLoc.lat && toLoc.lng) {
         sequence.push({ 
           city: leg.to || toLoc.display_name, 
@@ -560,9 +591,41 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   // Reset legs when trip type changes
   const handleTripTypeChange = (newType: "roundtrip" | "oneway" | "multi") => {
     setTripType(newType);
-    // Reset to single leg when switching from multi to other types
-    if (newType !== "multi" && legs.length > 1) {
-      setLegs([{ id: crypto.randomUUID(), from: legs[0]?.from || "", to: legs[0]?.to || "", date: legs[0]?.date, returnDate: legs[0]?.returnDate }]);
+    
+    // Update memory with new trip type
+    updateMemory({ tripType: newType });
+    
+    if (newType === "multi") {
+      // When switching TO multi, preserve existing data and create 2 legs
+      const currentLeg = legs[0];
+      const firstLeg: FlightLeg = {
+        id: crypto.randomUUID(),
+        from: currentLeg?.from || "",
+        to: currentLeg?.to || "",
+        date: currentLeg?.date,
+        fromLocation: currentLeg?.fromLocation,
+        toLocation: currentLeg?.toLocation,
+      };
+      // Second leg starts from where first leg ends
+      const secondLeg: FlightLeg = {
+        id: crypto.randomUUID(),
+        from: currentLeg?.to || "",
+        to: "",
+        date: undefined,
+        fromLocation: currentLeg?.toLocation,
+      };
+      setLegs([firstLeg, secondLeg]);
+    } else if (legs.length > 1) {
+      // Reset to single leg when switching from multi to other types
+      setLegs([{ 
+        id: crypto.randomUUID(), 
+        from: legs[0]?.from || "", 
+        to: legs[0]?.to || "", 
+        date: legs[0]?.date, 
+        returnDate: legs[0]?.returnDate,
+        fromLocation: legs[0]?.fromLocation,
+        toLocation: legs[0]?.toLocation,
+      }]);
     }
   };
 
