@@ -13,7 +13,8 @@ export type ChatQuickAction =
   | { type: "zoom"; center: [number, number]; zoom: number }
   | { type: "tabAndZoom"; tab: "flights" | "activities" | "stays" | "preferences"; center: [number, number]; zoom: number }
   | { type: "updateFlight"; flightData: FlightFormData }
-  | { type: "selectAirport"; field: "from" | "to"; airport: Airport };
+  | { type: "selectAirport"; field: "from" | "to"; airport: Airport }
+  | { type: "triggerFlightSearch" };
 
 export interface FlightFormData {
   from?: string;
@@ -44,8 +45,9 @@ interface ChatMessage {
   isTyping?: boolean;
   isStreaming?: boolean;
   isHidden?: boolean;
-  airportChoices?: AirportChoice; // For displaying airport selection buttons (single)
-  dualAirportChoices?: DualAirportChoice; // For displaying both from/to selections
+  airportChoices?: AirportChoice;
+  dualAirportChoices?: DualAirportChoice;
+  hasSearchButton?: boolean;
 }
 
 interface PlannerChatProps {
@@ -56,6 +58,7 @@ export interface PlannerChatRef {
   injectSystemMessage: (event: CountrySelectionEvent) => void;
   askAirportChoice: (choice: AirportChoice) => void;
   askDualAirportChoice: (choices: DualAirportChoice) => void;
+  offerFlightSearch: (from: string, to: string) => void;
 }
 
 // City coordinates for map actions
@@ -451,6 +454,21 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
           role: "assistant",
           text: `Plusieurs aéroports sont disponibles pour ${parts.join(" et ")}. Sélectionnez vos préférences :`,
           dualAirportChoices: choices,
+        },
+      ]);
+    },
+
+    offerFlightSearch: (from: string, to: string) => {
+      const fromCode = from.match(/\(([A-Z]{3})\)/)?.[1] || from;
+      const toCode = to.match(/\(([A-Z]{3})\)/)?.[1] || to;
+      
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `search-ready-${Date.now()}`,
+          role: "assistant",
+          text: `Parfait ! Votre itinéraire **${fromCode} → ${toCode}** est prêt. Cliquez ci-dessous pour lancer la recherche de vols.`,
+          hasSearchButton: true,
         },
       ]);
     },

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar as CalendarIcon, Users, Plane, MapPin, Building2, Star, Clock, Wifi, Car, Coffee, Wind, X, Heart, Utensils, TreePine, Palette, Waves, Dumbbell, Sparkles, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Users, Plane, MapPin, Building2, Star, Clock, Wifi, Car, Coffee, Wind, X, Heart, Utensils, TreePine, Palette, Waves, Dumbbell, Sparkles, Loader2, Search, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType, SelectedAirport } from "@/pages/TravelPlanner";
 import { Slider } from "@/components/ui/slider";
@@ -8,6 +8,7 @@ import FlightRouteBuilder, { FlightLeg } from "./FlightRouteBuilder";
 import type { LocationResult } from "@/hooks/useLocationAutocomplete";
 import { findNearestAirports, Airport } from "@/hooks/useNearestAirports";
 import type { AirportChoice, DualAirportChoice } from "./PlannerChat";
+import FlightResults, { FlightOffer, generateMockFlights } from "./FlightResults";
 
 export interface FlightRoutePoint {
   city: string;
@@ -50,6 +51,9 @@ interface PlannerPanelProps {
   selectedAirport?: SelectedAirport | null;
   onSelectedAirportConsumed?: () => void;
   onUserLocationDetected?: (location: UserLocation) => void;
+  onSearchReady?: (from: string, to: string) => void;
+  triggerSearch?: boolean;
+  onSearchTriggered?: () => void;
 }
 
 const tabLabels: Record<TabType, string> = {
@@ -59,7 +63,7 @@ const tabLabels: Record<TabType, string> = {
   preferences: "Préférences",
 };
 
-const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected }: PlannerPanelProps) => {
+const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected, onSearchReady, triggerSearch, onSearchTriggered }: PlannerPanelProps) => {
   if (!isVisible && layout === "overlay") return null;
 
   const wrapperClass =
@@ -88,7 +92,7 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
           </div>
         )}
         <div className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]">
-          {activeTab === "flights" && <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} flightFormData={flightFormData} onFlightFormDataConsumed={onFlightFormDataConsumed} onCountrySelected={onCountrySelected} onAskAirportChoice={onAskAirportChoice} onAskDualAirportChoice={onAskDualAirportChoice} selectedAirport={selectedAirport} onSelectedAirportConsumed={onSelectedAirportConsumed} onUserLocationDetected={onUserLocationDetected} />}
+          {activeTab === "flights" && <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} flightFormData={flightFormData} onFlightFormDataConsumed={onFlightFormDataConsumed} onCountrySelected={onCountrySelected} onAskAirportChoice={onAskAirportChoice} onAskDualAirportChoice={onAskDualAirportChoice} selectedAirport={selectedAirport} onSelectedAirportConsumed={onSelectedAirportConsumed} onUserLocationDetected={onUserLocationDetected} onSearchReady={onSearchReady} triggerSearch={triggerSearch} onSearchTriggered={onSearchTriggered} />}
           {activeTab === "activities" && <ActivitiesPanel />}
           {activeTab === "stays" && <StaysPanel />}
           {activeTab === "preferences" && <PreferencesPanel />}
@@ -149,7 +153,7 @@ interface FlightOptions {
 }
 
 // Flights Panel
-const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected }: { 
+const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected, onSearchReady, triggerSearch, onSearchTriggered }: { 
   onMapMove: (center: [number, number], zoom: number) => void;
   onFlightRoutesChange?: (routes: FlightRoutePoint[]) => void;
   flightFormData?: FlightFormData | null;
@@ -160,14 +164,19 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   selectedAirport?: SelectedAirport | null;
   onSelectedAirportConsumed?: () => void;
   onUserLocationDetected?: (location: UserLocation) => void;
+  onSearchReady?: (from: string, to: string) => void;
+  triggerSearch?: boolean;
+  onSearchTriggered?: () => void;
 }) => {
   const [tripType, setTripType] = useState<"roundtrip" | "oneway" | "multi">("roundtrip");
   const [isSearchingAirports, setIsSearchingAirports] = useState(false);
+  const [isSearchingFlights, setIsSearchingFlights] = useState(false);
+  const [flightResults, setFlightResults] = useState<FlightOffer[] | null>(null);
   const [legs, setLegs] = useState<FlightLeg[]>([
     { id: crypto.randomUUID(), from: "", to: "", date: undefined, returnDate: undefined },
   ]);
   const [passengers, setPassengers] = useState<Passenger[]>([
-    { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 1, checkedBags: 0 },
+    { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 },
   ]);
   const [travelClass, setTravelClass] = useState<"economy" | "business" | "first">("economy");
   const [options, setOptions] = useState<FlightOptions>({
@@ -239,7 +248,17 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
     });
     
     onSelectedAirportConsumed?.();
-  }, [selectedAirport, onSelectedAirportConsumed]);
+    
+    // Check if both airports are now set, notify chat for search button
+    setTimeout(() => {
+      const firstLeg = legs[0];
+      const fromHasAirport = /\([A-Z]{3}\)/.test(firstLeg?.from || '');
+      const toHasAirport = /\([A-Z]{3}\)/.test(firstLeg?.to || '');
+      if (fromHasAirport && toHasAirport && firstLeg?.date) {
+        onSearchReady?.(firstLeg.from, firstLeg.to);
+      }
+    }, 100);
+  }, [selectedAirport, onSelectedAirportConsumed, legs, onSearchReady]);
 
   // Detect user's city from IP on mount
   useEffect(() => {
@@ -371,12 +390,39 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
         return;
       }
       
-      // Proceed with search (API will handle city-to-airport resolution if needed)
-      console.log("Searching flights with:", { legs, passengers, travelClass, options, tripType });
+      // Proceed with search - both airports confirmed
+      performFlightSearch(updatedFrom, updatedTo);
     } finally {
       setIsSearchingAirports(false);
     }
   };
+
+  // Perform the actual flight search
+  const performFlightSearch = (from: string, to: string) => {
+    setIsSearchingFlights(true);
+    
+    // Simulate API call with mock data
+    setTimeout(() => {
+      const mockFlights = generateMockFlights(from, to);
+      setFlightResults(mockFlights);
+      setIsSearchingFlights(false);
+    }, 1500);
+  };
+
+  // Handle triggered search from chat
+  useEffect(() => {
+    if (!triggerSearch) return;
+    
+    const firstLeg = legs[0];
+    const fromHasAirport = /\([A-Z]{3}\)/.test(firstLeg?.from || '');
+    const toHasAirport = /\([A-Z]{3}\)/.test(firstLeg?.to || '');
+    
+    if (fromHasAirport && toHasAirport) {
+      performFlightSearch(firstLeg.from, firstLeg.to);
+    }
+    
+    onSearchTriggered?.();
+  }, [triggerSearch, legs, onSearchTriggered]);
 
   // Notify parent of route changes when legs change
   const handleLegsChange = (newLegs: FlightLeg[]) => {
@@ -420,7 +466,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   };
 
   const addPassenger = () => {
-    setPassengers([...passengers, { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 1, checkedBags: 0 }]);
+    setPassengers([...passengers, { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 }]);
   };
 
   const removePassenger = (id: string) => {
@@ -456,6 +502,38 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
       setLegs([{ id: crypto.randomUUID(), from: legs[0]?.from || "", to: legs[0]?.to || "", date: legs[0]?.date, returnDate: legs[0]?.returnDate }]);
     }
   };
+
+  // Show results view if we have results
+  if (flightResults !== null || isSearchingFlights) {
+    return (
+      <div className="space-y-4">
+        {/* Back button */}
+        <button
+          onClick={() => setFlightResults(null)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Modifier la recherche
+        </button>
+        
+        {/* Route summary */}
+        <div className="p-3 rounded-xl bg-muted/30 border border-border/30">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-medium">{legs[0]?.from?.match(/\(([A-Z]{3})\)/)?.[1] || legs[0]?.from}</span>
+            <ArrowLeft className="h-3 w-3 rotate-180 text-muted-foreground" />
+            <span className="font-medium">{legs[0]?.to?.match(/\(([A-Z]{3})\)/)?.[1] || legs[0]?.to}</span>
+          </div>
+        </div>
+        
+        {/* Results */}
+        <FlightResults 
+          flights={flightResults || []} 
+          isLoading={isSearchingFlights}
+          onSelect={(flight) => console.log("Selected flight:", flight)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
