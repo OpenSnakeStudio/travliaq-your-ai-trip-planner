@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronUp, Loader2, Pause, Play, RefreshCw, Volume2, VolumeX, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, Loader2, RefreshCw, Volume2, VolumeX, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -335,10 +335,14 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                   />
                 </div>
 
-                {/* Invisible interaction layer to ensure wheel/touch works over iframe */}
-                <div className="absolute inset-0 z-10" aria-hidden="true" />
+                {/* Clickable overlay for pause/play - click anywhere on video */}
+                <div 
+                  className="absolute inset-0 z-10 cursor-pointer" 
+                  onClick={togglePlayPause}
+                  aria-label={isPaused ? "Lecture" : "Pause"}
+                />
 
-                {/* Side controls: prev/next + pause */}
+                {/* Side controls: prev/next only */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3">
                   <button
                     onClick={goToPrev}
@@ -347,14 +351,6 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                     aria-label="Vidéo précédente"
                   >
                     <ChevronUp className="h-6 w-6" />
-                  </button>
-                  
-                  <button
-                    onClick={togglePlayPause}
-                    className="h-11 w-11 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background/90 transition-colors"
-                    aria-label={isPaused ? "Lecture" : "Pause"}
-                  >
-                    {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
                   </button>
                   
                   <button
