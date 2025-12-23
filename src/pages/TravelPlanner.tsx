@@ -7,6 +7,7 @@ import PlannerCard from "@/components/planner/PlannerCard";
 import PlannerChat, { FlightFormData, PlannerChatRef, AirportChoice, DualAirportChoice } from "@/components/planner/PlannerChat";
 import PlannerTopBar from "@/components/planner/PlannerTopBar";
 import type { Airport } from "@/hooks/useNearestAirports";
+import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 
 export type TabType = "flights" | "activities" | "stays" | "preferences";
 
@@ -97,7 +98,7 @@ const TravelPlanner = () => {
   }, []);
 
   return (
-    <>
+    <FlightMemoryProvider>
       <Helmet>
         <title>Planificateur | Travliaq</title>
         <meta
@@ -205,7 +206,7 @@ const TravelPlanner = () => {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
-    </>
+    </FlightMemoryProvider>
   );
 };
 

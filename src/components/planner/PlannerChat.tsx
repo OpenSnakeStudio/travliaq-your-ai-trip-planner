@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
-import { Send, User, Plane } from "lucide-react";
+import { Send, User, Plane, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-travliaq.png";
 import ReactMarkdown from "react-markdown";
-import type { LocationResult } from "@/hooks/useLocationAutocomplete";
 import type { CountrySelectionEvent } from "./PlannerPanel";
 import type { Airport } from "@/hooks/useNearestAirports";
+import { useFlightMemory, type AirportInfo, type MissingField } from "@/contexts/FlightMemoryContext";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export type ChatQuickAction =
   | { type: "tab"; tab: "flights" | "activities" | "stays" | "preferences" }
@@ -38,6 +42,9 @@ export interface DualAirportChoice {
   to?: AirportChoice;
 }
 
+// Widget types for inline interactions
+type WidgetType = "datePicker" | "returnDatePicker" | "passengerCount";
+
 interface ChatMessage {
   id: string;
   role: "assistant" | "user" | "system";
@@ -48,6 +55,7 @@ interface ChatMessage {
   airportChoices?: AirportChoice;
   dualAirportChoices?: DualAirportChoice;
   hasSearchButton?: boolean;
+  widget?: WidgetType;
 }
 
 interface PlannerChatProps {
@@ -205,6 +213,48 @@ const DualAirportSelection = ({
   </div>
 );
 
+// Inline Date Picker Widget
+const DatePickerWidget = ({ 
+  label, 
+  value, 
+  onChange,
+  minDate
+}: { 
+  label: string;
+  value: Date | null;
+  onChange: (date: Date) => void;
+  minDate?: Date;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="mt-3">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted/50 border border-border/50 text-sm font-medium hover:bg-muted hover:border-primary/30 transition-all">
+            <CalendarIcon className="h-4 w-4 text-primary" />
+            {value ? format(value, "d MMMM yyyy", { locale: fr }) : label}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={value || undefined}
+            onSelect={(date) => {
+              if (date) {
+                onChange(date);
+                setOpen(false);
+              }
+            }}
+            disabled={(date) => minDate ? date < minDate : date < new Date()}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+};
+
 // Markdown message component
 const MarkdownMessage = ({ content }: { content: string }) => (
   <ReactMarkdown
@@ -229,6 +279,51 @@ const MarkdownMessage = ({ content }: { content: string }) => (
   </ReactMarkdown>
 );
 
+// Helper to convert FlightFormData to memory updates
+function flightDataToMemory(flightData: FlightFormData): Partial<{
+  departure: AirportInfo | null;
+  arrival: AirportInfo | null;
+  departureDate: Date | null;
+  returnDate: Date | null;
+  passengers: { adults: number; children: number; infants: number };
+  tripType: "roundtrip" | "oneway" | "multi";
+}> {
+  const updates: ReturnType<typeof flightDataToMemory> = {};
+  
+  if (flightData.from) {
+    updates.departure = { city: flightData.from };
+  }
+  if (flightData.to) {
+    updates.arrival = { city: flightData.to };
+  }
+  if (flightData.departureDate) {
+    updates.departureDate = new Date(flightData.departureDate);
+  }
+  if (flightData.returnDate) {
+    updates.returnDate = new Date(flightData.returnDate);
+  }
+  if (flightData.passengers) {
+    updates.passengers = { adults: flightData.passengers, children: 0, infants: 0 };
+  }
+  if (flightData.tripType) {
+    updates.tripType = flightData.tripType;
+  }
+  
+  return updates;
+}
+
+// Get field label in French
+function getMissingFieldLabel(field: MissingField): string {
+  switch (field) {
+    case "departure": return "ville de départ";
+    case "arrival": return "destination";
+    case "departureDate": return "date de départ";
+    case "returnDate": return "date de retour";
+    case "passengers": return "nombre de voyageurs";
+    default: return field;
+  }
+}
+
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onAction }, ref) => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -240,6 +335,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
     },
   ]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const searchButtonShownRef = useRef(false);
+  
+  // Access flight memory
+  const { memory, updateMemory, isReadyToSearch, missingFields, getMemorySummary } = useFlightMemory();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -248,6 +347,35 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Show search button automatically when ready
+  useEffect(() => {
+    if (isReadyToSearch && !searchButtonShownRef.current) {
+      searchButtonShownRef.current = true;
+      
+      const departure = memory.departure?.airport || memory.departure?.city || "départ";
+      const arrival = memory.arrival?.airport || memory.arrival?.city || "destination";
+      const depCode = memory.departure?.iata ? ` (${memory.departure.iata})` : "";
+      const arrCode = memory.arrival?.iata ? ` (${memory.arrival.iata})` : "";
+      
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `search-ready-auto-${Date.now()}`,
+          role: "assistant",
+          text: `Parfait ! Votre recherche **${departure}${depCode} → ${arrival}${arrCode}** est prête.\n\n📅 Départ : ${memory.departureDate ? format(memory.departureDate, "d MMMM yyyy", { locale: fr }) : "-"}${memory.returnDate ? `\n📅 Retour : ${format(memory.returnDate, "d MMMM yyyy", { locale: fr })}` : ""}\n👥 ${memory.passengers.adults} voyageur${memory.passengers.adults > 1 ? "s" : ""}`,
+          hasSearchButton: true,
+        },
+      ]);
+    }
+  }, [isReadyToSearch, memory]);
+
+  // Reset search button shown when memory is reset
+  useEffect(() => {
+    if (!memory.departure && !memory.arrival) {
+      searchButtonShownRef.current = false;
+    }
+  }, [memory.departure, memory.arrival]);
 
   // Handle airport selection from buttons (single or dual)
   const handleAirportSelect = (messageId: string, field: "from" | "to", airport: Airport, isDual?: boolean) => {
@@ -278,6 +406,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
       );
     }
 
+    // Update flight memory with airport info
+    const airportInfo: AirportInfo = {
+      city: airport.city_name || airport.name,
+      airport: airport.name,
+      iata: airport.iata,
+    };
+    
+    if (field === "from") {
+      updateMemory({ departure: airportInfo });
+    } else {
+      updateMemory({ arrival: airportInfo });
+    }
+
     // Add brief inline confirmation (no duplicate IATA code)
     const confirmText = field === "from" 
       ? `✓ Départ : **${airport.name}**`
@@ -296,6 +437,77 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
     onAction({ type: "selectAirport", field, airport });
   };
 
+  // Handle date selection from widget
+  const handleDateSelect = (messageId: string, dateType: "departure" | "return", date: Date) => {
+    // Update memory
+    if (dateType === "departure") {
+      updateMemory({ departureDate: date });
+    } else {
+      updateMemory({ returnDate: date });
+    }
+
+    // Remove widget from message
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId ? { ...m, widget: undefined } : m
+      )
+    );
+
+    // Add confirmation
+    const confirmText = dateType === "departure"
+      ? `✓ Date de départ : **${format(date, "d MMMM yyyy", { locale: fr })}**`
+      : `✓ Date de retour : **${format(date, "d MMMM yyyy", { locale: fr })}**`;
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `confirm-date-${Date.now()}`,
+        role: "assistant",
+        text: confirmText,
+      },
+    ]);
+
+    // Ask for next missing field if any
+    setTimeout(() => askNextMissingField(), 300);
+  };
+
+  // Ask for the next missing field
+  const askNextMissingField = () => {
+    const remaining = missingFields.filter(f => {
+      if (f === "departure" && memory.departure) return false;
+      if (f === "arrival" && memory.arrival) return false;
+      if (f === "departureDate" && memory.departureDate) return false;
+      if (f === "returnDate" && memory.returnDate) return false;
+      return true;
+    });
+
+    if (remaining.length === 0) return;
+
+    const nextField = remaining[0];
+    
+    if (nextField === "departureDate") {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ask-date-${Date.now()}`,
+          role: "assistant",
+          text: "Quand souhaitez-vous partir ? 📅",
+          widget: "datePicker",
+        },
+      ]);
+    } else if (nextField === "returnDate" && memory.tripType === "roundtrip") {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ask-return-date-${Date.now()}`,
+          role: "assistant",
+          text: "Et quand souhaitez-vous revenir ? 📅",
+          widget: "returnDatePicker",
+        },
+      ]);
+    }
+  };
+
   // Stream response from SSE
   const streamResponse = async (
     apiMessages: { role: string; content: string }[],
@@ -303,6 +515,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
   ): Promise<{ content: string; flightData: FlightFormData | null }> => {
     let fullContent = "";
     let flightData: FlightFormData | null = null;
+
+    // Include memory context in the request
+    const memoryContext = getMemorySummary();
+    const contextMessage = memoryContext 
+      ? `[CONTEXTE MÉMOIRE] ${memoryContext}\n[CHAMPS MANQUANTS] ${missingFields.map(getMissingFieldLabel).join(", ") || "Aucun - prêt à chercher"}`
+      : "";
 
     const response = await fetch(
       `https://cinbnmlfpffmyjmkwbco.supabase.co/functions/v1/planner-chat`,
@@ -313,7 +531,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
           "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
           "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA",
         },
-        body: JSON.stringify({ messages: apiMessages, stream: true }),
+        body: JSON.stringify({ 
+          messages: apiMessages, 
+          stream: true,
+          memoryContext: contextMessage,
+          missingFields: missingFields,
+        }),
       }
     );
 
@@ -504,6 +727,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
       const { cleanContent, action } = parseAction(content || "Désolé, je n'ai pas pu répondre.");
 
       if (flightData && Object.keys(flightData).length > 0) {
+        // Update memory with extracted data
+        const memoryUpdates = flightDataToMemory(flightData);
+        updateMemory(memoryUpdates);
+
         const destCity = flightData.to;
         if (destCity) {
           const coords = getCityCoords(destCity.toLowerCase().split(",")[0].trim());
@@ -521,10 +748,18 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
         onAction(action);
       }
 
+      // Check if AI response suggests showing a widget
+      let widget: WidgetType | undefined;
+      if (cleanContent.toLowerCase().includes("date") && missingFields.includes("departureDate")) {
+        widget = "datePicker";
+      } else if (cleanContent.toLowerCase().includes("retour") && missingFields.includes("returnDate")) {
+        widget = "returnDatePicker";
+      }
+
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId
-            ? { ...m, text: cleanContent, isTyping: false, isStreaming: false }
+            ? { ...m, text: cleanContent, isTyping: false, isStreaming: false, widget }
             : m
         )
       );
@@ -627,6 +862,23 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
                     choices={m.dualAirportChoices}
                     onSelect={(field, airport) => handleAirportSelect(m.id, field, airport, true)}
                     disabled={isLoading}
+                  />
+                )}
+
+                {/* Date Picker Widget */}
+                {m.widget === "datePicker" && (
+                  <DatePickerWidget
+                    label="Choisir la date de départ"
+                    value={memory.departureDate}
+                    onChange={(date) => handleDateSelect(m.id, "departure", date)}
+                  />
+                )}
+                {m.widget === "returnDatePicker" && (
+                  <DatePickerWidget
+                    label="Choisir la date de retour"
+                    value={memory.returnDate}
+                    onChange={(date) => handleDateSelect(m.id, "return", date)}
+                    minDate={memory.departureDate || undefined}
                   />
                 )}
 
