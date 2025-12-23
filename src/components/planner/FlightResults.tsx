@@ -224,43 +224,33 @@ const FlightCard = ({
               <div className="space-y-3">
                 {flight.outbound.map((segment, idx) => (
                   <div key={idx}>
-                    <div className="bg-card rounded-xl p-4 border border-border">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-border shrink-0">
+                    <div className="bg-card rounded-xl p-3 border border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-border shrink-0">
                           <img 
                             src={getAirlineLogo(segment.airlineCode)} 
                             alt={segment.airline}
-                            className="w-6 h-6 object-contain"
+                            className="w-5 h-5 object-contain"
                             onError={(e) => { e.currentTarget.style.display = 'none'; }}
                           />
                         </div>
                         
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <div className="text-lg font-bold">{segment.departureTime}</div>
-                              <div className="text-xs text-muted-foreground">{segment.departureAirport}</div>
-                            </div>
-                            
-                            <div className="flex-1 flex items-center px-2">
-                              <div className="h-px flex-1 bg-border" />
-                              <Plane className="h-3 w-3 text-muted-foreground mx-2" />
-                              <div className="h-px flex-1 bg-border" />
-                            </div>
-                            
-                            <div className="text-right">
-                              <div className="text-lg font-bold">{segment.arrivalTime}</div>
-                              <div className="text-xs text-muted-foreground">{segment.arrivalAirport}</div>
-                            </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-bold">{segment.departureTime}</span>
+                            <span className="text-xs text-muted-foreground">{segment.departureAirport}</span>
+                            <Plane className="h-3 w-3 text-muted-foreground mx-1 shrink-0" />
+                            <span className="text-base font-bold">{segment.arrivalTime}</span>
+                            <span className="text-xs text-muted-foreground">{segment.arrivalAirport}</span>
                           </div>
                         </div>
                         
-                        <div className="text-right shrink-0 pl-4 border-l border-border">
-                          <div className="flex items-center gap-1 text-sm font-medium">
-                            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                        <div className="text-right shrink-0">
+                          <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                            <Clock className="h-3 w-3" />
                             {segment.duration}
                           </div>
-                          <div className="text-xs text-muted-foreground">{segment.flightNumber}</div>
+                          <div className="text-[10px] text-muted-foreground">{segment.flightNumber}</div>
                         </div>
                       </div>
                     </div>
@@ -291,43 +281,33 @@ const FlightCard = ({
                 <div className="space-y-3">
                   {flight.inbound.map((segment, idx) => (
                     <div key={idx}>
-                      <div className="bg-card rounded-xl p-4 border border-border">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-border shrink-0">
+                      <div className="bg-card rounded-xl p-3 border border-border">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center border border-border shrink-0">
                             <img 
                               src={getAirlineLogo(segment.airlineCode)} 
                               alt={segment.airline}
-                              className="w-6 h-6 object-contain"
+                              className="w-5 h-5 object-contain"
                               onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
                           </div>
                           
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between gap-4">
-                              <div>
-                                <div className="text-lg font-bold">{segment.departureTime}</div>
-                                <div className="text-xs text-muted-foreground">{segment.departureAirport}</div>
-                              </div>
-                              
-                              <div className="flex-1 flex items-center px-2">
-                                <div className="h-px flex-1 bg-border" />
-                                <Plane className="h-3 w-3 text-muted-foreground mx-2" />
-                                <div className="h-px flex-1 bg-border" />
-                              </div>
-                              
-                              <div className="text-right">
-                                <div className="text-lg font-bold">{segment.arrivalTime}</div>
-                                <div className="text-xs text-muted-foreground">{segment.arrivalAirport}</div>
-                              </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base font-bold">{segment.departureTime}</span>
+                              <span className="text-xs text-muted-foreground">{segment.departureAirport}</span>
+                              <Plane className="h-3 w-3 text-muted-foreground mx-1 shrink-0" />
+                              <span className="text-base font-bold">{segment.arrivalTime}</span>
+                              <span className="text-xs text-muted-foreground">{segment.arrivalAirport}</span>
                             </div>
                           </div>
                           
-                          <div className="text-right shrink-0 pl-4 border-l border-border">
-                            <div className="flex items-center gap-1 text-sm font-medium">
-                              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <div className="text-right shrink-0">
+                            <div className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                              <Clock className="h-3 w-3" />
                               {segment.duration}
                             </div>
-                            <div className="text-xs text-muted-foreground">{segment.flightNumber}</div>
+                            <div className="text-[10px] text-muted-foreground">{segment.flightNumber}</div>
                           </div>
                         </div>
                       </div>
