@@ -120,7 +120,7 @@ function parseAction(content: string): { cleanContent: string; action: ChatQuick
   return { cleanContent, action: null };
 }
 
-// Compact Airport button component
+// Ultra-compact inline Airport button component
 const AirportButton = ({ 
   airport, 
   onClick,
@@ -134,26 +134,16 @@ const AirportButton = ({
     onClick={onClick}
     disabled={disabled}
     className={cn(
-      "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all text-left",
+      "inline-flex items-center gap-1.5 px-2 py-1 rounded-md border transition-all",
       "bg-card hover:bg-primary/10 hover:border-primary/50",
-      "border-border/50 shadow-sm",
+      "border-border/50 text-xs",
       disabled && "opacity-50 cursor-not-allowed"
     )}
   >
-    <div className="h-6 w-6 rounded bg-primary/10 flex items-center justify-center shrink-0">
-      <Plane className="h-3 w-3 text-primary" />
-    </div>
-    <div className="min-w-0 flex-1">
-      <div className="text-xs font-medium text-foreground flex items-center gap-1.5">
-        <span className="truncate">{airport.name}</span>
-        <span className="text-[10px] px-1 py-0.5 rounded bg-primary/20 text-primary font-semibold shrink-0">
-          {airport.iata}
-        </span>
-      </div>
-      <div className="text-[10px] text-muted-foreground">
-        {airport.distance_km.toFixed(0)} km
-      </div>
-    </div>
+    <span className="font-semibold text-primary">{airport.iata}</span>
+    <span className="text-muted-foreground">·</span>
+    <span className="text-foreground truncate max-w-[120px]">{airport.city_name || airport.name.split(" ")[0]}</span>
+    <span className="text-muted-foreground text-[10px]">({airport.distance_km.toFixed(0)}km)</span>
   </button>
 );
 
