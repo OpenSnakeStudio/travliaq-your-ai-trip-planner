@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.planner-chat]
 verify_jwt = false
+
+[functions.location-autocomplete]
+verify_jwt = false

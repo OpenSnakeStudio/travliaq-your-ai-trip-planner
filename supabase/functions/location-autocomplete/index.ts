@@ -14,10 +14,27 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const q = url.searchParams.get("q") || "";
-    const limit = url.searchParams.get("limit") || "10";
-    const types = url.searchParams.get("types") || "city,airport,country";
+    let q = "";
+    let limit = "10";
+    let types: string | string[] = "city,airport,country";
+
+    if (req.method === "POST") {
+      const body = (await req.json().catch(() => ({}))) as {
+        q?: string;
+        limit?: number | string;
+        types?: string[] | string;
+      };
+      q = body.q ?? "";
+      limit = String(body.limit ?? "10");
+      types = body.types ?? "city,airport,country";
+    } else {
+      const url = new URL(req.url);
+      q = url.searchParams.get("q") || "";
+      limit = url.searchParams.get("limit") || "10";
+      types = url.searchParams.get("types") || "city,airport,country";
+    }
+
+    const typesParam = Array.isArray(types) ? types.join(",") : types;
 
     if (!q || q.length < 3) {
       return new Response(JSON.stringify([]), {
@@ -25,14 +42,41 @@ serve(async (req) => {
       });
     }
 
-    const apiUrl = `${API_BASE_URL}/autocomplete?q=${encodeURIComponent(q)}&limit=${limit}&types=${types}`;
-    
-    const response = await fetch(apiUrl, {
-      headers: { accept: "application/json" },
-    });
+    const apiUrl = `${API_BASE_URL}/autocomplete?q=${encodeURIComponent(q)}&limit=${encodeURIComponent(limit)}&types=${encodeURIComponent(typesParam)}`;
+
+    // Small retry (upstream can be flaky)
+    const fetchOnce = async () => {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 8000);
+      try {
+        return await fetch(apiUrl, {
+          headers: {
+            accept: "application/json",
+            "user-agent": "travliaq-edge-proxy/1.0",
+          },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(t);
+      }
+    };
+
+    let response = await fetchOnce();
+    if (!response.ok) {
+      // retry once
+      response = await fetchOnce();
+    }
 
     if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
+      console.error("Autocomplete upstream error", {
+        status: response.status,
+        q,
+      });
+      // Dont crash UI on upstream errors
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const data = await response.json();
@@ -42,8 +86,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Autocomplete error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+    return new Response(JSON.stringify([]), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
