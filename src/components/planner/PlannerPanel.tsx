@@ -248,10 +248,23 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
           const data = await response.json();
           if (data.city && data.country_name && data.latitude && data.longitude) {
             const userCity = `${data.city}, ${data.country_name}`;
+            
+            // Create a location object with coordinates
+            const userLocationData = {
+              id: "user-location",
+              name: data.city,
+              type: "city" as const,
+              country_code: data.country_code || "",
+              country_name: data.country_name,
+              lat: data.latitude,
+              lng: data.longitude,
+              display_name: userCity,
+            };
+            
             setLegs((prev) => {
               if (prev.length > 0 && !prev[0].from) {
                 return prev.map((leg, idx) =>
-                  idx === 0 ? { ...leg, from: userCity } : leg
+                  idx === 0 ? { ...leg, from: userCity, fromLocation: userLocationData } : leg
                 );
               }
               return prev;
