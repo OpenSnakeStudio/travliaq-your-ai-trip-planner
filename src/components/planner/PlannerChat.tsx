@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-travliaq.png";
 import ReactMarkdown from "react-markdown";
 import type { CountrySelectionEvent } from "./PlannerPanel";
-import type { Airport } from "@/hooks/useNearestAirports";
+import { findNearestAirports, type Airport } from "@/hooks/useNearestAirports";
 import { useFlightMemory, type AirportInfo, type MissingField } from "@/contexts/FlightMemoryContext";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -367,21 +367,88 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
     const needsArrivalAirport = needsAirportSelection.arrival;
     
     if (needsDepartureAirport || needsArrivalAirport) {
-      // We have cities but need airport selection
+      // We have cities but need airport selection - search for airports and show them
       searchButtonShownRef.current = true;
       
-      const neededParts: string[] = [];
-      if (needsDepartureAirport) neededParts.push("départ");
-      if (needsArrivalAirport) neededParts.push("arrivée");
+      const messageId = `airport-selection-${Date.now()}`;
       
+      // Add typing indicator
       setMessages((prev) => [
         ...prev,
-        {
-          id: `info-ready-${Date.now()}`,
-          role: "assistant",
-          text: `Super ! Votre voyage **${departure} → ${arrival}** est configuré :\n\n📅 Départ : ${depDate}${retDate ? `\n📅 Retour : ${retDate}` : ""}\n👥 ${travelers} voyageur${travelers > 1 ? "s" : ""}\n\n${arrival} est une destination fascinante ! Pour rechercher les meilleurs vols, veuillez maintenant sélectionner vos aéroports de ${neededParts.join(" et d'")} dans le panneau de droite. ✈️`,
-        },
+        { id: messageId, role: "assistant", text: "", isTyping: true },
       ]);
+      
+      // Fetch destination fact and airports in parallel
+      const fetchAirportsAndFact = async () => {
+        try {
+          // Fetch airports for both cities if needed
+          const [fromAirportsResult, toAirportsResult, factResult] = await Promise.all([
+            needsDepartureAirport && memory.departure?.city 
+              ? findNearestAirports(memory.departure.city, 5, memory.departure.countryCode)
+              : null,
+            needsArrivalAirport && memory.arrival?.city
+              ? findNearestAirports(memory.arrival.city, 5, memory.arrival.countryCode)
+              : null,
+            memory.arrival?.city
+              ? supabase.functions.invoke("destination-fact", {
+                  body: { city: memory.arrival.city, country: memory.arrival.country }
+                }).then(r => r.data?.fact || null).catch(() => null)
+              : null,
+          ]);
+          
+          // Build airport choices
+          let dualChoices: DualAirportChoice | undefined;
+          
+          if (fromAirportsResult?.airports?.length || toAirportsResult?.airports?.length) {
+            dualChoices = {};
+            if (fromAirportsResult?.airports?.length) {
+              dualChoices.from = {
+                field: "from",
+                cityName: memory.departure?.city || departure,
+                airports: fromAirportsResult.airports,
+              };
+            }
+            if (toAirportsResult?.airports?.length) {
+              dualChoices.to = {
+                field: "to",
+                cityName: memory.arrival?.city || arrival,
+                airports: toAirportsResult.airports,
+              };
+            }
+          }
+          
+          // Build the message
+          const factLine = factResult ? `\n\n💡 **Le saviez-vous ?** ${factResult}` : "";
+          
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    text: `Super ! Votre voyage **${departure} → ${arrival}** est configuré :\n\n📅 Départ : ${depDate}${retDate ? `\n📅 Retour : ${retDate}` : ""}\n👥 ${travelers} voyageur${travelers > 1 ? "s" : ""}${factLine}\n\nSélectionnez vos aéroports ci-dessous :`,
+                    isTyping: false,
+                    dualAirportChoices: dualChoices,
+                  }
+                : m
+            )
+          );
+        } catch (error) {
+          console.error("Error fetching airports/fact:", error);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    text: `Super ! Votre voyage **${departure} → ${arrival}** est configuré.\n\n📅 Départ : ${depDate}${retDate ? `\n📅 Retour : ${retDate}` : ""}\n👥 ${travelers} voyageur${travelers > 1 ? "s" : ""}\n\nVeuillez sélectionner vos aéroports dans le panneau de droite.`,
+                    isTyping: false,
+                  }
+                : m
+            )
+          );
+        }
+      };
+      
+      fetchAirportsAndFact();
     } else {
       // All airports selected - ready to search!
       searchButtonShownRef.current = true;
