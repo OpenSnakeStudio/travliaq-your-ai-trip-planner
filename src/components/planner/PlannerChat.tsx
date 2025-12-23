@@ -1641,15 +1641,21 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
       let widget: WidgetType | undefined;
 
       if (showDateWidget) {
+        // Default tripType is "roundtrip" if not yet defined
+        const effectiveTripType = nextMem.tripType || "roundtrip";
+        
         if (!nextMem.departureDate) {
           if (pendingTripDurationRef.current) {
+            // Duration known: just pick departure, return is calculated
             widget = "datePicker";
-          } else if (nextMem.tripType === "roundtrip") {
-            widget = "dateRangePicker";
+          } else if (effectiveTripType === "oneway") {
+            // One-way: only departure needed
+            widget = "datePicker";
           } else {
-            widget = "datePicker";
+            // Roundtrip (default) or multi: show range picker for departure + return
+            widget = "dateRangePicker";
           }
-        } else if (nextMem.tripType === "roundtrip" && !nextMem.returnDate) {
+        } else if (effectiveTripType === "roundtrip" && !nextMem.returnDate) {
           widget = "returnDatePicker";
         }
       }
