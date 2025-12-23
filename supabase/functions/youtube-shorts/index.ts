@@ -33,7 +33,7 @@ interface YouTubeSearchResponse {
 }
 
 // Categories with their search queries (in English for better results)
-const CATEGORY_QUERIES = {
+const CATEGORY_QUERIES: Record<string, string[]> = {
   monuments: [
     "famous landmarks",
     "must see monuments",
@@ -59,6 +59,8 @@ const CATEGORY_QUERIES = {
     "best restaurants",
     "food tour",
     "where to eat",
+    "street food",
+    "local cuisine",
   ],
   hotel: [
     "best hotels",
@@ -67,21 +69,41 @@ const CATEGORY_QUERIES = {
   ],
 };
 
-// Define rotation order (less food, more monuments/activities)
+// Balanced rotation: monuments, activities, city, food, hotel in a good mix
 const CATEGORY_ROTATION = [
   "monuments",
-  "city", 
   "activities",
-  "monuments",
   "city",
   "food",
+  "monuments",
   "activities",
   "hotel",
-  "monuments",
   "city",
-  "activities",
+  "food",
   "monuments",
+  "activities",
+  "city",
 ];
+
+// Simple filter to check if title/description mentions the city
+function isRelevantToCity(video: YouTubeVideo, cityName: string): boolean {
+  const cityLower = cityName.toLowerCase();
+  const cityWords = cityLower.split(/[\s,]+/).filter(w => w.length > 2);
+  
+  const titleLower = video.title.toLowerCase();
+  const descLower = video.description.toLowerCase();
+  const combined = `${titleLower} ${descLower}`;
+  
+  // Check if the city name or significant words appear
+  if (combined.includes(cityLower)) return true;
+  
+  // Check for individual significant city words (for multi-word cities)
+  for (const word of cityWords) {
+    if (combined.includes(word)) return true;
+  }
+  
+  return false;
+}
 
 async function searchYouTube(
   apiKey: string, 
@@ -89,14 +111,17 @@ async function searchYouTube(
   category: string, 
   query: string
 ): Promise<YouTubeVideo[]> {
+  // Use quotes around city name for stricter matching
+  const searchQuery = `"${city}" ${query} #shorts`;
+  
   const searchParams = new URLSearchParams({
     part: "snippet",
-    q: `${city} ${query} #shorts`,
+    q: searchQuery,
     type: "video",
     videoDuration: "short",
-    maxResults: "3", // Get 3 per category
+    maxResults: "5", // Get more to filter out irrelevant ones
     order: "relevance",
-    relevanceLanguage: "en", // English preferred
+    relevanceLanguage: "en",
     safeSearch: "moderate",
     key: apiKey,
   });
@@ -117,7 +142,7 @@ async function searchYouTube(
 
     const data: YouTubeSearchResponse = await response.json();
 
-    return (data.items || []).map((item) => ({
+    const videos = (data.items || []).map((item) => ({
       id: item.id.videoId,
       title: item.snippet.title,
       description: item.snippet.description,
@@ -128,6 +153,13 @@ async function searchYouTube(
       publishedAt: item.snippet.publishedAt,
       category,
     }));
+
+    // Filter to keep only videos that seem relevant to the city
+    const relevant = videos.filter(v => isRelevantToCity(v, city));
+    
+    console.log(`[youtube-shorts] ${category}: ${videos.length} found, ${relevant.length} relevant to "${city}"`);
+    
+    return relevant.length > 0 ? relevant : videos.slice(0, 2); // Fallback to top 2 if no match
   } catch (error) {
     console.error(`[youtube-shorts] Error searching ${category}:`, error);
     return [];

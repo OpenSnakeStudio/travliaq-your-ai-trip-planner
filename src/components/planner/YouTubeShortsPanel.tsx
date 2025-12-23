@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronUp, Loader2, RefreshCw, Volume2, VolumeX, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronUp, Loader2, Pause, Play, RefreshCw, Volume2, VolumeX, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,8 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
   const [mode, setMode] = useState<PanelMode>("list");
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const lastScrollTime = useRef(0);
@@ -80,16 +82,32 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
       if (videos.length === 0) return 0;
       return prev < videos.length - 1 ? prev + 1 : 0;
     });
+    setIsPaused(false); // Resume on video change
   }, [videos.length]);
 
   const goToPrev = useCallback(() => {
     setCurrentVideoIndex((prev) => (prev > 0 ? prev - 1 : prev));
+    setIsPaused(false); // Resume on video change
   }, []);
 
   const openPlayerAt = useCallback((idx: number) => {
     setCurrentVideoIndex(idx);
     setMode("player");
+    setIsPaused(false);
   }, []);
+
+  // Toggle play/pause via YouTube postMessage API
+  const togglePlayPause = useCallback(() => {
+    const iframe = iframeRef.current;
+    if (!iframe?.contentWindow) return;
+    
+    if (isPaused) {
+      iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+    } else {
+      iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+    }
+    setIsPaused((p) => !p);
+  }, [isPaused]);
 
   // Wheel/Touch only when in player mode.
   const handleWheel = useCallback(
@@ -295,11 +313,21 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
             {/* PLAYER MODE: fullscreen video + scroll */}
             {!loading && !error && currentVideo && mode === "player" && (
               <section className="relative h-full">
+                {/* Close button - top right */}
+                <button
+                  onClick={() => setMode("list")}
+                  className="absolute top-3 right-3 z-40 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background transition-colors"
+                  aria-label="Fermer la vidéo"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
                 {/* Video area */}
                 <div className="absolute inset-0 bg-background">
                   <iframe
+                    ref={iframeRef}
                     key={currentVideo.id}
-                    src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=0&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1`}
+                    src={`https://www.youtube.com/embed/${currentVideo.id}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=0&controls=0&modestbranding=1&rel=0&showinfo=0&playsinline=1&enablejsapi=1`}
                     title={currentVideo.title}
                     className="absolute inset-0 h-full w-full pointer-events-none"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -310,7 +338,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                 {/* Invisible interaction layer to ensure wheel/touch works over iframe */}
                 <div className="absolute inset-0 z-10" aria-hidden="true" />
 
-                {/* Minimal controls */}
+                {/* Side controls: prev/next + pause */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col gap-3">
                   <button
                     onClick={goToPrev}
@@ -320,6 +348,15 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                   >
                     <ChevronUp className="h-6 w-6" />
                   </button>
+                  
+                  <button
+                    onClick={togglePlayPause}
+                    className="h-11 w-11 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background/90 transition-colors"
+                    aria-label={isPaused ? "Lecture" : "Pause"}
+                  >
+                    {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+                  </button>
+                  
                   <button
                     onClick={goToNext}
                     className="h-11 w-11 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background/90 transition-colors"
@@ -329,7 +366,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                   </button>
                 </div>
 
-                {/* Bottom gradient - minimal info only */}
+                {/* Bottom gradient - minimal info + mute */}
                 <div className="absolute bottom-0 left-0 right-0 z-30 p-4 bg-gradient-to-t from-background/95 via-background/70 to-transparent">
                   <div className="flex items-end gap-3">
                     <div className="flex-1 min-w-0">
