@@ -265,29 +265,45 @@ export function FlightMemoryProvider({ children }: { children: ReactNode }) {
     const points: MemoryRoutePoint[] = [];
 
     if (memory.tripType === "multi") {
+      // For multi-destination, we need to build a chain of points
       memory.legs.forEach((leg, idx) => {
+        // Add departure of each leg (but avoid duplicates)
         if (leg.departure?.lat && leg.departure?.lng) {
           const label = leg.departure.iata
             ? `${leg.departure.airport || leg.departure.city} (${leg.departure.iata})`
             : leg.departure.city || `Étape ${idx + 1}`;
-          points.push({
-            label,
-            lat: leg.departure.lat,
-            lng: leg.departure.lng,
-            type: idx === 0 ? "departure" : "waypoint",
-            legIndex: idx,
-          });
+          
+          // Check if this point already exists (from previous leg's arrival)
+          const lastPoint = points[points.length - 1];
+          const isDuplicate = lastPoint && 
+            Math.abs(lastPoint.lat - leg.departure.lat) < 0.01 && 
+            Math.abs(lastPoint.lng - leg.departure.lng) < 0.01;
+          
+          if (!isDuplicate) {
+            points.push({
+              label,
+              city: leg.departure.city,
+              country: leg.departure.country,
+              lat: leg.departure.lat,
+              lng: leg.departure.lng,
+              type: idx === 0 ? "departure" : "waypoint",
+              legIndex: idx,
+            });
+          }
         }
-        // Add arrival of last leg
-        if (idx === memory.legs.length - 1 && leg.arrival?.lat && leg.arrival?.lng) {
+        
+        // Add arrival of each leg
+        if (leg.arrival?.lat && leg.arrival?.lng) {
           const label = leg.arrival.iata
             ? `${leg.arrival.airport || leg.arrival.city} (${leg.arrival.iata})`
-            : leg.arrival.city || "Arrivée finale";
+            : leg.arrival.city || "Destination";
           points.push({
             label,
+            city: leg.arrival.city,
+            country: leg.arrival.country,
             lat: leg.arrival.lat,
             lng: leg.arrival.lng,
-            type: "arrival",
+            type: idx === memory.legs.length - 1 ? "arrival" : "waypoint",
             legIndex: idx,
           });
         }
