@@ -53,27 +53,26 @@ export const useLocationAutocomplete = (
         return [];
       }
 
-      const typesParam = types.join(",");
-      const supabaseUrl = "https://cinbnmlfpffmyjmkwbco.supabase.co";
-      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA";
-      
-      const url = `${supabaseUrl}/functions/v1/location-autocomplete?q=${encodeURIComponent(debouncedSearch)}&limit=10&types=${typesParam}`;
-      
-      const response = await fetch(url, {
-        headers: {
-          "apikey": supabaseKey,
-          "Authorization": `Bearer ${supabaseKey}`,
-        },
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch autocomplete results");
+      const { data, error } = await supabase.functions.invoke<ApiAutocompleteResult[]>(
+        "location-autocomplete",
+        {
+          body: {
+            q: debouncedSearch,
+            limit: 10,
+            types,
+          },
+        }
+      );
+
+      if (error) {
+        // If upstream is temporarily unavailable, avoid crashing the UI
+        return [];
       }
-      
-      const data: ApiAutocompleteResult[] = await response.json();
+
+      const apiData: ApiAutocompleteResult[] = data ?? [];
 
       // Transform API response to our format
-      const results = data.map((item) => {
+      const results = apiData.map((item) => {
         let displayName = item.name;
         
         if (item.type === "airport" && item.iata) {
