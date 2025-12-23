@@ -32,40 +32,36 @@ interface YouTubeSearchResponse {
   }[];
 }
 
-// Categories with their search queries (in English for better results)
+// Categories with their search queries - TRAVEL focused to avoid unrelated results
 const CATEGORY_QUERIES: Record<string, string[]> = {
   monuments: [
-    "famous landmarks",
-    "must see monuments",
-    "best attractions",
-    "iconic places",
-    "historical sites",
+    "travel famous landmarks",
+    "travel must see monuments",
+    "travel best attractions",
+    "travel iconic places visit",
   ],
   activities: [
-    "things to do",
-    "best activities",
-    "what to do",
-    "top experiences",
-    "adventure activities",
+    "travel things to do",
+    "travel best activities",
+    "travel top experiences",
+    "tourism adventure",
   ],
   city: [
-    "travel guide",
-    "city tour",
-    "walking tour",
-    "travel vlog",
-    "hidden gems",
+    "travel guide tour",
+    "city walking tour travel",
+    "travel vlog visit",
+    "tourism hidden gems",
   ],
   food: [
-    "best restaurants",
-    "food tour",
-    "where to eat",
-    "street food",
-    "local cuisine",
+    "travel food tour",
+    "travel where to eat",
+    "travel street food",
+    "tourism local cuisine",
   ],
   hotel: [
-    "best hotels",
-    "where to stay",
-    "luxury hotel tour",
+    "travel best hotels",
+    "tourism where to stay",
+    "travel hotel tour",
   ],
 };
 
@@ -85,7 +81,14 @@ const CATEGORY_ROTATION = [
   "city",
 ];
 
-// Simple filter to check if title/description mentions the city
+// Keywords that indicate non-travel content to exclude
+const EXCLUDE_KEYWORDS = [
+  "emperor", "empire", "comic", "comics", "movie", "film", "game", "gaming",
+  "song", "music", "album", "band", "anime", "cartoon", "documentary history",
+  "ancient rome", "roman emperor", "byzantine", "historical figure",
+];
+
+// Simple filter to check if title/description mentions the city AND is travel-related
 function isRelevantToCity(video: YouTubeVideo, cityName: string): boolean {
   const cityLower = cityName.toLowerCase();
   const cityWords = cityLower.split(/[\s,]+/).filter(w => w.length > 2);
@@ -94,13 +97,26 @@ function isRelevantToCity(video: YouTubeVideo, cityName: string): boolean {
   const descLower = video.description.toLowerCase();
   const combined = `${titleLower} ${descLower}`;
   
-  // Check if the city name or significant words appear
-  if (combined.includes(cityLower)) return true;
-  
-  // Check for individual significant city words (for multi-word cities)
-  for (const word of cityWords) {
-    if (combined.includes(word)) return true;
+  // First, exclude videos with non-travel keywords
+  for (const keyword of EXCLUDE_KEYWORDS) {
+    if (combined.includes(keyword)) {
+      console.log(`[youtube-shorts] Excluding "${video.title}" - contains "${keyword}"`);
+      return false;
+    }
   }
+  
+  // Travel-related keywords that should be present
+  const travelKeywords = ["travel", "tour", "visit", "trip", "tourism", "tourist", "vacation", "destination", "explore", "guide"];
+  const hasTravelContext = travelKeywords.some(kw => combined.includes(kw));
+  
+  // Check if the city name or significant words appear
+  const cityMentioned = combined.includes(cityLower) || cityWords.some(w => combined.includes(w));
+  
+  // Best: city mentioned AND travel context
+  if (cityMentioned && hasTravelContext) return true;
+  
+  // Acceptable: just travel context (for cities with common names)
+  if (hasTravelContext) return true;
   
   return false;
 }
