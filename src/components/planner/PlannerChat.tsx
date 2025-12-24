@@ -1002,15 +1002,58 @@ function getMissingFieldLabel(field: MissingField): string {
 }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onAction }, ref) => {
+  const CHAT_STORAGE_KEY = "travliaq_planner_chat_messages";
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage.",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const raw = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (!raw) throw new Error("no stored chat");
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("invalid stored chat");
+      // Restore only safe/displayable parts (no widgets/typing state)
+      return parsed
+        .filter((m: any) => m && typeof m.text === "string" && (m.role === "assistant" || m.role === "user" || m.role === "system"))
+        .slice(-200)
+        .map((m: any) => ({
+          id: String(m.id || crypto.randomUUID()),
+          role: m.role,
+          text: m.text,
+          isHidden: Boolean(m.isHidden),
+          hasSearchButton: Boolean(m.hasSearchButton),
+        }));
+    } catch {
+      return [
+        {
+          id: "welcome",
+          role: "assistant",
+          text: "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage.",
+        },
+      ];
+    }
+  });
+
+  // Persist chat history (texts) so it survives refresh
+  useEffect(() => {
+    try {
+      const toStore = messages
+        .filter((m) => !m.isHidden)
+        .filter((m) => !m.isTyping)
+        .map((m) => ({
+          id: m.id,
+          role: m.role,
+          text: m.text,
+          hasSearchButton: Boolean(m.hasSearchButton),
+          isHidden: Boolean(m.isHidden),
+        }))
+        .slice(-200);
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+      // ignore
+    }
+  }, [messages]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchButtonShownRef = useRef(false);
   const pendingTravelersWidgetRef = useRef(false); // Track if we need to show travelers widget after date selection

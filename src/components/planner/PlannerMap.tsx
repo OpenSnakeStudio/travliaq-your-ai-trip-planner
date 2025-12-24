@@ -520,7 +520,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         onPinClick(pin);
       });
 
-      const marker = new mapboxgl.Marker({ element: el })
+      const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
         .setLngLat([pin.lng, pin.lat])
         .addTo(map.current!);
 
