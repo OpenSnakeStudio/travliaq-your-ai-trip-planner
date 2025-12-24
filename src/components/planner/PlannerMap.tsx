@@ -206,9 +206,47 @@ const cityCoordinates: Record<string, { lat: number; lng: number }> = {
   "phuket": { lat: 7.8804, lng: 98.3923 },
 };
 
-function getCityCoords(cityName: string): { lat: number; lng: number } | null {
-  const normalizedCity = cityName.toLowerCase().split(",")[0].trim();
-  return cityCoordinates[normalizedCity] || null;
+// Generate a great circle arc between two points for curved flight paths
+function generateGreatCircleArc(
+  start: [number, number],
+  end: [number, number],
+  numPoints: number = 50
+): [number, number][] {
+  const points: [number, number][] = [];
+  
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const toDeg = (rad: number) => (rad * 180) / Math.PI;
+  
+  const lat1 = toRad(start[1]);
+  const lon1 = toRad(start[0]);
+  const lat2 = toRad(end[1]);
+  const lon2 = toRad(end[0]);
+  
+  // Calculate the angular distance between points
+  const d = 2 * Math.asin(
+    Math.sqrt(
+      Math.pow(Math.sin((lat2 - lat1) / 2), 2) +
+      Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin((lon2 - lon1) / 2), 2)
+    )
+  );
+  
+  for (let i = 0; i <= numPoints; i++) {
+    const f = i / numPoints;
+    
+    const A = Math.sin((1 - f) * d) / Math.sin(d);
+    const B = Math.sin(f * d) / Math.sin(d);
+    
+    const x = A * Math.cos(lat1) * Math.cos(lon1) + B * Math.cos(lat2) * Math.cos(lon2);
+    const y = A * Math.cos(lat1) * Math.sin(lon1) + B * Math.cos(lat2) * Math.sin(lon2);
+    const z = A * Math.sin(lat1) + B * Math.sin(lat2);
+    
+    const lat = Math.atan2(z, Math.sqrt(x * x + y * y));
+    const lon = Math.atan2(y, x);
+    
+    points.push([toDeg(lon), toDeg(lat)]);
+  }
+  
+  return points;
 }
 
 function cssHsl(varName: string, fallbackHsl = "222.2 47.4% 11.2%") {
@@ -654,6 +692,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       const arrival = memoryPoints.find(p => p.type === "arrival");
       
       if (departure && arrival) {
+        // Create a curved great circle arc for better visual appearance
+        const arcPoints = generateGreatCircleArc(
+          [departure.lng, departure.lat],
+          [arrival.lng, arrival.lat],
+          50 // number of points for smooth curve
+        );
+        
         map.current.addSource(memorySourceId, {
           type: "geojson",
           data: {
@@ -661,10 +706,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
             properties: {},
             geometry: {
               type: "LineString",
-              coordinates: [
-                [departure.lng, departure.lat],
-                [arrival.lng, arrival.lat],
-              ],
+              coordinates: arcPoints,
             },
           },
         });
