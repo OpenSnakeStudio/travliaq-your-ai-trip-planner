@@ -1633,59 +1633,40 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
     return { content: fullContent, flightData };
   };
 
+  // Prevent duplicate city selection messages
+  const citySelectionShownForCountryRef = useRef<string | null>(null);
+
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
     injectSystemMessage: async (event: CountrySelectionEvent) => {
+      const countryCode = event.country.country_code;
+      
+      // Prevent duplicate messages for the same country
+      if (citySelectionShownForCountryRef.current === countryCode) {
+        console.log("[PlannerChat] Skipping duplicate city selection for", countryCode);
+        return;
+      }
+      citySelectionShownForCountryRef.current = countryCode;
+      
       const fieldName = event.field === "from" ? "départ" : "destination";
       const countryName = event.country.name;
       
-      const systemText = `[SYSTÈME] L'utilisateur a sélectionné le pays "${countryName}" comme ${fieldName}. Pour les vols, nous avons besoin d'un aéroport ou d'une ville précise, pas d'un pays. Demande-lui quelle ville dans ${countryName} il souhaite utiliser comme ${fieldName}.`;
-      
-      setMessages((prev) => [
-        ...prev,
-        { id: `system-${Date.now()}`, role: "system" as const, text: systemText, isHidden: true },
-      ]);
-
+      // Instead of calling the AI, directly show the city selection widget
       setIsLoading(true);
-      const messageId = `bot-${Date.now()}`;
+      const messageId = `city-select-${Date.now()}`;
       setMessages((prev) => [
         ...prev,
-        { id: messageId, role: "assistant", text: "", isTyping: true },
+        { 
+          id: messageId, 
+          role: "assistant", 
+          text: `Je vois que vous avez sélectionné **${countryName}**. Dans quelle ville de ce pays souhaitez-vous ${event.field === "from" ? "partir" : "arriver"} ?`, 
+          isTyping: true 
+        },
       ]);
 
-      try {
-        const apiMessages = messages
-          .filter((m) => !m.isTyping && m.id !== "welcome")
-          .map((m) => ({ role: m.role === "system" ? "user" : m.role, content: m.text }));
-        apiMessages.push({ role: "user", content: systemText });
-
-        const { content } = await streamResponse(apiMessages, messageId);
-        const { cleanContent } = parseAction(content || `Dans quelle ville de ${countryName} souhaitez-vous partir/arriver ?`);
-
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId
-              ? { ...m, text: cleanContent, isTyping: false, isStreaming: false }
-              : m
-          )
-        );
-      } catch (err) {
-        console.error("Failed to get chat response:", err);
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === messageId
-              ? {
-                  ...m,
-                  text: `Je vois que vous avez sélectionné ${countryName}. Dans quelle ville de ce pays souhaitez-vous ${event.field === "from" ? "partir" : "arriver"} ?`,
-                  isTyping: false,
-                  isStreaming: false,
-                }
-              : m
-          )
-        );
-      } finally {
-        setIsLoading(false);
-      }
+      // Fetch cities directly
+      fetchAndShowCities(messageId, countryCode, countryName);
+      setIsLoading(false);
     },
 
     askAirportChoice: (choice: AirportChoice) => {
