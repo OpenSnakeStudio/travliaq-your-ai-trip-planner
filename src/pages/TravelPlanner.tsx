@@ -52,6 +52,7 @@ const TravelPlanner = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [triggerFlightSearch, setTriggerFlightSearch] = useState(false);
   const searchMessageSentRef = useRef(false);
+  const lastCountrySelectedRef = useRef<string | null>(null);
   const chatRef = useRef<PlannerChatRef>(null);
 
   // Destination popup state
@@ -92,6 +93,14 @@ const TravelPlanner = () => {
   }, []);
 
   const handleCountrySelected = useCallback((event: CountrySelectionEvent) => {
+    // Prevent duplicate triggers for the same country
+    const countryKey = `${event.field}-${event.country.country_code}`;
+    if (lastCountrySelectedRef.current === countryKey) {
+      console.log("[TravelPlanner] Skipping duplicate country selection:", countryKey);
+      return;
+    }
+    lastCountrySelectedRef.current = countryKey;
+    
     // Trigger the chat to ask about city in this country
     chatRef.current?.injectSystemMessage(event);
   }, []);
