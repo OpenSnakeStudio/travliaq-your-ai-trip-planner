@@ -547,19 +547,25 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     memoryMarkersRef.current.forEach((marker) => marker.remove());
     memoryMarkersRef.current = [];
 
-    // Remove previous memory route lines
+    // Remove previous memory route lines and plane
     const memorySourceId = "memory-route";
     const memoryArrowId = "memory-route-arrow";
+    const memoryBgId = `${memorySourceId}-bg`;
+    const planeSourceId = `${memorySourceId}-plane`;
     
-    if (map.current.getLayer(memoryArrowId)) {
-      map.current.removeLayer(memoryArrowId);
-    }
-    if (map.current.getLayer(memorySourceId)) {
-      map.current.removeLayer(memorySourceId);
-    }
-    if (map.current.getSource(memorySourceId)) {
-      map.current.removeSource(memorySourceId);
-    }
+    // Remove layers in order
+    [memoryArrowId, memorySourceId, memoryBgId, planeSourceId].forEach(layerId => {
+      if (map.current?.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+      }
+    });
+    
+    // Remove sources
+    [memorySourceId, planeSourceId].forEach(sourceId => {
+      if (map.current?.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+    });
 
     const memoryPoints = getRoutePoints();
     
@@ -602,65 +608,114 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     };
 
 
-    // Create markers for each point
+    // Create markers for each point with travel-themed design
     memoryPoints.forEach((point, index) => {
       // Outer container for stable positioning
       const container = document.createElement("div");
       container.className = "memory-route-marker-container";
-      container.style.cssText = `
-        width: 36px;
-        height: 36px;
-        position: relative;
-      `;
-
-      const el = document.createElement("div");
-      el.className = "memory-route-marker";
       
       const isDeparture = point.type === "departure";
       const isArrival = point.type === "arrival";
       
-      el.style.cssText = `
-        width: 36px;
-        height: 36px;
-        border-radius: 9999px;
-        background: ${isDeparture ? "hsl(var(--primary))" : "hsl(142 76% 36%)"};
-        border: 3px solid white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        font-size: 14px;
-        font-weight: 700;
-        color: white;
-        user-select: none;
-        z-index: 20;
-        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+      // Create a stylized pin with travel theme
+      container.innerHTML = `
+        <div class="travel-pin ${isDeparture ? 'departure' : 'arrival'}" style="
+          position: relative;
+          width: 48px;
+          height: 60px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+          animation: pinDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation-delay: ${isDeparture ? '0s' : '0.3s'};
+          opacity: 0;
+          transform: translateY(-20px);
+        ">
+          <!-- Pin body -->
+          <div style="
+            width: 44px;
+            height: 44px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            background: linear-gradient(135deg, ${isDeparture ? 'hsl(221.2, 83.2%, 53.3%)' : 'hsl(142, 76%, 36%)'} 0%, ${isDeparture ? 'hsl(221.2, 83.2%, 43.3%)' : 'hsl(142, 76%, 26%)'} 100%);
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15);
+          ">
+            <span style="
+              transform: rotate(45deg);
+              font-size: 20px;
+              filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));
+            ">${isDeparture ? '✈️' : '📍'}</span>
+          </div>
+          <!-- Pulse ring for arrival -->
+          ${isArrival ? `
+            <div style="
+              position: absolute;
+              top: 7px;
+              left: 2px;
+              width: 44px;
+              height: 44px;
+              border-radius: 50%;
+              border: 2px solid hsl(142, 76%, 36%);
+              animation: pulseRing 2s ease-out infinite;
+              opacity: 0;
+            "></div>
+          ` : ''}
+          <!-- Label -->
+          <div style="
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            backdrop-filter: blur(4px);
+          ">${point.city || extractCityName(point.label)}</div>
+        </div>
+        <style>
+          @keyframes pinDrop {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes pulseRing {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(1.8); opacity: 0; }
+          }
+        </style>
       `;
-      el.textContent = isDeparture ? "✈" : "🛬";
 
-      // Add tooltip with label
-      el.title = point.label;
-
-      // Add hover effect (shadow only, no transform to avoid position issues)
-      el.addEventListener("mouseenter", () => {
-        el.style.boxShadow = "0 6px 20px rgba(0,0,0,0.4)";
-        el.style.borderColor = "hsl(var(--primary))";
+      const pinEl = container.querySelector('.travel-pin') as HTMLElement;
+      
+      // Add hover effect
+      pinEl?.addEventListener("mouseenter", () => {
+        pinEl.style.filter = "drop-shadow(0 6px 12px rgba(0,0,0,0.4))";
+        pinEl.style.transform = "scale(1.1)";
       });
-      el.addEventListener("mouseleave", () => {
-        el.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
-        el.style.borderColor = "white";
+      pinEl?.addEventListener("mouseleave", () => {
+        pinEl.style.filter = "drop-shadow(0 4px 8px rgba(0,0,0,0.3))";
+        pinEl.style.transform = "scale(1)";
       });
-
-      container.appendChild(el);
 
       // Add click handler for arrival destinations (open popup)
       if (isArrival && onDestinationClick) {
-        el.addEventListener("click", (e) => {
+        pinEl?.addEventListener("click", (e) => {
           e.stopPropagation();
           
           // Get screen position of the marker element
-          const rect = el.getBoundingClientRect();
+          const rect = pinEl.getBoundingClientRect();
           const screenPosition = {
             x: rect.left + rect.width / 2,
             y: rect.top,
@@ -679,7 +734,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         });
       }
 
-      const marker = new mapboxgl.Marker({ element: container, anchor: "center" })
+      // Use bottom-center anchor so the pin tip touches the exact coordinate
+      const marker = new mapboxgl.Marker({ element: container, anchor: "bottom" })
         .setLngLat([point.lng, point.lat])
         .addTo(map.current!);
 
@@ -710,6 +766,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           arcPoints[arcPoints.length - 1] = endCoords;
         }
         
+        // Create animated flight path
+        const routeColor = cssHsl("--primary", "221.2 83.2% 53.3%");
+        
+        // Add the full route as a background (faded)
         map.current.addSource(memorySourceId, {
           type: "geojson",
           data: {
@@ -722,8 +782,23 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           },
         });
 
-        const routeColor = cssHsl("--primary", "221.2 83.2% 53.3%");
+        // Background line (faded path)
+        map.current.addLayer({
+          id: `${memorySourceId}-bg`,
+          type: "line",
+          source: memorySourceId,
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": routeColor,
+            "line-width": 2,
+            "line-opacity": 0.25,
+          },
+        });
 
+        // Animated dashed line
         map.current.addLayer({
           id: memorySourceId,
           type: "line",
@@ -735,10 +810,80 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           paint: {
             "line-color": routeColor,
             "line-width": 3,
-            "line-dasharray": [2, 2],
-            "line-opacity": 0.85,
+            "line-dasharray": [2, 1.5],
+            "line-opacity": 0.9,
           },
         });
+
+        // Animate the dash offset for flying effect
+        let dashOffset = 0;
+        const animateDash = () => {
+          if (!map.current?.getLayer(memorySourceId)) return;
+          dashOffset = (dashOffset + 0.15) % 3.5;
+          map.current.setPaintProperty(memorySourceId, "line-dasharray", [2, 1.5]);
+          requestAnimationFrame(animateDash);
+        };
+        animateDash();
+
+        // Small plane icon moving along the route
+        const planeSourceId = `${memorySourceId}-plane`;
+        map.current.addSource(planeSourceId, {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: { bearing: 0 },
+            geometry: {
+              type: "Point",
+              coordinates: arcPoints[0],
+            },
+          },
+        });
+
+        // Create a custom plane icon layer
+        map.current.addLayer({
+          id: planeSourceId,
+          type: "symbol",
+          source: planeSourceId,
+          layout: {
+            "icon-image": "airport",
+            "icon-size": 1.2,
+            "icon-rotate": ["get", "bearing"],
+            "icon-rotation-alignment": "map",
+            "icon-allow-overlap": true,
+          },
+        });
+
+        // Animate plane along the route
+        let planeProgress = 0;
+        const animatePlane = () => {
+          if (!map.current?.getSource(planeSourceId)) return;
+          
+          planeProgress += 0.003;
+          if (planeProgress > 1) planeProgress = 0;
+          
+          const currentIndex = Math.floor(planeProgress * (arcPoints.length - 1));
+          const nextIndex = Math.min(currentIndex + 1, arcPoints.length - 1);
+          const currentPoint = arcPoints[currentIndex];
+          const nextPoint = arcPoints[nextIndex];
+          
+          // Calculate bearing for plane rotation
+          const bearing = Math.atan2(
+            nextPoint[0] - currentPoint[0],
+            nextPoint[1] - currentPoint[1]
+          ) * (180 / Math.PI);
+          
+          (map.current.getSource(planeSourceId) as mapboxgl.GeoJSONSource).setData({
+            type: "Feature",
+            properties: { bearing: bearing },
+            geometry: {
+              type: "Point",
+              coordinates: currentPoint,
+            },
+          });
+          
+          requestAnimationFrame(animatePlane);
+        };
+        animatePlane();
 
         // Direction arrows along the line
         map.current.addLayer({
@@ -747,16 +892,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           source: memorySourceId,
           layout: {
             "symbol-placement": "line",
-            "symbol-spacing": 90,
-            "text-field": "➜",
-            "text-size": 16,
+            "symbol-spacing": 120,
+            "text-field": "›",
+            "text-size": 20,
             "text-keep-upright": false,
             "text-rotation-alignment": "map",
           },
           paint: {
             "text-color": routeColor,
-            "text-halo-color": "rgba(0,0,0,0.35)",
-            "text-halo-width": 1,
+            "text-halo-color": "rgba(255,255,255,0.8)",
+            "text-halo-width": 2,
           },
         });
 
