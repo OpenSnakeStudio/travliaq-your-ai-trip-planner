@@ -262,10 +262,8 @@ export function FlightMemoryProvider({ children }: { children: ReactNode }) {
   const [memory, setMemory] = useState<FlightMemory>(() => loadFromStorage());
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Hydrate from localStorage on mount (client-side only)
+  // Hydrate from localStorage on mount (memory already loaded in useState initializer)
   useEffect(() => {
-    const stored = loadFromStorage();
-    setMemory(stored);
     setIsHydrated(true);
   }, []);
 

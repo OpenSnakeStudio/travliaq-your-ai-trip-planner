@@ -219,10 +219,8 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
   // Access travel memory for room suggestions
   const { memory: travelMemory, hasDestinations, hasDates } = useTravelMemory();
 
-  // Hydrate on mount
+  // Hydrate on mount (memory already loaded in useState initializer)
   useEffect(() => {
-    const stored = loadFromStorage();
-    setMemory(stored);
     setIsHydrated(true);
   }, []);
 

@@ -146,10 +146,8 @@ export function TravelMemoryProvider({ children }: { children: ReactNode }) {
   const [memory, setMemory] = useState<TravelMemory>(() => loadFromStorage());
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Hydrate on mount
+  // Hydrate on mount (memory already loaded in useState initializer)
   useEffect(() => {
-    const stored = loadFromStorage();
-    setMemory(stored);
     setIsHydrated(true);
   }, []);
 
