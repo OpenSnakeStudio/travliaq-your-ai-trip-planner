@@ -7,16 +7,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTravelMemory } from "@/contexts/TravelMemoryContext";
-import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan, type AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
+import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan } from "@/contexts/AccommodationMemoryContext";
 import { useFlightMemory } from "@/contexts/FlightMemoryContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { useLocationAutocomplete, LocationResult } from "@/hooks/useLocationAutocomplete";
-import { format, differenceInDays } from "date-fns";
-import { fr } from "date-fns/locale";
+import { differenceInDays } from "date-fns";
+import { DateRangePicker } from "@/components/DateRangePicker";
+import type { DateRange } from "react-day-picker";
 
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
@@ -380,8 +380,8 @@ function RoomsSelector({
   );
 }
 
-// Date picker for check-in/check-out
-function DateRangeSelector({
+// Compact date range using shared DateRangePicker
+function CompactDateRange({
   checkIn,
   checkOut,
   onChange,
@@ -391,84 +391,31 @@ function DateRangeSelector({
   onChange: (checkIn: Date | null, checkOut: Date | null) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectingCheckOut, setSelectingCheckOut] = useState(false);
 
   const nights = checkIn && checkOut ? differenceInDays(checkOut, checkIn) : 0;
 
-  const handleSelect = (date: Date | undefined) => {
-    if (!date) return;
-    
-    if (!checkIn || (checkIn && checkOut) || !selectingCheckOut) {
-      // Selecting check-in
-      onChange(date, null);
-      setSelectingCheckOut(true);
-    } else {
-      // Selecting check-out
-      if (date > checkIn) {
-        onChange(checkIn, date);
-        setIsOpen(false);
-        setSelectingCheckOut(false);
-      } else {
-        // If selected date is before check-in, use it as new check-in
-        onChange(date, null);
-      }
-    }
+  const handleRangeChange = (range: DateRange | undefined) => {
+    onChange(range?.from || null, range?.to || null);
   };
 
-  const displayText = checkIn && checkOut
-    ? `${format(checkIn, "d MMM", { locale: fr })} - ${format(checkOut, "d MMM", { locale: fr })} (${nights} nuit${nights > 1 ? "s" : ""})`
-    : checkIn
-    ? `${format(checkIn, "d MMM", { locale: fr })} → ...`
-    : "Sélectionner les dates";
+  const value: DateRange | undefined = checkIn ? { from: checkIn, to: checkOut || undefined } : undefined;
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <button className="flex items-center gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors w-full text-left">
-          <CalendarDays className="h-4 w-4 text-primary shrink-0" />
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium">{displayText}</div>
-            {!checkIn && (
-              <div className="text-xs text-muted-foreground">Check-in → Check-out</div>
-            )}
-          </div>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="p-3 border-b border-border/50">
-          <p className="text-xs font-medium text-center">
-            {selectingCheckOut && checkIn ? "Sélectionnez le check-out" : "Sélectionnez le check-in"}
-          </p>
+    <div className="flex-1 min-w-0">
+      <DateRangePicker
+        value={value}
+        onChange={handleRangeChange}
+        disabled={(date) => date < new Date()}
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="h-10 text-xs border-0 bg-transparent shadow-none px-0"
+      />
+      {checkIn && checkOut && nights > 0 && (
+        <div className="text-[10px] text-muted-foreground mt-0.5 pl-7">
+          {nights} nuit{nights > 1 ? "s" : ""}
         </div>
-        <Calendar
-          mode="single"
-          selected={selectingCheckOut ? checkOut || undefined : checkIn || undefined}
-          onSelect={handleSelect}
-          disabled={(date) => date < new Date()}
-          modifiers={{
-            booked: checkIn ? { from: checkIn, to: checkOut || checkIn } : undefined,
-          }}
-          modifiersStyles={{
-            booked: { backgroundColor: "hsl(var(--primary) / 0.1)" },
-          }}
-          className="p-3 pointer-events-auto"
-        />
-        {checkIn && (
-          <div className="p-2 border-t border-border/50 flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onChange(null, null);
-                setSelectingCheckOut(false);
-              }}
-            >
-              Effacer
-            </Button>
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
+      )}
+    </div>
   );
 }
 
@@ -691,22 +638,10 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   if (!activeAccommodation) return null;
 
   return (
-    <div className="space-y-4">
-      {/* Accommodations list (tabs) */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Hébergements</span>
-          <button
-            onClick={handleAddAccommodation}
-            className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Ajouter
-          </button>
-        </div>
-        
-        {/* Accommodation tabs */}
-        <div className="flex gap-1.5 flex-wrap">
+    <div className="space-y-3">
+      {/* Accommodation tabs - only show when multiple */}
+      {hasMultipleAccommodations && (
+        <div className="flex gap-1.5 flex-wrap items-center">
           {memory.accommodations.map((acc, index) => (
             <button
               key={acc.id}
@@ -719,46 +654,63 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
               )}
             >
               <Hotel className="h-3 w-3" />
-              <span className="max-w-24 truncate">
-                {acc.city || `Hébergement ${index + 1}`}
+              <span className="max-w-20 truncate">
+                {acc.city || `Hébgt ${index + 1}`}
               </span>
-              {hasMultipleAccommodations && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveAccommodation(acc.id);
-                  }}
-                  className={cn(
-                    "h-4 w-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
-                    index === memory.activeAccommodationIndex
-                      ? "hover:bg-primary-foreground/20"
-                      : "hover:bg-destructive/20"
-                  )}
-                >
-                  <X className="h-2.5 w-2.5" />
-                </button>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveAccommodation(acc.id);
+                }}
+                className={cn(
+                  "h-4 w-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity",
+                  index === memory.activeAccommodationIndex
+                    ? "hover:bg-primary-foreground/20"
+                    : "hover:bg-destructive/20"
+                )}
+              >
+                <X className="h-2.5 w-2.5" />
+              </button>
             </button>
           ))}
+          <button
+            onClick={handleAddAccommodation}
+            className="flex items-center gap-1 px-2 py-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Destination input */}
-      <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20">
-        <DestinationInput
-          value={activeAccommodation.city}
-          onChange={(value) => setDestination(value, activeAccommodation.country, activeAccommodation.countryCode)}
-          placeholder="Où allez-vous ?"
-          onLocationSelect={handleLocationSelect}
+      {/* Destination + Dates on same row */}
+      <div className="flex items-start gap-2 p-2.5 rounded-xl border border-border/40 bg-muted/20">
+        {/* Destination */}
+        <div className="flex-1 min-w-0 border-r border-border/30 pr-2">
+          <DestinationInput
+            value={activeAccommodation.city}
+            onChange={(value) => setDestination(value, activeAccommodation.country, activeAccommodation.countryCode)}
+            placeholder="Où allez-vous ?"
+            onLocationSelect={handleLocationSelect}
+          />
+        </div>
+        {/* Dates */}
+        <CompactDateRange
+          checkIn={activeAccommodation.checkIn}
+          checkOut={activeAccommodation.checkOut}
+          onChange={handleDatesChange}
         />
       </div>
 
-      {/* Dates selector */}
-      <DateRangeSelector
-        checkIn={activeAccommodation.checkIn}
-        checkOut={activeAccommodation.checkOut}
-        onChange={handleDatesChange}
-      />
+      {/* Add button when single accommodation */}
+      {!hasMultipleAccommodations && (
+        <button
+          onClick={handleAddAccommodation}
+          className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Ajouter un hébergement
+        </button>
+      )}
 
       {/* Travelers + Rooms row */}
       <div className="flex gap-2 flex-wrap">
