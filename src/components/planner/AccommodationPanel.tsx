@@ -598,17 +598,26 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   // Track if user is typing vs selected from autocomplete
   const [destinationInput, setDestinationInput] = useState(activeAccommodation?.city || "");
   
+  // Store onMapMove in a ref to avoid infinite loops
+  const onMapMoveRef = useRef(onMapMove);
+  onMapMoveRef.current = onMapMove;
+  
   // Sync input when switching accommodations
   useEffect(() => {
     setDestinationInput(activeAccommodation?.city || "");
   }, [activeAccommodation?.id, activeAccommodation?.city]);
 
-  // Zoom on map when switching between accommodations
+  // Zoom on map when switching between accommodations (only on index change)
+  const prevIndexRef = useRef(memory.activeAccommodationIndex);
   useEffect(() => {
-    if (activeAccommodation?.lat && activeAccommodation?.lng && onMapMove) {
-      onMapMove([activeAccommodation.lng, activeAccommodation.lat], 12);
+    // Only zoom when we actually switch tabs, not on every render
+    if (prevIndexRef.current !== memory.activeAccommodationIndex) {
+      prevIndexRef.current = memory.activeAccommodationIndex;
+      if (activeAccommodation?.lat && activeAccommodation?.lng && onMapMoveRef.current) {
+        onMapMoveRef.current([activeAccommodation.lng, activeAccommodation.lat], 12);
+      }
     }
-  }, [memory.activeAccommodationIndex, activeAccommodation?.lat, activeAccommodation?.lng, onMapMove]);
+  }, [memory.activeAccommodationIndex, activeAccommodation?.lat, activeAccommodation?.lng]);
 
   // Handle destination selection from autocomplete - ONLY here we update the real city
   const handleLocationSelect = (location: LocationResult) => {
