@@ -43,8 +43,10 @@ export interface AccommodationEntry {
   // Dates (independent from flights)
   checkIn: Date | null;
   checkOut: Date | null;
-  // Flag to indicate if dates are synced from flights
+  // Flag to indicate if dates are synced from flights (auto-sync)
   syncedFromFlight?: boolean;
+  // Flag to indicate if user manually modified dates (takes priority over sync)
+  userModifiedDates?: boolean;
   // Budget (per night)
   budgetPreset: BudgetPreset;
   priceMin: number;
@@ -102,8 +104,8 @@ interface AccommodationMemoryContextValue {
   // Advanced filters for active accommodation
   updateAdvancedFilters: (filters: Partial<AdvancedFilters>) => void;
 
-  // Dates for active accommodation
-  setDates: (checkIn: Date | null, checkOut: Date | null) => void;
+  // Dates for active accommodation (isUserAction: true marks as user-modified)
+  setDates: (checkIn: Date | null, checkOut: Date | null, isUserAction?: boolean) => void;
   
   // Destination for active accommodation
   setDestination: (city: string, country: string, countryCode: string, lat?: number, lng?: number) => void;
@@ -354,9 +356,14 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     updateActive({ minRating: rating });
   }, [updateActive]);
 
-  // Dates helpers
-  const setDates = useCallback((checkIn: Date | null, checkOut: Date | null) => {
-    updateActive({ checkIn, checkOut });
+  // Dates helpers - when user manually sets dates, mark as user-modified
+  const setDates = useCallback((checkIn: Date | null, checkOut: Date | null, isUserAction: boolean = true) => {
+    updateActive({ 
+      checkIn, 
+      checkOut,
+      // If user manually changes dates, mark as user-modified and remove sync flag
+      ...(isUserAction ? { userModifiedDates: true, syncedFromFlight: false } : {}),
+    });
   }, [updateActive]);
 
   // Destination helpers

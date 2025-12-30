@@ -713,7 +713,8 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
           const existing = memory.accommodations[existingIndex];
           // Only update if not being removed
           if (!accommodationIdsToRemove.includes(existing.id)) {
-            if (dest.checkIn || dest.checkOut) {
+            // IMPORTANT: Only sync dates if user hasn't manually modified them
+            if (!existing.userModifiedDates && (dest.checkIn || dest.checkOut)) {
               updateAccommodation(existing.id, {
                 checkIn: dest.checkIn || existing.checkIn,
                 checkOut: dest.checkOut || existing.checkOut,
@@ -731,6 +732,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
             checkIn: dest.checkIn,
             checkOut: dest.checkOut,
             syncedFromFlight: true,
+            userModifiedDates: false,
           });
         }
       });
@@ -758,12 +760,15 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       );
       
       if (existingIndex >= 0) {
-        // Update dates for existing accommodation
+        // Update dates for existing accommodation - ONLY if user hasn't manually modified
         const existing = memory.accommodations[existingIndex];
-        updateAccommodation(existing.id, {
-          checkIn: departureDate,
-          checkOut: returnDate || existing.checkOut,
-        });
+        if (!existing.userModifiedDates) {
+          updateAccommodation(existing.id, {
+            checkIn: departureDate,
+            checkOut: returnDate || existing.checkOut,
+            syncedFromFlight: true,
+          });
+        }
       } else if (departure.lat && departure.lng) {
         // Update first accommodation with destination info + dates
         const first = memory.accommodations[0];
@@ -776,6 +781,8 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
             lng: departure.lng,
             checkIn: departureDate,
             checkOut: returnDate || null,
+            syncedFromFlight: true,
+            userModifiedDates: false,
           });
         }
       }
@@ -944,7 +951,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
             checkIn={activeAccommodation.checkIn}
             checkOut={activeAccommodation.checkOut}
             onChange={handleDatesChange}
-            isSyncedWithFlight={activeAccommodation.syncedFromFlight}
+            isSyncedWithFlight={activeAccommodation.syncedFromFlight && !activeAccommodation.userModifiedDates}
           />
         </div>
         
