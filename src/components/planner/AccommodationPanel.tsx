@@ -740,10 +740,10 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
               checkOut: dest.checkOut,
               syncedFromFlight: true,
               userModifiedDates: false,
-              // Default values
-              budgetPreset: "comfort" as BudgetPreset,
-              priceMin: 80,
-              priceMax: 180,
+              // Default values (inherited from memory defaults)
+              budgetPreset: prev.defaultBudgetPreset,
+              priceMin: prev.defaultPriceMin,
+              priceMax: prev.defaultPriceMax,
               types: [] as AccommodationType[],
               minRating: null,
               amenities: [] as EssentialAmenity[],

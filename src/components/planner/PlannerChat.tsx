@@ -10,7 +10,7 @@ import type { CountrySelectionEvent } from "./PlannerPanel";
 import { findNearestAirports, type Airport } from "@/hooks/useNearestAirports";
 import { useFlightMemory, type AirportInfo, type MissingField } from "@/contexts/FlightMemoryContext";
 import { useTravelMemory } from "@/contexts/TravelMemoryContext";
-import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
+import { useAccommodationMemory, type AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isSameMonth, isBefore, startOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -101,6 +101,7 @@ export interface PlannerChatRef {
   askAirportChoice: (choice: AirportChoice) => void;
   askDualAirportChoice: (choices: DualAirportChoice) => void;
   offerFlightSearch: (from: string, to: string) => void;
+  handleAccommodationUpdate: (city: string, updates: Partial<AccommodationEntry>) => boolean;
 }
 
 // City coordinates for map actions
@@ -1225,6 +1226,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
   // Access flight memory
   const { memory, updateMemory, resetMemory, isReadyToSearch, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
 
+  // Access travel memory for travelers propagation
+  const { updateTravelers } = useTravelMemory();
+
+  // Access accommodation memory for targeting specific accommodations
+  const { memory: accomMemory, updateAccommodation } = useAccommodationMemory();
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -1511,8 +1518,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
 
   // Handle travelers selection from widget
   const handleTravelersSelect = (messageId: string, travelers: { adults: number; children: number; infants: number }) => {
-    // Update memory
+    // Update flight memory
     updateMemory({ passengers: travelers });
+
+    // Update travel memory for accommodation suggestions
+    updateTravelers({
+      adults: travelers.adults,
+      children: travelers.children,
+      infants: travelers.infants,
+      childrenAges: [] // Default empty, user can refine in widget
+    });
 
     // Remove widget from message (already handled by the component showing confirmation)
     setMessages((prev) =>
@@ -2117,6 +2132,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
     return { content: fullContent, flightData, accommodationData };
   };
 
+  // Helper function to find accommodation by city name
+  const findAccommodationByCity = useCallback((cityName: string): AccommodationEntry | null => {
+    const normalizedCity = cityName.toLowerCase().trim();
+    return accomMemory.accommodations.find(
+      a => a.city?.toLowerCase().trim() === normalizedCity
+    ) || null;
+  }, [accomMemory.accommodations]);
+
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
     injectSystemMessage: async (event: CountrySelectionEvent) => {
@@ -2194,7 +2217,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
     offerFlightSearch: (from: string, to: string) => {
       const fromCode = from.match(/\(([A-Z]{3})\)/)?.[1] || from;
       const toCode = to.match(/\(([A-Z]{3})\)/)?.[1] || to;
-      
+
       setMessages((prev) => [
         ...prev,
         {
@@ -2204,6 +2227,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ onA
           hasSearchButton: true,
         },
       ]);
+    },
+
+    handleAccommodationUpdate: (city: string, updates: Partial<AccommodationEntry>): boolean => {
+      const accommodation = findAccommodationByCity(city);
+      if (!accommodation) {
+        console.warn(`[PlannerChat] No accommodation found for city: ${city}`);
+        return false;
+      }
+
+      // Update the accommodation with the provided changes
+      updateAccommodation(accommodation.id, updates);
+      console.log(`[PlannerChat] Updated accommodation for ${city}:`, updates);
+      return true;
     },
   }));
 

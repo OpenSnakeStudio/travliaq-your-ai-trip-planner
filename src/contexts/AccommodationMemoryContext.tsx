@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, ReactNode, useEffect } from "react";
 import { useTravelMemory } from "./TravelMemoryContext";
+import { useFlightMemory } from "./FlightMemoryContext";
+import { migrateAccommodationMemory } from "@/lib/memoryMigration";
 
 const STORAGE_KEY = "travliaq_accommodation_memory";
 
@@ -47,6 +49,8 @@ export interface AccommodationEntry {
   syncedFromFlight?: boolean;
   // Flag to indicate if user manually modified dates (takes priority over sync)
   userModifiedDates?: boolean;
+  // Flag to indicate if user manually modified budget (prevents auto-propagation)
+  userModifiedBudget?: boolean;
   // Budget (per night)
   budgetPreset: BudgetPreset;
   priceMin: number;
@@ -70,6 +74,10 @@ export interface AccommodationMemory {
   // Shared room configuration
   useAutoRooms: boolean;
   customRooms: RoomConfig[];
+  // Default budget preferences (applied to new accommodations)
+  defaultBudgetPreset: BudgetPreset;
+  defaultPriceMin: number;
+  defaultPriceMax: number;
 }
 
 // Context value type
@@ -86,6 +94,9 @@ interface AccommodationMemoryContextValue {
   // Budget helpers for active accommodation
   setBudgetPreset: (preset: BudgetPreset) => void;
   setCustomBudget: (min: number, max: number) => void;
+
+  // Default budget preferences (applied to new accommodations)
+  setDefaultBudget: (preset: BudgetPreset, min: number, max: number) => void;
 
   // Type helpers for active accommodation
   toggleType: (type: AccommodationType) => void;
@@ -155,6 +166,9 @@ const initialMemory: AccommodationMemory = {
   activeAccommodationIndex: 0,
   useAutoRooms: true,
   customRooms: [],
+  defaultBudgetPreset: "comfort",
+  defaultPriceMin: 80,
+  defaultPriceMax: 180,
 };
 
 // Serialize for localStorage (convert Dates to ISO strings)
@@ -173,10 +187,11 @@ function serializeMemory(memory: AccommodationMemory): string {
 // Deserialize from localStorage (convert ISO strings to Dates)
 function deserializeMemory(json: string): AccommodationMemory | null {
   try {
-    const parsed = JSON.parse(json);
-    if (!parsed || typeof parsed !== "object") return null;
-    
-    const accommodations = (parsed.accommodations || []).map((acc: any) => ({
+    // First, run migration if needed (V1 → V2)
+    const migrated = migrateAccommodationMemory(json);
+    if (!migrated || typeof migrated !== "object") return null;
+
+    const accommodations = (migrated.accommodations || []).map((acc: any) => ({
       ...createDefaultAccommodation(),
       ...acc,
       checkIn: acc.checkIn ? new Date(acc.checkIn) : null,
@@ -186,12 +201,16 @@ function deserializeMemory(json: string): AccommodationMemory | null {
         ...acc.advancedFilters,
       },
     }));
-    
+
     return {
       accommodations: accommodations.length > 0 ? accommodations : [createDefaultAccommodation()],
-      activeAccommodationIndex: parsed.activeAccommodationIndex || 0,
-      useAutoRooms: parsed.useAutoRooms ?? true,
-      customRooms: parsed.customRooms || [],
+      activeAccommodationIndex: migrated.activeAccommodationIndex || 0,
+      useAutoRooms: migrated.useAutoRooms ?? true,
+      customRooms: migrated.customRooms || [],
+      // V2 fields (with defaults if migration didn't add them)
+      defaultBudgetPreset: migrated.defaultBudgetPreset || 'comfort',
+      defaultPriceMin: migrated.defaultPriceMin ?? 80,
+      defaultPriceMax: migrated.defaultPriceMax ?? 180,
     };
   } catch {
     return null;
@@ -215,9 +234,12 @@ const AccommodationMemoryContext = createContext<AccommodationMemoryContextValue
 export function AccommodationMemoryProvider({ children }: { children: ReactNode }) {
   const [memory, setMemory] = useState<AccommodationMemory>(() => loadFromStorage());
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   // Access travel memory for room suggestions
   const { memory: travelMemory, hasDestinations, hasDates } = useTravelMemory();
+
+  // Access flight memory for trip type changes
+  const { memory: flightMemory } = useFlightMemory();
 
   // Hydrate on mount (memory already loaded in useState initializer)
   useEffect(() => {
@@ -234,6 +256,28 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     }
   }, [memory, isHydrated]);
 
+  // Handle trip type changes - cleanup accommodations when switching from multi to single destination
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const tripType = flightMemory.tripType;
+
+    // When switching to roundtrip or oneway, keep only the first accommodation
+    if (tripType === "roundtrip" || tripType === "oneway") {
+      setMemory(prev => {
+        // Only cleanup if we have more than 1 accommodation
+        if (prev.accommodations.length <= 1) return prev;
+
+        return {
+          ...prev,
+          accommodations: prev.accommodations.slice(0, 1),
+          activeAccommodationIndex: 0,
+        };
+      });
+    }
+    // When switching to multi, let the auto-sync mechanism in AccommodationPanel handle it
+  }, [flightMemory.tripType, isHydrated]);
+
   // Get active accommodation
   const getActiveAccommodation = useCallback((): AccommodationEntry | null => {
     return memory.accommodations[memory.activeAccommodationIndex] || null;
@@ -241,15 +285,21 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
 
   // Add new accommodation
   const addAccommodation = useCallback((entry?: Partial<AccommodationEntry>) => {
-    const newAccommodation: AccommodationEntry = {
-      ...createDefaultAccommodation(),
-      ...entry,
-    };
-    setMemory(prev => ({
-      ...prev,
-      accommodations: [...prev.accommodations, newAccommodation],
-      activeAccommodationIndex: prev.accommodations.length,
-    }));
+    setMemory(prev => {
+      const newAccommodation: AccommodationEntry = {
+        ...createDefaultAccommodation(),
+        // Apply default budget preferences
+        budgetPreset: prev.defaultBudgetPreset,
+        priceMin: prev.defaultPriceMin,
+        priceMax: prev.defaultPriceMax,
+        ...entry,
+      };
+      return {
+        ...prev,
+        accommodations: [...prev.accommodations, newAccommodation],
+        activeAccommodationIndex: prev.accommodations.length,
+      };
+    });
   }, []);
 
   // Remove accommodation
@@ -311,12 +361,32 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
   // Budget helpers
   const setBudgetPreset = useCallback((preset: BudgetPreset) => {
     const { min, max } = BUDGET_PRESETS[preset];
-    updateActive({ budgetPreset: preset, priceMin: min, priceMax: max });
+    updateActive({
+      budgetPreset: preset,
+      priceMin: min,
+      priceMax: max,
+      userModifiedBudget: true, // Mark as user-modified
+    });
   }, [updateActive]);
 
   const setCustomBudget = useCallback((min: number, max: number) => {
-    updateActive({ budgetPreset: "custom", priceMin: min, priceMax: max });
+    updateActive({
+      budgetPreset: "custom",
+      priceMin: min,
+      priceMax: max,
+      userModifiedBudget: true, // Mark as user-modified
+    });
   }, [updateActive]);
+
+  // Default budget setter (applied to new accommodations)
+  const setDefaultBudget = useCallback((preset: BudgetPreset, min: number, max: number) => {
+    setMemory(prev => ({
+      ...prev,
+      defaultBudgetPreset: preset,
+      defaultPriceMin: min,
+      defaultPriceMax: max,
+    }));
+  }, []);
 
   // Type helpers
   const toggleType = useCallback((type: AccommodationType) => {
@@ -486,6 +556,7 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     updateAccommodation,
     setBudgetPreset,
     setCustomBudget,
+    setDefaultBudget,
     toggleType,
     toggleAmenity,
     setMinRating,

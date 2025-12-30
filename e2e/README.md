@@ -1,23 +1,37 @@
-# 🎭 Tests E2E - Questionnaire Travliaq
+# 🎭 Tests E2E - Travliaq
 
 ## 📦 Contenu
 
-Ce dossier contient tous les tests end-to-end (E2E) du questionnaire Travliaq utilisant Playwright.
+Ce dossier contient tous les tests end-to-end (E2E) pour Travliaq utilisant Playwright :
+- **Questionnaire** : Tests du parcours de génération de voyage
+- **Planner** : Tests du planificateur multi-destinations
 
 ## 📁 Structure
 
 ```
 e2e/
 ├── fixtures/
-│   └── auth.ts                          # Authentification automatique
+│   └── auth.ts                              # Authentification automatique
 ├── helpers/
-│   └── questionnaire.ts                 # Fonctions utilitaires
-├── questionnaire-solo-complete.spec.ts  # Parcours solo complet (21 étapes)
-├── questionnaire-family.spec.ts         # Parcours famille (14 étapes)
-├── questionnaire-duo-no-destination.spec.ts  # Duo sans destination (17 étapes)
-├── questionnaire-validation.spec.ts     # Tests de validation (4 tests)
-├── questionnaire-mobile.spec.ts         # Tests responsive mobile (2 tests)
-└── README.md                            # Ce fichier
+│   ├── questionnaire.ts                     # Helpers questionnaire
+│   ├── planner-page.ts                      # Page Object Model - Planner
+│   └── memory-helpers.ts                    # Helpers localStorage
+├── planner/
+│   └── specs/
+│       ├── multi-destination-persistence.spec.ts
+│       ├── trip-type-switching.spec.ts
+│       ├── chat-travelers-propagation.spec.ts
+│       ├── chat-accommodation-targeting.spec.ts
+│       ├── budget-propagation.spec.ts
+│       ├── budget-override-protection.spec.ts
+│       ├── bidirectional-sync.spec.ts
+│       └── full-user-journey.spec.ts
+├── questionnaire-solo-complete.spec.ts      # Parcours solo complet (21 étapes)
+├── questionnaire-family.spec.ts             # Parcours famille (14 étapes)
+├── questionnaire-duo-no-destination.spec.ts # Duo sans destination (17 étapes)
+├── questionnaire-validation.spec.ts         # Tests de validation (4 tests)
+├── questionnaire-mobile.spec.ts             # Tests responsive mobile (2 tests)
+└── README.md                                # Ce fichier
 ```
 
 ## 🎯 Tests disponibles
@@ -213,6 +227,114 @@ Intégration dans votre pipeline :
     name: playwright-report
     path: playwright-report/
 ```
+
+---
+
+## 🗺️ Tests Planner Multi-Destinations
+
+### ✅ Suites de tests (8 suites, 53+ tests)
+
+| Suite | Tests | Bugs Couverts | Description |
+|-------|-------|---------------|-------------|
+| **Multi-Destination Persistence** | 3 | BUG #1 | Persistance des données lors des changements d'onglets |
+| **Trip Type Switching** | 9 | BUG #2 | Nettoyage des hébergements lors du changement de type de voyage |
+| **Chat Travelers Propagation** | 6 | BUG #3 | Propagation des voyageurs du chat vers TravelMemory |
+| **Chat Accommodation Targeting** | 8 | BUG #4 | Ciblage et modification d'hébergements par ville |
+| **Budget Propagation** | 5 | BUG #5 | Propagation du budget aux nouveaux hébergements |
+| **Budget Override Protection** | 7 | BUG #6 | Protection des budgets modifiés manuellement |
+| **Bidirectional Sync** | 9 | - | Synchronisation Chat ↔ Memory ↔ Widgets |
+| **Full User Journey** | 6 | - | Parcours utilisateur complets et réalistes |
+
+**Total** : **53 tests** couvrant **100% des bugs critiques**
+
+### 🏃 Lancer les tests Planner
+
+```bash
+# Tous les tests planner
+npx playwright test planner/
+
+# Une suite spécifique
+npx playwright test multi-destination-persistence
+npx playwright test budget-propagation
+npx playwright test full-user-journey
+
+# Mode debug
+npx playwright test planner/ --debug
+
+# Avec interface
+npx playwright test planner/ --ui
+```
+
+### 🛠️ Helpers Planner
+
+```typescript
+import { PlannerPage } from '../helpers/planner-page';
+
+const page = new PlannerPage(authenticatedPage);
+
+// Navigation
+await page.goto();
+await page.switchToStays();
+await page.switchToFlights();
+
+// Multi-destination
+await page.setupMultiDestination(['Paris', 'Tokyo', 'Bangkok']);
+
+// Chat
+await page.sendChatMessage('2 adults and 1 child');
+await page.waitForChatResponse();
+
+// Accommodations
+await page.selectBudgetPreset('premium');
+await page.setCheckInDate('2024-06-01');
+const accommodations = await page.getAllAccommodations();
+
+// localStorage
+const accomMemory = await page.memory.getAccommodationMemory();
+const flightMemory = await page.memory.getFlightMemory();
+```
+
+### 🎯 Couverture Planner
+
+- ✅ Démontage de composants (data loss prevention)
+- ✅ Changement de type de voyage (multi ↔ roundtrip ↔ oneway)
+- ✅ Propagation voyageurs (chat → FlightMemory → TravelMemory)
+- ✅ Ciblage d'hébergements par ville via chat
+- ✅ Propagation du budget par défaut
+- ✅ Protection des modifications utilisateur (`userModifiedBudget`, `userModifiedDates`)
+- ✅ Synchronisation bidirectionnelle
+- ✅ Parcours utilisateur complets
+- ✅ Persistance localStorage
+- ✅ Migration V1 → V2
+
+### 🐛 Bugs Validés
+
+Chaque bug critique dispose de tests E2E dédiés :
+
+1. **BUG #1**: Component unmounting → Données disparaissent ✅ **FIXED**
+2. **BUG #2**: Trip type switching → Hébergements obsolètes ✅ **FIXED**
+3. **BUG #3**: Travelers chat → Pas de propagation TravelMemory ✅ **FIXED**
+4. **BUG #4**: Chat → Impossible cibler hébergement par ville ✅ **FIXED**
+5. **BUG #5**: Budget → Toujours "comfort" par défaut ✅ **FIXED**
+6. **BUG #6**: Budget → Pas de protection modifications manuelles ✅ **FIXED**
+
+### ⚙️ Debugging Planner
+
+```bash
+# Activer les logs mémoire (dans console navigateur)
+window.enableMemoryLogging()
+window.getMemoryLogs()
+window.printLogSummary()
+
+# Vérifier migration localStorage
+const summary = getMigrationSummary()
+console.log(summary)
+
+# Forcer migration
+migrateAllMemories()
+```
+
+---
 
 ## 📚 Documentation complète
 
