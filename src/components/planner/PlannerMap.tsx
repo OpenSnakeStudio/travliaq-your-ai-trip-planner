@@ -991,10 +991,15 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
   }, [mapLoaded]);
 
-  // Update map center/zoom
+  // Update map center/zoom with fast animation
   useEffect(() => {
     if (!map.current) return;
-    map.current.flyTo({ center: [center[0], center[1]], zoom });
+    map.current.flyTo({ 
+      center: [center[0], center[1]], 
+      zoom,
+      duration: 800, // Fast animation (was default ~2500ms)
+      essential: true,
+    });
   }, [center, zoom]);
 
   return (
