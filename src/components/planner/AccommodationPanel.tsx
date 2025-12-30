@@ -839,7 +839,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   if (!activeAccommodation) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Accommodation tabs + Add button - always visible */}
       <div className="flex gap-1.5 flex-wrap items-center">
         {memory.accommodations.map((acc, index) => (
@@ -887,7 +887,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       {/* BLOC 1: Essentiel - Destination, Dates, Voyageurs, Budget */}
       <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
         {/* Ligne 1: Destination + Dates */}
-        <div className="flex items-center gap-3 p-3 border-b border-border/30">
+        <div className="flex items-center gap-2.5 p-2.5 border-b border-border/30">
           <div className="flex-1 min-w-0">
             <DestinationInput
               value={destinationInput}
@@ -905,7 +905,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         </div>
         
         {/* Ligne 2: Voyageurs + Chambres + Budget */}
-        <div className="p-3 space-y-3">
+        <div className="p-2.5 space-y-2.5">
           <div className="flex gap-2 flex-wrap">
             <TravelersSelector
               adults={travelMemory.travelers.adults}
@@ -923,7 +923,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
           </div>
           
           {/* Budget - sur 2 lignes */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <span className="text-xs text-muted-foreground">Budget par nuit</span>
             <div className="flex gap-1.5">
               {(["eco", "comfort", "premium"] as BudgetPreset[]).map((preset) => (
@@ -964,22 +964,10 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
           </div>
         </div>
 
-        {/* Add accommodation button */}
-        {!hasMultipleAccommodations && (
-          <div className="px-3 pb-3">
-            <button
-              onClick={handleAddAccommodation}
-              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Ajouter un hébergement
-            </button>
-          </div>
-        )}
       </div>
 
       {/* BLOC 2: Préférences - Type, Note, Équipements */}
-      <div className="rounded-xl border border-border/40 bg-card/50 p-3 space-y-3">
+      <div className="rounded-xl border border-border/40 bg-card/50 p-2.5 space-y-2.5">
         {/* Type d'hébergement */}
         <div className="space-y-1.5">
           <span className="text-xs text-muted-foreground">Type</span>
