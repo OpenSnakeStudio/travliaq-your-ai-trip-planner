@@ -169,26 +169,81 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   triggerSearch?: boolean;
   onSearchTriggered?: () => void;
 }) => {
-  const [tripType, setTripType] = useState<"roundtrip" | "oneway" | "multi">("roundtrip");
+  // Access flight memory for synchronization
+  const { memory, updateMemory } = useFlightMemory();
+  
+  // Initialize tripType from memory
+  const [tripType, setTripTypeLocal] = useState<"roundtrip" | "oneway" | "multi">(memory.tripType);
   const [isSearchingAirports, setIsSearchingAirports] = useState(false);
   const [isSearchingFlights, setIsSearchingFlights] = useState(false);
   const [flightResults, setFlightResults] = useState<FlightOffer[] | null>(null);
-  const [legs, setLegs] = useState<FlightLeg[]>([
-    { id: crypto.randomUUID(), from: "", to: "", date: undefined, returnDate: undefined },
-  ]);
-  const [passengers, setPassengers] = useState<Passenger[]>([
-    { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 },
-  ]);
-  const [travelClass, setTravelClass] = useState<"economy" | "business" | "first">("economy");
+  
+  // Initialize legs from memory
+  const [legs, setLegs] = useState<FlightLeg[]>(() => {
+    if (memory.tripType === "multi" && memory.legs.length > 0) {
+      return memory.legs.map(leg => ({
+        id: leg.id,
+        from: leg.departure?.airport 
+          ? `${leg.departure.airport} (${leg.departure.iata})` 
+          : leg.departure?.city || "",
+        to: leg.arrival?.airport 
+          ? `${leg.arrival.airport} (${leg.arrival.iata})` 
+          : leg.arrival?.city || "",
+        date: leg.date || undefined,
+      }));
+    }
+    
+    const fromDisplay = memory.departure?.airport 
+      ? `${memory.departure.airport} (${memory.departure.iata})` 
+      : memory.departure?.city || "";
+    const toDisplay = memory.arrival?.airport 
+      ? `${memory.arrival.airport} (${memory.arrival.iata})` 
+      : memory.arrival?.city || "";
+    
+    return [{
+      id: crypto.randomUUID(),
+      from: fromDisplay,
+      to: toDisplay,
+      date: memory.departureDate || undefined,
+      returnDate: memory.returnDate || undefined,
+    }];
+  });
+  
+  const [passengers, setPassengers] = useState<Passenger[]>(() => {
+    const passengersArray: Passenger[] = [];
+    for (let i = 0; i < memory.passengers.adults; i++) {
+      passengersArray.push({ id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 });
+    }
+    for (let i = 0; i < memory.passengers.children; i++) {
+      passengersArray.push({ id: crypto.randomUUID(), type: "child", personalItems: 1, cabinBags: 0, checkedBags: 0 });
+    }
+    return passengersArray.length > 0 ? passengersArray : [
+      { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 },
+    ];
+  });
+  
+  const [travelClass, setTravelClass] = useState<"economy" | "business" | "first">(
+    memory.cabinClass === "premium_economy" ? "economy" : memory.cabinClass === "first" ? "first" : memory.cabinClass as "economy" | "business"
+  );
   const [options, setOptions] = useState<FlightOptions>({
-    directOnly: false,
-    flexibleDates: false,
+    directOnly: memory.directOnly,
+    flexibleDates: memory.flexibleDates,
     includeNearbyAirports: false,
     noEveningFlights: false,
   });
 
-  // Access flight memory for synchronization
-  const { memory, updateMemory } = useFlightMemory();
+  // Sync tripType with memory when changing
+  const setTripType = (newType: "roundtrip" | "oneway" | "multi") => {
+    setTripTypeLocal(newType);
+    updateMemory({ tripType: newType });
+  };
+  
+  // Sync with memory when it changes externally
+  useEffect(() => {
+    if (memory.tripType !== tripType) {
+      setTripTypeLocal(memory.tripType);
+    }
+  }, [memory.tripType]);
 
   // Apply flight form data from chat AI
   useEffect(() => {
