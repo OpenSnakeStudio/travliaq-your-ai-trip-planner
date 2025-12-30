@@ -472,9 +472,10 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
       setTripType(memory.tripType);
     }
 
-    // Sync passengers count (only if user hasn't edited since last sync)
+    // Sync passengers count FROM memory only on initial mount or if memory has more passengers
+    // Don't override if user manually added passengers
     const memTotalPassengers = memory.passengers.adults + memory.passengers.children + memory.passengers.infants;
-    if (memTotalPassengers > 0 && memTotalPassengers !== passengers.length) {
+    if (memTotalPassengers > passengers.length) {
       const newPassengers: Passenger[] = [];
       for (let i = 0; i < memory.passengers.adults; i++) {
         newPassengers.push({ id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 });
@@ -908,17 +909,34 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   };
 
   const addPassenger = () => {
-    setPassengers([...passengers, { id: crypto.randomUUID(), type: "adult", personalItems: 1, cabinBags: 0, checkedBags: 0 }]);
+    const newPassengers = [...passengers, { id: crypto.randomUUID(), type: "adult" as const, personalItems: 1, cabinBags: 0, checkedBags: 0 }];
+    setPassengers(newPassengers);
+    // Sync with memory
+    const adults = newPassengers.filter(p => p.type === "adult").length;
+    const children = newPassengers.filter(p => p.type === "child").length;
+    updateMemory({ passengers: { adults, children, infants: 0 } });
   };
 
   const removePassenger = (id: string) => {
     if (passengers.length > 1) {
-      setPassengers(passengers.filter(p => p.id !== id));
+      const newPassengers = passengers.filter(p => p.id !== id);
+      setPassengers(newPassengers);
+      // Sync with memory
+      const adults = newPassengers.filter(p => p.type === "adult").length;
+      const children = newPassengers.filter(p => p.type === "child").length;
+      updateMemory({ passengers: { adults, children, infants: 0 } });
     }
   };
 
   const updatePassenger = (id: string, updates: Partial<Passenger>) => {
-    setPassengers(passengers.map(p => p.id === id ? { ...p, ...updates } : p));
+    const newPassengers = passengers.map(p => p.id === id ? { ...p, ...updates } : p);
+    setPassengers(newPassengers);
+    // Sync with memory when type changes
+    if (updates.type !== undefined) {
+      const adults = newPassengers.filter(p => p.type === "adult").length;
+      const children = newPassengers.filter(p => p.type === "child").length;
+      updateMemory({ passengers: { adults, children, infants: 0 } });
+    }
   };
 
   const toggleOption = (key: keyof FlightOptions) => {
