@@ -169,6 +169,16 @@ export default {
             transform: "translateY(-10px)"
           }
         },
+        "flash": {
+          "0%, 100%": {
+            backgroundColor: "transparent",
+            boxShadow: "none"
+          },
+          "50%": {
+            backgroundColor: "hsl(var(--primary) / 0.3)",
+            boxShadow: "0 0 0 3px hsl(var(--primary) / 0.2)"
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -182,6 +192,7 @@ export default {
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
         "shimmer": "shimmer 2s infinite",
         "adventure-float": "adventure-float 3s ease-in-out infinite",
+        "flash": "flash 2s ease-in-out",
       },
       transitionProperty: {
         'adventure': 'var(--transition-adventure)',

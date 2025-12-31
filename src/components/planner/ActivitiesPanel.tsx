@@ -4,12 +4,14 @@
  */
 
 import { useState, useEffect } from "react";
-import { MapPin, Clock, Star, Palette, TreePine, Utensils, Sparkles, Heart, ShoppingBag, Music, X, Plus } from "lucide-react";
+import { MapPin, Clock, Star, Palette, TreePine, Utensils, Sparkles, Heart, ShoppingBag, Music, X, Plus, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import { useActivityMemory, ActivityEntry } from "@/contexts/ActivityMemoryContext";
 import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
 import { toastSuccess, toastInfo } from "@/lib/toast";
+import { eventBus } from "@/lib/eventBus";
 
 // ============================================================================
 // HELPER COMPONENTS
@@ -277,14 +279,25 @@ const ActivitiesPanel = () => {
 
       {/* No destination message */}
       {accommodationMemory.accommodations.length === 0 && (
-        <div className="py-8 text-center">
+        <div className="py-8 text-center space-y-4">
           <span className="text-4xl mb-2 block">🗺️</span>
-          <p className="text-sm text-muted-foreground">
-            Aucune destination configurée
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Ajoutez d'abord une destination dans l'onglet vols
-          </p>
+          <div>
+            <p className="text-sm text-muted-foreground">
+              Aucune destination configurée
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ajoutez d'abord une destination dans l'onglet vols
+            </p>
+          </div>
+          <Button
+            onClick={() => eventBus.emit("tab:change", { tab: "flights" })}
+            variant="outline"
+            size="sm"
+            className="mx-auto"
+          >
+            <Plane className="h-3.5 w-3.5 mr-2" />
+            Aller aux vols
+          </Button>
         </div>
       )}
 
@@ -365,7 +378,7 @@ const ActivitiesPanel = () => {
             </div>
 
             {filteredActivities.length === 0 ? (
-              <div className="py-8 text-center">
+              <div className="py-8 text-center space-y-4">
                 <span className="text-4xl mb-2 block">🎭</span>
                 <p className="text-sm text-muted-foreground">
                   {currentActivities.length === 0
@@ -373,12 +386,28 @@ const ActivitiesPanel = () => {
                     : "Aucune activité ne correspond aux filtres"}
                 </p>
                 {currentActivities.length === 0 && currentDestination && (
-                  <button
-                    onClick={handleAddActivity}
-                    className="mt-3 text-xs text-primary hover:text-primary/80 font-medium"
-                  >
-                    + Ajouter une activité
-                  </button>
+                  <div className="flex flex-col gap-2 items-center">
+                    <Button
+                      onClick={() => {
+                        eventBus.emit("chat:injectMessage", {
+                          role: "assistant",
+                          text: `Je peux vous suggérer des activités incontournables à ${currentDestination.city}. Quels sont vos centres d'intérêt ? (culture, gastronomie, nature, sport...)`
+                        });
+                      }}
+                      variant="default"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Suggérer des activités IA
+                    </Button>
+                    <button
+                      onClick={handleAddActivity}
+                      className="text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
+                    >
+                      + Ajouter manuellement
+                    </button>
+                  </div>
                 )}
               </div>
             ) : (

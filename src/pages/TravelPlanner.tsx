@@ -9,6 +9,7 @@ import PlannerTopBar from "@/components/planner/PlannerTopBar";
 import DestinationPopup from "@/components/planner/DestinationPopup";
 import YouTubeShortsPanel from "@/components/planner/YouTubeShortsPanel";
 import OnboardingTour from "@/components/planner/OnboardingTour";
+import { PlannerErrorBoundary } from "@/components/planner/PlannerErrorBoundary";
 import type { Airport } from "@/hooks/useNearestAirports";
 import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
@@ -150,23 +151,25 @@ const TravelPlanner = () => {
           {/* Right: Map workspace - resizable */}
           <ResizablePanel defaultSize={65} minSize={40}>
             <main className="relative h-full overflow-hidden pt-12" data-tour="map-area">
-              <PlannerMap
-                activeTab={activeTab}
-                center={mapCenter}
-                zoom={mapZoom}
-                onPinClick={handlePinClick}
-                selectedPinId={selectedPin?.id}
-                flightRoutes={flightRoutes}
-                animateToUserLocation={!initialAnimationDone}
-                onAnimationComplete={() => {
-                  setInitialAnimationDone(true);
-                  // Open panel with the restored/active tab (don't force flights)
-                  setIsPanelVisible(true);
-                }}
-                isPanelOpen={isPanelVisible}
-                userLocation={initialAnimationDone ? userLocation : null}
-                onDestinationClick={handleDestinationClick}
-              />
+              <PlannerErrorBoundary componentName="PlannerMap">
+                <PlannerMap
+                  activeTab={activeTab}
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  onPinClick={handlePinClick}
+                  selectedPinId={selectedPin?.id}
+                  flightRoutes={flightRoutes}
+                  animateToUserLocation={!initialAnimationDone}
+                  onAnimationComplete={() => {
+                    setInitialAnimationDone(true);
+                    // Open panel with the restored/active tab (don't force flights)
+                    setIsPanelVisible(true);
+                  }}
+                  isPanelOpen={isPanelVisible}
+                  userLocation={initialAnimationDone ? userLocation : null}
+                  onDestinationClick={handleDestinationClick}
+                />
+              </PlannerErrorBoundary>
 
               {/* Overlay tabs */}
               <div data-tour="tabs-bar">
@@ -188,31 +191,33 @@ const TravelPlanner = () => {
               ) : (
                 /* Regular Overlay panel */
                 <div data-tour="flights-panel">
-                  <PlannerPanel
-                    activeTab={activeTab}
-                    layout="overlay"
-                    isVisible={isPanelVisible}
-                    onClose={() => setIsPanelVisible(false)}
-                    onMapMove={(center, zoom) => {
-                      setMapCenter(center);
-                      setMapZoom(zoom);
-                    }}
-                    onFlightRoutesChange={setFlightRoutes}
-                    flightFormData={flightFormData}
-                    onFlightFormDataConsumed={() => setFlightFormData(null)}
-                    onCountrySelected={handleCountrySelected}
-                    onAskAirportChoice={handleAskAirportChoice}
-                    onAskDualAirportChoice={handleAskDualAirportChoice}
-                    onAskAirportConfirmation={handleAskAirportConfirmation}
-                    selectedAirport={selectedAirport}
-                    onSelectedAirportConsumed={() => setSelectedAirport(null)}
-                    onUserLocationDetected={setUserLocation}
-                    onSearchReady={handleSearchReady}
-                    triggerSearch={triggerFlightSearch}
-                    onSearchTriggered={() => setTriggerFlightSearch(false)}
-                    confirmedMultiAirports={confirmedMultiAirports}
-                    onConfirmedMultiAirportsConsumed={() => setConfirmedMultiAirports(null)}
-                  />
+                  <PlannerErrorBoundary componentName="PlannerPanel">
+                    <PlannerPanel
+                      activeTab={activeTab}
+                      layout="overlay"
+                      isVisible={isPanelVisible}
+                      onClose={() => setIsPanelVisible(false)}
+                      onMapMove={(center, zoom) => {
+                        setMapCenter(center);
+                        setMapZoom(zoom);
+                      }}
+                      onFlightRoutesChange={setFlightRoutes}
+                      flightFormData={flightFormData}
+                      onFlightFormDataConsumed={() => setFlightFormData(null)}
+                      onCountrySelected={handleCountrySelected}
+                      onAskAirportChoice={handleAskAirportChoice}
+                      onAskDualAirportChoice={handleAskDualAirportChoice}
+                      onAskAirportConfirmation={handleAskAirportConfirmation}
+                      selectedAirport={selectedAirport}
+                      onSelectedAirportConsumed={() => setSelectedAirport(null)}
+                      onUserLocationDetected={setUserLocation}
+                      onSearchReady={handleSearchReady}
+                      triggerSearch={triggerFlightSearch}
+                      onSearchTriggered={() => setTriggerFlightSearch(false)}
+                      confirmedMultiAirports={confirmedMultiAirports}
+                      onConfirmedMultiAirportsConsumed={() => setConfirmedMultiAirports(null)}
+                    />
+                  </PlannerErrorBoundary>
                 </div>
               )}
 

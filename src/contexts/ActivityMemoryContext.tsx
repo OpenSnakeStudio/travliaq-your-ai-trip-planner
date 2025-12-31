@@ -6,6 +6,7 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import { usePreferenceMemory } from "./PreferenceMemoryContext";
+import { eventBus } from "@/lib/eventBus";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -228,6 +229,9 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
       }],
     }));
 
+    // Flash the activities tab to indicate an update
+    eventBus.emit("tab:flash", { tab: "activities" });
+
     return id;
   }, []);
 
@@ -251,6 +255,9 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
           : a
       ),
     }));
+
+    // Flash the activities tab to indicate an update
+    eventBus.emit("tab:flash", { tab: "activities" });
   }, []);
 
   const updateMemoryBatch = useCallback((updater: (prev: ActivityMemory) => ActivityMemory) => {

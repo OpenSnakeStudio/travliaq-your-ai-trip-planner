@@ -4,6 +4,7 @@ import { useFlightMemory } from "./FlightMemoryContext";
 import { usePreferenceMemory } from "./PreferenceMemoryContext";
 import { migrateAccommodationMemory } from "@/lib/memoryMigration";
 import { toastSuccess } from "@/lib/toast";
+import { eventBus } from "@/lib/eventBus";
 
 const STORAGE_KEY = "travliaq_accommodation_memory";
 
@@ -343,6 +344,9 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
         );
       }
 
+      // Flash the stays tab to indicate an update
+      eventBus.emit("tab:flash", { tab: "stays" });
+
       return {
         ...prev,
         accommodations: [...prev.accommodations, newAccommodation],
@@ -396,18 +400,21 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
   const updateAccommodation = useCallback((id: string, updates: Partial<AccommodationEntry>) => {
     setMemory(prev => ({
       ...prev,
-      accommodations: prev.accommodations.map(acc => 
-        acc.id === id 
-          ? { 
-              ...acc, 
+      accommodations: prev.accommodations.map(acc =>
+        acc.id === id
+          ? {
+              ...acc,
               ...updates,
-              advancedFilters: updates.advancedFilters 
+              advancedFilters: updates.advancedFilters
                 ? { ...acc.advancedFilters, ...updates.advancedFilters }
                 : acc.advancedFilters,
             }
           : acc
       ),
     }));
+
+    // Flash the stays tab to indicate an update
+    eventBus.emit("tab:flash", { tab: "stays" });
   }, []);
 
   // Update active accommodation helper

@@ -9,6 +9,7 @@ import type { LocationResult } from "@/hooks/useLocationAutocomplete";
 import { findNearestAirports, Airport } from "@/hooks/useNearestAirports";
 import FlightResults, { FlightOffer, generateMockFlights } from "./FlightResults";
 import { useFlightMemory, type AirportInfo } from "@/contexts/FlightMemoryContext";
+import { ActivitiesPanelSkeleton, AccommodationPanelSkeleton, PreferencesPanelSkeleton } from "./PanelSkeletons";
 
 // Lazy load panels for code splitting
 const AccommodationPanel = lazy(() => import("./AccommodationPanel"));
@@ -93,17 +94,17 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
             <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} flightFormData={flightFormData} onFlightFormDataConsumed={onFlightFormDataConsumed} onCountrySelected={onCountrySelected} onAskAirportChoice={onAskAirportChoice} onAskDualAirportChoice={onAskDualAirportChoice} onAskAirportConfirmation={onAskAirportConfirmation} selectedAirport={selectedAirport} onSelectedAirportConsumed={onSelectedAirportConsumed} onUserLocationDetected={onUserLocationDetected} onSearchReady={onSearchReady} triggerSearch={triggerSearch} onSearchTriggered={onSearchTriggered} confirmedMultiAirports={confirmedMultiAirports} onConfirmedMultiAirportsConsumed={onConfirmedMultiAirportsConsumed} />
           </div>
           <div style={{ display: activeTab === "activities" ? "block" : "none" }}>
-            <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+            <Suspense fallback={<ActivitiesPanelSkeleton />}>
               <ActivitiesPanel />
             </Suspense>
           </div>
           <div style={{ display: activeTab === "stays" ? "block" : "none" }}>
-            <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+            <Suspense fallback={<AccommodationPanelSkeleton />}>
               <AccommodationPanel onMapMove={onMapMove} />
             </Suspense>
           </div>
           <div style={{ display: activeTab === "preferences" ? "block" : "none" }}>
-            <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+            <Suspense fallback={<PreferencesPanelSkeleton />}>
               <PreferencesPanel />
             </Suspense>
           </div>

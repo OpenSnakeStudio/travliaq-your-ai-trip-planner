@@ -27,6 +27,7 @@ import type { AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
 export type PlannerEvents = {
   // Tab & Navigation
   "tab:change": { tab: "flights" | "activities" | "stays" | "preferences" };
+  "tab:flash": { tab: "flights" | "activities" | "stays" | "preferences" };
   "panel:toggle": { visible: boolean };
   
   // Map interactions

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { usePlannerEvent } from "@/lib/eventBus";
+import { usePlannerEvent, eventBus } from "@/lib/eventBus";
 import type { FlightFormData, ConfirmedAirports } from "@/types/flight";
 import type { Airport } from "@/hooks/useNearestAirports";
 
@@ -28,6 +28,8 @@ export function useFlightState(
     setFlightFormData(data);
     setIsPanelVisible(true);
     searchMessageSentRef.current = false;
+    // Flash the flights tab to indicate an update
+    eventBus.emit("tab:flash", { tab: "flights" });
   }, [setIsPanelVisible]));
 
   // Event listener: airport selection
