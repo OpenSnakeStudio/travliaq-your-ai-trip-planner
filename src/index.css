@@ -97,6 +97,11 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    /* Slightly larger base font for better readability in production */
+    font-size: 17px;
+  }
+
   body {
     @apply bg-background text-foreground font-inter;
   }
