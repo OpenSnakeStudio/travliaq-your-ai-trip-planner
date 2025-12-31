@@ -8,11 +8,11 @@ interface PlannerTabsProps {
   onTabChange: (tab: TabType) => void;
 }
 
-const tabs: { id: TabType; label: string; icon: React.ElementType }[] = [
-  { id: "flights", label: "Vols", icon: Plane },
-  { id: "activities", label: "Activités", icon: MapPin },
-  { id: "stays", label: "Hébergements", icon: Building2 },
-  { id: "preferences", label: "Préférences", icon: User },
+const tabs: { id: TabType; label: string; icon: React.ElementType; emoji: string }[] = [
+  { id: "flights", label: "Vols", icon: Plane, emoji: "✈️" },
+  { id: "stays", label: "Hébergements", icon: Building2, emoji: "🏨" },
+  { id: "activities", label: "Activités", icon: MapPin, emoji: "🎭" },
+  { id: "preferences", label: "Préférences", icon: User, emoji: "⚙️" },
 ];
 
 const PlannerTabs = ({ activeTab, onTabChange }: PlannerTabsProps) => {
@@ -38,7 +38,7 @@ const PlannerTabs = ({ activeTab, onTabChange }: PlannerTabsProps) => {
       </div>
 
       {/* Tab Navigation */}
-      <nav className="flex items-center gap-1 flex-1">
+      <nav className="flex items-center gap-1 flex-1" data-tour="tabs-bar">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -47,15 +47,27 @@ const PlannerTabs = ({ activeTab, onTabChange }: PlannerTabsProps) => {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
+              data-tour={`${tab.id}-tab`}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                "group relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300",
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-adventure"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25 scale-[1.02]"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/80 hover:scale-[1.01]"
               )}
             >
-              <Icon className="h-4 w-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              {/* Animated background glow on hover */}
+              <span className={cn(
+                "absolute inset-0 rounded-xl transition-opacity duration-300",
+                isActive ? "opacity-0" : "opacity-0 group-hover:opacity-100 bg-gradient-to-r from-primary/5 to-primary/10"
+              )} />
+              
+              <span className="relative z-10 text-base">{tab.emoji}</span>
+              <span className="relative z-10 hidden sm:inline">{tab.label}</span>
+              
+              {/* Active indicator dot */}
+              {isActive && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary-foreground/80" />
+              )}
             </button>
           );
         })}

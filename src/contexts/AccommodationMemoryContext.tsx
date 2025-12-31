@@ -17,7 +17,7 @@ export interface RoomConfig {
 }
 
 // Budget presets
-export type BudgetPreset = "eco" | "comfort" | "premium" | "custom";
+export type BudgetPreset = "eco" | "comfort" | "premium" | "luxury" | "custom";
 
 // Accommodation types
 export type AccommodationType = "hotel" | "apartment" | "villa" | "hostel" | "guesthouse" | "any";
@@ -143,8 +143,9 @@ interface AccommodationMemoryContextValue {
 export const BUDGET_PRESETS: Record<BudgetPreset, { min: number; max: number; label: string }> = {
   eco: { min: 0, max: 80, label: "Économique" },
   comfort: { min: 80, max: 180, label: "Confort" },
-  premium: { min: 180, max: 500, label: "Premium" },
-  custom: { min: 0, max: 500, label: "Personnalisé" },
+  premium: { min: 180, max: 350, label: "Premium" },
+  luxury: { min: 350, max: 1000, label: "Luxe" },
+  custom: { min: 0, max: 1000, label: "Personnalisé" },
 };
 
 // Create a default accommodation entry
@@ -307,6 +308,7 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
       comfort: { min: 80, max: 180 },
       premium: { min: 180, max: 350 },
       luxury: { min: 350, max: 1000 },
+      custom: { min: 0, max: 1000 },
     };
 
     const { min, max } = budgetPresets[budgetPreset];
