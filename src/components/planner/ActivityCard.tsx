@@ -51,14 +51,19 @@ function formatDuration(activity: ViatorActivity | ActivityEntry): string {
   return "Durée non spécifiée";
 }
 
-function getImageUrl(activity: ViatorActivity | ActivityEntry, size: "small" | "medium" | "large" = "medium"): string | null {
+// Always use large images to avoid pixelation
+function getImageUrl(activity: ViatorActivity | ActivityEntry): string | null {
   const images = activity.images;
   if (!images || images.length === 0) return null;
 
   const primaryImage = images[0];
 
-  if (primaryImage.variants && primaryImage.variants[size]) {
-    return primaryImage.variants[size];
+  // Prioritize large > medium > url to avoid pixelation
+  if (primaryImage.variants?.large) {
+    return primaryImage.variants.large;
+  }
+  if (primaryImage.variants?.medium) {
+    return primaryImage.variants.medium;
   }
 
   return primaryImage.url || null;
@@ -74,7 +79,7 @@ function renderStars(rating: number) {
         <Star
           key={i}
           className={cn(
-            "h-3 w-3",
+            "h-3.5 w-3.5",
             i < fullStars
               ? "fill-amber-400 text-amber-400"
               : i === fullStars && hasHalfStar
@@ -88,7 +93,7 @@ function renderStars(rating: number) {
 }
 
 export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, className, compact = false }: ActivityCardProps) => {
-  const imageUrl = getImageUrl(activity, compact ? "small" : "medium");
+  const imageUrl = getImageUrl(activity);
   const discountPercentage = getDiscountPercentage(activity);
   const popular = isPopular(activity);
   const topRated = isTopRated(activity);
@@ -96,7 +101,6 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
   const title = activity.title;
   const rating = activity.rating;
   const pricing = activity.pricing;
-  const categories = activity.categories || [];
 
   if (compact) {
     return (
@@ -108,7 +112,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
         )}
         onClick={onClick}
       >
-        {/* Small Image */}
+        {/* Small Image - use large for quality */}
         <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
           {imageUrl ? (
             <img
@@ -154,6 +158,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
     );
   }
 
+  // Full card - 1 per row, larger image
   return (
     <div
       className={cn(
@@ -163,8 +168,8 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
       )}
       onClick={onClick}
     >
-      {/* Image */}
-      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
+      {/* Large Image */}
+      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -179,72 +184,56 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
         )}
 
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {discountPercentage && (
-            <span className="px-2 py-0.5 bg-destructive text-destructive-foreground text-xs font-bold rounded-md flex items-center gap-1">
+            <span className="px-2.5 py-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm">
               <Percent className="h-3 w-3" />
               -{discountPercentage}%
             </span>
           )}
           {popular && (
-            <span className="px-2 py-0.5 bg-accent text-accent-foreground text-xs font-medium rounded-md flex items-center gap-1">
+            <span className="px-2.5 py-1 bg-accent text-accent-foreground text-xs font-medium rounded-lg flex items-center gap-1 shadow-sm">
               <Users className="h-3 w-3" />
               Populaire
             </span>
           )}
           {topRated && !popular && (
-            <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-md flex items-center gap-1">
+            <span className="px-2.5 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-lg flex items-center gap-1 shadow-sm">
               <Award className="h-3 w-3" />
-              Top
+              Top noté
             </span>
           )}
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-3 space-y-2">
+      <div className="p-4 space-y-3">
         {/* Title */}
-        <h4 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug min-h-[2.5rem]">
+        <h4 className="font-semibold text-sm text-foreground line-clamp-2 leading-snug">
           {title}
         </h4>
 
-        {/* Rating & Duration */}
+        {/* Rating - More prominent */}
         <div className="flex items-center justify-between">
           {rating && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               {renderStars(rating.average)}
+              <span className="text-sm font-semibold text-foreground">{rating.average.toFixed(1)}</span>
               <span className="text-xs text-muted-foreground">
-                ({rating.count.toLocaleString()})
+                ({rating.count.toLocaleString()} avis)
               </span>
             </div>
           )}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            <span>{formatDuration(activity)}</span>
-          </div>
         </div>
 
-        {/* Categories */}
-        {categories.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {categories.slice(0, 2).map((category, idx) => (
-              <span
-                key={idx}
-                className="px-2 py-0.5 bg-muted text-muted-foreground text-[10px] font-medium rounded-full"
-              >
-                {category}
-              </span>
-            ))}
-            {categories.length > 2 && (
-              <span className="px-2 py-0.5 bg-muted text-muted-foreground text-[10px] font-medium rounded-full">
-                +{categories.length - 2}
-              </span>
-            )}
-          </div>
-        )}
+        {/* Duration */}
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="h-3.5 w-3.5" />
+          <span>{formatDuration(activity)}</span>
+        </div>
 
         {/* Pricing & Actions */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
           <div className="flex flex-col">
             {pricing && (
               <>
@@ -254,7 +243,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                   </span>
                 )}
                 <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-bold text-primary">
+                  <span className="text-xl font-bold text-primary">
                     {pricing.from_price}€
                   </span>
                   <span className="text-xs text-muted-foreground">/ pers</span>
@@ -271,9 +260,9 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                   e.stopPropagation();
                   onAdd();
                 }}
-                className="px-3 py-1.5 bg-primary text-primary-foreground hover:opacity-90 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
+                className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-4 w-4" />
                 Ajouter
               </button>
             )}
