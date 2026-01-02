@@ -1,33 +1,34 @@
 /**
- * Activities Panel - Matching AccommodationPanel UX
+ * Activities Panel - Matching AccommodationPanel UX exactly
  *
  * Features:
- * - City tabs like AccommodationPanel (with "+" button for adding)
+ * - City tabs identical to AccommodationPanel (with "+" button)
  * - Inline city input when adding (not popup)
+ * - Zoom to city on map when switching tabs
  * - Two-view system: filters + results
  * - Activity cards in 2-column grid
  * - Detail modal on click
  */
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { 
-  Search, Sparkles, Loader2, Plus, X, MapPin, Hotel,
-  ChevronLeft, AlertCircle, Calendar
+  Search, Sparkles, Loader2, Plus, MapPin, Hotel,
+  ChevronLeft, AlertCircle, Link2, CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
 import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
+import { useFlightMemory } from "@/contexts/FlightMemoryContext";
 import { ActivityCard } from "./ActivityCard";
 import { ActivityFilters } from "./ActivityFilters";
 import { ActivityDetailModal } from "./ActivityDetailModal";
 import { toast } from "sonner";
 import { eventBus } from "@/lib/eventBus";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import type { ActivitySearchParams, ViatorActivity, ActivityFilters as ActivityFiltersType } from "@/types/activity";
+import type { ViatorActivity } from "@/types/activity";
 
 // ============================================================================
 // TYPES
@@ -41,6 +42,8 @@ interface CityEntry {
   countryCode: string;
   checkIn: Date | null;
   checkOut: Date | null;
+  lat?: number;
+  lng?: number;
 }
 
 // ============================================================================
@@ -72,6 +75,18 @@ const EmptyState = ({
   </div>
 );
 
+// Format date range display (like AccommodationPanel)
+const formatDateRange = (checkIn: Date | null, checkOut: Date | null) => {
+  if (!checkIn) return null;
+  const start = format(checkIn, "d MMM.", { locale: fr });
+  if (checkOut) {
+    const end = format(checkOut, "d MMM.", { locale: fr });
+    const nights = differenceInDays(checkOut, checkIn);
+    return `${start} → ${end} (${nights}n)`;
+  }
+  return start;
+};
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -79,9 +94,6 @@ const EmptyState = ({
 const ActivitiesPanel = () => {
   const {
     state: activityState,
-    searchActivities,
-    loadMoreResults,
-    clearSearch,
     loadRecommendations,
     addActivityFromSearch,
     removeActivity,
@@ -92,6 +104,7 @@ const ActivitiesPanel = () => {
   } = useActivityMemory();
 
   const { memory: accommodationMemory } = useAccommodationMemory();
+  const { memory: flightMemory } = useFlightMemory();
 
   // UI State
   const [currentView, setCurrentView] = useState<ViewType>("filters");
@@ -100,13 +113,6 @@ const ActivitiesPanel = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<ViatorActivity[]>([]);
-  
-  // Add city state
-  const [isAddingCity, setIsAddingCity] = useState(false);
-  const [newCityName, setNewCityName] = useState("");
-  const [newCityCountry, setNewCityCountry] = useState("");
-  const [newCityDate, setNewCityDate] = useState("");
-  const addCityInputRef = useRef<HTMLInputElement>(null);
 
   // Derive cities from accommodations (like AccommodationPanel)
   const cities = useMemo<CityEntry[]>(() => {
@@ -118,6 +124,8 @@ const ActivitiesPanel = () => {
         countryCode: acc.countryCode || "",
         checkIn: acc.checkIn,
         checkOut: acc.checkOut,
+        lat: acc.lat,
+        lng: acc.lng,
       }));
   }, [accommodationMemory.accommodations]);
 
@@ -126,36 +134,6 @@ const ActivitiesPanel = () => {
 
   // Get planned activities for current city
   const plannedActivities = activeCity ? getActivitiesByDestination(activeCity.id) : [];
-
-  // Format date for display
-  const formatDateRange = (checkIn: Date | null, checkOut: Date | null) => {
-    if (!checkIn) return "";
-    const start = format(checkIn, "d MMM", { locale: fr });
-    if (checkOut) {
-      const end = format(checkOut, "d MMM", { locale: fr });
-      return `${start} - ${end}`;
-    }
-    return start;
-  };
-
-  // Focus city on map when switching
-  const prevCityIndexRef = useRef(activeCityIndex);
-  useEffect(() => {
-    if (prevCityIndexRef.current !== activeCityIndex && activeCity) {
-      prevCityIndexRef.current = activeCityIndex;
-      eventBus.emit("activities:cityFocus", {
-        city: activeCity.city,
-        countryCode: activeCity.countryCode,
-      });
-    }
-  }, [activeCityIndex, activeCity]);
-
-  // Focus input when adding city
-  useEffect(() => {
-    if (isAddingCity && addCityInputRef.current) {
-      addCityInputRef.current.focus();
-    }
-  }, [isAddingCity]);
 
   // Handle search using Supabase edge function
   const handleSearch = useCallback(async () => {
@@ -247,9 +225,8 @@ const ActivitiesPanel = () => {
       
       // If activity has coordinates, emit map event
       if (activity.coordinates) {
-        eventBus.emit("map:moveToLocation", {
-          lat: activity.coordinates.lat,
-          lng: activity.coordinates.lng,
+        eventBus.emit("map:zoom", {
+          center: [activity.coordinates.lng, activity.coordinates.lat] as [number, number],
           zoom: 15,
         });
       }
@@ -257,26 +234,14 @@ const ActivitiesPanel = () => {
     [selectActivity]
   );
 
-  // Handle add city submission
-  const handleAddCity = useCallback(() => {
-    if (!newCityName.trim()) {
-      toast.error("Veuillez entrer un nom de ville");
-      return;
-    }
-    // Notify user to add via accommodations tab
-    toast.info(`Pour ajouter ${newCityName}, utilisez l'onglet Hébergements`);
-    setIsAddingCity(false);
-    setNewCityName("");
-    setNewCityCountry("");
-    setNewCityDate("");
-  }, [newCityName]);
-
-  // Cancel add city
-  const handleCancelAddCity = useCallback(() => {
-    setIsAddingCity(false);
-    setNewCityName("");
-    setNewCityCountry("");
-    setNewCityDate("");
+  // Handle click to add city - redirect to Accommodation
+  const handleAddCityClick = useCallback(() => {
+    toast.info("Ajoutez une destination dans l'onglet Hébergements", {
+      action: {
+        label: "Aller",
+        onClick: () => eventBus.emit("tab:change", { tab: "stays" }),
+      },
+    });
   }, []);
 
   // Back to filters
@@ -294,6 +259,18 @@ const ActivitiesPanel = () => {
     }
   }, [activeCity, loadRecommendations]);
 
+  // Handle city tab click with map zoom (same speed as hotels)
+  const handleCityClick = useCallback((index: number) => {
+    setActiveCityIndex(index);
+    const city = cities[index];
+    if (city?.lat && city?.lng) {
+      eventBus.emit("map:zoom", {
+        center: [city.lng, city.lat] as [number, number],
+        zoom: 12,
+      });
+    }
+  }, [cities]);
+
   // ============================================================================
   // RENDER
   // ============================================================================
@@ -301,7 +278,7 @@ const ActivitiesPanel = () => {
   return (
     <div className="space-y-3" data-tour="activities-panel">
       {/* No Cities Message */}
-      {cities.length === 0 && !isAddingCity && (
+      {cities.length === 0 && (
         <EmptyState
           icon={MapPin}
           title="Aucune destination"
@@ -320,13 +297,13 @@ const ActivitiesPanel = () => {
         />
       )}
 
-      {/* City Tabs - Like AccommodationPanel */}
-      {(cities.length > 0 || isAddingCity) && (
+      {/* City Tabs - EXACTLY like AccommodationPanel */}
+      {cities.length > 0 && (
         <div className="flex gap-1.5 flex-wrap items-center">
           {cities.map((city, index) => (
             <button
               key={city.id}
-              onClick={() => setActiveCityIndex(index)}
+              onClick={() => handleCityClick(index)}
               className={cn(
                 "px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 group",
                 index === activeCityIndex
@@ -335,73 +312,55 @@ const ActivitiesPanel = () => {
               )}
             >
               <MapPin className="h-3 w-3" />
-              <div className="flex flex-col items-start">
-                <span className="max-w-24 truncate" title={`${city.city}${city.countryCode ? `, ${city.countryCode}` : ""}`}>
-                  {city.city}{city.countryCode ? `, ${city.countryCode}` : ""}
-                </span>
-                {(city.checkIn || city.checkOut) && (
-                  <span className={cn(
-                    "text-[10px]",
-                    index === activeCityIndex ? "text-primary-foreground/70" : "text-muted-foreground/70"
-                  )}>
-                    {formatDateRange(city.checkIn, city.checkOut)}
-                  </span>
-                )}
-              </div>
+              <span
+                className="max-w-24 truncate"
+                title={`${city.city}${city.countryCode ? `, ${city.countryCode}` : ""}`}
+              >
+                {city.city}
+              </span>
             </button>
           ))}
-
-          {/* Add City Button / Input */}
-          {isAddingCity ? (
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg border border-primary/30 bg-muted/30">
-              <input
-                ref={addCityInputRef}
-                type="text"
-                value={newCityName}
-                onChange={(e) => setNewCityName(e.target.value)}
-                placeholder="Ville..."
-                className="w-20 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddCity();
-                  if (e.key === "Escape") handleCancelAddCity();
-                }}
-              />
-              <input
-                type="text"
-                value={newCityCountry}
-                onChange={(e) => setNewCityCountry(e.target.value.toUpperCase())}
-                placeholder="FR"
-                className="w-8 bg-transparent text-xs placeholder:text-muted-foreground focus:outline-none text-center"
-                maxLength={2}
-              />
-              <input
-                type="date"
-                value={newCityDate}
-                onChange={(e) => setNewCityDate(e.target.value)}
-                className="w-28 bg-transparent text-xs focus:outline-none"
-              />
-              <button
-                onClick={handleAddCity}
-                className="p-0.5 rounded hover:bg-primary/20 text-primary"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={handleCancelAddCity}
-                className="p-0.5 rounded hover:bg-destructive/20 text-muted-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
+          
+          {/* Add button or sync indicator */}
+          {flightMemory.tripType !== "multi" ? (
             <button
-              onClick={() => setIsAddingCity(true)}
+              onClick={handleAddCityClick}
               className="flex items-center gap-1 px-2.5 py-1.5 text-xs text-primary hover:text-primary/80 transition-colors rounded-lg border border-dashed border-primary/30 hover:border-primary/50"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Ajouter</span>
             </button>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground/70 rounded-lg border border-dashed border-border/30">
+              <Link2 className="h-3 w-3" />
+              <span>Synchronisé avec vos vols</span>
+            </div>
           )}
+        </div>
+      )}
+
+      {/* City Details Card (like AccommodationPanel) */}
+      {activeCity && (
+        <div className="rounded-xl border border-border/40 bg-card/50 overflow-hidden">
+          {/* City info line */}
+          <div className="flex items-center gap-2.5 p-2.5 border-b border-border/30">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <MapPin className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-medium truncate">{activeCity.city}</span>
+            </div>
+            <div className="w-px h-6 bg-border/40" />
+            <div className="flex items-center gap-2 text-sm">
+              <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+              {activeCity.checkIn && activeCity.checkOut ? (
+                <span className="text-foreground flex items-center gap-1">
+                  {formatDateRange(activeCity.checkIn, activeCity.checkOut)}
+                  <Link2 className="h-3 w-3 text-primary/70" />
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Dates à définir</span>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -504,78 +463,41 @@ const ActivitiesPanel = () => {
 
               {/* Error State */}
               {searchError && (
-                <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-destructive">Erreur de recherche</p>
-                    <p className="text-xs text-destructive/80 mt-1">{searchError}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Results Header */}
-              {searchResults.length > 0 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    {searchResults.length} résultat{searchResults.length > 1 ? "s" : ""}
-                  </p>
-                  <button
-                    onClick={handleBackToFilters}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Nouvelle recherche
-                  </button>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <p>{searchError}</p>
                 </div>
               )}
 
               {/* Results Grid - 2 columns */}
-              {searchResults.length > 0 && (
+              {!searchError && searchResults.length > 0 && (
                 <div className="grid grid-cols-2 gap-3">
                   {searchResults.map((activity) => (
                     <ActivityCard
                       key={activity.id}
                       activity={activity}
                       mode="search"
-                      onAdd={() => handleAddActivity(activity)}
                       onClick={() => handleActivityClick(activity)}
+                      onAdd={() => handleAddActivity(activity)}
                     />
                   ))}
                 </div>
               )}
 
-              {/* Recommendations */}
-              {activityState.recommendations.length > 0 && searchResults.length === 0 && !searchError && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-medium text-foreground">Recommandations pour vous</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {activityState.recommendations.map((activity) => (
-                      <ActivityCard
-                        key={activity.id}
-                        activity={activity}
-                        mode="search"
-                        onAdd={() => handleAddActivity(activity)}
-                        onClick={() => handleActivityClick(activity)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {!isSearching && searchResults.length === 0 && activityState.recommendations.length === 0 && !searchError && (
+              {/* Empty Results */}
+              {!searchError && searchResults.length === 0 && !isSearching && (
                 <EmptyState
                   icon={Search}
-                  title="Aucun résultat"
-                  description="Essayez de modifier vos filtres ou d'élargir votre recherche"
-                  action={
-                    <Button onClick={handleBackToFilters} variant="outline" size="sm">
-                      Modifier les filtres
-                    </Button>
-                  }
+                  title="Aucune activité trouvée"
+                  description="Essayez de modifier vos critères de recherche"
                 />
+              )}
+
+              {/* Loading */}
+              {isSearching && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
               )}
             </div>
           )}
@@ -587,11 +509,10 @@ const ActivitiesPanel = () => {
         activity={detailModalActivity}
         open={!!detailModalActivity}
         onClose={() => setDetailModalActivity(null)}
-        onAdd={handleAddActivity}
-        isInTrip={detailModalActivity ? activityState.activities.some((a) => a.viatorId === detailModalActivity.id) : false}
+        onAdd={detailModalActivity ? () => handleAddActivity(detailModalActivity) : undefined}
       />
     </div>
   );
 };
 
-export default ActivitiesPanel;
+export default memo(ActivitiesPanel);
