@@ -612,8 +612,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return;
     }
     
-    // DON'T show flight routes on stays tab - only show accommodation markers
-    if (activeTab === "stays") {
+    // DON'T show flight routes on stays or activities tabs - only on flights tab
+    if (activeTab === "stays" || activeTab === "activities") {
       routesDrawnRef.current = false;
       return;
     }
@@ -1151,6 +1151,50 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const activityPopupRef = useRef<mapboxgl.Popup | null>(null);
   const [apiActivities, setApiActivities] = useState<TravliaqActivity[]>([]);
   const [activeActivityCity, setActiveActivityCity] = useState<{ city: string; lat?: number; lng?: number } | null>(null);
+  
+  // Previous tab ref to detect tab changes
+  const prevTabRef = useRef<TabType | null>(null);
+  
+  // Auto-zoom to first city when switching to activities tab
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    
+    // Only trigger on tab change TO activities
+    if (activeTab === "activities" && prevTabRef.current !== "activities") {
+      // Find the first city (from accommodation or use fallback)
+      const firstAccommodation = accommodationMemory.accommodations.find(a => a.lat && a.lng);
+      
+      if (firstAccommodation?.lat && firstAccommodation?.lng) {
+        // Zoom to first accommodation city
+        setActiveActivityCity({
+          city: firstAccommodation.city,
+          lat: firstAccommodation.lat,
+          lng: firstAccommodation.lng,
+        });
+        
+        map.current.flyTo({
+          center: [firstAccommodation.lng, firstAccommodation.lat],
+          zoom: 12,
+          duration: 1000,
+          essential: true,
+        });
+      } else {
+        // No accommodation set, zoom to a default like Paris
+        const defaultCity = { city: "Paris", lat: 48.8566, lng: 2.3522 };
+        setActiveActivityCity(defaultCity);
+        
+        map.current.flyTo({
+          center: [defaultCity.lng, defaultCity.lat],
+          zoom: 12,
+          duration: 1000,
+          essential: true,
+        });
+      }
+    }
+    
+    // Update previous tab
+    prevTabRef.current = activeTab;
+  }, [activeTab, mapLoaded, accommodationMemory.accommodations]);
   
   // Listen for city focus events (when user selects a city in ActivitiesPanel)
   usePlannerEvent("activities:cityFocus", useCallback((data) => {
