@@ -2,10 +2,10 @@
  * Activity Detail Modal
  *
  * Full-screen modal displaying comprehensive activity information
+ * Uses large images to avoid pixelation
  */
 
-import { useState } from "react";
-import { X, Star, Clock, MapPin, Users, Calendar, ExternalLink, Plus, Trash2, Award, Tag } from "lucide-react";
+import { Star, Clock, MapPin, Users, Calendar, ExternalLink, Plus, Trash2, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -26,6 +26,13 @@ export interface ActivityDetailModalProps {
 
 function isViatorActivity(activity: ViatorActivity | ActivityEntry): activity is ViatorActivity {
   return "booking_url" in activity && !("destinationId" in activity);
+}
+
+// Always get large image to avoid pixelation
+function getLargeImageUrl(image: { url: string; variants?: { small?: string; medium?: string; large?: string } }): string {
+  if (image.variants?.large) return image.variants.large;
+  if (image.variants?.medium) return image.variants.medium;
+  return image.url;
 }
 
 const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) => (
@@ -50,7 +57,7 @@ const renderStars = (rating: number) => {
         <Star
           key={i}
           className={cn(
-            "h-4 w-4",
+            "h-5 w-5",
             i < fullStars
               ? "fill-amber-400 text-amber-400"
               : i === fullStars && hasHalfStar
@@ -76,7 +83,6 @@ export const ActivityDetailModal = ({
   const title = activity.title;
   const description = activity.description;
   const images = activity.images || [];
-  const categories = activity.categories || [];
 
   const rating = activity.rating;
   const pricing = activity.pricing;
@@ -96,8 +102,8 @@ export const ActivityDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
-        {/* Image Carousel */}
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
+        {/* Image Carousel - Large images */}
         {images.length > 0 && (
           <div className="relative h-80 bg-gradient-to-br from-primary/5 to-primary/10">
             <Carousel className="w-full h-full">
@@ -106,7 +112,7 @@ export const ActivityDetailModal = ({
                   <CarouselItem key={index}>
                     <div className="relative h-80 w-full">
                       <img
-                        src={image.variants?.large || image.url}
+                        src={getLargeImageUrl(image)}
                         alt={`${title} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
@@ -127,11 +133,31 @@ export const ActivityDetailModal = ({
               )}
             </Carousel>
 
+            {/* Single close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-lg"
+              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-lg z-10"
+              aria-label="Fermer"
             >
-              <X className="h-5 w-5" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* No images fallback with close button */}
+        {images.length === 0 && (
+          <div className="relative h-32 bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+            <MapPin className="h-12 w-12 text-muted-foreground/20" />
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-lg z-10"
+              aria-label="Fermer"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+              </svg>
             </button>
           </div>
         )}
@@ -140,35 +166,21 @@ export const ActivityDetailModal = ({
         <div className="p-6 space-y-6">
           {/* Header */}
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">{title}</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-3">{title}</h2>
 
             {rating && (
               <div className="flex items-center gap-3 mb-3">
                 {renderStars(rating.average)}
-                <span className="text-sm font-medium text-foreground">{rating.average.toFixed(1)}</span>
+                <span className="text-lg font-semibold text-foreground">{rating.average.toFixed(1)}</span>
                 <span className="text-sm text-muted-foreground">
                   ({rating.count.toLocaleString()} avis)
                 </span>
                 {rating.average >= 4.8 && (
-                  <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-medium rounded-full flex items-center gap-1">
+                  <span className="px-2.5 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full flex items-center gap-1">
                     <Award className="h-3 w-3" />
                     Top noté
                   </span>
                 )}
-              </div>
-            )}
-
-            {categories.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {categories.map((category, idx) => (
-                  <span
-                    key={idx}
-                    className="px-3 py-1 bg-muted text-muted-foreground text-xs font-medium rounded-full flex items-center gap-1"
-                  >
-                    <Tag className="h-3 w-3" />
-                    {category}
-                  </span>
-                ))}
               </div>
             )}
           </div>

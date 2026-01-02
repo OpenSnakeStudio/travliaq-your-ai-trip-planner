@@ -13,7 +13,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef, memo } from "react";
 import { 
   Search, Sparkles, Loader2, Plus, X,
-  ChevronLeft, AlertCircle, CalendarDays, Compass, MapPin
+  ChevronLeft, AlertCircle, CalendarDays, Compass, MapPin,
+  ArrowUpDown, TrendingDown, TrendingUp, Star, Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -269,6 +270,7 @@ const ActivitiesPanel = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<ViatorActivity[]>([]);
+  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "rating" | "duration">("default");
   
   // Adding city state
   const [isAddingCity, setIsAddingCity] = useState(false);
@@ -303,6 +305,25 @@ const ActivitiesPanel = () => {
 
   // Get planned activities for current city
   const plannedActivities = activeCity ? getActivitiesByDestination(activeCity.id) : [];
+
+  // Sort search results
+  const sortedSearchResults = useMemo(() => {
+    if (sortBy === "default" || searchResults.length === 0) return searchResults;
+    
+    const sorted = [...searchResults];
+    switch (sortBy) {
+      case "price_asc":
+        return sorted.sort((a, b) => (a.pricing?.from_price || 0) - (b.pricing?.from_price || 0));
+      case "price_desc":
+        return sorted.sort((a, b) => (b.pricing?.from_price || 0) - (a.pricing?.from_price || 0));
+      case "rating":
+        return sorted.sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0));
+      case "duration":
+        return sorted.sort((a, b) => (b.duration?.minutes || 0) - (a.duration?.minutes || 0));
+      default:
+        return sorted;
+    }
+  }, [searchResults, sortBy]);
 
   // Handle search using Supabase edge function
   const handleSearch = useCallback(async () => {
@@ -762,14 +783,41 @@ const ActivitiesPanel = () => {
           {/* RESULTS VIEW */}
           {currentView === "results" && (
             <div className="space-y-4">
-              {/* Back Button */}
-              <button
-                onClick={handleBackToFilters}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Retour aux filtres
-              </button>
+              {/* Header with Back + Sort */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handleBackToFilters}
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Retour
+                </button>
+
+                {/* Sort options */}
+                {!searchError && sortedSearchResults.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                      className="text-xs bg-transparent border-none text-muted-foreground focus:outline-none cursor-pointer"
+                    >
+                      <option value="default">Par défaut</option>
+                      <option value="price_asc">Prix ↑</option>
+                      <option value="price_desc">Prix ↓</option>
+                      <option value="rating">Meilleures notes</option>
+                      <option value="duration">Plus longue durée</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Results count */}
+              {!searchError && sortedSearchResults.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {sortedSearchResults.length} activité{sortedSearchResults.length > 1 ? "s" : ""} trouvée{sortedSearchResults.length > 1 ? "s" : ""}
+                </p>
+              )}
 
               {/* Error State */}
               {searchError && (
@@ -779,10 +827,10 @@ const ActivitiesPanel = () => {
                 </div>
               )}
 
-              {/* Results Grid - 2 columns */}
-              {!searchError && searchResults.length > 0 && (
-                <div className="grid grid-cols-2 gap-3">
-                  {searchResults.map((activity) => (
+              {/* Results - 1 card per row for better image visibility */}
+              {!searchError && sortedSearchResults.length > 0 && (
+                <div className="space-y-3">
+                  {sortedSearchResults.map((activity) => (
                     <ActivityCard
                       key={activity.id}
                       activity={activity}
@@ -795,7 +843,7 @@ const ActivitiesPanel = () => {
               )}
 
               {/* Empty Results */}
-              {!searchError && searchResults.length === 0 && !isSearching && (
+              {!searchError && sortedSearchResults.length === 0 && !isSearching && (
                 <EmptyState
                   icon={Search}
                   title="Aucune activité trouvée"
