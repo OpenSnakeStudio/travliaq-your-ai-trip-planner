@@ -49,6 +49,7 @@ export interface ActivityDuration {
 export interface ActivityLocation {
   destination: string;
   country: string;
+  city?: string;
 }
 
 /**
@@ -68,6 +69,10 @@ export interface ViatorActivity {
   confirmation_type: string;
   location: ActivityLocation;
   availability: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 /**
@@ -213,4 +218,14 @@ export interface CategoryWithEmoji {
   label: string;
   emoji: string;
   keyword: string;
+}
+
+/**
+ * Activity Filters interface
+ */
+export interface ActivityFilters {
+  categories: string[];
+  priceRange: [number, number];
+  ratingMin: number;
+  durationMax?: number; // in minutes
 }

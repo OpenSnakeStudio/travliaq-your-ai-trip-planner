@@ -4,12 +4,8 @@
  * Centralized export for all activity-related services
  */
 
-export { activityService } from './activityService';
-export { recommendationService } from './recommendationService';
-export { activityCacheService } from './cacheService';
+import { activityService } from './activityService';
+import { recommendationService } from './recommendationService';
+import { activityCacheService } from './cacheService';
 
-export default {
-  activityService,
-  recommendationService,
-  activityCacheService,
-};
+export { activityService, recommendationService, activityCacheService };

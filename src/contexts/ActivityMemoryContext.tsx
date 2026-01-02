@@ -19,8 +19,12 @@ import type {
   ViatorActivity,
   ActivitySearchParams,
   ActivitySearchResponse,
+  ActivityFilters,
 } from "@/types/activity";
 import { toast } from "sonner";
+
+// Re-export types for consumers
+export type { ActivityEntry, ViatorActivity, ActivityFilters } from "@/types/activity";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -36,12 +40,7 @@ export interface ActivitySearchState {
   error: string | null;
 }
 
-export interface ActivityFilters {
-  categories: string[];
-  priceRange: [number, number];
-  ratingMin: number;
-  durationMax: number; // in minutes
-}
+// ActivityFilters is now imported from @/types/activity
 
 export interface ActivityMemory {
   // Planned activities
@@ -364,7 +363,12 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, isLoadingRecommendations: true }));
 
     try {
-      const startDate = destination.checkIn || new Date().toISOString().split('T')[0];
+      const checkInValue = destination.checkIn;
+      const startDate = typeof checkInValue === 'string' 
+        ? checkInValue 
+        : checkInValue instanceof Date 
+          ? checkInValue.toISOString().split('T')[0] 
+          : new Date().toISOString().split('T')[0];
 
       const recommendations = await recommendationService.getPersonalizedRecommendations(
         destination.city,
