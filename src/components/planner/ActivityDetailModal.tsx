@@ -2,14 +2,6 @@
  * Activity Detail Modal
  *
  * Full-screen modal displaying comprehensive activity information
- * Features:
- * - Image carousel with responsive images
- * - Full description and highlights
- * - Pricing and booking information
- * - Reviews and ratings
- * - Duration, location, categories
- * - Add to trip / Remove from trip actions
- * - External booking link
  */
 
 import { useState } from "react";
@@ -18,62 +10,23 @@ import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import type { ViatorActivity, ActivityEntry } from "@/types/activity";
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 export interface ActivityDetailModalProps {
-  /**
-   * Activity to display (from Viator API or user's planned activities)
-   */
   activity: ViatorActivity | ActivityEntry | null;
-
-  /**
-   * Whether modal is open
-   */
   open: boolean;
-
-  /**
-   * Called when modal closes
-   */
   onClose: () => void;
-
-  /**
-   * Called when user adds activity to trip (for Viator activities)
-   */
   onAdd?: (activity: ViatorActivity) => void;
-
-  /**
-   * Called when user removes activity from trip (for planned activities)
-   */
   onRemove?: (activityId: string) => void;
-
-  /**
-   * Whether activity is already in the trip
-   */
   isInTrip?: boolean;
 }
 
-// ============================================================================
-// TYPE GUARDS
-// ============================================================================
-
 function isViatorActivity(activity: ViatorActivity | ActivityEntry): activity is ViatorActivity {
-  return "product_code" in activity;
+  return "booking_url" in activity && !("destinationId" in activity);
 }
-
-// ============================================================================
-// HELPER COMPONENTS
-// ============================================================================
 
 const InfoRow = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) => (
   <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
@@ -110,10 +63,6 @@ const renderStars = (rating: number) => {
   );
 };
 
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
-
 export const ActivityDetailModal = ({
   activity,
   open,
@@ -122,46 +71,24 @@ export const ActivityDetailModal = ({
   onRemove,
   isInTrip = false,
 }: ActivityDetailModalProps) => {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
   if (!activity) return null;
 
-  // Extract common properties
   const title = activity.title;
   const description = activity.description;
   const images = activity.images || [];
   const categories = activity.categories || [];
 
-  const rating = isViatorActivity(activity)
-    ? activity.rating
-    : "rating" in activity && activity.rating
-    ? activity.rating
-    : null;
-
-  const pricing = isViatorActivity(activity)
-    ? activity.pricing
-    : "pricing" in activity && activity.pricing
-    ? activity.pricing
-    : null;
-
+  const rating = activity.rating;
+  const pricing = activity.pricing;
   const duration = activity.duration;
   const location = isViatorActivity(activity) ? activity.location : null;
-
-  const productCode = isViatorActivity(activity) ? activity.product_code : null;
   const bookingUrl = isViatorActivity(activity) ? activity.booking_url : null;
 
-  // Format duration
   const formatDuration = () => {
     if (!duration) return "Durée non spécifiée";
-    const { min_duration, max_duration, unit } = duration;
-    const unitLabel = unit === "hours" ? "h" : "min";
-    if (min_duration === max_duration) {
-      return `${min_duration}${unitLabel}`;
-    }
-    return `${min_duration}-${max_duration}${unitLabel}`;
+    return duration.formatted || `${duration.minutes} min`;
   };
 
-  // Check if activity has discount
   const hasDiscount = pricing && pricing.original_price && pricing.original_price > pricing.from_price;
   const discountPercentage = hasDiscount
     ? Math.round(((pricing.original_price! - pricing.from_price) / pricing.original_price!) * 100)
@@ -183,7 +110,6 @@ export const ActivityDetailModal = ({
                         alt={`${title} - Image ${index + 1}`}
                         className="w-full h-full object-cover"
                       />
-                      {/* Discount Badge */}
                       {hasDiscount && index === 0 && (
                         <div className="absolute top-4 left-4 px-3 py-1.5 bg-destructive text-destructive-foreground rounded-lg font-bold text-sm">
                           -{discountPercentage}%
@@ -201,7 +127,6 @@ export const ActivityDetailModal = ({
               )}
             </Carousel>
 
-            {/* Close button */}
             <button
               onClick={onClose}
               className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-lg"
@@ -217,7 +142,6 @@ export const ActivityDetailModal = ({
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-2">{title}</h2>
 
-            {/* Rating */}
             {rating && (
               <div className="flex items-center gap-3 mb-3">
                 {renderStars(rating.average)}
@@ -234,7 +158,6 @@ export const ActivityDetailModal = ({
               </div>
             )}
 
-            {/* Categories */}
             {categories.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {categories.map((category, idx) => (
@@ -257,14 +180,14 @@ export const ActivityDetailModal = ({
               <InfoRow
                 icon={MapPin}
                 label="Lieu"
-                value={`${location.city || ""}, ${location.country || ""}`.trim()}
+                value={`${location.city || location.destination || ""}, ${location.country || ""}`.trim()}
               />
             )}
             {pricing && (
               <InfoRow
                 icon={Users}
                 label="Prix par personne"
-                value={`${pricing.from_price}€${pricing.currency ? ` ${pricing.currency}` : ""}`}
+                value={`${pricing.from_price}€`}
               />
             )}
             {isViatorActivity(activity) && activity.flags && activity.flags.length > 0 && (
@@ -306,7 +229,6 @@ export const ActivityDetailModal = ({
 
           {/* Footer Actions */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
-            {/* Booking Link */}
             {bookingUrl && (
               <Button variant="outline" size="lg" className="flex-1 gap-2" asChild>
                 <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
@@ -316,7 +238,6 @@ export const ActivityDetailModal = ({
               </Button>
             )}
 
-            {/* Add/Remove Button */}
             {isInTrip ? (
               <Button
                 variant="destructive"

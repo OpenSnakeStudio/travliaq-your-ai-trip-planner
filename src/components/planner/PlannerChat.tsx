@@ -1298,9 +1298,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
   const { getSerializedState: getAccommodationMemory } = useAccommodationMemory();
   const { getSerializedState: getTravelMemory } = useTravelMemory();
   const {
-    addActivity,
+    addManualActivity,
     updateActivity,
-    getActivitiesByCity,
+    getActivitiesByDestination,
     getSerializedState: getActivityMemory,
   } = useActivityMemory();
   const {
@@ -2458,7 +2458,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
     },
 
     handleActivityUpdate: (city: string, updates: Partial<ActivityEntry>): boolean => {
-      const activities = getActivitiesByCity(city);
+      const activities = getActivitiesByDestination(city);
 
       if (activities.length === 0) {
         console.warn(`[PlannerChat] No activities found for city: ${city}`);
@@ -2498,7 +2498,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
         return null;
       }
 
-      const id = addActivity({
+      const id = addManualActivity({
         destinationId: destination.id,
         city: destination.city || city,
         country: destination.country || "",

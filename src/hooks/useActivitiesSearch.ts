@@ -4,24 +4,12 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { TravliaqActivity, ActivityEntry } from "@/contexts/ActivityMemoryContext";
+import type { ViatorActivity, ActivitySearchParams, ActivitySearchResponse } from "@/types/activity";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface ActivitySearchParams {
-  city: string;
-  countryCode: string;
-  startDate: string; // YYYY-MM-DD
-  endDate?: string;
-  categories?: string[];
-  priceRange?: { min?: number; max?: number };
-  ratingMin?: number;
-  page?: number;
-  limit?: number;
-}
-
 export interface ActivitySearchResult {
-  activities: TravliaqActivity[];
+  activities: ViatorActivity[];
   totalCount: number;
   page: number;
   hasMore: boolean;
@@ -29,7 +17,7 @@ export interface ActivitySearchResult {
 }
 
 export interface UseActivitiesSearchReturn {
-  results: TravliaqActivity[];
+  results: ViatorActivity[];
   loading: boolean;
   error: string | null;
   totalCount: number;
@@ -40,7 +28,7 @@ export interface UseActivitiesSearchReturn {
 }
 
 export function useActivitiesSearch(): UseActivitiesSearchReturn {
-  const [results, setResults] = useState<TravliaqActivity[]>([]);
+  const [results, setResults] = useState<ViatorActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
