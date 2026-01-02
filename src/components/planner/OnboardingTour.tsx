@@ -1,50 +1,129 @@
-import { useState, useEffect } from "react";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import { useState, useEffect, useCallback } from "react";
+import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from "react-joyride";
+import { eventBus } from "@/lib/eventBus";
+import type { TabType } from "@/pages/TravelPlanner";
 
 interface OnboardingTourProps {
   /** Force-show the tour even if already seen */
   forceShow?: boolean;
   /** Callback when tour ends */
   onComplete?: () => void;
+  /** Callback to control panel visibility */
+  onPanelVisibilityChange?: (visible: boolean) => void;
+  /** Callback to trigger animation after onboarding */
+  onRequestAnimation?: () => void;
 }
 
 const STORAGE_KEY = "travliaq_onboarding_completed";
 
+// Step configuration with tab and panel requirements
+interface StepConfig {
+  tab?: TabType;
+  panelOpen?: boolean;
+}
+
+const STEP_CONFIG: Record<number, StepConfig> = {
+  0: { panelOpen: false },  // Welcome - no panel
+  1: { panelOpen: false },  // Chat panel - no widget panel
+  2: { panelOpen: false },  // Map - no widget panel
+  3: { panelOpen: false },  // Tabs bar explanation - no widget yet
+  4: { tab: "flights", panelOpen: true },     // Flights panel
+  5: { tab: "stays", panelOpen: true },       // Stays panel  
+  6: { tab: "activities", panelOpen: true },  // Activities panel
+  7: { tab: "preferences", panelOpen: true }, // Preferences panel
+  8: { panelOpen: false },  // Final step - close panel
+};
+
 /**
  * Onboarding tour for the Planner page.
  * Shows only once for new users (tracked in localStorage).
+ * Automatically opens the correct tab and panel when focusing on a widget.
+ * Blocks initial animations until onboarding is complete.
  */
-export default function OnboardingTour({ forceShow = false, onComplete }: OnboardingTourProps) {
+export default function OnboardingTour({ 
+  forceShow = false, 
+  onComplete,
+  onPanelVisibilityChange,
+  onRequestAnimation,
+}: OnboardingTourProps) {
   const [runTour, setRunTour] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
 
   // Check if user has already seen the tour
   useEffect(() => {
     if (forceShow) {
       setRunTour(true);
+      // Close panel at start
+      onPanelVisibilityChange?.(false);
       return;
     }
 
     const hasSeenTour = localStorage.getItem(STORAGE_KEY) === "true";
     if (!hasSeenTour) {
       // Wait a bit for the page to fully load
-      const timer = setTimeout(() => setRunTour(true), 1500);
+      const timer = setTimeout(() => {
+        setRunTour(true);
+        // Close panel at start of onboarding
+        onPanelVisibilityChange?.(false);
+      }, 800);
       return () => clearTimeout(timer);
     }
-  }, [forceShow]);
+  }, [forceShow, onPanelVisibilityChange]);
+
+  // Configure step: open tab and panel as needed
+  const configureStep = useCallback((index: number) => {
+    const config = STEP_CONFIG[index];
+    if (!config) return;
+
+    // Handle panel visibility
+    if (config.panelOpen !== undefined) {
+      onPanelVisibilityChange?.(config.panelOpen);
+    }
+
+    // Handle tab change (after panel is ready)
+    if (config.tab) {
+      setTimeout(() => {
+        eventBus.emit("tab:change", { tab: config.tab! });
+      }, 100);
+    }
+  }, [onPanelVisibilityChange]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status } = data;
+    const { status, action, index, type } = data;
 
-    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+    // Handle step transitions
+    if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      // Navigate to next/previous step
+      const nextIndex = action === ACTIONS.PREV ? index - 1 : index + 1;
+      setStepIndex(nextIndex);
+      configureStep(nextIndex);
+    }
+
+    // Handle tour completion
+    const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
+    if (finishedStatuses.includes(status)) {
       setRunTour(false);
+      setStepIndex(0);
       localStorage.setItem(STORAGE_KEY, "true");
+      
+      // Close panel first
+      onPanelVisibilityChange?.(false);
+      
+      // Return to flights tab
+      eventBus.emit("tab:change", { tab: "flights" });
+      
+      // Trigger animation and geolocation after a short delay
+      setTimeout(() => {
+        onRequestAnimation?.();
+      }, 300);
+      
       onComplete?.();
     }
   };
 
   const steps: Step[] = [
     {
-      target: "body", // Centered welcome step
+      target: "body",
       placement: "center",
       title: "Bienvenue sur Travliaq ! ✈️",
       content: (
@@ -89,61 +168,61 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
       title: "Vos Outils de Planification 🛠️",
       content: (
         <div className="space-y-2">
-          <p>Passez d'un onglet à l'autre pour configurer chaque aspect de votre voyage.</p>
+          <p>Utilisez ces onglets pour configurer chaque aspect de votre voyage.</p>
           <p className="text-muted-foreground text-sm">
-            Vols, activités, hébergements - tout est synchronisé automatiquement !
+            Vols → Hébergements → Activités → Préférences. Tout est synchronisé automatiquement !
           </p>
         </div>
       ),
     },
     {
       target: '[data-tour="flights-panel"]',
-      placement: "auto",
-      title: "Recherche de Vols ✈️",
+      placement: "right",
+      title: "1. Recherche de Vols ✈️",
       content: (
         <div className="space-y-2">
-          <p>Configurez vos recherches de vols avec tous les détails.</p>
+          <p>Configurez vos vols ici.</p>
           <p className="text-muted-foreground text-sm">
-            Multi-destinations, classes de voyage, bagages... tout est personnalisable.
+            Multi-destinations, classes de voyage, bagages... Les dates et destinations se synchronisent avec vos hébergements.
           </p>
         </div>
       ),
     },
     {
-      target: '[data-tour="stays-panel"]',
-      placement: "auto",
-      title: "Hébergements 🏨",
+      target: '[data-tour="flights-panel"]',
+      placement: "right",
+      title: "2. Hébergements 🏨",
       content: (
         <div className="space-y-2">
           <p>Trouvez l'hébergement parfait pour chaque destination.</p>
           <p className="text-muted-foreground text-sm">
-            Les dates et destinations sont synchronisées automatiquement avec vos vols !
+            Les dates et villes sont automatiquement reprises de vos vols. Filtrez par confort, équipements et budget.
           </p>
         </div>
       ),
     },
     {
-      target: '[data-tour="activities-panel"]',
-      placement: "auto",
-      title: "Activités 🎭",
+      target: '[data-tour="flights-panel"]',
+      placement: "right",
+      title: "3. Activités 🎭",
       content: (
         <div className="space-y-2">
-          <p>Planifiez vos activités et visites par destination.</p>
+          <p>Planifiez vos activités par destination.</p>
           <p className="text-muted-foreground text-sm">
-            Filtrez par type, durée et budget pour personnaliser votre voyage.
+            Culture, gastronomie, nature... Laissez l'IA vous suggérer les incontournables ou ajoutez les vôtres.
           </p>
         </div>
       ),
     },
     {
-      target: '[data-tour="preferences-panel"]',
-      placement: "auto",
-      title: "Préférences de Voyage 🎨",
+      target: '[data-tour="flights-panel"]',
+      placement: "right",
+      title: "4. Préférences Globales ⚙️",
       content: (
         <div className="space-y-2">
-          <p>Définissez vos préférences globales de voyage.</p>
+          <p>Définissez votre style de voyage.</p>
           <p className="text-muted-foreground text-sm">
-            Rythme, budget, centres d'intérêt... pour une expérience sur mesure.
+            Rythme, confort, centres d'intérêt, restrictions alimentaires... Toutes ces préférences affectent les suggestions de l'IA.
           </p>
         </div>
       ),
@@ -156,7 +235,7 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
         <div className="space-y-2">
           <p>Vous êtes prêt à planifier votre prochain voyage.</p>
           <p className="text-muted-foreground text-sm">
-            Commencez par dire bonjour à l'assistant ou explorez la carte !
+            Commencez par dire bonjour à l'assistant ou configurez vos vols directement !
           </p>
         </div>
       ),
@@ -167,6 +246,7 @@ export default function OnboardingTour({ forceShow = false, onComplete }: Onboar
     <Joyride
       steps={steps}
       run={runTour}
+      stepIndex={stepIndex}
       continuous
       scrollToFirstStep
       showProgress

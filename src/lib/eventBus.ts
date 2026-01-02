@@ -52,6 +52,35 @@ export type PlannerEvents = {
   "accommodation:update": { city: string; updates: Partial<AccommodationEntry> };
   "accommodation:syncWithFlights": void;
   
+  // Activities-related
+  "activities:search": { 
+    city: string; 
+    countryCode: string; 
+    checkIn: Date | null; 
+    checkOut: Date | null;
+    destinationId: string;
+    lat?: number;
+    lng?: number;
+    filters?: {
+      ratingMin: number;
+      budgetMin: number;
+      budgetMax: number;
+    };
+  };
+  "activities:resultsReady": { 
+    activities: unknown[]; 
+    destinationId: string;
+    city: string;
+    lat?: number;
+    lng?: number;
+  };
+  "activities:cityFocus": {
+    city: string;
+    countryCode: string;
+    lat?: number;
+    lng?: number;
+  };
+  
   // Chat interactions
   "chat:injectMessage": { role: "assistant" | "system"; text: string };
   "chat:offerFlightSearch": { from: string; to: string };
