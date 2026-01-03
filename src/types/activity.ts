@@ -59,6 +59,7 @@ export interface ViatorActivity {
   id: string;
   title: string;
   description: string;
+  type?: "activity" | "attraction";  // Type from unified search (backend balancing)
   images: ActivityImage[];
   pricing: ActivityPricing;
   rating: ActivityRating;

@@ -183,7 +183,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
           </div>
         )}
 
-        {/* Badges */}
+        {/* Badges Left */}
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {discountPercentage && (
             <span className="px-2.5 py-1 bg-destructive text-destructive-foreground text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm">
@@ -204,6 +204,20 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
             </span>
           )}
         </div>
+
+        {/* Badge Type (Right) - From unified search */}
+        {isViatorActivity(activity) && activity.type && (
+          <div className="absolute top-3 right-3">
+            <span className={cn(
+              "px-2.5 py-1 text-xs font-medium rounded-lg shadow-sm",
+              activity.type === "activity"
+                ? "bg-blue-500 text-white"
+                : "bg-purple-500 text-white"
+            )}>
+              {activity.type === "activity" ? "Activité" : "Attraction"}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content */}

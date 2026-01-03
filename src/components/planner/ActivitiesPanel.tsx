@@ -325,6 +325,18 @@ const ActivitiesPanel = () => {
     }
   }, [searchResults, sortBy]);
 
+  // Calculate type breakdown for unified search results
+  const typeBreakdown = useMemo(() => {
+    const breakdown = { activity: 0, attraction: 0 };
+    sortedSearchResults.forEach((item) => {
+      const type = item.type || "activity";
+      if (type === "activity" || type === "attraction") {
+        breakdown[type]++;
+      }
+    });
+    return breakdown;
+  }, [sortedSearchResults]);
+
   // Handle search using Supabase edge function
   const handleSearch = useCallback(async () => {
     if (!activeCity) {
@@ -337,6 +349,7 @@ const ActivitiesPanel = () => {
 
     try {
       const requestBody = {
+        search_mode: "both",  // Enable unified search (activities + attractions with 50/50 balancing)
         location: {
           city: activeCity.city,
           country_code: activeCity.countryCode,
@@ -357,7 +370,7 @@ const ActivitiesPanel = () => {
         language: "fr",
         pagination: {
           page: 1,
-          limit: 20,
+          limit: 50,  // Increased from 20 to leverage backend 50/50 balancing
         },
       };
 
@@ -812,11 +825,19 @@ const ActivitiesPanel = () => {
                 )}
               </div>
 
-              {/* Results count */}
+              {/* Results count with type breakdown */}
               {!searchError && sortedSearchResults.length > 0 && (
-                <p className="text-xs text-muted-foreground">
-                  {sortedSearchResults.length} activité{sortedSearchResults.length > 1 ? "s" : ""} trouvée{sortedSearchResults.length > 1 ? "s" : ""}
-                </p>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-xs font-medium text-foreground">
+                    {sortedSearchResults.length} résultat{sortedSearchResults.length > 1 ? "s" : ""} trouvé{sortedSearchResults.length > 1 ? "s" : ""}
+                  </p>
+                  {/* Breakdown if both types present (unified search) */}
+                  {typeBreakdown.activity > 0 && typeBreakdown.attraction > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {typeBreakdown.activity} activité{typeBreakdown.activity > 1 ? "s" : ""} · {typeBreakdown.attraction} attraction{typeBreakdown.attraction > 1 ? "s" : ""}
+                    </p>
+                  )}
+                </div>
               )}
 
               {/* Error State */}
