@@ -415,6 +415,7 @@ const ActivitiesPanel = () => {
 
     setIsSearching(true);
     setSearchError(null);
+    eventBus.emit("map:searchInAreaStatus", { isSearching: true });
 
     try {
       // Get map bounds via event bus
@@ -498,6 +499,7 @@ const ActivitiesPanel = () => {
       setCurrentView("results");
     } finally {
       setIsSearching(false);
+      eventBus.emit("map:searchInAreaStatus", { isSearching: false });
     }
   }, [activeCity, activityState.activeFilters]);
 

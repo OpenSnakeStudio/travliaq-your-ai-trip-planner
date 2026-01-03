@@ -44,6 +44,7 @@ export type PlannerEvents = {
     };
   };
   "map:searchInArea": void;
+  "map:searchInAreaStatus": { isSearching: boolean };
   
   // Flight-related
   "flight:updateFormData": FlightFormData;

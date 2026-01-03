@@ -297,6 +297,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const memoryMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const hasAnimatedRef = useRef(false);
+  const [isSearchingInArea, setIsSearchingInArea] = useState(false);
 
   // Get route points from flight memory
   const { getRoutePoints } = useFlightMemory();
@@ -421,6 +422,19 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       eventBus.off("map:getBounds", handleGetBounds);
     };
   }, [mapLoaded]);
+
+  // Listen to search in area status
+  useEffect(() => {
+    const handleSearchStatus = (data: { isSearching: boolean }) => {
+      setIsSearchingInArea(data.isSearching);
+    };
+
+    eventBus.on("map:searchInAreaStatus", handleSearchStatus);
+
+    return () => {
+      eventBus.off("map:searchInAreaStatus", handleSearchStatus);
+    };
+  }, []);
 
   // Animate to user location on initial load
   useEffect(() => {
@@ -1457,14 +1471,24 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
       {/* Search in Area Button - Only visible on activities tab */}
       {activeTab === "activities" && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="absolute top-4 right-4 z-10">
           <button
-            onClick={() => eventBus.emit("map:searchInArea")}
-            className="px-4 py-2.5 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 font-medium text-sm transition-all flex items-center gap-2 hover:shadow-xl"
-            title="Rechercher des activités dans la zone visible"
+            onClick={() => !isSearchingInArea && eventBus.emit("map:searchInArea")}
+            disabled={isSearchingInArea}
+            className={`
+              px-3 py-2 bg-white dark:bg-gray-900
+              text-gray-900 dark:text-gray-100
+              rounded-lg shadow-lg border border-gray-200 dark:border-gray-700
+              font-medium text-xs transition-all flex items-center gap-1.5
+              ${isSearchingInArea
+                ? 'opacity-60 cursor-not-allowed'
+                : 'hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-xl cursor-pointer'
+              }
+            `}
+            title={isSearchingInArea ? "Recherche en cours..." : "Rechercher des activités dans la zone visible"}
           >
             <svg
-              className="h-4 w-4"
+              className={`h-3.5 w-3.5 ${isSearchingInArea ? 'animate-spin' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1473,10 +1497,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                d={isSearchingInArea
+                  ? "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  : "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                }
               />
             </svg>
-            Rechercher dans cette zone
+            {isSearchingInArea ? "Recherche..." : "Rechercher dans cette zone"}
           </button>
         </div>
       )}
