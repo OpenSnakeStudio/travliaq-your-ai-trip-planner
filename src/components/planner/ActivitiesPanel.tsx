@@ -796,6 +796,28 @@ const ActivitiesPanel = () => {
                 )}
               </Button>
 
+              {/* Map Bounds Search Button */}
+              <Button
+                onClick={handleMapBoundsSearch}
+                disabled={!activeCity || isSearching}
+                variant="outline"
+                className="w-full gap-2"
+                size="lg"
+              >
+                {isSearching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Recherche...
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="h-4 w-4" />
+                    Rechercher dans cette zone
+                    <Compass className="h-3.5 w-3.5 ml-auto text-muted-foreground" />
+                  </>
+                )}
+              </Button>
+
               {/* Recommendations Button */}
               <Button
                 onClick={handleLoadRecommendations}

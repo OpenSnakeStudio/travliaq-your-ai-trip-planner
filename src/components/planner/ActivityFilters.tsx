@@ -2,13 +2,18 @@
  * Activity Filters Component
  *
  * Professional filtering UI for activity search with advanced filters
+ * NOW with Viator categories and intelligent auto-selection
  */
 
 import { useState } from "react";
-import { Filter, X, Star, DollarSign, Sparkles, Clock, Sun, SlidersHorizontal, Users } from "lucide-react";
+import { Filter, X, Star, DollarSign, Sparkles, Clock, Sun, SlidersHorizontal, Users, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ActivityFilters as ActivityFiltersType, CategoryWithEmoji, TimeOfDay, DurationRange } from "@/types/activity";
+import { VIATOR_CATEGORIES } from "@/constants/metaCategories";
+import { autoSelectFilters, getFiltersSummary } from "@/services/activities/filterAutoSelection";
+import { useTripPreferences } from "@/contexts/PreferencesContext";
+import { toast } from "sonner";
 
 export interface ActivityFiltersProps {
   filters: ActivityFiltersType;
@@ -32,16 +37,6 @@ const BUDGET_RANGES = [
   { id: "premium", label: "150€+", min: 150, max: 500 },
 ];
 
-// Default categories (no API call needed)
-const DEFAULT_CATEGORIES: CategoryWithEmoji[] = [
-  { id: 1, label: "Culture", emoji: "🎨", keyword: "culture" },
-  { id: 2, label: "Gastronomie", emoji: "🍽️", keyword: "food" },
-  { id: 3, label: "Nature", emoji: "🌲", keyword: "nature" },
-  { id: 4, label: "Aventure", emoji: "🧗", keyword: "adventure" },
-  { id: 5, label: "Musées", emoji: "🏛️", keyword: "museums" },
-  { id: 6, label: "Sports", emoji: "⚽", keyword: "sport" },
-];
-
 // Time of day options
 const TIME_OF_DAY_OPTIONS: { id: TimeOfDay; label: string; hours: string }[] = [
   { id: "morning", label: "Matin", hours: "8h-12h" },
@@ -58,21 +53,43 @@ const DURATION_RANGE_OPTIONS: { id: DurationRange; label: string }[] = [
   { id: "multiDay", label: "Plusieurs jours" },
 ];
 
-export const ActivityFilters = ({ 
-  filters, 
-  onFiltersChange, 
-  className, 
+export const ActivityFilters = ({
+  filters,
+  onFiltersChange,
+  className,
   compact = false,
   travelers
 }: ActivityFiltersProps) => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const categories = DEFAULT_CATEGORIES;
+  const { preferences } = useTripPreferences();
 
-  const handleCategoryToggle = (keyword: string) => {
+  // Use Viator categories
+  const categories = VIATOR_CATEGORIES;
+
+  // AUTO-SELECT: Intelligent filter selection based on user preferences
+  const handleAutoSelect = () => {
+    if (!preferences) {
+      toast.error("Vos préférences de voyage ne sont pas disponibles");
+      return;
+    }
+
+    const smartFilters = autoSelectFilters(preferences);
+
+    onFiltersChange({
+      categories: smartFilters.categories,
+      priceRange: smartFilters.priceRange,
+      ratingMin: smartFilters.ratingMin,
+    });
+
+    const summary = getFiltersSummary(smartFilters);
+    toast.success(`Filtres appliqués : ${summary}`);
+  };
+
+  const handleCategoryToggle = (categoryId: string) => {
     const currentCategories = filters.categories || [];
-    const newCategories = currentCategories.includes(keyword)
-      ? currentCategories.filter((c) => c !== keyword)
-      : [...currentCategories, keyword];
+    const newCategories = currentCategories.includes(categoryId)
+      ? currentCategories.filter((c) => c !== categoryId)
+      : [...currentCategories, categoryId];
 
     onFiltersChange({ categories: newCategories });
   };
@@ -170,29 +187,43 @@ export const ActivityFilters = ({
         </div>
       )}
 
-      {/* Categories - 3 columns, compact */}
+      {/* Auto-Select Button */}
+      {!compact && (
+        <button
+          onClick={handleAutoSelect}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 hover:from-primary/20 hover:to-primary/10 transition-all group"
+        >
+          <Wand2 className="h-4 w-4 text-primary group-hover:rotate-12 transition-transform" />
+          <span className="text-sm font-medium text-primary">
+            Sélection automatique selon mes préférences
+          </span>
+          <Sparkles className="h-3.5 w-3.5 text-primary/60" />
+        </button>
+      )}
+
+      {/* Categories - 2 columns for 7 Viator categories */}
       {!compact && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-medium text-foreground">Catégories</span>
           </div>
-          <div className="grid grid-cols-3 gap-1">
+          <div className="grid grid-cols-2 gap-2">
             {categories.map((category) => {
-              const isSelected = filters.categories?.includes(category.keyword) || false;
+              const isSelected = filters.categories?.includes(category.id) || false;
               return (
                 <button
                   key={category.id}
-                  onClick={() => handleCategoryToggle(category.keyword)}
+                  onClick={() => handleCategoryToggle(category.id)}
                   className={cn(
-                    "px-2 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1 transition-all border",
+                    "px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 transition-all border",
                     isSelected
-                      ? "bg-primary/10 text-primary border-primary/30"
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-muted/30 text-muted-foreground border-border/30 hover:bg-muted/50"
                   )}
                 >
-                  <span className="text-xs">{category.emoji}</span>
-                  <span className="truncate">{category.label}</span>
+                  <span className="text-base">{category.emoji}</span>
+                  <span className="truncate">{category.name}</span>
                 </button>
               );
             })}

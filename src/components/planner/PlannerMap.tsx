@@ -1343,7 +1343,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     // Only show on activities tab
     if (activeTab !== "activities") return;
 
-    // Get top 15 attractions from search results (V2)
+    // Get ALL attractions from search results (V2 - REFONTE UX)
+    // Backend now returns ALL attractions (not limited to 15) for full map coverage
     const attractions = activityState.search.attractions || [];
 
     if (attractions.length === 0) return;
