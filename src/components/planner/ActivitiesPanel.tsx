@@ -245,6 +245,8 @@ const ActivitiesPanel = () => {
   const {
     state: activityState,
     allDestinations, // Computed: inherited from accommodations + local
+    searchActivities,
+    clearSearch,
     loadRecommendations,
     addActivityFromSearch,
     removeActivity,
@@ -267,10 +269,12 @@ const ActivitiesPanel = () => {
   const [currentView, setCurrentView] = useState<ViewType>("filters");
   const [activeCityIndex, setActiveCityIndex] = useState(0);
   const [detailModalActivity, setDetailModalActivity] = useState<ViatorActivity | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [searchResults, setSearchResults] = useState<ViatorActivity[]>([]);
   const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "rating" | "duration">("default");
+
+  // Use search results from context (includes attractions for map pins)
+  const searchResults = activityState.search.activities;
+  const isSearching = activityState.search.isSearching;
+  const searchError = activityState.search.error;
   
   // Adding city state
   const [isAddingCity, setIsAddingCity] = useState(false);
