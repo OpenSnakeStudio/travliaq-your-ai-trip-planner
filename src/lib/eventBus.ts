@@ -17,6 +17,7 @@ import type {
   CountrySelectionEvent,
 } from "@/types/flight";
 import type { AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
+import type { ViatorActivity } from "@/types/activity";
 
 // ===== Event Types =====
 
@@ -33,6 +34,15 @@ export type PlannerEvents = {
   // Map interactions
   "map:zoom": { center: [number, number]; zoom: number };
   "map:moveToLocation": { lat: number; lng: number; zoom?: number };
+  "map:getBounds": void;
+  "map:bounds": {
+    bounds: {
+      north: number;
+      south: number;
+      east: number;
+      west: number;
+    };
+  };
   
   // Flight-related
   "flight:updateFormData": FlightFormData;
@@ -53,10 +63,10 @@ export type PlannerEvents = {
   "accommodation:syncWithFlights": void;
   
   // Activities-related
-  "activities:search": { 
-    city: string; 
-    countryCode: string; 
-    checkIn: Date | null; 
+  "activities:search": {
+    city: string;
+    countryCode: string;
+    checkIn: Date | null;
     checkOut: Date | null;
     destinationId: string;
     lat?: number;
@@ -67,8 +77,8 @@ export type PlannerEvents = {
       budgetMax: number;
     };
   };
-  "activities:resultsReady": { 
-    activities: unknown[]; 
+  "activities:resultsReady": {
+    activities: unknown[];
     destinationId: string;
     city: string;
     lat?: number;
@@ -79,6 +89,9 @@ export type PlannerEvents = {
     countryCode: string;
     lat?: number;
     lng?: number;
+  };
+  "attraction:click": {
+    attraction: ViatorActivity;
   };
   
   // Chat interactions

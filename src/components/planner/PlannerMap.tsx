@@ -7,6 +7,7 @@ import type { FlightRoutePoint } from "./PlannerPanel";
 import { useFlightMemory, type MemoryRoutePoint } from "@/contexts/FlightMemoryContext";
 import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
+import eventBus from "@/lib/eventBus";
 
 // Destination click event for popup
 export interface DestinationClickEvent {
