@@ -396,6 +396,31 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     };
   }, []);
 
+  // Event bus handler: Send map bounds when requested
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const handleGetBounds = () => {
+      if (!map.current) return;
+
+      const bounds = map.current.getBounds();
+      eventBus.emit("map:bounds", {
+        bounds: {
+          north: bounds.getNorth(),
+          south: bounds.getSouth(),
+          east: bounds.getEast(),
+          west: bounds.getWest(),
+        },
+      });
+    };
+
+    eventBus.on("map:getBounds", handleGetBounds);
+
+    return () => {
+      eventBus.off("map:getBounds", handleGetBounds);
+    };
+  }, [mapLoaded]);
+
   // Animate to user location on initial load
   useEffect(() => {
     if (!map.current || !mapLoaded || hasAnimatedRef.current || !animateToUserLocation) return;

@@ -406,6 +406,101 @@ const ActivitiesPanel = () => {
     }
   }, [activeCity, activityState.activeFilters]);
 
+  // Handle map bounds search (search in visible map area)
+  const handleMapBoundsSearch = useCallback(async () => {
+    if (!activeCity) {
+      toast.error("Veuillez sélectionner une ville");
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+
+    try {
+      // Get map bounds via event bus
+      const mapBounds = await new Promise<{
+        north: number;
+        south: number;
+        east: number;
+        west: number;
+      } | null>((resolve) => {
+        const timeout = setTimeout(() => resolve(null), 1000);
+
+        const handleBounds = (data: any) => {
+          clearTimeout(timeout);
+          eventBus.off("map:bounds", handleBounds);
+          resolve(data.bounds);
+        };
+
+        eventBus.on("map:bounds", handleBounds);
+        eventBus.emit("map:getBounds");
+      });
+
+      if (!mapBounds) {
+        toast.error("Impossible de récupérer la zone visible");
+        return;
+      }
+
+      const requestBody = {
+        search_mode: "both",
+        location: {
+          geo: {
+            bounds: mapBounds,  // Use map viewport bounds instead of city
+          },
+        },
+        dates: {
+          start: activeCity.checkIn?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0],
+          end: activeCity.checkOut?.toISOString().split("T")[0],
+        },
+        filters: {
+          categories: activityState.activeFilters.categories,
+          price_range: {
+            min: activityState.activeFilters.priceRange[0],
+            max: activityState.activeFilters.priceRange[1],
+          },
+          rating_min: activityState.activeFilters.ratingMin,
+        },
+        currency: "EUR",
+        language: "fr",
+        pagination: {
+          page: 1,
+          limit: 40,  // Fetch 40 activities
+        },
+      };
+
+      const { data, error } = await supabase.functions.invoke("activities-search", {
+        body: requestBody,
+      });
+
+      if (error) {
+        throw new Error(error.message || "Erreur lors de la recherche");
+      }
+
+      const activities = data?.results?.activities_list || data?.results?.activities || data?.activities || [];
+      const attractions = data?.results?.attractions || [];
+
+      if (activities.length > 0 || attractions.length > 0) {
+        setSearchResults(activities);
+        setCurrentView("results");
+        toast.success(`${attractions.length} attractions et ${activities.length} activités trouvées dans cette zone`);
+        console.log(
+          `[Activities] Map bounds search: ${activities.length} activities + ${attractions.length} attractions`
+        );
+      } else {
+        setSearchResults([]);
+        setCurrentView("results");
+        toast.info("Aucune activité trouvée dans cette zone");
+      }
+    } catch (error: any) {
+      console.error("[Activities] Map bounds search error:", error);
+      setSearchError(error.message || "Erreur lors de la recherche");
+      toast.error("Erreur lors de la recherche dans cette zone");
+      setCurrentView("results");
+    } finally {
+      setIsSearching(false);
+    }
+  }, [activeCity, activityState.activeFilters]);
+
   // Handle add activity
   const handleAddActivity = useCallback(
     (viatorActivity: ViatorActivity) => {
@@ -726,7 +821,29 @@ const ActivitiesPanel = () => {
                 />
               </div>
 
-              {/* Search Button */}
+              {/* Map Bounds Search Button (NEW) */}
+              <Button
+                onClick={handleMapBoundsSearch}
+                disabled={!activeCity || isSearching}
+                className="w-full gap-2"
+                size="lg"
+                variant="outline"
+              >
+                {isSearching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Recherche en cours...
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="h-4 w-4" />
+                    Rechercher dans cette zone
+                    <Compass className="h-3.5 w-3.5 ml-auto text-muted-foreground" />
+                  </>
+                )}
+              </Button>
+
+              {/* City Search Button */}
               <Button
                 onClick={handleSearch}
                 disabled={!activeCity || isSearching}
