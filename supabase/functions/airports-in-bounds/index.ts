@@ -18,7 +18,7 @@ interface BoundsRequest {
 
 interface AirportResult {
   hubId: string;          // Stable identifier for the city hub (used as marker key)
-  iata: string;           // Primary airport IATA (cheapest one)
+  iata: string;           // Primary airport IATA
   name: string;           // Primary airport name
   cityName: string | null;
   countryCode: string | null;
@@ -26,7 +26,6 @@ interface AirportResult {
   lat: number;            // City center (stable when possible)
   lng: number;
   type: "large" | "medium";
-  price: number;          // Cheapest price among all airports in city
   airportCount: number;   // Number of airports in this city
   allIatas: string[];     // All airport IATA codes in this city (for API calls)
 }
@@ -37,17 +36,7 @@ function normalizeCityName(name: string | null): string | null {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
-// Generate a fake price based on city name (deterministic)
-function generateFakePrice(cityName: string | null, iata: string): number {
-  const str = cityName || iata;
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
-  // Price between 29€ and 399€
-  return 29 + Math.abs(hash % 370);
-}
+// Price generation removed - real prices come from map-prices API
 
 // Calculate minimum distance between airports based on zoom level
 // Reduced distances to allow more airports in dense regions (UK, Europe)
@@ -153,7 +142,6 @@ Deno.serve(async (req) => {
         lat: number;
         lng: number;
         type: string;
-        price: number;
         countryCode: string | null;
         countryName: string | null;
       }>;
@@ -168,8 +156,6 @@ Deno.serve(async (req) => {
 
       // Skip if this is the user's departure city (exclude their origin)
       if (excludeCityLower && cityKey === excludeCityLower) continue;
-
-      const price = generateFakePrice(row.city_name, row.iata);
       
       if (!cityGroups.has(cityKey)) {
         cityGroups.set(cityKey, {
@@ -184,19 +170,14 @@ Deno.serve(async (req) => {
         lat: row.latitude,
         lng: row.longitude,
         type: row.airport_type,
-        price,
         countryCode: row.country_code,
         countryName: row.country_name,
       });
     }
 
     // Now create one result per city with:
-    // - Center coordinates (average of all airports)
-    // - Cheapest price
-    // Now create one result per city with:
     // - Center coordinates (prefer stable city coordinates from `cities` table)
-    // - Cheapest price
-    // - All IATA codes for future API calls
+    // - All IATA codes for future API calls (prices fetched separately via map-prices)
 
     // Best-effort lookup of stable city coordinates (prevents pins from shifting when bounds change)
     const uniqueCityNames = Array.from(
@@ -314,23 +295,22 @@ Deno.serve(async (req) => {
       // Skip if too close to another city
       if (isTooClose(centerLat, centerLng)) continue;
 
-      // Find cheapest airport
-      const cheapest = cityAirports.reduce((min, a) => (a.price < min.price ? a : min), cityAirports[0]);
+      // Pick primary airport (first one by type priority, or first large airport)
+      const primaryAirport = cityAirports[0];
 
       // Check if any airport is large
       const hasLargeAirport = cityAirports.some((a) => a.type === "large_airport");
 
       cityResults.push({
         hubId,
-        iata: cheapest.iata, // Primary IATA is the cheapest one
-        name: cheapest.name,
+        iata: primaryAirport.iata,
+        name: primaryAirport.name,
         cityName,
-        countryCode: cheapest.countryCode,
-        countryName: cheapest.countryName,
+        countryCode: primaryAirport.countryCode,
+        countryName: primaryAirport.countryName,
         lat: centerLat,
         lng: centerLng,
         type: hasLargeAirport ? "large" : "medium",
-        price: cheapest.price,
         airportCount: cityAirports.length,
         allIatas: cityAirports.map((a) => a.iata),
       });
