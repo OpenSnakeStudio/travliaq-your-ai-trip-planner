@@ -616,7 +616,7 @@ const ActivitiesPanel = () => {
   return (
     <div className="space-y-3" data-tour="activities-panel">
       {/* City Tabs + Add button */}
-      <div className="flex gap-1.5 flex-wrap items-center">
+      <div className="flex gap-1.5 flex-wrap items-center" data-tour="activities-widget">
         {cities.map((city, index) => (
           <div
             key={city.id}
