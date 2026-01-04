@@ -28,7 +28,8 @@ const pricesCache = new Map<string, { data: MapPrice | null; timestamp: number }
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
 function getCacheKey(origins: string[], destination: string): string {
-  return `${origins.sort().join(',')}-${destination}`;
+  // Create a copy to avoid mutating the original array
+  return `${[...origins].sort().join(',')}-${destination}`;
 }
 
 export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesResult {
@@ -49,8 +50,8 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       return;
     }
 
-    // If origins changed, clear the accumulated prices
-    const originsKey = origins.sort().join(',');
+    // If origins changed, clear the accumulated prices (create copy to avoid mutation)
+    const originsKey = [...origins].sort().join(',');
     if (originsKey !== lastOriginsKey.current) {
       pricesRef.current = {};
       lastOriginsKey.current = originsKey;
