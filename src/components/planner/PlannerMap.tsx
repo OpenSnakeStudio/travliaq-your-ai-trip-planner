@@ -326,30 +326,40 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Find all airports for the departure city (for multi-airport cities)
   // Only update when departure city/iata changes, NOT when airports change
   const departureAirports = useMemo(() => {
-    if (!departureCity) {
+    // If we have no departure at all, clear cache
+    if (!departureCity && !departureIata) {
       cachedDepartureAirportsRef.current = [];
       return [];
     }
-    
+
+    // If city is missing but IATA exists, still allow price fetching (important at low zoom)
+    if (!departureCity && departureIata) {
+      const fallback = [departureIata];
+      cachedDepartureAirportsRef.current = fallback;
+      return fallback;
+    }
+
     // Find the airport marker for the departure city to get allIatas
-    const cityNormalized = departureCity.toLowerCase().trim();
-    const matchingHub = airports.find(a => 
-      a.cityName?.toLowerCase().trim() === cityNormalized ||
-      a.iata === departureIata
+    const cityNormalized = (departureCity ?? "").toLowerCase().trim();
+    const matchingHub = airports.find(
+      (a) => a.cityName?.toLowerCase().trim() === cityNormalized || a.iata === departureIata
     );
-    
+
     // If we found a hub with multiple airports, cache and use them
     if (matchingHub?.allIatas && matchingHub.allIatas.length > 0) {
       cachedDepartureAirportsRef.current = matchingHub.allIatas;
       return matchingHub.allIatas;
     }
-    
+
     // If hub not found but we have cached airports for this departure, keep using them
-    if (cachedDepartureAirportsRef.current.length > 0 && 
-        cachedDepartureAirportsRef.current.some(iata => iata === departureIata)) {
+    if (
+      departureIata &&
+      cachedDepartureAirportsRef.current.length > 0 &&
+      cachedDepartureAirportsRef.current.some((iata) => iata === departureIata)
+    ) {
       return cachedDepartureAirportsRef.current;
     }
-    
+
     // Fallback to single airport if available
     const fallback = departureIata ? [departureIata] : [];
     cachedDepartureAirportsRef.current = fallback;
@@ -614,6 +624,17 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return;
     }
 
+    // If no departure is selected, don't show flight price markers at all.
+    // This prevents the "city + —" UI, and matches the rule: no price => no marker.
+    if (departureAirports.length === 0) {
+      displayedAirportsRef.current.forEach((marker) => {
+        const el = marker.getElement();
+        el.style.opacity = "0";
+        el.style.pointerEvents = "none";
+      });
+      return;
+    }
+
     // Get user's departure airport info
     const userDepartureIata = flightMem?.departure?.iata?.toUpperCase();
     const userDepartureCity = flightMem?.departure?.city?.toLowerCase().trim();
@@ -698,7 +719,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       // IMPORTANT UX RULE: if we don't have a real price (number), we don't show the city marker.
       // - undefined: not fetched yet
       // - null: "no flights" returned by API
-      const shouldHideBecauseNoPrice = !isOrigin && departureAirports.length > 0 && (priceValue === null || priceValue === undefined);
+      // NOTE: departureAirports.length is guaranteed > 0 in this effect (we early-return otherwise)
+      const shouldHideBecauseNoPrice = !isOrigin && (priceValue === null || priceValue === undefined);
 
       // If this is the departure city and zoom is low, or we don't have a price, hide the marker
       if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoPrice) {
