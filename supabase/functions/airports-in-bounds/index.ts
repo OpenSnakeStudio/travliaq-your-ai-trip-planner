@@ -91,19 +91,16 @@ Deno.serve(async (req) => {
     const minDistance = getMinDistance(zoom);
 
     // Determine which airport types to show based on zoom level:
-    // - zoom < 4: only large airports (world view)
-    // - zoom 4-7: large + medium airports (regional view - includes Newcastle, etc.)
+    // - zoom < 6: only large airports (world/continent view)
+    // - zoom 6-7: large + medium airports (regional view)
     // - zoom >= 8: large + medium + small airports (city view)
     let effectiveTypes: string[];
-    if (zoom < 4) {
+    if (zoom < 6) {
       effectiveTypes = ["large_airport"];
     } else if (zoom < 8) {
-      // Regional view: include medium airports (Newcastle, etc.)
-      effectiveTypes = types.filter(t => t !== "small_airport");
-      // Always include medium at this zoom even if not explicitly requested
-      if (!effectiveTypes.includes("medium_airport")) {
-        effectiveTypes.push("medium_airport");
-      }
+      // Regional view: include medium airports
+      effectiveTypes = types.filter((t) => t !== "small_airport");
+      if (!effectiveTypes.includes("medium_airport")) effectiveTypes.push("medium_airport");
     } else {
       // High zoom - can show small airports if requested
       effectiveTypes = types;
@@ -268,12 +265,29 @@ Deno.serve(async (req) => {
       const stableKey = `${cityName.toLowerCase()}|||${(cityAirports[0]?.countryCode || "").toLowerCase()}`;
       const stableCenter = cityCenterMap.get(stableKey);
 
-      const centerLat = stableCenter
-        ? stableCenter.lat
-        : cityAirports.reduce((sum, a) => sum + a.lat, 0) / cityAirports.length;
-      const centerLng = stableCenter
-        ? stableCenter.lng
-        : cityAirports.reduce((sum, a) => sum + a.lng, 0) / cityAirports.length;
+      const avgLat = cityAirports.reduce((sum, a) => sum + a.lat, 0) / cityAirports.length;
+      const avgLng = cityAirports.reduce((sum, a) => sum + a.lng, 0) / cityAirports.length;
+
+      // Some city names are ambiguous (e.g., "Newcastle" GB can be NI vs upon Tyne).
+      // Only trust the `cities` table center if it's close to the airports' average.
+      const distanceKm = (aLat: number, aLng: number, bLat: number, bLng: number) => {
+        const R = 6371;
+        const toRad = (d: number) => (d * Math.PI) / 180;
+        const dLat = toRad(bLat - aLat);
+        const dLng = toRad(bLng - aLng);
+        const lat1 = toRad(aLat);
+        const lat2 = toRad(bLat);
+        const h =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+        return 2 * R * Math.asin(Math.sqrt(h));
+      };
+
+      const shouldUseStable =
+        stableCenter && distanceKm(avgLat, avgLng, stableCenter.lat, stableCenter.lng) <= 120;
+
+      const centerLat = shouldUseStable ? stableCenter!.lat : avgLat;
+      const centerLng = shouldUseStable ? stableCenter!.lng : avgLng;
 
       // Skip if too close to another city
       if (isTooClose(centerLat, centerLng)) continue;
