@@ -451,7 +451,43 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [activeTab, departureAirports, destinationIatas, fetchPrices]);
 
   // Get accommodation entries for markers
-  const { memory: accommodationMemory } = useAccommodationMemory();
+  const { memory: accommodationMemory, getActiveAccommodation } = useAccommodationMemory();
+
+  // Track previous tab to detect tab switches
+  const prevActiveTabRef = useRef<TabType>(activeTab);
+
+  // Auto-zoom to accommodation city when switching to stays tab
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const previousTab = prevActiveTabRef.current;
+    prevActiveTabRef.current = activeTab;
+
+    // Only trigger when switching TO stays tab (not when already on it)
+    if (activeTab !== "stays" || previousTab === "stays") return;
+
+    // Get the active accommodation or fallback to first one with coordinates
+    const activeAccom = getActiveAccommodation();
+    const accommodations = accommodationMemory.accommodations;
+
+    // Find the best accommodation to zoom to
+    let targetAccom = activeAccom && activeAccom.lat && activeAccom.lng ? activeAccom : null;
+
+    if (!targetAccom) {
+      // Fallback to first accommodation with valid coordinates
+      targetAccom = accommodations.find((acc) => acc.lat && acc.lng) || null;
+    }
+
+    if (targetAccom && targetAccom.lat && targetAccom.lng) {
+      console.log(`[PlannerMap] Switching to stays tab, zooming to ${targetAccom.city}`);
+      map.current.flyTo({
+        center: [targetAccom.lng, targetAccom.lat],
+        zoom: 11,
+        duration: 1500,
+        essential: true,
+      });
+    }
+  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation]);
 
   // Get activity entries for markers
   const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
