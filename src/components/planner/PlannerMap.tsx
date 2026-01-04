@@ -321,40 +321,42 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const departureCity = flightMem?.departure?.city;
   
   // Cache departure airports PERSISTENTLY - only update when user explicitly changes departure
+  // NOTE: we keep it in state so the UI re-renders when it becomes available.
   const cachedDepartureAirportsRef = useRef<string[]>([]);
   const cachedDepartureIataRef = useRef<string | undefined>(undefined);
-  
+  const [departureAirports, setDepartureAirports] = useState<string[]>([]);
+
   // Update departure airports ONLY when the user's departure changes (not viewport)
   useEffect(() => {
     // If departure changed, update cache
     if (departureIata !== cachedDepartureIataRef.current) {
       cachedDepartureIataRef.current = departureIata;
-      
+
       if (!departureIata) {
         // User cleared departure
         cachedDepartureAirportsRef.current = [];
+        setDepartureAirports([]);
         return;
       }
-      
+
       // Try to find multi-airport hub from current visible airports
       const cityNormalized = (departureCity ?? "").toLowerCase().trim();
       const matchingHub = airports.find(
         (a) => a.cityName?.toLowerCase().trim() === cityNormalized || a.iata === departureIata
       );
-      
+
       if (matchingHub?.allIatas && matchingHub.allIatas.length > 0) {
         cachedDepartureAirportsRef.current = matchingHub.allIatas;
+        setDepartureAirports(matchingHub.allIatas);
         console.log(`[PlannerMap] Cached departure airports for ${departureCity || departureIata}:`, matchingHub.allIatas);
       } else {
         // Fallback to single IATA
         cachedDepartureAirportsRef.current = [departureIata];
+        setDepartureAirports([departureIata]);
         console.log(`[PlannerMap] Cached single departure airport:`, departureIata);
       }
     }
   }, [departureIata, departureCity, airports]);
-  
-  // Always return cached value - this is stable across viewport changes
-  const departureAirports = cachedDepartureAirportsRef.current;
 
   // Get all visible airport IATAs for map-prices API (excluding departure airports)
   // Flatten all allIatas from hubs to ensure prices are stable when zooming
