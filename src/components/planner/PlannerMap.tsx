@@ -664,13 +664,14 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Hide all markers when not on flights tab
+    // Remove all flight markers when leaving the flights tab
+    // (We remove instead of hiding to guarantee no stale flight prices remain visible.)
     if (activeTab !== "flights") {
-      displayedAirportsRef.current.forEach((marker) => {
-        const el = marker.getElement();
-        el.style.opacity = "0";
-        el.style.pointerEvents = "none";
-      });
+      airportRemovalTimeoutsRef.current.forEach((t) => clearTimeout(t));
+      airportRemovalTimeoutsRef.current.clear();
+
+      displayedAirportsRef.current.forEach((marker) => marker.remove());
+      displayedAirportsRef.current.clear();
       return;
     }
 
