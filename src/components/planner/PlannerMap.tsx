@@ -559,7 +559,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       const el = document.createElement("div");
       el.className = "airport-marker";
       
-      // Compact pin style - smaller and more precise
+      // Display city name + price
+      const cityName = airport.cityName || airport.name;
       const priceText = `${airport.price}€`;
       
       // NOTE: Do NOT set `transform` on the marker element itself.
@@ -580,31 +581,33 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           transform-origin: bottom center;
         ">
           <div style="
+            display: flex;
+            align-items: center;
+            gap: 4px;
             background: rgba(32, 33, 36, 0.95);
-            color: #8ab4f8;
-            font-size: 10px;
-            font-weight: 600;
-            padding: 3px 6px;
-            border-radius: 10px;
+            padding: 4px 8px;
+            border-radius: 12px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             white-space: nowrap;
-          ">${priceText}</div>
+          ">
+            <span style="
+              color: white;
+              font-size: 10px;
+              font-weight: 600;
+            ">${cityName}</span>
+            <span style="
+              color: #8ab4f8;
+              font-size: 10px;
+              font-weight: 500;
+            ">${priceText}</span>
+          </div>
           <div style="
             width: 0;
             height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-top: 5px solid rgba(32, 33, 36, 0.95);
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid rgba(32, 33, 36, 0.95);
             margin-top: -1px;
-          "></div>
-          <div style="
-            width: 6px;
-            height: 6px;
-            background: hsl(220, 90%, 56%);
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-            margin-top: 2px;
           "></div>
         </div>
       `;
