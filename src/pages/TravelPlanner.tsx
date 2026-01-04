@@ -160,7 +160,7 @@ const TravelPlanner = () => {
                 <ResizablePanelGroup direction="horizontal" className="h-full">
                   {/* Left: Chat - resizable */}
                   <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
-                    <div data-tour="chat-panel" className="h-full">
+                    <div data-tour="chat-panel" className="h-full relative">
                       <PlannerChat ref={chatRef} />
                     </div>
                   </ResizablePanel>
