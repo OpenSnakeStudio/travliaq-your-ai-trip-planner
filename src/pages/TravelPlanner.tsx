@@ -10,6 +10,7 @@ import DestinationPopup from "@/components/planner/DestinationPopup";
 import YouTubeShortsPanel from "@/components/planner/YouTubeShortsPanel";
 import OnboardingTour from "@/components/planner/OnboardingTour";
 import { PlannerErrorBoundary } from "@/components/planner/PlannerErrorBoundary";
+import { AutoDetectDeparture } from "@/components/planner/AutoDetectDeparture";
 import type { Airport } from "@/hooks/useNearestAirports";
 import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
@@ -145,6 +146,8 @@ const TravelPlanner = () => {
     <TravelMemoryProvider>
       <PreferenceMemoryProvider>
         <FlightMemoryProvider>
+          {/* Auto-detect departure airport from user's location */}
+          <AutoDetectDeparture />
           <AccommodationMemoryProvider>
             <ActivityMemoryProvider>
               <Helmet>
