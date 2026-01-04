@@ -479,15 +479,22 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
 
     if (targetAccom && targetAccom.lat && targetAccom.lng) {
-      console.log(`[PlannerMap] Switching to stays tab, zooming to ${targetAccom.city}`);
+      console.log(`[PlannerMap] Switching to stays tab, zooming to ${targetAccom.city}, panel open: ${isPanelOpen}`);
+      
+      // Calculate offset: when panel is open, shift center to the right to compensate
+      // Panel takes ~400px, so we offset by ~200px worth of longitude at zoom 11
+      // Only apply offset if panel is open
+      const offsetX = isPanelOpen ? 150 : 0; // pixels to shift right
+      
       map.current.flyTo({
         center: [targetAccom.lng, targetAccom.lat],
         zoom: 11,
         duration: 1500,
         essential: true,
+        offset: [offsetX, 0], // [x, y] offset in pixels - positive x shifts view right
       });
     }
-  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation]);
+  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, isPanelOpen]);
 
   // Get activity entries for markers
   const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
