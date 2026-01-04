@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS, TooltipRenderProps } from "react-joyride";
 import { eventBus } from "@/lib/eventBus";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,16 +28,17 @@ interface StepConfig {
 const STEP_CONFIG: Record<number, StepConfig> = {
   0: { panelOpen: false },  // Welcome - no panel
   1: { panelOpen: false },  // Chat panel - no widget panel
-  2: { panelOpen: false },  // Tabs bar explanation - no widget yet
-  3: { tab: "flights", panelOpen: true },     // Flights panel
-  4: { tab: "stays", panelOpen: true },       // Stays panel  
-  5: { tab: "activities", panelOpen: true },  // Activities panel
-  6: { tab: "preferences", panelOpen: true }, // Preferences panel
-  7: { panelOpen: false },  // Final step - close panel
+  2: { panelOpen: false },  // Tabs bar explanation
+  3: { panelOpen: false },  // Map
+  4: { tab: "flights", panelOpen: true },     // Flights widget
+  5: { tab: "stays", panelOpen: true },       // Stays widget
+  6: { tab: "activities", panelOpen: true },  // Activities widget
+  7: { tab: "preferences", panelOpen: true }, // Preferences widget
+  8: { panelOpen: false },  // Final step - close panel
 };
 
 // Step icons for visual enhancement
-const STEP_ICONS = ["✈️", "💬", "🛠️", "✈️", "🏨", "🎭", "⚙️", "🚀"];
+const STEP_ICONS = ["✨", "💬", "🛠️", "🗺️", "✈️", "🏨", "🎭", "⚙️", "🚀"];
 
 /**
  * Custom tooltip component with animations
@@ -196,6 +197,7 @@ export default function OnboardingTour({
 }: OnboardingTourProps) {
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const targetRetryRef = useRef(0);
 
   // Check if user has already seen the tour
   useEffect(() => {
@@ -240,14 +242,23 @@ export default function OnboardingTour({
     const { status, action, index, type } = data;
 
     const goToStep = (nextIndex: number) => {
+      targetRetryRef.current = 0;
       configureStep(nextIndex);
       // Give the UI a moment to render the right tab/panel (lazy panels)
-      setTimeout(() => setStepIndex(nextIndex), 180);
+      setTimeout(() => setStepIndex(nextIndex), 320);
     };
 
-    // If the target is missing (usually because the panel/tab hasn't rendered yet), retry instead of skipping.
+    // If the target is missing, retry a few times (render/lazy-load), then only as a last resort move on.
     if (type === EVENTS.TARGET_NOT_FOUND) {
-      goToStep(index);
+      targetRetryRef.current += 1;
+      if (targetRetryRef.current <= 8) {
+        configureStep(index);
+        setTimeout(() => setStepIndex(index), 380);
+        return;
+      }
+      // last resort: continue instead of freezing
+      const fallbackNext = action === ACTIONS.PREV ? index - 1 : index + 1;
+      goToStep(fallbackNext);
       return;
     }
 
@@ -323,6 +334,20 @@ export default function OnboardingTour({
       spotlightPadding: 4,
     },
     {
+      target: '[data-tour="map-area"]',
+      placement: "left",
+      title: "Carte Interactive",
+      content: (
+        <div className="space-y-2">
+          <p>Visualisez votre voyage sur la carte.</p>
+          <p className="text-muted-foreground text-sm">
+            Les pins, itinéraires et recherches se mettent à jour selon vos choix (vols, hébergements, activités).
+          </p>
+        </div>
+      ),
+      spotlightPadding: 10,
+    },
+    {
       target: '[data-tour="flights-widget"]',
       placement: "right",
       title: "Recherche de Vols",
@@ -358,7 +383,7 @@ export default function OnboardingTour({
         <div className="space-y-2">
           <p>Planifiez vos activités par destination.</p>
           <p className="text-muted-foreground text-sm">
-            Culture, gastronomie, nature... Laissez l'IA vous suggérer les incontournables ou ajoutez les vôtres.
+            Culture, gastronomie, nature... Lancez une recherche ou explorez par filtres.
           </p>
         </div>
       ),
