@@ -55,13 +55,13 @@ function getMinDistance(zoom: number): number {
   return 0.25;               // Very zoomed in
 }
 
-// Get dynamic limit based on zoom
+// Get dynamic limit based on zoom - increased for better coverage
 function getDynamicLimit(zoom: number): number {
-  if (zoom < 3) return 12;   // Continental view - very few major hubs
-  if (zoom < 4) return 20;
-  if (zoom < 5) return 35;
-  if (zoom < 6) return 50;
-  return 80;
+  if (zoom < 3) return 20;   // Continental view - more major hubs
+  if (zoom < 4) return 35;
+  if (zoom < 5) return 60;
+  if (zoom < 6) return 80;
+  return 120;
 }
 
 Deno.serve(async (req) => {
