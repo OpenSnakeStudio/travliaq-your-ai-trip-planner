@@ -50,22 +50,23 @@ function generateFakePrice(cityName: string | null, iata: string): number {
 }
 
 // Calculate minimum distance between airports based on zoom level
+// Reduced distances to allow more airports in dense regions (UK, Europe)
 function getMinDistance(zoom: number): number {
-  if (zoom < 3) return 6;    // Very zoomed out - 6 degrees apart
-  if (zoom < 4) return 4;    // 4 degrees
-  if (zoom < 5) return 2;    // 2 degrees
-  if (zoom < 6) return 1;    // 1 degree
-  if (zoom < 7) return 0.5;  // 0.5 degree
-  return 0.25;               // Very zoomed in
+  if (zoom < 3) return 5;    // Very zoomed out - 5 degrees apart
+  if (zoom < 4) return 3;    // 3 degrees
+  if (zoom < 5) return 1.5;  // 1.5 degrees - allows Newcastle + Manchester
+  if (zoom < 6) return 0.8;  // 0.8 degree
+  if (zoom < 7) return 0.4;  // 0.4 degree
+  return 0.2;                // Very zoomed in
 }
 
 // Get dynamic limit based on zoom - increased for better coverage
 function getDynamicLimit(zoom: number): number {
-  if (zoom < 3) return 20;   // Continental view - more major hubs
-  if (zoom < 4) return 35;
-  if (zoom < 5) return 60;
-  if (zoom < 6) return 80;
-  return 120;
+  if (zoom < 3) return 25;   // Continental view - more major hubs
+  if (zoom < 4) return 45;
+  if (zoom < 5) return 80;
+  if (zoom < 6) return 100;
+  return 150;
 }
 
 Deno.serve(async (req) => {
@@ -90,15 +91,19 @@ Deno.serve(async (req) => {
     const minDistance = getMinDistance(zoom);
 
     // Determine which airport types to show based on zoom level:
-    // - zoom < 5: only large airports
-    // - zoom 5-7: large + medium airports
-    // - zoom >= 8: large + medium + small airports (only at high zoom)
+    // - zoom < 4: only large airports (world view)
+    // - zoom 4-7: large + medium airports (regional view - includes Newcastle, etc.)
+    // - zoom >= 8: large + medium + small airports (city view)
     let effectiveTypes: string[];
-    if (zoom < 5) {
+    if (zoom < 4) {
       effectiveTypes = ["large_airport"];
     } else if (zoom < 8) {
-      // Only include medium if requested, but never small at this zoom
+      // Regional view: include medium airports (Newcastle, etc.)
       effectiveTypes = types.filter(t => t !== "small_airport");
+      // Always include medium at this zoom even if not explicitly requested
+      if (!effectiveTypes.includes("medium_airport")) {
+        effectiveTypes.push("medium_airport");
+      }
     } else {
       // High zoom - can show small airports if requested
       effectiveTypes = types;
