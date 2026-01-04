@@ -20,6 +20,8 @@ interface UseMapPricesResult {
   isLoading: boolean;
   error: string | null;
   fetchPrices: (origins: string[], destinations: string[]) => void;
+  /** Returns destinations that are NOT in cache, NOT pending, and NOT already known */
+  getMissingDestinations: (origins: string[], destinations: string[]) => string[];
 }
 
 // Cache with TTL - persists across component remounts
@@ -39,7 +41,7 @@ function getOriginsKey(origins: string[]): string {
 }
 
 export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesResult {
-  const { enabled = true, debounceMs = 800 } = options; // Increased debounce to reduce API calls
+  const { enabled = true, debounceMs = 800 } = options;
   
   // Use ref to accumulate prices (never reset, only update)
   const pricesRef = useRef<MapPricesResult>({});
@@ -51,6 +53,48 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
   const abortController = useRef<AbortController | null>(null);
   const lastOriginsKey = useRef<string>('');
 
+  /**
+   * Returns destinations that need to be fetched:
+   * - Not in global cache (or cache expired)
+   * - Not already in pricesRef (current session)
+   * - Not currently pending
+   */
+  const getMissingDestinations = useCallback((origins: string[], destinations: string[]): string[] => {
+    if (origins.length === 0) return [];
+    
+    const now = Date.now();
+    const originsKey = getOriginsKey(origins);
+    const currentOriginsKey = lastOriginsKey.current;
+    
+    // If origins changed, everything is "missing"
+    const originsChanged = originsKey !== currentOriginsKey && currentOriginsKey !== '';
+    
+    return destinations.filter(dest => {
+      // If origins just changed, we need all destinations
+      if (originsChanged) return true;
+      
+      const cacheKey = getCacheKey(origins, dest);
+      
+      // Check global cache
+      const cached = pricesCache.get(cacheKey);
+      if (cached && (now - cached.timestamp) < CACHE_TTL) {
+        return false; // Valid cache hit
+      }
+      
+      // Check session-level prices
+      if (pricesRef.current[dest] !== undefined) {
+        return false; // Already known this session
+      }
+      
+      // Check pending requests
+      if (pendingRequests.has(cacheKey)) {
+        return false; // Already being fetched
+      }
+      
+      return true; // Need to fetch
+    });
+  }, []);
+
   const fetchPrices = useCallback((origins: string[], destinations: string[]) => {
     if (!enabled || origins.length === 0 || destinations.length === 0) {
       return;
@@ -60,6 +104,7 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
     
     // If origins changed, clear the accumulated prices
     if (originsKey !== lastOriginsKey.current) {
+      console.log(`[useMapPrices] Origins changed: ${lastOriginsKey.current} -> ${originsKey}, resetting prices`);
       pricesRef.current = {};
       lastOriginsKey.current = originsKey;
     }
@@ -69,64 +114,42 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       clearTimeout(debounceTimeout.current);
     }
 
-    // If we know we will fetch (after debounce), flip loading immediately so markers show "..."
-    const nowPreview = Date.now();
-    let willFetch = false;
+    // Check if we will actually fetch anything
+    const now = Date.now();
+    const uncachedDestinations: string[] = [];
+    
     for (const dest of destinations) {
       const cacheKey = getCacheKey(origins, dest);
       const cached = pricesCache.get(cacheKey);
-
-      if (cached && (nowPreview - cached.timestamp) < CACHE_TTL) continue;
+      
+      if (cached && (now - cached.timestamp) < CACHE_TTL) {
+        // Hydrate from cache immediately
+        pricesRef.current[dest] = cached.data;
+        continue;
+      }
+      
       if (pricesRef.current[dest] !== undefined) continue;
       if (pendingRequests.has(cacheKey)) continue;
-
-      willFetch = true;
-      break;
+      
+      uncachedDestinations.push(dest);
     }
 
-    if (willFetch) {
-      setIsLoading(true);
-      setError(null);
+    // Update state with cached values immediately
+    setPrices({ ...pricesRef.current });
+
+    // If nothing to fetch, done
+    if (uncachedDestinations.length === 0) {
+      console.log(`[useMapPrices] All ${destinations.length} destinations cached/known`);
+      setIsLoading(false);
+      return;
     }
+
+    // We will fetch, set loading
+    console.log(`[useMapPrices] Will fetch ${uncachedDestinations.length}/${destinations.length} destinations after debounce`);
+    setIsLoading(true);
+    setError(null);
 
     debounceTimeout.current = setTimeout(async () => {
-      const now = Date.now();
-      const uncachedDestinations: string[] = [];
-
-      // Check what we need to fetch
-      for (const dest of destinations) {
-        const cacheKey = getCacheKey(origins, dest);
-        const cached = pricesCache.get(cacheKey);
-        
-        // Use cache if valid
-        if (cached && (now - cached.timestamp) < CACHE_TTL) {
-          pricesRef.current[dest] = cached.data;
-          continue;
-        }
-        
-        // Skip if already in accumulated prices (from previous fetch in same session)
-        if (pricesRef.current[dest] !== undefined) {
-          continue;
-        }
-        
-        // Skip if request is pending
-        if (pendingRequests.has(cacheKey)) {
-          continue;
-        }
-        
-        uncachedDestinations.push(dest);
-      }
-
-      // Update state with what we have
-      setPrices({ ...pricesRef.current });
-
-      // If all cached/known, return immediately
-      if (uncachedDestinations.length === 0) {
-        // If we turned loading on earlier for this debounce, turn it back off.
-        setIsLoading(false);
-        return;
-      }
-
       // Mark destinations as pending
       const pendingKeys = uncachedDestinations.map(dest => getCacheKey(origins, dest));
       pendingKeys.forEach(key => pendingRequests.add(key));
@@ -143,6 +166,8 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
         for (let i = 0; i < uncachedDestinations.length; i += 50) {
           chunks.push(uncachedDestinations.slice(i, i + 50));
         }
+
+        console.log(`[useMapPrices] Fetching ${uncachedDestinations.length} prices in ${chunks.length} chunk(s)`);
 
         for (const chunk of chunks) {
           const { data, error: fnError } = await supabase.functions.invoke('map-prices', {
@@ -205,5 +230,5 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
     };
   }, []);
 
-  return { prices, isLoading, error, fetchPrices };
+  return { prices, isLoading, error, fetchPrices, getMissingDestinations };
 }
