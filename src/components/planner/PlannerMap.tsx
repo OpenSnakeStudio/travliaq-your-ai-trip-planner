@@ -377,20 +377,27 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     didAutoSetDepartureRef.current = true;
 
     (async () => {
-      const resp = await findNearestAirports(userLocation.city, 1);
+      // Extract city name only (remove ", Country" suffix if present)
+      const cityOnly = userLocation.city.split(",")[0].trim();
+      
+      const resp = await findNearestAirports(cityOnly, 1);
       const best = resp?.airports?.[0];
-      if (!best?.iata) return;
+      if (!best?.iata) {
+        console.warn("[PlannerMap] Could not find airport for city:", cityOnly);
+        return;
+      }
 
       updateMemory({
         departure: {
           iata: best.iata,
           airport: best.name,
-          city: resp?.matched_city || userLocation.city,
+          city: resp?.matched_city || cityOnly,
           countryCode: best.country_code,
           lat: best.lat,
           lng: best.lon,
         },
       });
+      console.log("[PlannerMap] Auto-set departure airport:", best.iata, "for city:", cityOnly);
     })();
   }, [flightMem?.departure?.iata, updateMemory, userLocation?.city]);
 
