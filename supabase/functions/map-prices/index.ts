@@ -8,10 +8,15 @@ const corsHeaders = {
 const API_URL = 'https://travliaq-api-production.up.railway.app/map-prices';
 
 interface MapPricesRequest {
-  origin: string;
+  origins: string[];  // Multiple origin airports (e.g., ["CDG", "ORY"] for Paris)
   destinations: string[];
   adults?: number;
   currency?: string;
+}
+
+interface PriceData {
+  price: number;
+  date: string;
 }
 
 serve(async (req) => {
@@ -24,18 +29,18 @@ serve(async (req) => {
     const body: MapPricesRequest = await req.json();
     
     console.log('[map-prices] Request:', {
-      origin: body.origin,
+      origins: body.origins,
       destinationsCount: body.destinations?.length,
       adults: body.adults,
       currency: body.currency
     });
 
     // Validate required fields
-    if (!body.origin || !body.destinations || body.destinations.length === 0) {
+    if (!body.origins || body.origins.length === 0 || !body.destinations || body.destinations.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: 'origin and destinations are required' 
+          error: 'origins and destinations are required' 
         }),
         { 
           status: 400, 
@@ -46,49 +51,71 @@ serve(async (req) => {
 
     // Limit destinations to 50
     const destinations = body.destinations.slice(0, 50);
+    const origins = body.origins.slice(0, 5); // Max 5 origin airports
 
-    // Call the external API
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        origin: body.origin,
-        destinations,
-        adults: body.adults || 1,
-        currency: body.currency || 'EUR'
-      })
-    });
+    // Fetch prices from all origin airports in parallel
+    const allResponses = await Promise.all(
+      origins.map(async (origin) => {
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              origin,
+              destinations,
+              adults: body.adults || 1,
+              currency: body.currency || 'EUR'
+            })
+          });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[map-prices] API error:', response.status, errorText);
-      
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: `API error: ${response.status}` 
-        }),
-        { 
-          status: 502, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          if (!response.ok) {
+            console.error(`[map-prices] API error for origin ${origin}:`, response.status);
+            return { origin, success: false, prices: {} };
+          }
+
+          const data = await response.json();
+          return { origin, success: data.success, prices: data.prices || {} };
+        } catch (err) {
+          console.error(`[map-prices] Error for origin ${origin}:`, err);
+          return { origin, success: false, prices: {} };
         }
-      );
+      })
+    );
+
+    // Merge prices: keep the cheapest price for each destination
+    const mergedPrices: Record<string, PriceData | null> = {};
+    
+    for (const dest of destinations) {
+      let cheapestPrice: PriceData | null = null;
+      
+      for (const response of allResponses) {
+        const priceData = response.prices[dest];
+        if (priceData && priceData.price !== null && priceData.price !== undefined) {
+          if (cheapestPrice === null || priceData.price < cheapestPrice.price) {
+            cheapestPrice = priceData;
+          }
+        }
+      }
+      
+      mergedPrices[dest] = cheapestPrice;
     }
 
-    const data = await response.json();
-    
-    console.log('[map-prices] Response:', {
-      success: data.success,
-      pricesCount: data.prices ? Object.keys(data.prices).length : 0,
-      cached: data.cached_destinations,
-      fetched: data.fetched_destinations
+    console.log('[map-prices] Merged response:', {
+      originsQueried: origins.length,
+      pricesWithValue: Object.values(mergedPrices).filter(p => p !== null).length,
+      pricesNull: Object.values(mergedPrices).filter(p => p === null).length
     });
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({
+        success: true,
+        prices: mergedPrices,
+        currency: body.currency || 'EUR',
+        origins
+      }),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

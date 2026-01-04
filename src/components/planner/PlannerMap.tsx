@@ -316,25 +316,47 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Get route points from flight memory
   const { getRoutePoints, memory: flightMem } = useFlightMemory();
 
-  // Get user's departure airport for map-prices API
+  // Get user's departure airports for map-prices API (supports multi-airport cities like Paris = CDG + ORY)
   const departureIata = flightMem?.departure?.iata;
+  const departureCity = flightMem?.departure?.city;
+  
+  // Find all airports for the departure city (for multi-airport cities)
+  const departureAirports = useMemo(() => {
+    if (!departureCity) return [];
+    
+    // Find the airport marker for the departure city to get allIatas
+    const cityNormalized = departureCity.toLowerCase().trim();
+    const matchingHub = airports.find(a => 
+      a.cityName?.toLowerCase().trim() === cityNormalized ||
+      a.iata === departureIata
+    );
+    
+    // If we found a hub with multiple airports, use all of them
+    if (matchingHub?.allIatas && matchingHub.allIatas.length > 0) {
+      return matchingHub.allIatas;
+    }
+    
+    // Fallback to single airport if available
+    return departureIata ? [departureIata] : [];
+  }, [airports, departureCity, departureIata]);
 
-  // Get all visible airport IATAs for map-prices API
+  // Get all visible airport IATAs for map-prices API (excluding departure airports)
   const destinationIatas = useMemo(() => {
-    return airports.map(a => a.iata).filter(iata => iata !== departureIata);
-  }, [airports, departureIata]);
+    const departureSet = new Set(departureAirports.map(i => i.toUpperCase()));
+    return airports.map(a => a.iata).filter(iata => !departureSet.has(iata.toUpperCase()));
+  }, [airports, departureAirports]);
 
   // Fetch real prices from map-prices API
   const { prices, isLoading: isLoadingPrices, fetchPrices } = useMapPrices({
-    enabled: activeTab === "flights" && !!departureIata,
+    enabled: activeTab === "flights" && departureAirports.length > 0,
   });
 
   // Trigger price fetch when airports or departure change
   useEffect(() => {
-    if (departureIata && destinationIatas.length > 0) {
-      fetchPrices(departureIata, destinationIatas);
+    if (departureAirports.length > 0 && destinationIatas.length > 0) {
+      fetchPrices(departureAirports, destinationIatas);
     }
-  }, [departureIata, destinationIatas, fetchPrices]);
+  }, [departureAirports, destinationIatas, fetchPrices]);
 
   // Get accommodation entries for markers
   const { memory: accommodationMemory } = useAccommodationMemory();
@@ -592,13 +614,22 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       const hubId = hubIdOf(airport);
       const existingMarker = displayedAirportsRef.current.get(hubId);
       
-      // Check if this is the departure city (origin)
+      // Check if this is the departure city (origin) - check all departure airports
       const isOrigin =
         (userDepartureIata && airport.iata.toUpperCase() === userDepartureIata) ||
-        (userDepartureCity && airport.cityName?.toLowerCase().trim() === userDepartureCity);
+        (userDepartureCity && airport.cityName?.toLowerCase().trim() === userDepartureCity) ||
+        departureAirports.some(da => da.toUpperCase() === airport.iata.toUpperCase());
       
-      // If this is the departure city and zoom is low, hide the marker entirely
-      if (isOrigin && hideDeparturePin) {
+      // Get price data for this airport
+      const priceData = prices[airport.iata];
+      const hasPrice = priceData !== undefined;
+      const priceValue = priceData?.price;
+      
+      // Hide markers without price (null = no flights available) - but show origin and loading states
+      const hasNoFlights = !isOrigin && departureAirports.length > 0 && hasPrice && priceValue === null;
+      
+      // If this is the departure city and zoom is low, or no flights available, hide the marker
+      if ((isOrigin && hideDeparturePin) || hasNoFlights) {
         if (existingMarker) {
           const el = existingMarker.getElement();
           el.style.opacity = "0";
@@ -621,13 +652,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         // Update price text in existing marker
         const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
         if (priceSpan) {
-          const priceData = prices[airport.iata];
-          const hasPrice = priceData !== undefined;
-          const priceValue = priceData?.price;
           let newPriceText: string;
           if (isOrigin) {
             newPriceText = "Départ";
-          } else if (!departureIata) {
+          } else if (departureAirports.length === 0) {
             newPriceText = "—";
           } else if (!hasPrice && isLoadingPrices) {
             newPriceText = "...";
@@ -650,15 +678,11 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       el.className = "airport-marker";
 
       const cityName = airport.cityName || airport.name;
-      // Get price from map-prices API
-      const priceData = prices[airport.iata];
-      const hasPrice = priceData !== undefined;
-      const priceValue = priceData?.price;
-      // isOrigin is already computed above
+      // priceData, hasPrice, priceValue already computed above
       let priceText: string;
       if (isOrigin) {
         priceText = "Départ";
-      } else if (!departureIata) {
+      } else if (departureAirports.length === 0) {
         priceText = "—"; // No departure selected
       } else if (!hasPrice && isLoadingPrices) {
         priceText = "..."; // Loading
@@ -771,7 +795,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     return () => {
       // Don't clear on every change - only on unmount
     };
-  }, [activeTab, mapLoaded, airports, flightMem, prices, isLoadingPrices, departureIata]);
+  }, [activeTab, mapLoaded, airports, flightMem, prices, isLoadingPrices, departureAirports]);
 
   // Cleanup all airport markers on unmount
   useEffect(() => {
