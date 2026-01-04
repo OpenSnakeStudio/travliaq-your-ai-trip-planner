@@ -460,9 +460,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const staysFocusRef = useRef<{ lng: number; lat: number; zoom: number; city?: string } | null>(null);
 
   const getStaysOffsetX = useCallback(() => {
-    // Panel is on the left. To keep the target visually centered in the *remaining* map area,
-    // we shift the camera center slightly to the left (negative X), so the target appears a bit to the right.
-    return isPanelOpen ? -150 : 0;
+    // Panel is on the left (~400px). To keep the target visually centered in the *remaining* map area,
+    // we shift the camera center to the left (negative X), so the target appears more to the right.
+    return isPanelOpen ? -220 : 0;
   }, [isPanelOpen]);
 
   const focusStaysTarget = useCallback(
