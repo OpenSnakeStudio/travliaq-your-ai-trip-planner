@@ -9,7 +9,9 @@ import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
 import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBounds";
 import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
+import { findNearestAirports } from "@/hooks/useNearestAirports";
 import eventBus from "@/lib/eventBus";
+
 
 // Destination click event for popup
 export interface DestinationClickEvent {
@@ -314,7 +316,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   });
 
   // Get route points from flight memory
-  const { getRoutePoints, memory: flightMem } = useFlightMemory();
+  const { getRoutePoints, memory: flightMem, updateMemory } = useFlightMemory();
 
   // Get user's departure airports for map-prices API (supports multi-airport cities like Paris = CDG + ORY)
   const departureIata = flightMem?.departure?.iata;
@@ -357,6 +359,40 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       }
     }
   }, [departureIata, departureCity, airports]);
+
+  // Auto-set a persistent departure airport from user location (first visit / empty memory)
+  const didAutoSetDepartureRef = useRef(false);
+  useEffect(() => {
+    if (didAutoSetDepartureRef.current) return;
+
+    // If user already has a departure, do nothing
+    if (flightMem?.departure?.iata) {
+      didAutoSetDepartureRef.current = true;
+      return;
+    }
+
+    // Need a detected city to infer nearest airport
+    if (!userLocation?.city) return;
+
+    didAutoSetDepartureRef.current = true;
+
+    (async () => {
+      const resp = await findNearestAirports(userLocation.city, 1);
+      const best = resp?.airports?.[0];
+      if (!best?.iata) return;
+
+      updateMemory({
+        departure: {
+          iata: best.iata,
+          airport: best.name,
+          city: resp?.matched_city || userLocation.city,
+          countryCode: best.country_code,
+          lat: best.lat,
+          lng: best.lon,
+        },
+      });
+    })();
+  }, [flightMem?.departure?.iata, updateMemory, userLocation?.city]);
 
   // Get all visible airport IATAs for map-prices API (excluding departure airports)
   // Flatten all allIatas from hubs to ensure prices are stable when zooming
@@ -708,10 +744,12 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           }
         }
         
-        // IMPORTANT UX RULE: if we don't have a real price (number), we don't show the city marker.
-        const shouldHideBecauseNoPrice = !isOrigin && (priceValue === null || priceValue === undefined);
+        // IMPORTANT UX RULE (updated):
+        // - While prices are still loading/unknown for this hub, we keep the marker visible (avoid blank map)
+        // - Once we have a response for this hub, if price is null/undefined => hide it
+        const shouldHideBecauseNoPrice = !isOrigin && hasAnyPrice && (priceValue === null || priceValue === undefined);
 
-        // If this is the departure city and zoom is low, or we don't have a price, hide the marker
+        // If this is the departure city and zoom is low, or we have a confirmed "no price", hide the marker
         if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoPrice) {
           if (existingMarker) {
             const el = existingMarker.getElement();
@@ -735,7 +773,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           // Update price text in existing marker
           const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
           if (priceSpan) {
-            const newPriceText = isOrigin ? "Départ" : `${priceValue}€`;
+            const displayPrice = priceValue === undefined ? "…" : priceValue === null ? "—" : `${priceValue}€`;
+            const newPriceText = isOrigin ? "Départ" : displayPrice;
             if (priceSpan.textContent !== newPriceText) {
               priceSpan.textContent = newPriceText;
               priceSpan.style.color = isOrigin ? "#475569" : "#0d9488";
@@ -749,7 +788,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         el.className = "airport-marker";
 
         const cityName = airport.cityName || airport.name;
-        const priceText = isOrigin ? "Départ" : `${priceValue}€`;
+        const displayPrice = priceValue === undefined ? "…" : priceValue === null ? "—" : `${priceValue}€`;
+        const priceText = isOrigin ? "Départ" : displayPrice;
 
         el.style.cssText = `
           opacity: 0;
