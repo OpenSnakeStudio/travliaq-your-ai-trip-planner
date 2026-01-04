@@ -816,19 +816,17 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           }
         }
         
-        // UPDATED UX RULE:
-        // - Show "…" while loading (priceValue === undefined)
-        // - Show "—" if no flight available (priceValue === null)
-        // - Show price if available (priceValue > 0)
-        // - Never hide destinations just because they have no price
-        // This gives users full visibility of all destinations
-
-        // Only hide departure city when zoomed out
-        if (isOrigin && hideDeparturePin) {
+        // RULE: Hide destinations with null price (no flight available)
+        // - priceValue === undefined: still loading, show "…"
+        // - priceValue === null: no flight, HIDE marker (cached for 6h, won't re-request)
+        // - priceValue > 0: show price
+        const shouldHideBecauseNoFlight = priceValue === null && !isOrigin;
+        
+        // Hide departure city when zoomed out OR hide if no flight available
+        if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoFlight) {
           if (existingMarker) {
-            const el = existingMarker.getElement();
-            el.style.opacity = "0";
-            el.style.pointerEvents = "none";
+            existingMarker.remove();
+            displayedAirportsRef.current.delete(hubId);
           }
           return; // Skip creating/showing this marker
         }
@@ -847,7 +845,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           // Update price text in existing marker
           const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
           if (priceSpan) {
-            const displayPrice = priceValue === undefined ? "…" : priceValue === null ? "—" : `${priceValue}€`;
+            const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
             const newPriceText = isOrigin ? "Départ" : displayPrice;
             if (priceSpan.textContent !== newPriceText) {
               priceSpan.textContent = newPriceText;
@@ -862,7 +860,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         el.className = "airport-marker";
 
         const cityName = airport.cityName || airport.name;
-        const displayPrice = priceValue === undefined ? "…" : priceValue === null ? "—" : `${priceValue}€`;
+        const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
         const priceText = isOrigin ? "Départ" : displayPrice;
 
         el.style.cssText = `
