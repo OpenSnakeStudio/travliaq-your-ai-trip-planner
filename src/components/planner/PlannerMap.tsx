@@ -517,12 +517,24 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return;
     }
 
-    // Get user's departure airport info (we keep it visible, but make it non-clickable)
+    // Get user's departure airport info
     const userDepartureIata = flightMem?.departure?.iata?.toUpperCase();
     const userDepartureCity = flightMem?.departure?.city?.toLowerCase().trim();
 
-    // Keep stable hub markers, but sort large hubs first
+    // Hide departure city badge when zoomed out (< 7) to avoid overlapping with nearby cities
+    // The user location pulsing dot remains visible
+    const hideDeparturePin = currentZoom < 7;
+
+    // Filter and sort airports
     const filteredAirports = airports
+      .filter((a) => {
+        // Hide departure city at low zoom levels
+        if (hideDeparturePin) {
+          if (userDepartureIata && a.iata.toUpperCase() === userDepartureIata) return false;
+          if (userDepartureCity && a.cityName?.toLowerCase().trim() === userDepartureCity) return false;
+        }
+        return true;
+      })
       .sort((a, b) => {
         // Large hubs first
         if (a.type === "large" && b.type !== "large") return -1;
