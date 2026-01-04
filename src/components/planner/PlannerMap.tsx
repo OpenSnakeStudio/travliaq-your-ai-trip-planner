@@ -456,6 +456,33 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Track previous tab to detect tab switches
   const prevActiveTabRef = useRef<TabType>(activeTab);
 
+  // Track last focused accommodation target so we can re-center when panel opens/closes
+  const staysFocusRef = useRef<{ lng: number; lat: number; zoom: number; city?: string } | null>(null);
+
+  const getStaysOffsetX = useCallback(() => {
+    // Panel is on the left. To keep the target visually centered in the *remaining* map area,
+    // we shift the camera center slightly to the left (negative X), so the target appears a bit to the right.
+    return isPanelOpen ? -150 : 0;
+  }, [isPanelOpen]);
+
+  const focusStaysTarget = useCallback(
+    (target: { lng: number; lat: number; zoom: number; city?: string }, opts?: { immediate?: boolean }) => {
+      if (!map.current || !mapLoaded) return;
+
+      const offsetX = getStaysOffsetX();
+      const duration = opts?.immediate ? 0 : 1200;
+
+      map.current.easeTo({
+        center: [target.lng, target.lat],
+        zoom: target.zoom,
+        duration,
+        essential: true,
+        offset: [offsetX, 0],
+      });
+    },
+    [getStaysOffsetX, mapLoaded]
+  );
+
   // Auto-zoom to accommodation city when switching to stays tab
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
@@ -470,31 +497,24 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const activeAccom = getActiveAccommodation();
     const accommodations = accommodationMemory.accommodations;
 
-    // Find the best accommodation to zoom to
     let targetAccom = activeAccom && activeAccom.lat && activeAccom.lng ? activeAccom : null;
-
     if (!targetAccom) {
-      // Fallback to first accommodation with valid coordinates
       targetAccom = accommodations.find((acc) => acc.lat && acc.lng) || null;
     }
 
-    if (targetAccom && targetAccom.lat && targetAccom.lng) {
-      console.log(`[PlannerMap] Switching to stays tab, zooming to ${targetAccom.city}, panel open: ${isPanelOpen}`);
-      
-      // Calculate offset: when panel is open, shift center to the right to compensate
-      // Panel takes ~400px, so we offset by ~200px worth of longitude at zoom 11
-      // Only apply offset if panel is open
-      const offsetX = isPanelOpen ? 150 : 0; // pixels to shift right
-      
-      map.current.flyTo({
-        center: [targetAccom.lng, targetAccom.lat],
-        zoom: 11,
-        duration: 1500,
-        essential: true,
-        offset: [offsetX, 0], // [x, y] offset in pixels - positive x shifts view right
-      });
+    if (targetAccom?.lat && targetAccom?.lng) {
+      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 11, city: targetAccom.city };
+      focusStaysTarget(staysFocusRef.current);
     }
-  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, isPanelOpen]);
+  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, focusStaysTarget]);
+
+  // When the stays panel opens/closes, re-center on the same target (center when closed, offset when open)
+  useEffect(() => {
+    if (activeTab !== "stays") return;
+    if (!staysFocusRef.current) return;
+
+    focusStaysTarget(staysFocusRef.current, { immediate: false });
+  }, [activeTab, isPanelOpen, focusStaysTarget]);
 
   // Get activity entries for markers
   const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
