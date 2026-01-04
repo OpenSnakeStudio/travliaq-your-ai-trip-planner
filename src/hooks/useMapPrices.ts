@@ -29,7 +29,9 @@ interface UseMapPricesResult {
 }
 
 // Constants
-const STORAGE_KEY = 'travliaq_price_cache_v3';
+// Keep backward compatibility across versions to avoid "lost cache" after refresh/deploy
+const STORAGE_KEYS = ['travliaq_price_cache_v3', 'travliaq_price_cache_v2'];
+const STORAGE_KEY = STORAGE_KEYS[0];
 const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours for ALL prices (including null - no flight available)
 const MAX_CACHE_ENTRIES = 500;
 
@@ -63,22 +65,27 @@ function getTTL(): number {
 function loadCacheFromStorage(): void {
   if (cacheLoaded) return;
   cacheLoaded = true;
-  
+
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    // Try newest key first, then fall back to older keys
+    let stored: string | null = null;
+    for (const key of STORAGE_KEYS) {
+      stored = localStorage.getItem(key);
+      if (stored) break;
+    }
     if (!stored) return;
-    
+
     const parsed = JSON.parse(stored) as Record<string, CacheEntry>;
     const now = Date.now();
     let validCount = 0;
-    
+
     for (const [key, entry] of Object.entries(parsed)) {
       if (now - entry.timestamp < CACHE_TTL) {
         pricesCache.set(key, entry);
         validCount++;
       }
     }
-    
+
     console.log(`[useMapPrices] Loaded ${validCount} cached prices from localStorage`);
   } catch (err) {
     console.warn('[useMapPrices] Failed to load cache from localStorage:', err);
@@ -143,7 +150,7 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       pricesCache.clear();
       pricesRef.current = {};
       setPrices({});
-      localStorage.removeItem(STORAGE_KEY);
+      STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
       console.log('[useMapPrices] Cleared all cache');
     } else {
       // Clear specific destinations for all origins
@@ -154,16 +161,16 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
           keysToDelete.push(key);
         }
       });
-      keysToDelete.forEach(key => pricesCache.delete(key));
-      
-      destinations.forEach(dest => {
+      keysToDelete.forEach((key) => pricesCache.delete(key));
+
+      destinations.forEach((dest) => {
         delete pricesRef.current[dest];
       });
       setPrices({ ...pricesRef.current });
       debouncedSave();
       console.log(`[useMapPrices] Cleared cache for ${destinations.length} destinations`);
     }
-    setPriceVersion(v => v + 1);
+    setPriceVersion((v) => v + 1);
   }, []);
 
   /**
@@ -299,25 +306,44 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
           if (data?.success && data?.prices) {
             const responseTime = Date.now();
             let pricesReceived = 0;
-            
+
+            // Track which destinations we actually received from the function
+            const receivedSet = new Set<string>();
+
             for (const [iata, priceData] of Object.entries(data.prices)) {
+              receivedSet.add(iata);
               const price = priceData as MapPrice | null;
-              
+
               // Update accumulated prices
               pricesRef.current[iata] = price;
-              
+
               // Update cache with fresh timestamp
               const cacheKey = getCacheKey(origins, iata);
               pricesCache.set(cacheKey, {
                 data: price,
-                timestamp: responseTime
+                timestamp: responseTime,
               });
-              
+
               // Remove from pending
               pendingRequests.delete(cacheKey);
               pricesReceived++;
             }
-            
+
+            // IMPORTANT: if the function omitted some requested destinations,
+            // mark them as null (no price) to avoid infinite "…".
+            for (const requestedDest of chunk) {
+              if (receivedSet.has(requestedDest)) continue;
+              if (pricesRef.current[requestedDest] !== undefined) continue;
+
+              pricesRef.current[requestedDest] = null;
+              const cacheKey = getCacheKey(origins, requestedDest);
+              pricesCache.set(cacheKey, {
+                data: null,
+                timestamp: responseTime,
+              });
+              pendingRequests.delete(cacheKey);
+            }
+
             console.log(`[useMapPrices] Cached ${pricesReceived} prices (TTL: 6h for all)`);
           }
         }
