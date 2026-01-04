@@ -341,21 +341,26 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         return;
       }
 
-      // Try to find multi-airport hub from current visible airports
+      // IMMEDIATELY set single IATA to enable prices - don't wait for airports
+      if (cachedDepartureAirportsRef.current.length === 0) {
+        cachedDepartureAirportsRef.current = [departureIata];
+        setDepartureAirports([departureIata]);
+        console.log(`[PlannerMap] Immediately set departure airport:`, departureIata);
+      }
+
+      // Try to find multi-airport hub from current visible airports (upgrade if available)
       const cityNormalized = (departureCity ?? "").toLowerCase().trim();
       const matchingHub = airports.find(
         (a) => a.cityName?.toLowerCase().trim() === cityNormalized || a.iata === departureIata
       );
 
       if (matchingHub?.allIatas && matchingHub.allIatas.length > 0) {
-        cachedDepartureAirportsRef.current = matchingHub.allIatas;
-        setDepartureAirports(matchingHub.allIatas);
-        console.log(`[PlannerMap] Cached departure airports for ${departureCity || departureIata}:`, matchingHub.allIatas);
-      } else {
-        // Fallback to single IATA
-        cachedDepartureAirportsRef.current = [departureIata];
-        setDepartureAirports([departureIata]);
-        console.log(`[PlannerMap] Cached single departure airport:`, departureIata);
+        // Only upgrade if we have more airports than before
+        if (matchingHub.allIatas.length > cachedDepartureAirportsRef.current.length) {
+          cachedDepartureAirportsRef.current = matchingHub.allIatas;
+          setDepartureAirports(matchingHub.allIatas);
+          console.log(`[PlannerMap] Upgraded departure airports for ${departureCity || departureIata}:`, matchingHub.allIatas);
+        }
       }
     }
   }, [departureIata, departureCity, airports]);
