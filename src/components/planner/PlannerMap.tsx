@@ -341,9 +341,22 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [airports, departureCity, departureIata]);
 
   // Get all visible airport IATAs for map-prices API (excluding departure airports)
+  // Flatten all allIatas from hubs to ensure prices are stable when zooming
   const destinationIatas = useMemo(() => {
     const departureSet = new Set(departureAirports.map(i => i.toUpperCase()));
-    return airports.map(a => a.iata).filter(iata => !departureSet.has(iata.toUpperCase()));
+    const allIatas = new Set<string>();
+    
+    for (const airport of airports) {
+      // Add all IATAs from the hub (supports multi-airport cities like Paris = CDG + ORY)
+      const hubIatas = airport.allIatas && airport.allIatas.length > 0 ? airport.allIatas : [airport.iata];
+      for (const iata of hubIatas) {
+        if (!departureSet.has(iata.toUpperCase())) {
+          allIatas.add(iata);
+        }
+      }
+    }
+    
+    return Array.from(allIatas);
   }, [airports, departureAirports]);
 
   // Fetch real prices from map-prices API
