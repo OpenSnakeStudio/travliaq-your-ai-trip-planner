@@ -598,6 +598,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
   // Track which airports are currently displayed (by hub id)
   const displayedAirportsRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
+  const airportRemovalTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   // Display airport markers when on flights tab - OPTIMIZED to avoid flickering
   useEffect(() => {
@@ -635,15 +636,32 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     // Current hubs in response
     const currentHubIds = new Set(filteredAirports.map(hubIdOf));
 
-    // Remove markers that are no longer in the viewport - IMMEDIATE removal to prevent glitches
-    const toRemove: string[] = [];
-    displayedAirportsRef.current.forEach((marker, hubId) => {
-      if (!currentHubIds.has(hubId)) {
-        marker.remove();
-        toRemove.push(hubId);
+    // Graceful marker removal: keep priced markers briefly so zooming/panning doesn't cause "empty map" flashes.
+    // We only ever display markers that have a price anyway, so keeping them briefly remains consistent with the UX rule.
+    const REMOVAL_GRACE_MS = 2000;
+
+    // If a hub is present again, cancel its pending removal.
+    currentHubIds.forEach((hubId) => {
+      const t = airportRemovalTimeoutsRef.current.get(hubId);
+      if (t) {
+        clearTimeout(t);
+        airportRemovalTimeoutsRef.current.delete(hubId);
       }
     });
-    toRemove.forEach((hubId) => displayedAirportsRef.current.delete(hubId));
+
+    // Schedule removal for hubs no longer present
+    displayedAirportsRef.current.forEach((marker, hubId) => {
+      if (currentHubIds.has(hubId)) return;
+      if (airportRemovalTimeoutsRef.current.has(hubId)) return;
+
+      const timeout = setTimeout(() => {
+        marker.remove();
+        displayedAirportsRef.current.delete(hubId);
+        airportRemovalTimeoutsRef.current.delete(hubId);
+      }, REMOVAL_GRACE_MS);
+
+      airportRemovalTimeoutsRef.current.set(hubId, timeout);
+    });
 
     // Add or update markers for current hubs
     filteredAirports.forEach((airport, idx) => {
@@ -677,11 +695,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       }
       const hasPrice = hasAnyPrice;
       
-      // Hide markers without price (null = no flights available) - but show origin and loading states
-      const hasNoFlights = !isOrigin && departureAirports.length > 0 && hasPrice && priceValue === null;
-      
-      // If this is the departure city and zoom is low, or no flights available, hide the marker
-      if ((isOrigin && hideDeparturePin) || hasNoFlights) {
+      // IMPORTANT UX RULE: if we don't have a real price (number), we don't show the city marker.
+      // - undefined: not fetched yet
+      // - null: "no flights" returned by API
+      const shouldHideBecauseNoPrice = !isOrigin && departureAirports.length > 0 && (priceValue === null || priceValue === undefined);
+
+      // If this is the departure city and zoom is low, or we don't have a price, hide the marker
+      if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoPrice) {
         if (existingMarker) {
           const el = existingMarker.getElement();
           el.style.opacity = "0";
@@ -704,22 +724,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         // Update price text in existing marker
         const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
         if (priceSpan) {
-          let newPriceText: string;
-          if (isOrigin) {
-            newPriceText = "Départ";
-          } else if (departureAirports.length === 0) {
-            newPriceText = "—";
-          } else if (!hasPrice && isLoadingPrices) {
-            newPriceText = "...";
-          } else if (priceValue === null || priceValue === undefined) {
-            newPriceText = "—";
-          } else {
-            newPriceText = `${priceValue}€`;
-          }
+          const newPriceText = isOrigin
+            ? "Départ"
+            : (departureAirports.length === 0 ? "—" : `${priceValue}€`);
+
           if (priceSpan.textContent !== newPriceText) {
             priceSpan.textContent = newPriceText;
-            // Update color based on price availability
-            priceSpan.style.color = (isOrigin || priceValue === null || priceValue === undefined) ? "#475569" : "#0d9488";
+            priceSpan.style.color = isOrigin || departureAirports.length === 0 ? "#475569" : "#0d9488";
           }
         }
         return;
@@ -730,19 +741,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       el.className = "airport-marker";
 
       const cityName = airport.cityName || airport.name;
-      // priceData, hasPrice, priceValue already computed above
-      let priceText: string;
-      if (isOrigin) {
-        priceText = "Départ";
-      } else if (departureAirports.length === 0) {
-        priceText = "—"; // No departure selected
-      } else if (!hasPrice && isLoadingPrices) {
-        priceText = "..."; // Loading
-      } else if (priceValue === null || priceValue === undefined) {
-        priceText = "—"; // No flights available
-      } else {
-        priceText = `${priceValue}€`;
-      }
+      const priceText = isOrigin
+        ? "Départ"
+        : (departureAirports.length === 0 ? "—" : `${priceValue}€`);
 
       // NOTE: Do NOT set `transform` on the marker element itself.
       el.style.cssText = `
@@ -852,6 +853,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Cleanup all airport markers on unmount
   useEffect(() => {
     return () => {
+      airportRemovalTimeoutsRef.current.forEach((t) => clearTimeout(t));
+      airportRemovalTimeoutsRef.current.clear();
+
       displayedAirportsRef.current.forEach((marker) => marker.remove());
       displayedAirportsRef.current.clear();
     };
