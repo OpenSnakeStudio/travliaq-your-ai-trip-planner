@@ -27,7 +27,7 @@ interface UseMapPricesResult {
 // Cache with TTL - persists across component remounts
 // Key is sorted origins + destination to ensure stability
 const pricesCache = new Map<string, { data: MapPrice | null; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours cache - prices don't change frequently
 
 // Track pending destinations to avoid duplicate requests
 const pendingRequests = new Set<string>();
@@ -184,22 +184,24 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
           }
 
           if (data?.success && data?.prices) {
+            const responseTime = Date.now(); // Use current time, not the debounce start time
             for (const [iata, priceData] of Object.entries(data.prices)) {
               const price = priceData as MapPrice | null;
               
               // Update accumulated prices
               pricesRef.current[iata] = price;
               
-              // Update cache
+              // Update cache with fresh timestamp
               const cacheKey = getCacheKey(origins, iata);
               pricesCache.set(cacheKey, {
                 data: price,
-                timestamp: now
+                timestamp: responseTime
               });
               
               // Remove from pending
               pendingRequests.delete(cacheKey);
             }
+            console.log(`[useMapPrices] Cached ${Object.keys(data.prices).length} prices (TTL: 6h)`);
           }
         }
 
