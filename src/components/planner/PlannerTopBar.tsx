@@ -36,12 +36,12 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
   return (
     <div
       className="absolute top-0 left-0 right-0 z-20 h-12 bg-background/80 backdrop-blur-md border-b border-border/50 flex items-center justify-between px-4"
+      data-tour="tabs-nav"
     >
       {/* Tab buttons - left side */}
       <nav
         className="flex items-center gap-1"
         aria-label="Navigation des onglets"
-        data-tour="tabs-nav"
       >
         {tabs.map((t) => {
           const Icon = t.icon;

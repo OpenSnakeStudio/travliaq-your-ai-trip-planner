@@ -41,90 +41,68 @@ function injectDriverStyles() {
   style.id = "driver-custom-styles";
    style.textContent = `
      /* Override Driver.js default styles */
-     .driver-overlay {
-       background: rgba(0, 0, 0, 0.85) !important;
-       z-index: 9998 !important;
-     }
+      .driver-overlay {
+        background: rgba(0, 0, 0, 0.85) !important;
+        z-index: 9998 !important;
+      }
 
-     .driver-stage {
-       background: transparent !important;
-       z-index: 9999 !important;
-     }
+      .driver-stage {
+        background: transparent !important;
+        z-index: 9999 !important;
+      }
 
-     .driver-popover {
-       z-index: 10002 !important;
-     }
-     
-     /* Custom spotlight with pulsing border */
-     .driver-active-element {
-       position: relative !important;
-       z-index: 10001 !important;
-       opacity: 1 !important;
-       filter: none !important;
-     }
+      .driver-popover {
+        z-index: 10002 !important;
+      }
 
-     .driver-active-element * {
-       opacity: 1 !important;
-       filter: none !important;
-     }
-     
-     /* Pulsing highlight ring */
-     .driver-active-element::before {
-       content: '' !important;
-       position: absolute !important;
-       inset: -8px !important;
-       border-radius: 16px !important;
-       pointer-events: none !important;
-       z-index: 10000 !important;
-       animation: travliaq-pulse 2s ease-in-out infinite !important;
-       box-shadow: 
-         0 0 0 4px hsl(var(--primary)),
-         0 0 30px 10px hsl(var(--primary) / 0.4),
-         0 0 60px 20px hsl(var(--primary) / 0.2) !important;
-     }
-     
-     /* Inner glow effect */
-     .driver-active-element::after {
-       content: '' !important;
-       position: absolute !important;
-       inset: 0 !important;
-       border-radius: 12px !important;
-       pointer-events: none !important;
-       z-index: 10000 !important;
-       box-shadow: inset 0 0 40px 10px hsl(var(--primary) / 0.15) !important;
-     }
-     
-     @keyframes travliaq-pulse {
-       0%, 100% {
-         box-shadow: 
-           0 0 0 4px hsl(var(--primary)),
-           0 0 30px 10px hsl(var(--primary) / 0.4),
-           0 0 60px 20px hsl(var(--primary) / 0.2);
-         transform: scale(1);
-       }
-       50% {
-         box-shadow: 
-           0 0 0 6px hsl(var(--primary)),
-           0 0 50px 20px hsl(var(--primary) / 0.5),
-           0 0 80px 30px hsl(var(--primary) / 0.3);
-         transform: scale(1.02);
-       }
-     }
-     
-     /* Custom popover styling */
-     .driver-popover {
-       background: hsl(var(--card)) !important;
-       border: 1px solid hsl(var(--border) / 0.5) !important;
-       border-radius: 16px !important;
-       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-       padding: 0 !important;
-       max-width: min(420px, calc(100vw - 32px)) !important;
-       overflow: hidden !important;
-     }
-     
-     .driver-popover-arrow {
-       display: none !important;
-     }
+      /* Make sure the highlighted element is truly above the overlay (stacking context safe) */
+      .driver-active-element {
+        z-index: 10001 !important;
+        opacity: 1 !important;
+        filter: none !important;
+        isolation: isolate !important;
+        border-radius: 16px !important;
+        animation: travliaq-pulse-shadow 2s ease-in-out infinite !important;
+        box-shadow:
+          0 0 0 4px hsl(var(--primary)),
+          0 0 30px 10px hsl(var(--primary) / 0.35),
+          0 0 60px 20px hsl(var(--primary) / 0.18) !important;
+      }
+
+      .driver-active-element * {
+        opacity: 1 !important;
+        filter: none !important;
+      }
+
+      @keyframes travliaq-pulse-shadow {
+        0%, 100% {
+          box-shadow:
+            0 0 0 4px hsl(var(--primary)),
+            0 0 30px 10px hsl(var(--primary) / 0.35),
+            0 0 60px 20px hsl(var(--primary) / 0.18);
+        }
+        50% {
+          box-shadow:
+            0 0 0 6px hsl(var(--primary)),
+            0 0 50px 18px hsl(var(--primary) / 0.45),
+            0 0 90px 32px hsl(var(--primary) / 0.26);
+        }
+      }
+
+      /* Custom popover styling */
+      .driver-popover {
+        background: hsl(var(--card)) !important;
+        border: 1px solid hsl(var(--border) / 0.5) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+        padding: 0 !important;
+        max-width: min(420px, calc(100vw - 32px)) !important;
+        overflow: hidden !important;
+      }
+
+      .driver-popover-arrow {
+        display: none !important;
+      }
      
      /* Popover header */
      .driver-popover-title {
@@ -208,10 +186,21 @@ function injectDriverStyles() {
        font-size: 0.875rem !important;
      }
      
-     /* Progress indicator */
-     .driver-popover-progress-text {
-       display: none !important;
-     }
+      /* Progress indicator */
+      .driver-popover-progress-text {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 10px 20px 0 20px !important;
+        padding: 6px 10px !important;
+        border-radius: 999px !important;
+        background: hsl(var(--muted) / 0.6) !important;
+        border: 1px solid hsl(var(--border) / 0.35) !important;
+        color: hsl(var(--muted-foreground)) !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.02em !important;
+      }
      
      /* Footer with buttons */
      .driver-popover-footer {
