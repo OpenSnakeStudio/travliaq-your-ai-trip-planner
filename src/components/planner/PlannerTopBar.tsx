@@ -34,12 +34,15 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
   usePlannerEvent("tab:flash", handleFlash);
   
   return (
-    <div 
+    <div
       className="absolute top-0 left-0 right-0 z-20 h-12 bg-background/80 backdrop-blur-md border-b border-border/50 flex items-center justify-between px-4"
-      data-tour="tabs-bar"
     >
       {/* Tab buttons - left side */}
-      <nav className="flex items-center gap-1" aria-label="Navigation des onglets">
+      <nav
+        className="flex items-center gap-1"
+        aria-label="Navigation des onglets"
+        data-tour="tabs-nav"
+      >
         {tabs.map((t) => {
           const Icon = t.icon;
           const isActive = activeTab === t.id;
