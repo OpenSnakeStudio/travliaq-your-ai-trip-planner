@@ -554,10 +554,11 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       const displayName = airport.cityName || airport.name;
       const priceText = `${airport.price} €`;
       
+      // NOTE: Do NOT set `transform` on the marker element itself.
+      // Mapbox uses `transform` to position markers; overriding it makes markers jump to top-left.
       el.style.cssText = `
         opacity: 0;
-        transform: scale(0.8);
-        transition: opacity 0.25s ease-out, transform 0.25s ease-out;
+        transition: opacity 0.25s ease-out;
       `;
       
       el.innerHTML = `
@@ -570,8 +571,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           border-radius: 20px;
           cursor: pointer;
           box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+          transition: background 0.15s ease, transform 0.25s ease-out, box-shadow 0.15s ease;
           white-space: nowrap;
+          transform: scale(0.9);
+          transform-origin: center;
         ">
           <span style="
             font-size: ${fontSize + 2}px;
@@ -594,15 +597,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
       // Animate in with staggered delay (capped)
       const delay = Math.min(idx * 15, 300);
+      const badge = el.querySelector(".airport-badge") as HTMLElement;
+
       requestAnimationFrame(() => {
         setTimeout(() => {
           el.style.opacity = "1";
-          el.style.transform = "scale(1)";
+          badge.style.transform = "scale(1)";
         }, delay);
       });
 
       // Hover effects
-      const badge = el.querySelector(".airport-badge") as HTMLElement;
       badge?.addEventListener("mouseenter", () => {
         badge.style.background = "rgba(66, 133, 244, 0.95)";
         badge.style.transform = "scale(1.08)";
