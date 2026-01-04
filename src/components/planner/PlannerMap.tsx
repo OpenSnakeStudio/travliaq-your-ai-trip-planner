@@ -460,9 +460,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const staysFocusRef = useRef<{ lng: number; lat: number; zoom: number; city?: string } | null>(null);
 
   const getStaysOffsetX = useCallback(() => {
-    // Panel is on the left (~400px). To keep the target visually centered in the *remaining* map area,
-    // we shift the camera center to the left (negative X), so the target appears more to the right.
-    return isPanelOpen ? -220 : 0;
+    // Goal: when the left overlay panel is open, keep the target city visually centered in the *remaining visible* map.
+    // We measure the real panel width and shift the target to the right by ~half that width.
+    if (!isPanelOpen) return 0;
+
+    const panelEl = document.querySelector('[data-tour="widgets-panel"]') as HTMLElement | null;
+    const panelWidth = panelEl?.getBoundingClientRect().width ?? 420;
+
+    // Clamp to avoid extreme shifts on very small/large screens.
+    const offset = Math.round(panelWidth / 2);
+    return Math.max(120, Math.min(320, offset));
   }, [isPanelOpen]);
 
   const focusStaysTarget = useCallback(
