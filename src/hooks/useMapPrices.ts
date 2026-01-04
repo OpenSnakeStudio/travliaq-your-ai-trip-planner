@@ -181,38 +181,53 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
    */
   const getMissingDestinations = useCallback((origins: string[], destinations: string[]): string[] => {
     if (origins.length === 0) return [];
-    
+
     const now = Date.now();
     const originsKey = getOriginsKey(origins);
     const currentOriginsKey = lastOriginsKey.current;
-    
+
     // If origins changed, everything is "missing"
     const originsChanged = originsKey !== currentOriginsKey && currentOriginsKey !== '';
-    
-    return destinations.filter(dest => {
+
+    // IMPORTANT: hydrate session state from cache so that a "100% cache hit"
+    // does not leave the UI stuck in "…" forever.
+    let hydratedAny = false;
+
+    const missing = destinations.filter((dest) => {
       // If origins just changed, we need all destinations
       if (originsChanged) return true;
-      
+
       const cacheKey = getCacheKey(origins, dest);
-      
+
       // Check global cache (6h TTL for ALL prices including null)
       const cached = pricesCache.get(cacheKey);
       if (cached && now - cached.timestamp < CACHE_TTL) {
+        if (pricesRef.current[dest] === undefined) {
+          pricesRef.current[dest] = cached.data;
+          hydratedAny = true;
+        }
         return false; // Valid cache hit - don't re-request
       }
-      
+
       // Check session-level prices
       if (pricesRef.current[dest] !== undefined) {
         return false; // Already known this session
       }
-      
+
       // Check pending requests
       if (pendingRequests.has(cacheKey)) {
         return false; // Already being fetched
       }
-      
+
       return true; // Need to fetch
     });
+
+    if (hydratedAny) {
+      setPrices({ ...pricesRef.current });
+      setPriceVersion((v) => v + 1);
+    }
+
+    return missing;
   }, []);
 
   const fetchPrices = useCallback((origins: string[], destinations: string[]) => {
