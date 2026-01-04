@@ -376,16 +376,23 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [airports, departureAirports]);
 
   // Fetch real prices from map-prices API
-  const { prices, isLoading: isLoadingPrices, fetchPrices } = useMapPrices({
+  const { prices, isLoading: isLoadingPrices, fetchPrices, getMissingDestinations } = useMapPrices({
     enabled: activeTab === "flights" && departureAirports.length > 0,
   });
 
-  // Trigger price fetch when airports or departure change
+  // Calculate missing destinations (not cached, not pending, not known)
+  const missingDestinationIatas = useMemo(() => {
+    if (departureAirports.length === 0 || destinationIatas.length === 0) return [];
+    return getMissingDestinations(departureAirports, destinationIatas);
+  }, [departureAirports, destinationIatas, getMissingDestinations]);
+
+  // Trigger price fetch ONLY for missing destinations
   useEffect(() => {
-    if (departureAirports.length > 0 && destinationIatas.length > 0) {
-      fetchPrices(departureAirports, destinationIatas);
+    if (departureAirports.length > 0 && missingDestinationIatas.length > 0) {
+      console.log(`[PlannerMap] Fetching prices for ${missingDestinationIatas.length} missing destinations (total visible: ${destinationIatas.length})`);
+      fetchPrices(departureAirports, missingDestinationIatas);
     }
-  }, [departureAirports, destinationIatas, fetchPrices]);
+  }, [departureAirports, missingDestinationIatas, fetchPrices, destinationIatas.length]);
 
   // Get accommodation entries for markers
   const { memory: accommodationMemory } = useAccommodationMemory();
@@ -529,7 +536,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, []);
 
   // Fetch airports when map moves (only on flights tab)
-  // IMPORTANT: Account for panel offset so airports under the panel are still fetched
+  // IMPORTANT: Add buffer to bounds for stability during small pan/zoom movements
   useEffect(() => {
     if (!map.current || !mapLoaded || activeTab !== "flights") return;
 
@@ -540,36 +547,36 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       const zoom = map.current.getZoom();
       
       // Get the current padding (accounts for panel offset)
-      // Extend the bounds to the left to compensate for the panel overlay
-      // The panel takes about 350-450px on the left, we need to extend the bounds
       const container = map.current.getContainer();
       const containerWidth = container.clientWidth;
       
-      // Calculate how much extra longitude we need to cover the hidden area
-      // At current zoom, the visible width in degrees is:
+      // Calculate bounds span
       const lngSpan = bounds.getEast() - bounds.getWest();
-      const panelWidthPx = isPanelOpen ? 450 : 350; // Match the padding values
+      const latSpan = bounds.getNorth() - bounds.getSouth();
+      
+      // Panel compensation (left side)
+      const panelWidthPx = isPanelOpen ? 450 : 350;
       const extraLngRatio = panelWidthPx / containerWidth;
-      const extraLng = lngSpan * extraLngRatio * 1.2; // Add 20% buffer
+      const panelExtraLng = lngSpan * extraLngRatio * 1.2;
       
-      // Extend the western bound to cover the area hidden by the panel
-      const adjustedWest = bounds.getWest() - extraLng;
+      // Add 15% buffer on all sides to stabilize the list during small movements
+      // This way, small pans don't trigger different hub selections
+      const BOUNDS_BUFFER = 0.15;
+      const bufferLng = lngSpan * BOUNDS_BUFFER;
+      const bufferLat = latSpan * BOUNDS_BUFFER;
       
-      fetchAirports({
-        north: bounds.getNorth(),
-        south: bounds.getSouth(),
-        east: bounds.getEast(),
-        west: adjustedWest,
-      });
+      const paddedBounds = {
+        north: bounds.getNorth() + bufferLat,
+        south: bounds.getSouth() - bufferLat,
+        east: bounds.getEast() + bufferLng,
+        west: bounds.getWest() - panelExtraLng - bufferLng,
+      };
+      
+      fetchAirports(paddedBounds);
       
       // Emit event for other components
       eventBus.emit("airports:fetch", {
-        bounds: {
-          north: bounds.getNorth(),
-          south: bounds.getSouth(),
-          east: bounds.getEast(),
-          west: adjustedWest,
-        },
+        bounds: paddedBounds,
         zoom,
       });
     };
