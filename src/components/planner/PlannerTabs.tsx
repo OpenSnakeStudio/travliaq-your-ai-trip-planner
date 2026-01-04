@@ -38,7 +38,7 @@ const PlannerTabs = ({ activeTab, onTabChange }: PlannerTabsProps) => {
       </div>
 
       {/* Tab Navigation */}
-      <nav className="flex items-center gap-1 flex-1" data-tour="tabs-bar">
+      <nav className="flex items-center gap-1 flex-1" aria-label="Navigation des onglets">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

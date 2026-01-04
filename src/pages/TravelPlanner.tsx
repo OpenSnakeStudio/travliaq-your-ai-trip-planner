@@ -170,7 +170,7 @@ const TravelPlanner = () => {
 
                   {/* Right: Map workspace - resizable */}
                   <ResizablePanel defaultSize={65} minSize={40}>
-                    <main className="relative h-full overflow-hidden pt-12" data-tour="map-area">
+                    <main className="relative h-full overflow-hidden pt-12">
                       <PlannerErrorBoundary componentName="PlannerMap">
                         <PlannerMap
                           activeTab={activeTab}
