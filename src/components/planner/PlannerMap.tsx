@@ -620,10 +620,26 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         (userDepartureCity && airport.cityName?.toLowerCase().trim() === userDepartureCity) ||
         departureAirports.some(da => da.toUpperCase() === airport.iata.toUpperCase());
       
-      // Get price data for this airport
-      const priceData = prices[airport.iata];
-      const hasPrice = priceData !== undefined;
-      const priceValue = priceData?.price;
+      // Get price data for this airport - use minimum price across all airports in the hub
+      const hubIatas = airport.allIatas && airport.allIatas.length > 0 ? airport.allIatas : [airport.iata];
+      let priceValue: number | null | undefined = undefined;
+      let hasAnyPrice = false;
+      
+      for (const iata of hubIatas) {
+        const pd = prices[iata];
+        if (pd !== undefined) {
+          hasAnyPrice = true;
+          if (pd !== null && pd.price !== null && pd.price !== undefined) {
+            if (priceValue === undefined || priceValue === null || pd.price < priceValue) {
+              priceValue = pd.price;
+            }
+          } else if (priceValue === undefined) {
+            // Keep track that we got a null response (no flights)
+            priceValue = null;
+          }
+        }
+      }
+      const hasPrice = hasAnyPrice;
       
       // Hide markers without price (null = no flights available) - but show origin and loading states
       const hasNoFlights = !isOrigin && departureAirports.length > 0 && hasPrice && priceValue === null;
