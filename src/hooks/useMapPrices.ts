@@ -69,6 +69,26 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       clearTimeout(debounceTimeout.current);
     }
 
+    // If we know we will fetch (after debounce), flip loading immediately so markers show "..."
+    const nowPreview = Date.now();
+    let willFetch = false;
+    for (const dest of destinations) {
+      const cacheKey = getCacheKey(origins, dest);
+      const cached = pricesCache.get(cacheKey);
+
+      if (cached && (nowPreview - cached.timestamp) < CACHE_TTL) continue;
+      if (pricesRef.current[dest] !== undefined) continue;
+      if (pendingRequests.has(cacheKey)) continue;
+
+      willFetch = true;
+      break;
+    }
+
+    if (willFetch) {
+      setIsLoading(true);
+      setError(null);
+    }
+
     debounceTimeout.current = setTimeout(async () => {
       const now = Date.now();
       const uncachedDestinations: string[] = [];
@@ -102,11 +122,10 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
 
       // If all cached/known, return immediately
       if (uncachedDestinations.length === 0) {
+        // If we turned loading on earlier for this debounce, turn it back off.
+        setIsLoading(false);
         return;
       }
-
-      setIsLoading(true);
-      setError(null);
 
       // Mark destinations as pending
       const pendingKeys = uncachedDestinations.map(dest => getCacheKey(origins, dest));
