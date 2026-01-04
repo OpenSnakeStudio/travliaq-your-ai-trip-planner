@@ -360,30 +360,38 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
   }, [departureIata, departureCity, airports]);
 
-  // Auto-set a persistent departure airport from user location (first visit / empty memory)
-  const didAutoSetDepartureRef = useRef(false);
+  // Auto-set a departure airport from user location (first visit / empty memory)
+  // Important: never permanently lock the map in a "no departure" state if the lookup fails.
+  const autoSetDepartureAttemptRef = useRef<{ city?: string; attemptedAt?: number; success?: boolean }>({});
   useEffect(() => {
-    if (didAutoSetDepartureRef.current) return;
-
-    // If user already has a departure, do nothing
+    // If user already has a departure, stop.
     if (flightMem?.departure?.iata) {
-      didAutoSetDepartureRef.current = true;
+      autoSetDepartureAttemptRef.current.success = true;
       return;
     }
 
-    // Need a detected city to infer nearest airport
     if (!userLocation?.city) return;
 
-    didAutoSetDepartureRef.current = true;
+    const cityOnly = userLocation.city.split(",")[0].trim();
+    const attempt = autoSetDepartureAttemptRef.current;
+
+    // Avoid spamming: retry at most once per minute for the same city
+    if (
+      attempt.success ||
+      (attempt.city === cityOnly && attempt.attemptedAt && Date.now() - attempt.attemptedAt < 60_000)
+    ) {
+      return;
+    }
+
+    attempt.city = cityOnly;
+    attempt.attemptedAt = Date.now();
 
     (async () => {
-      // Extract city name only (remove ", Country" suffix if present)
-      const cityOnly = userLocation.city.split(",")[0].trim();
-      
       const resp = await findNearestAirports(cityOnly, 1);
       const best = resp?.airports?.[0];
+
       if (!best?.iata) {
-        console.warn("[PlannerMap] Could not find airport for city:", cityOnly);
+        console.warn("[PlannerMap] Could not infer departure airport from city:", cityOnly);
         return;
       }
 
@@ -397,6 +405,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           lng: best.lon,
         },
       });
+
+      autoSetDepartureAttemptRef.current.success = true;
       console.log("[PlannerMap] Auto-set departure airport:", best.iata, "for city:", cityOnly);
     })();
   }, [flightMem?.departure?.iata, updateMemory, userLocation?.city]);
@@ -659,16 +669,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return;
     }
 
-    // If no departure is selected, don't show flight price markers at all.
-    // This prevents the "city + —" UI, and matches the rule: no price => no marker.
-    if (departureAirports.length === 0) {
-      displayedAirportsRef.current.forEach((marker) => {
-        const el = marker.getElement();
-        el.style.opacity = "0";
-        el.style.pointerEvents = "none";
-      });
-      return;
-    }
+
+    // If no departure is selected, still show airport/city markers (without prices).
+    // Prices will appear as soon as a departure is set.
 
     // Get user's departure airport info
     const userDepartureIata = flightMem?.departure?.iata?.toUpperCase();
