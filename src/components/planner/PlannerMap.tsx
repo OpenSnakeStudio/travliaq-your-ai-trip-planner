@@ -431,7 +431,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [airports, departureAirports]);
 
   // Fetch real prices from map-prices API
-  const { prices, isLoading: isLoadingPrices, fetchPrices, getMissingDestinations } = useMapPrices({
+  const { prices, isLoading: isLoadingPrices, fetchPrices, getMissingDestinations, priceVersion } = useMapPrices({
     enabled: activeTab === "flights" && departureAirports.length > 0,
   });
 
@@ -655,6 +655,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const displayedAirportsRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const airportRemovalTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
+  // Constants for marker management
+  const MAX_PERSISTENT_MARKERS = 100; // Limit persistent markers to avoid clutter
+  const MAX_DISTANCE_DEGREES = 60; // Remove markers more than 60° from center
+
   // Display airport markers when on flights tab - OPTIMIZED to avoid flickering
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
@@ -697,7 +701,6 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     // Helper: check if a marker has a confirmed price (not loading, not null)
     const markerHasPrice = (hubId: string): boolean => {
-      // Find the marker element and check its price display
       const marker = displayedAirportsRef.current.get(hubId);
       if (!marker) return false;
       const priceSpan = marker.getElement()?.querySelector('.airport-price') as HTMLElement | null;
@@ -707,10 +710,22 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return txt.endsWith('€') && !['…', '—'].includes(txt);
     };
 
+    // Helper: get marker distance from map center
+    const getMarkerDistance = (marker: mapboxgl.Marker): number => {
+      if (!map.current) return 0;
+      const center = map.current.getCenter();
+      const pos = marker.getLngLat();
+      // Simple degree-based distance (not great-circle, but fast approximation)
+      const dLng = Math.abs(pos.lng - center.lng);
+      const dLat = Math.abs(pos.lat - center.lat);
+      return Math.sqrt(dLng * dLng + dLat * dLat);
+    };
+
     // Graceful marker removal:
-    // - Markers WITH a confirmed price: keep them FOREVER (no removal) to save API calls
-    // - Markers without price: short grace period (2s) then remove
+    // - Markers WITH a confirmed price AND within distance: keep them
+    // - Markers without price or too far away: remove after grace period
     const REMOVAL_GRACE_NO_PRICE_MS = 2_000;
+    const REMOVAL_GRACE_FAR_AWAY_MS = 500;
 
     // If a hub is present again, cancel its pending removal.
     currentHubIds.forEach((hubId) => {
@@ -721,27 +736,53 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       }
     });
 
-    // Schedule removal for hubs no longer in API response
-    // Markers WITH a confirmed price: keep them FOREVER (no timeout) to save API calls
-    // Markers WITHOUT price: remove after short grace period
+    // Schedule removal for hubs no longer in API response OR too far from center
     displayedAirportsRef.current.forEach((marker, hubId) => {
       if (currentHubIds.has(hubId)) return;
       if (airportRemovalTimeoutsRef.current.has(hubId)) return;
 
       const hasPrice = markerHasPrice(hubId);
+      const distance = getMarkerDistance(marker);
+      const isTooFar = distance > MAX_DISTANCE_DEGREES;
       
-      // If marker has price, keep it indefinitely - no removal scheduled
-      if (hasPrice) return;
+      // If marker has price AND is within distance, keep it (no removal)
+      if (hasPrice && !isTooFar) return;
 
-      // Only schedule removal for markers without price
+      // Determine grace period based on reason
+      const graceMs = isTooFar ? REMOVAL_GRACE_FAR_AWAY_MS : REMOVAL_GRACE_NO_PRICE_MS;
+
       const timeout = setTimeout(() => {
         marker.remove();
         displayedAirportsRef.current.delete(hubId);
         airportRemovalTimeoutsRef.current.delete(hubId);
-      }, REMOVAL_GRACE_NO_PRICE_MS);
+      }, graceMs);
 
       airportRemovalTimeoutsRef.current.set(hubId, timeout);
     });
+
+    // Limit persistent markers: if too many with prices, remove the farthest ones
+    const markersWithPrices: { hubId: string; marker: mapboxgl.Marker; distance: number }[] = [];
+    displayedAirportsRef.current.forEach((marker, hubId) => {
+      if (markerHasPrice(hubId) && !currentHubIds.has(hubId)) {
+        markersWithPrices.push({ hubId, marker, distance: getMarkerDistance(marker) });
+      }
+    });
+
+    if (markersWithPrices.length > MAX_PERSISTENT_MARKERS) {
+      // Sort by distance (farthest first) and remove excess
+      markersWithPrices.sort((a, b) => b.distance - a.distance);
+      const toRemove = markersWithPrices.slice(0, markersWithPrices.length - MAX_PERSISTENT_MARKERS);
+      toRemove.forEach(({ hubId, marker }) => {
+        marker.remove();
+        displayedAirportsRef.current.delete(hubId);
+        const t = airportRemovalTimeoutsRef.current.get(hubId);
+        if (t) {
+          clearTimeout(t);
+          airportRemovalTimeoutsRef.current.delete(hubId);
+        }
+      });
+      console.log(`[PlannerMap] Cleaned up ${toRemove.length} distant markers (limit: ${MAX_PERSISTENT_MARKERS})`);
+    }
 
     // Add or update markers for current hubs
     // IMPORTANT: Each airport is wrapped in try-catch to isolate failures
@@ -775,13 +816,15 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           }
         }
         
-        // IMPORTANT UX RULE (updated):
-        // - While prices are still loading/unknown for this hub, we keep the marker visible (avoid blank map)
-        // - Once we have a response for this hub, if price is null/undefined => hide it
-        const shouldHideBecauseNoPrice = !isOrigin && hasAnyPrice && (priceValue === null || priceValue === undefined);
+        // UPDATED UX RULE:
+        // - Show "…" while loading (priceValue === undefined)
+        // - Show "—" if no flight available (priceValue === null)
+        // - Show price if available (priceValue > 0)
+        // - Never hide destinations just because they have no price
+        // This gives users full visibility of all destinations
 
-        // If this is the departure city and zoom is low, or we have a confirmed "no price", hide the marker
-        if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoPrice) {
+        // Only hide departure city when zoomed out
+        if (isOrigin && hideDeparturePin) {
           if (existingMarker) {
             const el = existingMarker.getElement();
             el.style.opacity = "0";
@@ -928,7 +971,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     return () => {
       // Don't clear on every change - only on unmount
     };
-  }, [activeTab, mapLoaded, airports, flightMem, prices, isLoadingPrices, departureAirports]);
+  }, [activeTab, mapLoaded, airports, flightMem, prices, isLoadingPrices, departureAirports, priceVersion, currentZoom]);
 
   // Cleanup all airport markers on unmount
   useEffect(() => {

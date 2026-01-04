@@ -22,12 +22,27 @@ interface UseMapPricesResult {
   fetchPrices: (origins: string[], destinations: string[]) => void;
   /** Returns destinations that are NOT in cache, NOT pending, and NOT already known */
   getMissingDestinations: (origins: string[], destinations: string[]) => string[];
+  /** Force version increment to trigger re-renders */
+  priceVersion: number;
+  /** Clear cache for specific destinations or all */
+  clearCache: (destinations?: string[]) => void;
 }
+
+// Constants
+const STORAGE_KEY = 'travliaq_price_cache_v2';
+const CACHE_TTL_WITH_PRICE = 6 * 60 * 60 * 1000; // 6 hours for valid prices
+const CACHE_TTL_NULL_PRICE = 30 * 60 * 1000; // 30 minutes for null prices (allow retry)
+const MAX_CACHE_ENTRIES = 500;
 
 // Cache with TTL - persists across component remounts
 // Key is sorted origins + destination to ensure stability
-const pricesCache = new Map<string, { data: MapPrice | null; timestamp: number }>();
-const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours cache - prices don't change frequently
+interface CacheEntry {
+  data: MapPrice | null;
+  timestamp: number;
+}
+
+const pricesCache = new Map<string, CacheEntry>();
+let cacheLoaded = false;
 
 // Track pending destinations to avoid duplicate requests
 const pendingRequests = new Set<string>();
@@ -40,18 +55,119 @@ function getOriginsKey(origins: string[]): string {
   return [...origins].sort().join(',');
 }
 
+// Get TTL based on price value
+function getTTL(priceData: MapPrice | null): number {
+  return priceData !== null ? CACHE_TTL_WITH_PRICE : CACHE_TTL_NULL_PRICE;
+}
+
+// Load cache from localStorage
+function loadCacheFromStorage(): void {
+  if (cacheLoaded) return;
+  cacheLoaded = true;
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return;
+    
+    const parsed = JSON.parse(stored) as Record<string, CacheEntry>;
+    const now = Date.now();
+    let validCount = 0;
+    
+    for (const [key, entry] of Object.entries(parsed)) {
+      const ttl = getTTL(entry.data);
+      if (now - entry.timestamp < ttl) {
+        pricesCache.set(key, entry);
+        validCount++;
+      }
+    }
+    
+    console.log(`[useMapPrices] Loaded ${validCount} cached prices from localStorage`);
+  } catch (err) {
+    console.warn('[useMapPrices] Failed to load cache from localStorage:', err);
+  }
+}
+
+// Save cache to localStorage
+function saveCacheToStorage(): void {
+  try {
+    // Clean up expired entries and limit size
+    const now = Date.now();
+    const entries: [string, CacheEntry][] = [];
+    
+    pricesCache.forEach((entry, key) => {
+      const ttl = getTTL(entry.data);
+      if (now - entry.timestamp < ttl) {
+        entries.push([key, entry]);
+      }
+    });
+    
+    // Sort by timestamp (newest first) and limit
+    entries.sort((a, b) => b[1].timestamp - a[1].timestamp);
+    const limitedEntries = entries.slice(0, MAX_CACHE_ENTRIES);
+    
+    const obj = Object.fromEntries(limitedEntries);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  } catch (err) {
+    console.warn('[useMapPrices] Failed to save cache to localStorage:', err);
+  }
+}
+
+// Debounced save to avoid excessive writes
+let saveTimeout: NodeJS.Timeout | null = null;
+function debouncedSave(): void {
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveCacheToStorage, 2000);
+}
+
 export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesResult {
   const { enabled = true, debounceMs = 800 } = options;
+  
+  // Load cache on first mount
+  useEffect(() => {
+    loadCacheFromStorage();
+  }, []);
   
   // Use ref to accumulate prices (never reset, only update)
   const pricesRef = useRef<MapPricesResult>({});
   const [prices, setPrices] = useState<MapPricesResult>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [priceVersion, setPriceVersion] = useState(0);
   
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const abortController = useRef<AbortController | null>(null);
   const lastOriginsKey = useRef<string>('');
+
+  /**
+   * Clear cache for specific destinations or all
+   */
+  const clearCache = useCallback((destinations?: string[]) => {
+    if (!destinations) {
+      pricesCache.clear();
+      pricesRef.current = {};
+      setPrices({});
+      localStorage.removeItem(STORAGE_KEY);
+      console.log('[useMapPrices] Cleared all cache');
+    } else {
+      // Clear specific destinations for all origins
+      const keysToDelete: string[] = [];
+      pricesCache.forEach((_, key) => {
+        const dest = key.split('-').pop();
+        if (dest && destinations.includes(dest)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => pricesCache.delete(key));
+      
+      destinations.forEach(dest => {
+        delete pricesRef.current[dest];
+      });
+      setPrices({ ...pricesRef.current });
+      debouncedSave();
+      console.log(`[useMapPrices] Cleared cache for ${destinations.length} destinations`);
+    }
+    setPriceVersion(v => v + 1);
+  }, []);
 
   /**
    * Returns destinations that need to be fetched:
@@ -75,10 +191,13 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       
       const cacheKey = getCacheKey(origins, dest);
       
-      // Check global cache
+      // Check global cache with appropriate TTL
       const cached = pricesCache.get(cacheKey);
-      if (cached && (now - cached.timestamp) < CACHE_TTL) {
-        return false; // Valid cache hit
+      if (cached) {
+        const ttl = getTTL(cached.data);
+        if (now - cached.timestamp < ttl) {
+          return false; // Valid cache hit
+        }
       }
       
       // Check session-level prices
@@ -122,10 +241,13 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       const cacheKey = getCacheKey(origins, dest);
       const cached = pricesCache.get(cacheKey);
       
-      if (cached && (now - cached.timestamp) < CACHE_TTL) {
-        // Hydrate from cache immediately
-        pricesRef.current[dest] = cached.data;
-        continue;
+      if (cached) {
+        const ttl = getTTL(cached.data);
+        if (now - cached.timestamp < ttl) {
+          // Hydrate from cache immediately
+          pricesRef.current[dest] = cached.data;
+          continue;
+        }
       }
       
       if (pricesRef.current[dest] !== undefined) continue;
@@ -184,7 +306,9 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
           }
 
           if (data?.success && data?.prices) {
-            const responseTime = Date.now(); // Use current time, not the debounce start time
+            const responseTime = Date.now();
+            let pricesReceived = 0;
+            
             for (const [iata, priceData] of Object.entries(data.prices)) {
               const price = priceData as MapPrice | null;
               
@@ -200,12 +324,20 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
               
               // Remove from pending
               pendingRequests.delete(cacheKey);
+              pricesReceived++;
             }
-            console.log(`[useMapPrices] Cached ${Object.keys(data.prices).length} prices (TTL: 6h)`);
+            
+            const ttlDesc = 'valid=6h, null=30min';
+            console.log(`[useMapPrices] Cached ${pricesReceived} prices (TTL: ${ttlDesc})`);
           }
         }
 
+        // Trigger re-render with new version
+        setPriceVersion(v => v + 1);
         setPrices({ ...pricesRef.current });
+        
+        // Save to localStorage
+        debouncedSave();
       } catch (err) {
         // Clear pending on error
         pendingKeys.forEach(key => pendingRequests.delete(key));
@@ -232,5 +364,5 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
     };
   }, []);
 
-  return { prices, isLoading, error, fetchPrices, getMissingDestinations };
+  return { prices, isLoading, error, fetchPrices, getMissingDestinations, priceVersion, clearCache };
 }
