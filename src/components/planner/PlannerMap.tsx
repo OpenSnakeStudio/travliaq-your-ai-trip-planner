@@ -685,186 +685,181 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     });
 
     // Add or update markers for current hubs
+    // IMPORTANT: Each airport is wrapped in try-catch to isolate failures
     filteredAirports.forEach((airport, idx) => {
-      const hubId = hubIdOf(airport);
-      const existingMarker = displayedAirportsRef.current.get(hubId);
-      
-      // Check if this is the departure city (origin) - check all departure airports
-      const isOrigin =
-        (userDepartureIata && airport.iata.toUpperCase() === userDepartureIata) ||
-        (userDepartureCity && airport.cityName?.toLowerCase().trim() === userDepartureCity) ||
-        departureAirports.some(da => da.toUpperCase() === airport.iata.toUpperCase());
-      
-      // Get price data for this airport - use minimum price across all airports in the hub
-      const hubIatas = airport.allIatas && airport.allIatas.length > 0 ? airport.allIatas : [airport.iata];
-      let priceValue: number | null | undefined = undefined;
-      let hasAnyPrice = false;
-      
-      for (const iata of hubIatas) {
-        const pd = prices[iata];
-        if (pd !== undefined) {
-          hasAnyPrice = true;
-          if (pd !== null && pd.price !== null && pd.price !== undefined) {
-            if (priceValue === undefined || priceValue === null || pd.price < priceValue) {
-              priceValue = pd.price;
-            }
-          } else if (priceValue === undefined) {
-            // Keep track that we got a null response (no flights)
-            priceValue = null;
-          }
-        }
-      }
-      const hasPrice = hasAnyPrice;
-      
-      // IMPORTANT UX RULE: if we don't have a real price (number), we don't show the city marker.
-      // - undefined: not fetched yet
-      // - null: "no flights" returned by API
-      // NOTE: departureAirports.length is guaranteed > 0 in this effect (we early-return otherwise)
-      const shouldHideBecauseNoPrice = !isOrigin && (priceValue === null || priceValue === undefined);
-
-      // If this is the departure city and zoom is low, or we don't have a price, hide the marker
-      if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoPrice) {
-        if (existingMarker) {
-          const el = existingMarker.getElement();
-          el.style.opacity = "0";
-          el.style.pointerEvents = "none";
-        }
-        return; // Skip creating/showing this marker
-      }
-
-      if (existingMarker) {
-        // Keep the marker, only update position if it really changed (prevents micro-jitter)
-        const prev = existingMarker.getLngLat();
-        if (Math.abs(prev.lng - airport.lng) > 0.0001 || Math.abs(prev.lat - airport.lat) > 0.0001) {
-          existingMarker.setLngLat([airport.lng, airport.lat]);
-        }
-
-        const el = existingMarker.getElement();
-        el.style.opacity = "1";
-        el.style.pointerEvents = "auto";
+      try {
+        const hubId = hubIdOf(airport);
+        const existingMarker = displayedAirportsRef.current.get(hubId);
         
-        // Update price text in existing marker
-        const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
-        if (priceSpan) {
-          const newPriceText = isOrigin
-            ? "Départ"
-            : (departureAirports.length === 0 ? "—" : `${priceValue}€`);
-
-          if (priceSpan.textContent !== newPriceText) {
-            priceSpan.textContent = newPriceText;
-            priceSpan.style.color = isOrigin || departureAirports.length === 0 ? "#475569" : "#0d9488";
+        // Check if this is the departure city (origin) - check all departure airports
+        const isOrigin =
+          (userDepartureIata && airport.iata.toUpperCase() === userDepartureIata) ||
+          (userDepartureCity && airport.cityName?.toLowerCase().trim() === userDepartureCity) ||
+          departureAirports.some(da => da.toUpperCase() === airport.iata.toUpperCase());
+        
+        // Get price data for this airport - use minimum price across all airports in the hub
+        const hubIatas = airport.allIatas && airport.allIatas.length > 0 ? airport.allIatas : [airport.iata];
+        let priceValue: number | null | undefined = undefined;
+        let hasAnyPrice = false;
+        
+        for (const iata of hubIatas) {
+          const pd = prices[iata];
+          if (pd !== undefined) {
+            hasAnyPrice = true;
+            if (pd !== null && pd.price !== null && pd.price !== undefined) {
+              if (priceValue === undefined || priceValue === null || pd.price < priceValue) {
+                priceValue = pd.price;
+              }
+            } else if (priceValue === undefined) {
+              priceValue = null;
+            }
           }
         }
-        return;
-      }
+        
+        // IMPORTANT UX RULE: if we don't have a real price (number), we don't show the city marker.
+        const shouldHideBecauseNoPrice = !isOrigin && (priceValue === null || priceValue === undefined);
 
-      // Create new marker
-      const el = document.createElement("div");
-      el.className = "airport-marker";
+        // If this is the departure city and zoom is low, or we don't have a price, hide the marker
+        if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoPrice) {
+          if (existingMarker) {
+            const el = existingMarker.getElement();
+            el.style.opacity = "0";
+            el.style.pointerEvents = "none";
+          }
+          return; // Skip creating/showing this marker
+        }
 
-      const cityName = airport.cityName || airport.name;
-      const priceText = isOrigin
-        ? "Départ"
-        : (departureAirports.length === 0 ? "—" : `${priceValue}€`);
+        if (existingMarker) {
+          // Keep the marker, only update position if it really changed
+          const prev = existingMarker.getLngLat();
+          if (Math.abs(prev.lng - airport.lng) > 0.0001 || Math.abs(prev.lat - airport.lat) > 0.0001) {
+            existingMarker.setLngLat([airport.lng, airport.lat]);
+          }
 
-      // NOTE: Do NOT set `transform` on the marker element itself.
-      el.style.cssText = `
-        opacity: 0;
-        transition: opacity 0.2s ease-out;
-      `;
+          const el = existingMarker.getElement();
+          el.style.opacity = "1";
+          el.style.pointerEvents = "auto";
+          
+          // Update price text in existing marker
+          const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
+          if (priceSpan) {
+            const newPriceText = isOrigin ? "Départ" : `${priceValue}€`;
+            if (priceSpan.textContent !== newPriceText) {
+              priceSpan.textContent = newPriceText;
+              priceSpan.style.color = isOrigin ? "#475569" : "#0d9488";
+            }
+          }
+          return;
+        }
 
-      // Travliaq-style airport badge: city name on top, price below, elegant rounded design
-      el.innerHTML = `
-        <div class="airport-badge" style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          cursor: ${isOrigin ? "default" : "pointer"};
-          transition: transform 0.15s ease-out, filter 0.15s ease-out;
-          transform: scale(0.92);
-          transform-origin: bottom center;
-          filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
-        ">
-          <div style="
+        // Create new marker
+        const el = document.createElement("div");
+        el.className = "airport-marker";
+
+        const cityName = airport.cityName || airport.name;
+        const priceText = isOrigin ? "Départ" : `${priceValue}€`;
+
+        el.style.cssText = `
+          opacity: 0;
+          transition: opacity 0.2s ease-out;
+        `;
+
+        // Travliaq-style airport badge
+        el.innerHTML = `
+          <div class="airport-badge" style="
             display: flex;
             flex-direction: column;
             align-items: center;
-            background: linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
-            padding: 5px 10px 4px;
-            border-radius: 10px;
-            border: 1px solid rgba(0,0,0,0.08);
-            min-width: 44px;
+            cursor: ${isOrigin ? "default" : "pointer"};
+            transition: transform 0.15s ease-out, filter 0.15s ease-out;
+            transform: scale(0.92);
+            transform-origin: bottom center;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
           ">
-            <span style="
-              color: #1e293b;
-              font-size: 9px;
-              font-weight: 600;
-              letter-spacing: 0.01em;
-              line-height: 1.1;
-              max-width: 80px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            ">${cityName}</span>
-            <span class="airport-price" style="
-              color: ${isOrigin || priceValue === null || priceValue === undefined ? "#475569" : "#0d9488"};
-              font-size: 11px;
-              font-weight: 700;
-              line-height: 1.2;
-              margin-top: 1px;
-            ">${priceText}</span>
+            <div style="
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              background: linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
+              padding: 5px 10px 4px;
+              border-radius: 10px;
+              border: 1px solid rgba(0,0,0,0.08);
+              min-width: 44px;
+            ">
+              <span style="
+                color: #1e293b;
+                font-size: 9px;
+                font-weight: 600;
+                letter-spacing: 0.01em;
+                line-height: 1.1;
+                max-width: 80px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              ">${cityName}</span>
+              <span class="airport-price" style="
+                color: ${isOrigin ? "#475569" : "#0d9488"};
+                font-size: 11px;
+                font-weight: 700;
+                line-height: 1.2;
+                margin-top: 1px;
+              ">${priceText}</span>
+            </div>
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 6px solid transparent;
+              border-right: 6px solid transparent;
+              border-top: 7px solid rgba(255,255,255,0.98);
+              margin-top: -1px;
+              filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+            "></div>
           </div>
-          <div style="
-            width: 0;
-            height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-top: 7px solid rgba(255,255,255,0.98);
-            margin-top: -1px;
-            filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
-          "></div>
-        </div>
-      `;
+        `;
 
-      // Animate in with staggered delay (capped)
-      const delay = Math.min(idx * 15, 300);
-      const badge = el.querySelector(".airport-badge") as HTMLElement | null;
+        // Animate in with staggered delay (capped)
+        const delay = Math.min(idx * 15, 300);
+        const badge = el.querySelector(".airport-badge") as HTMLElement | null;
 
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          el.style.opacity = "1";
-          if (badge) badge.style.transform = "scale(1)";
-        }, delay);
-      });
-
-      // Hover effects - subtle scale + lift (disabled for origin)
-      if (!isOrigin) {
-        badge?.addEventListener("mouseenter", () => {
-          badge.style.transform = "scale(1.08)";
-          badge.style.filter = "drop-shadow(0 4px 10px rgba(0,0,0,0.3))";
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            el.style.opacity = "1";
+            if (badge) badge.style.transform = "scale(1)";
+          }, delay);
         });
-        badge?.addEventListener("mouseleave", () => {
-          badge.style.transform = "scale(1)";
-          badge.style.filter = "drop-shadow(0 2px 6px rgba(0,0,0,0.25))";
+
+        // Hover effects (disabled for origin)
+        if (!isOrigin) {
+          badge?.addEventListener("mouseenter", () => {
+            badge.style.transform = "scale(1.08)";
+            badge.style.filter = "drop-shadow(0 4px 10px rgba(0,0,0,0.3))";
+          });
+          badge?.addEventListener("mouseleave", () => {
+            badge.style.transform = "scale(1)";
+            badge.style.filter = "drop-shadow(0 2px 6px rgba(0,0,0,0.25))";
+          });
+        }
+
+        // Click handler (disabled for origin)
+        badge?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (isOrigin) return;
+          console.log(`[PlannerMap] Hub clicked: ${hubId} (cheapest=${airport.iata}) - ${airport.cityName}`);
+          eventBus.emit("airports:click", { airport });
         });
+
+        const marker = new mapboxgl.Marker({
+          element: el,
+          anchor: "center",
+        })
+          .setLngLat([airport.lng, airport.lat])
+          .addTo(map.current!);
+
+        displayedAirportsRef.current.set(hubId, marker);
+      } catch (err) {
+        // Isolate failure: skip this airport, log warning, continue with others
+        console.warn(`[PlannerMap] Failed to render marker for ${airport?.iata ?? 'unknown'}:`, err);
       }
-
-      // Click handler - emit event for flight form (disabled for origin)
-      badge?.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (isOrigin) return;
-        console.log(`[PlannerMap] Hub clicked: ${hubId} (cheapest=${airport.iata}) - ${airport.cityName}`);
-        eventBus.emit("airports:click", { airport });
-      });
-
-      const marker = new mapboxgl.Marker({
-        element: el,
-        anchor: "center",
-      })
-        .setLngLat([airport.lng, airport.lat])
-        .addTo(map.current!);
-
-      displayedAirportsRef.current.set(hubId, marker);
     });
 
     return () => {
