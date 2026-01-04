@@ -29,9 +29,8 @@ interface UseMapPricesResult {
 }
 
 // Constants
-const STORAGE_KEY = 'travliaq_price_cache_v2';
-const CACHE_TTL_WITH_PRICE = 6 * 60 * 60 * 1000; // 6 hours for valid prices
-const CACHE_TTL_NULL_PRICE = 30 * 60 * 1000; // 30 minutes for null prices (allow retry)
+const STORAGE_KEY = 'travliaq_price_cache_v3';
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours for ALL prices (including null - no flight available)
 const MAX_CACHE_ENTRIES = 500;
 
 // Cache with TTL - persists across component remounts
@@ -55,9 +54,9 @@ function getOriginsKey(origins: string[]): string {
   return [...origins].sort().join(',');
 }
 
-// Get TTL based on price value
-function getTTL(priceData: MapPrice | null): number {
-  return priceData !== null ? CACHE_TTL_WITH_PRICE : CACHE_TTL_NULL_PRICE;
+// Get TTL - same for all (null = no flight, we remember that)
+function getTTL(): number {
+  return CACHE_TTL;
 }
 
 // Load cache from localStorage
@@ -74,8 +73,7 @@ function loadCacheFromStorage(): void {
     let validCount = 0;
     
     for (const [key, entry] of Object.entries(parsed)) {
-      const ttl = getTTL(entry.data);
-      if (now - entry.timestamp < ttl) {
+      if (now - entry.timestamp < CACHE_TTL) {
         pricesCache.set(key, entry);
         validCount++;
       }
@@ -95,8 +93,7 @@ function saveCacheToStorage(): void {
     const entries: [string, CacheEntry][] = [];
     
     pricesCache.forEach((entry, key) => {
-      const ttl = getTTL(entry.data);
-      if (now - entry.timestamp < ttl) {
+      if (now - entry.timestamp < CACHE_TTL) {
         entries.push([key, entry]);
       }
     });
@@ -191,13 +188,10 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       
       const cacheKey = getCacheKey(origins, dest);
       
-      // Check global cache with appropriate TTL
+      // Check global cache (6h TTL for ALL prices including null)
       const cached = pricesCache.get(cacheKey);
-      if (cached) {
-        const ttl = getTTL(cached.data);
-        if (now - cached.timestamp < ttl) {
-          return false; // Valid cache hit
-        }
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        return false; // Valid cache hit - don't re-request
       }
       
       // Check session-level prices
@@ -241,13 +235,10 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       const cacheKey = getCacheKey(origins, dest);
       const cached = pricesCache.get(cacheKey);
       
-      if (cached) {
-        const ttl = getTTL(cached.data);
-        if (now - cached.timestamp < ttl) {
-          // Hydrate from cache immediately
-          pricesRef.current[dest] = cached.data;
-          continue;
-        }
+      if (cached && now - cached.timestamp < CACHE_TTL) {
+        // Hydrate from cache immediately (includes null = no flight)
+        pricesRef.current[dest] = cached.data;
+        continue;
       }
       
       if (pricesRef.current[dest] !== undefined) continue;
@@ -327,8 +318,7 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
               pricesReceived++;
             }
             
-            const ttlDesc = 'valid=6h, null=30min';
-            console.log(`[useMapPrices] Cached ${pricesReceived} prices (TTL: ${ttlDesc})`);
+            console.log(`[useMapPrices] Cached ${pricesReceived} prices (TTL: 6h for all)`);
           }
         }
 
