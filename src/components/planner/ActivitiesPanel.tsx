@@ -616,7 +616,7 @@ const ActivitiesPanel = () => {
   return (
     <div className="space-y-3" data-tour="activities-panel">
       {/* City Tabs + Add button */}
-      <div className="flex gap-1.5 flex-wrap items-center" data-tour="activities-widget">
+      <div className="flex gap-1.5 flex-wrap items-center">
         {cities.map((city, index) => (
           <div
             key={city.id}
@@ -766,7 +766,7 @@ const ActivitiesPanel = () => {
           {currentView === "filters" && (
             <div className="space-y-4">
               {/* Filters Card */}
-              <div className="rounded-xl border border-border/40 bg-card/50 p-3" data-tour="activities-widget">
+              <div className="rounded-xl border border-border/40 bg-card/50 p-3">
                 <ActivityFilters
                   filters={activityState.activeFilters}
                   onFiltersChange={updateFilters}

@@ -323,7 +323,7 @@ export default function OnboardingTour({
 
   const steps: DriveStep[] = [
     {
-      element: "body",
+      element: "#root",
       popover: {
         title: "Bienvenue sur Travliaq !",
         description: `
@@ -448,7 +448,7 @@ export default function OnboardingTour({
       },
     },
     {
-      element: "body",
+      element: "#root",
       popover: {
         title: "🚀 C'est parti !",
         description: `
@@ -487,7 +487,9 @@ export default function OnboardingTour({
           stageRadius: 16,
           animate: true,
           smoothScroll: false,
-          disableActiveInteraction: true,
+          // Important: garder l'UI du popover cliquable même quand on cible des conteneurs larges.
+          // (Avec certains targets comme body/#root, le mode "disableActiveInteraction" peut bloquer les clics.)
+          disableActiveInteraction: false,
           popoverClass: "travliaq-popover",
           nextBtnText: "Suivant →",
           prevBtnText: "← Précédent",

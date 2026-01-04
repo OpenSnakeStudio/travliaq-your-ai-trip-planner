@@ -1535,7 +1535,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
         </div>
       </div>
 
-      <div data-tour="flights-widget">
+      <div>
         {/* Route Builder */}
         <FlightRouteBuilder
           legs={legs}

@@ -1755,7 +1755,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [center, zoom]);
 
   return (
-    <div className="absolute inset-0 w-full h-full relative">
+    <div className="absolute inset-0 w-full h-full relative" data-tour="map-area">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" style={{ minHeight: "100%" }} />
 
       {/* Search in Area Button - Only visible on activities tab */}
