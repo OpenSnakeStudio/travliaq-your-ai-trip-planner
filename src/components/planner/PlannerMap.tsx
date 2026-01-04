@@ -520,19 +520,15 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     // Create a set of current airport IATAs for quick lookup
     const currentIatas = new Set(airports.map((a) => a.iata));
 
-    // Remove markers that are no longer in the viewport
+    // Remove markers that are no longer in the viewport - IMMEDIATE removal to prevent glitches
+    const toRemove: string[] = [];
     displayedAirportsRef.current.forEach((marker, iata) => {
       if (!currentIatas.has(iata)) {
-        const el = marker.getElement();
-        el.style.opacity = "0";
-        el.style.transform = "scale(0.8)";
-        // Remove after animation
-        setTimeout(() => {
-          marker.remove();
-          displayedAirportsRef.current.delete(iata);
-        }, 200);
+        marker.remove();
+        toRemove.push(iata);
       }
     });
+    toRemove.forEach((iata) => displayedAirportsRef.current.delete(iata));
 
     // Add or update markers for current airports
     airports.forEach((airport, idx) => {
