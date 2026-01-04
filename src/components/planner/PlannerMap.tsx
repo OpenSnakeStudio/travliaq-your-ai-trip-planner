@@ -707,11 +707,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return txt.endsWith('€') && !['…', '—'].includes(txt);
     };
 
-    // Graceful marker removal timings:
-    // - Markers WITH a confirmed price: keep them MUCH longer (30s) so they stay visible when zooming out
-    // - Markers without price: short grace period (2s)
-    const REMOVAL_GRACE_WITH_PRICE_MS = 30_000; // 30 seconds for priced markers
-    const REMOVAL_GRACE_NO_PRICE_MS = 2_000;    // 2 seconds for non-priced
+    // Graceful marker removal:
+    // - Markers WITH a confirmed price: keep them FOREVER (no removal) to save API calls
+    // - Markers without price: short grace period (2s) then remove
+    const REMOVAL_GRACE_NO_PRICE_MS = 2_000;
 
     // If a hub is present again, cancel its pending removal.
     currentHubIds.forEach((hubId) => {
@@ -723,18 +722,23 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     });
 
     // Schedule removal for hubs no longer in API response
+    // Markers WITH a confirmed price: keep them FOREVER (no timeout) to save API calls
+    // Markers WITHOUT price: remove after short grace period
     displayedAirportsRef.current.forEach((marker, hubId) => {
       if (currentHubIds.has(hubId)) return;
       if (airportRemovalTimeoutsRef.current.has(hubId)) return;
 
       const hasPrice = markerHasPrice(hubId);
-      const gracePeriod = hasPrice ? REMOVAL_GRACE_WITH_PRICE_MS : REMOVAL_GRACE_NO_PRICE_MS;
+      
+      // If marker has price, keep it indefinitely - no removal scheduled
+      if (hasPrice) return;
 
+      // Only schedule removal for markers without price
       const timeout = setTimeout(() => {
         marker.remove();
         displayedAirportsRef.current.delete(hubId);
         airportRemovalTimeoutsRef.current.delete(hubId);
-      }, gracePeriod);
+      }, REMOVAL_GRACE_NO_PRICE_MS);
 
       airportRemovalTimeoutsRef.current.set(hubId, timeout);
     });
