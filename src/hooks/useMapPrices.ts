@@ -22,18 +22,24 @@ interface UseMapPricesResult {
   fetchPrices: (origins: string[], destinations: string[]) => void;
 }
 
-// Cache with TTL (30 minutes as per API)
+// Cache with TTL - persists across component remounts
 // Key is sorted origins + destination to ensure stability
 const pricesCache = new Map<string, { data: MapPrice | null; timestamp: number }>();
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+// Track pending destinations to avoid duplicate requests
+const pendingRequests = new Set<string>();
 
 function getCacheKey(origins: string[], destination: string): string {
-  // Create a copy to avoid mutating the original array
   return `${[...origins].sort().join(',')}-${destination}`;
 }
 
+function getOriginsKey(origins: string[]): string {
+  return [...origins].sort().join(',');
+}
+
 export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesResult {
-  const { enabled = true, debounceMs = 300 } = options;
+  const { enabled = true, debounceMs = 800 } = options; // Increased debounce to reduce API calls
   
   // Use ref to accumulate prices (never reset, only update)
   const pricesRef = useRef<MapPricesResult>({});
@@ -50,8 +56,9 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       return;
     }
 
-    // If origins changed, clear the accumulated prices (create copy to avoid mutation)
-    const originsKey = [...origins].sort().join(',');
+    const originsKey = getOriginsKey(origins);
+    
+    // If origins changed, clear the accumulated prices
     if (originsKey !== lastOriginsKey.current) {
       pricesRef.current = {};
       lastOriginsKey.current = originsKey;
@@ -63,26 +70,35 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
     }
 
     debounceTimeout.current = setTimeout(async () => {
-      // Check cache first
       const now = Date.now();
-      const cachedPrices: MapPricesResult = { ...pricesRef.current };
       const uncachedDestinations: string[] = [];
 
+      // Check what we need to fetch
       for (const dest of destinations) {
         const cacheKey = getCacheKey(origins, dest);
         const cached = pricesCache.get(cacheKey);
         
+        // Use cache if valid
         if (cached && (now - cached.timestamp) < CACHE_TTL) {
-          cachedPrices[dest] = cached.data;
-        } else if (pricesRef.current[dest] === undefined) {
-          // Only fetch if not already in our accumulated prices
-          uncachedDestinations.push(dest);
+          pricesRef.current[dest] = cached.data;
+          continue;
         }
+        
+        // Skip if already in accumulated prices (from previous fetch in same session)
+        if (pricesRef.current[dest] !== undefined) {
+          continue;
+        }
+        
+        // Skip if request is pending
+        if (pendingRequests.has(cacheKey)) {
+          continue;
+        }
+        
+        uncachedDestinations.push(dest);
       }
 
-      // Update accumulated prices with cached values
-      pricesRef.current = { ...pricesRef.current, ...cachedPrices };
-      setPrices(pricesRef.current);
+      // Update state with what we have
+      setPrices({ ...pricesRef.current });
 
       // If all cached/known, return immediately
       if (uncachedDestinations.length === 0) {
@@ -91,6 +107,10 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
 
       setIsLoading(true);
       setError(null);
+
+      // Mark destinations as pending
+      const pendingKeys = uncachedDestinations.map(dest => getCacheKey(origins, dest));
+      pendingKeys.forEach(key => pendingRequests.add(key));
 
       // Abort previous request
       if (abortController.current) {
@@ -108,7 +128,7 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
         for (const chunk of chunks) {
           const { data, error: fnError } = await supabase.functions.invoke('map-prices', {
             body: {
-              origins,  // Send all origin airports
+              origins,
               destinations: chunk,
               adults: 1,
               currency: 'EUR'
@@ -127,16 +147,23 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
               pricesRef.current[iata] = price;
               
               // Update cache
-              pricesCache.set(getCacheKey(origins, iata), {
+              const cacheKey = getCacheKey(origins, iata);
+              pricesCache.set(cacheKey, {
                 data: price,
                 timestamp: now
               });
+              
+              // Remove from pending
+              pendingRequests.delete(cacheKey);
             }
           }
         }
 
         setPrices({ ...pricesRef.current });
       } catch (err) {
+        // Clear pending on error
+        pendingKeys.forEach(key => pendingRequests.delete(key));
+        
         if ((err as Error).name !== 'AbortError') {
           console.error('[useMapPrices] Error fetching prices:', err);
           setError((err as Error).message);
