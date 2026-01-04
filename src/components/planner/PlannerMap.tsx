@@ -320,9 +320,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const departureIata = flightMem?.departure?.iata;
   const departureCity = flightMem?.departure?.city;
   
+  // Cache departure airports to avoid resetting when departure city goes out of view
+  const cachedDepartureAirportsRef = useRef<string[]>([]);
+  
   // Find all airports for the departure city (for multi-airport cities)
+  // Only update when departure city/iata changes, NOT when airports change
   const departureAirports = useMemo(() => {
-    if (!departureCity) return [];
+    if (!departureCity) {
+      cachedDepartureAirportsRef.current = [];
+      return [];
+    }
     
     // Find the airport marker for the departure city to get allIatas
     const cityNormalized = departureCity.toLowerCase().trim();
@@ -331,13 +338,22 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       a.iata === departureIata
     );
     
-    // If we found a hub with multiple airports, use all of them
+    // If we found a hub with multiple airports, cache and use them
     if (matchingHub?.allIatas && matchingHub.allIatas.length > 0) {
+      cachedDepartureAirportsRef.current = matchingHub.allIatas;
       return matchingHub.allIatas;
     }
     
+    // If hub not found but we have cached airports for this departure, keep using them
+    if (cachedDepartureAirportsRef.current.length > 0 && 
+        cachedDepartureAirportsRef.current.some(iata => iata === departureIata)) {
+      return cachedDepartureAirportsRef.current;
+    }
+    
     // Fallback to single airport if available
-    return departureIata ? [departureIata] : [];
+    const fallback = departureIata ? [departureIata] : [];
+    cachedDepartureAirportsRef.current = fallback;
+    return fallback;
   }, [airports, departureCity, departureIata]);
 
   // Get all visible airport IATAs for map-prices API (excluding departure airports)
