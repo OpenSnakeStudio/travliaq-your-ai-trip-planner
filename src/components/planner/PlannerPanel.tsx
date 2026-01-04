@@ -91,20 +91,20 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
           </div>
         )}
         <div className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]">
-          <div style={{ display: activeTab === "flights" ? "block" : "none" }}>
+          <div data-tour="widget-flights" style={{ display: activeTab === "flights" ? "block" : "none" }}>
             <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} flightFormData={flightFormData} onFlightFormDataConsumed={onFlightFormDataConsumed} onCountrySelected={onCountrySelected} onAskAirportChoice={onAskAirportChoice} onAskDualAirportChoice={onAskDualAirportChoice} onAskAirportConfirmation={onAskAirportConfirmation} selectedAirport={selectedAirport} onSelectedAirportConsumed={onSelectedAirportConsumed} onUserLocationDetected={onUserLocationDetected} onSearchReady={onSearchReady} triggerSearch={triggerSearch} onSearchTriggered={onSearchTriggered} confirmedMultiAirports={confirmedMultiAirports} onConfirmedMultiAirportsConsumed={onConfirmedMultiAirportsConsumed} />
           </div>
-          <div style={{ display: activeTab === "activities" ? "block" : "none" }}>
+          <div data-tour="widget-activities" style={{ display: activeTab === "activities" ? "block" : "none" }}>
             <Suspense fallback={<ActivitiesPanelSkeleton />}>
               <ActivitiesPanel />
             </Suspense>
           </div>
-          <div style={{ display: activeTab === "stays" ? "block" : "none" }}>
+          <div data-tour="widget-stays" style={{ display: activeTab === "stays" ? "block" : "none" }}>
             <Suspense fallback={<AccommodationPanelSkeleton />}>
               <AccommodationPanel onMapMove={onMapMove} />
             </Suspense>
           </div>
-          <div style={{ display: activeTab === "preferences" ? "block" : "none" }}>
+          <div data-tour="widget-preferences" style={{ display: activeTab === "preferences" ? "block" : "none" }}>
             <Suspense fallback={<PreferencesPanelSkeleton />}>
               <PreferencesPanel />
             </Suspense>
