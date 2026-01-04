@@ -313,7 +313,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   });
 
   // Get route points from flight memory
-  const { getRoutePoints } = useFlightMemory();
+  const { getRoutePoints, memory: flightMem } = useFlightMemory();
 
   // Get accommodation entries for markers
   const { memory: accommodationMemory } = useAccommodationMemory();
@@ -517,8 +517,21 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return;
     }
 
+    // Get user's departure airport IATA to exclude from display
+    const userDepartureIata = flightMem?.departure?.iata?.toUpperCase();
+
+    // Filter airports: exclude user's departure airport and sort large airports first
+    const filteredAirports = airports
+      .filter((a) => !userDepartureIata || a.iata.toUpperCase() !== userDepartureIata)
+      .sort((a, b) => {
+        // Large airports first
+        if (a.type === "large" && b.type !== "large") return -1;
+        if (a.type !== "large" && b.type === "large") return 1;
+        return 0;
+      });
+
     // Create a set of current airport IATAs for quick lookup
-    const currentIatas = new Set(airports.map((a) => a.iata));
+    const currentIatas = new Set(filteredAirports.map((a) => a.iata));
 
     // Remove markers that are no longer in the viewport - IMMEDIATE removal to prevent glitches
     const toRemove: string[] = [];
@@ -531,7 +544,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     toRemove.forEach((iata) => displayedAirportsRef.current.delete(iata));
 
     // Add or update markers for current airports
-    airports.forEach((airport, idx) => {
+    filteredAirports.forEach((airport, idx) => {
       const existingMarker = displayedAirportsRef.current.get(airport.iata);
       
       if (existingMarker) {
