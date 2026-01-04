@@ -436,23 +436,19 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [airports, departureAirports]);
 
   // Fetch real prices from map-prices API
-  const { prices, isLoading: isLoadingPrices, fetchPrices, getMissingDestinations, priceVersion } = useMapPrices({
+  const { prices, isLoading: isLoadingPrices, fetchPrices, priceVersion } = useMapPrices({
     enabled: activeTab === "flights" && departureAirports.length > 0,
   });
 
-  // Calculate missing destinations (not cached, not pending, not known)
-  const missingDestinationIatas = useMemo(() => {
-    if (departureAirports.length === 0 || destinationIatas.length === 0) return [];
-    return getMissingDestinations(departureAirports, destinationIatas);
-  }, [departureAirports, destinationIatas, getMissingDestinations]);
-
-  // Trigger price fetch ONLY for missing destinations
+  // Trigger price fetch for ALL visible destinations.
+  // The hook itself handles cache hydration + only fetching uncached items,
+  // which is more stable than pre-computing "missing" here.
   useEffect(() => {
-    if (departureAirports.length > 0 && missingDestinationIatas.length > 0) {
-      console.log(`[PlannerMap] Fetching prices for ${missingDestinationIatas.length} missing destinations (total visible: ${destinationIatas.length})`);
-      fetchPrices(departureAirports, missingDestinationIatas);
-    }
-  }, [departureAirports, missingDestinationIatas, fetchPrices, destinationIatas.length]);
+    if (activeTab !== "flights") return;
+    if (departureAirports.length === 0 || destinationIatas.length === 0) return;
+
+    fetchPrices(departureAirports, destinationIatas);
+  }, [activeTab, departureAirports, destinationIatas, fetchPrices]);
 
   // Get accommodation entries for markers
   const { memory: accommodationMemory } = useAccommodationMemory();
