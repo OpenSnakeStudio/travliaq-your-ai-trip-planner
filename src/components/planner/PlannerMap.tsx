@@ -843,14 +843,20 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           el.style.opacity = "1";
           el.style.pointerEvents = "auto";
           
-          // Update price text in existing marker
+          // Update price text in existing marker (only show prices on flights tab)
           const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
           if (priceSpan) {
-            const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
-            const newPriceText = isOrigin ? "Départ" : displayPrice;
-            if (priceSpan.textContent !== newPriceText) {
-              priceSpan.textContent = newPriceText;
-              priceSpan.style.color = isOrigin ? "#475569" : "#0d9488";
+            if (activeTab === "flights") {
+              const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
+              const newPriceText = isOrigin ? "Départ" : displayPrice;
+              if (priceSpan.textContent !== newPriceText) {
+                priceSpan.textContent = newPriceText;
+                priceSpan.style.color = isOrigin ? "#475569" : "#0d9488";
+              }
+              priceSpan.style.display = "";
+            } else {
+              // Hide price on other tabs
+              priceSpan.style.display = "none";
             }
           }
           return;
@@ -861,6 +867,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         el.className = "airport-marker";
 
         const cityName = airport.cityName || airport.name;
+        // Only show prices on flights tab
+        const showPrice = activeTab === "flights";
         const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
         const priceText = isOrigin ? "Départ" : displayPrice;
 
@@ -908,6 +916,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
                 font-weight: 700;
                 line-height: 1.2;
                 margin-top: 1px;
+                display: ${showPrice ? "block" : "none"};
               ">${priceText}</span>
             </div>
             <div style="
