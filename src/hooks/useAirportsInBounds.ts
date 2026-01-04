@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface AirportMarker {
   hubId?: string;         // Stable identifier for the city hub (preferred)
-  iata: string;           // Primary airport IATA (cheapest one)
+  iata: string;           // Primary airport IATA
   name: string;
   cityName: string | null;
   countryCode: string | null;
@@ -11,7 +11,6 @@ export interface AirportMarker {
   lat: number;            // City center coordinates
   lng: number;
   type: "large" | "medium";
-  price: number;          // Cheapest price in city
   airportCount?: number;  // Number of airports in this city
   allIatas?: string[];    // All airport IATA codes (for API calls)
 }

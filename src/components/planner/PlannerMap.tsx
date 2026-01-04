@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback, memo } from "react";
+import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/mapbox-overrides.css";
@@ -8,6 +8,7 @@ import { useFlightMemory, type MemoryRoutePoint } from "@/contexts/FlightMemoryC
 import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
 import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBounds";
+import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
 import eventBus from "@/lib/eventBus";
 
 // Destination click event for popup
@@ -315,6 +316,26 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Get route points from flight memory
   const { getRoutePoints, memory: flightMem } = useFlightMemory();
 
+  // Get user's departure airport for map-prices API
+  const departureIata = flightMem?.departure?.iata;
+
+  // Get all visible airport IATAs for map-prices API
+  const destinationIatas = useMemo(() => {
+    return airports.map(a => a.iata).filter(iata => iata !== departureIata);
+  }, [airports, departureIata]);
+
+  // Fetch real prices from map-prices API
+  const { prices, isLoading: isLoadingPrices, fetchPrices } = useMapPrices({
+    enabled: activeTab === "flights" && !!departureIata,
+  });
+
+  // Trigger price fetch when airports or departure change
+  useEffect(() => {
+    if (departureIata && destinationIatas.length > 0) {
+      fetchPrices(departureIata, destinationIatas);
+    }
+  }, [departureIata, destinationIatas, fetchPrices]);
+
   // Get accommodation entries for markers
   const { memory: accommodationMemory } = useAccommodationMemory();
 
@@ -596,6 +617,31 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         const el = existingMarker.getElement();
         el.style.opacity = "1";
         el.style.pointerEvents = "auto";
+        
+        // Update price text in existing marker
+        const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
+        if (priceSpan) {
+          const priceData = prices[airport.iata];
+          const hasPrice = priceData !== undefined;
+          const priceValue = priceData?.price;
+          let newPriceText: string;
+          if (isOrigin) {
+            newPriceText = "Départ";
+          } else if (!departureIata) {
+            newPriceText = "—";
+          } else if (!hasPrice && isLoadingPrices) {
+            newPriceText = "...";
+          } else if (priceValue === null || priceValue === undefined) {
+            newPriceText = "—";
+          } else {
+            newPriceText = `${priceValue}€`;
+          }
+          if (priceSpan.textContent !== newPriceText) {
+            priceSpan.textContent = newPriceText;
+            // Update color based on price availability
+            priceSpan.style.color = (isOrigin || priceValue === null || priceValue === undefined) ? "#475569" : "#0d9488";
+          }
+        }
         return;
       }
 
@@ -604,8 +650,23 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       el.className = "airport-marker";
 
       const cityName = airport.cityName || airport.name;
+      // Get price from map-prices API
+      const priceData = prices[airport.iata];
+      const hasPrice = priceData !== undefined;
+      const priceValue = priceData?.price;
       // isOrigin is already computed above
-      const priceText = isOrigin ? "Départ" : `${airport.price}€`;
+      let priceText: string;
+      if (isOrigin) {
+        priceText = "Départ";
+      } else if (!departureIata) {
+        priceText = "—"; // No departure selected
+      } else if (!hasPrice && isLoadingPrices) {
+        priceText = "..."; // Loading
+      } else if (priceValue === null || priceValue === undefined) {
+        priceText = "—"; // No flights available
+      } else {
+        priceText = `${priceValue}€`;
+      }
 
       // NOTE: Do NOT set `transform` on the marker element itself.
       el.style.cssText = `
@@ -646,8 +707,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
               text-overflow: ellipsis;
               white-space: nowrap;
             ">${cityName}</span>
-            <span style="
-              color: ${isOrigin ? "#475569" : "#0d9488"};
+            <span class="airport-price" style="
+              color: ${isOrigin || priceValue === null || priceValue === undefined ? "#475569" : "#0d9488"};
               font-size: 11px;
               font-weight: 700;
               line-height: 1.2;
@@ -710,7 +771,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     return () => {
       // Don't clear on every change - only on unmount
     };
-  }, [activeTab, mapLoaded, airports, flightMem]);
+  }, [activeTab, mapLoaded, airports, flightMem, prices, isLoadingPrices, departureIata]);
 
   // Cleanup all airport markers on unmount
   useEffect(() => {
