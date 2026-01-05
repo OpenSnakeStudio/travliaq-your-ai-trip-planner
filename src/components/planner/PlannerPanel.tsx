@@ -90,7 +90,11 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
             )}
           </div>
         )}
-        <div className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]">
+        {/* Widget container wrapper - targets the ENTIRE visible widget for onboarding */}
+        <div 
+          className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]"
+          data-tour="widget-container"
+        >
           <div data-tour="widget-flights" style={{ display: activeTab === "flights" ? "block" : "none" }}>
             <FlightsPanel onMapMove={onMapMove} onFlightRoutesChange={onFlightRoutesChange} flightFormData={flightFormData} onFlightFormDataConsumed={onFlightFormDataConsumed} onCountrySelected={onCountrySelected} onAskAirportChoice={onAskAirportChoice} onAskDualAirportChoice={onAskDualAirportChoice} onAskAirportConfirmation={onAskAirportConfirmation} selectedAirport={selectedAirport} onSelectedAirportConsumed={onSelectedAirportConsumed} onUserLocationDetected={onUserLocationDetected} onSearchReady={onSearchReady} triggerSearch={triggerSearch} onSearchTriggered={onSearchTriggered} confirmedMultiAirports={confirmedMultiAirports} onConfirmedMultiAirportsConsumed={onConfirmedMultiAirportsConsumed} />
           </div>
