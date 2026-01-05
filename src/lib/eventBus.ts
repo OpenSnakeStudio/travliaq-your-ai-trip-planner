@@ -18,6 +18,7 @@ import type {
 } from "@/types/flight";
 import type { AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
 import type { ViatorActivity } from "@/types/activity";
+import type { HotelResult } from "@/components/planner/HotelSearchResults";
 
 // ===== Event Types =====
 
@@ -63,6 +64,11 @@ export type PlannerEvents = {
   // Accommodation-related
   "accommodation:update": { city: string; updates: Partial<AccommodationEntry> };
   "accommodation:syncWithFlights": void;
+  
+  // Hotel search results
+  "hotels:results": { hotels: HotelResult[] };
+  "hotels:select": { hotel: HotelResult };
+  "hotels:hover": { hotel: HotelResult | null };
   
   // Activities-related
   "activities:search": {

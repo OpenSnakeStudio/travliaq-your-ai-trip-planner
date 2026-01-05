@@ -300,11 +300,17 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const routeMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
   const memoryMarkersRef = useRef<mapboxgl.Marker[]>([]);
+  const hotelMarkersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const hasAnimatedRef = useRef(false);
   const [isSearchingInArea, setIsSearchingInArea] = useState(false);
   // Removed - using displayedAirportsRef for optimized rendering
   const [currentZoom, setCurrentZoom] = useState(zoom);
+  
+  // Hotel search results state
+  const [hotelResults, setHotelResults] = useState<{ hotels: Array<{ id: string; lat: number; lng: number; pricePerNight: number; name: string }> }>({ hotels: [] });
+  const [hoveredHotelId, setHoveredHotelId] = useState<string | null>(null);
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
 
   // Airports layer hook - enabled only on flights tab
   const { airports, isLoading: isLoadingAirports, fetchAirports } = useAirportsInBounds({
@@ -2083,6 +2089,122 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       attractionPinsRef.current = [];
     };
   }, [activeTab, mapLoaded, activityState.search.attractions]);
+
+  // Listen for hotel events and update state
+  useEffect(() => {
+    const handleHotelResults = (data: { hotels: typeof hotelResults.hotels }) => {
+      setHotelResults(data);
+    };
+    
+    const handleHotelHover = (data: { hotel: { id: string } | null }) => {
+      setHoveredHotelId(data.hotel?.id || null);
+    };
+    
+    const handleHotelSelect = (data: { hotel: { id: string } }) => {
+      setSelectedHotelId(data.hotel.id);
+    };
+
+    eventBus.on("hotels:results", handleHotelResults);
+    eventBus.on("hotels:hover", handleHotelHover);
+    eventBus.on("hotels:select", handleHotelSelect);
+
+    return () => {
+      eventBus.off("hotels:results", handleHotelResults);
+      eventBus.off("hotels:hover", handleHotelHover);
+      eventBus.off("hotels:select", handleHotelSelect);
+    };
+  }, []);
+
+  // Display hotel markers on map (stays tab only)
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    // Clear existing hotel markers
+    hotelMarkersRef.current.forEach((marker) => marker.remove());
+    hotelMarkersRef.current = [];
+
+    // Only show on stays tab
+    if (activeTab !== "stays" || hotelResults.hotels.length === 0) return;
+
+    hotelResults.hotels.forEach((hotel, index) => {
+      const isHovered = hoveredHotelId === hotel.id;
+      const isSelected = selectedHotelId === hotel.id;
+
+      // Create marker element
+      const el = document.createElement("div");
+      el.className = "hotel-price-marker";
+      el.style.cssText = `
+        position: relative;
+        cursor: pointer;
+        z-index: ${isHovered || isSelected ? 50 : 10 + index};
+        transition: all 0.2s ease;
+        transform: ${isHovered || isSelected ? 'scale(1.15)' : 'scale(1)'};
+      `;
+
+      el.innerHTML = `
+        <div style="
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 4px 8px;
+          background: ${isSelected ? 'hsl(var(--primary))' : isHovered ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--card))'};
+          color: ${isSelected || isHovered ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))'};
+          border-radius: 6px;
+          font-weight: 600;
+          font-size: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          border: 2px solid ${isSelected ? 'hsl(var(--primary-foreground))' : isHovered ? 'hsl(var(--primary))' : 'hsl(var(--border))'};
+          white-space: nowrap;
+          min-width: 45px;
+          text-align: center;
+        ">
+          ${hotel.pricePerNight}€
+        </div>
+        <div style="
+          position: absolute;
+          bottom: -5px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 0;
+          height: 0;
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-top: 6px solid ${isSelected ? 'hsl(var(--primary))' : isHovered ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--card))'};
+        "></div>
+      `;
+
+      // Add hover effect
+      el.addEventListener("mouseenter", () => {
+        eventBus.emit("hotels:hover", { hotel: hotel as any });
+      });
+
+      el.addEventListener("mouseleave", () => {
+        eventBus.emit("hotels:hover", { hotel: null });
+      });
+
+      // Click to select
+      el.addEventListener("click", () => {
+        eventBus.emit("hotels:select", { hotel: hotel as any });
+        // Zoom to hotel
+        map.current?.flyTo({
+          center: [hotel.lng, hotel.lat],
+          zoom: 15,
+          duration: 800,
+        });
+      });
+
+      const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })
+        .setLngLat([hotel.lng, hotel.lat])
+        .addTo(map.current!);
+
+      hotelMarkersRef.current.push(marker);
+    });
+
+    return () => {
+      hotelMarkersRef.current.forEach((marker) => marker.remove());
+      hotelMarkersRef.current = [];
+    };
+  }, [activeTab, mapLoaded, hotelResults.hotels, hoveredHotelId, selectedHotelId]);
 
   // Update map center/zoom with fast animation
   // Note: on stays tab, we apply the same horizontal offset used for accommodation focus,
