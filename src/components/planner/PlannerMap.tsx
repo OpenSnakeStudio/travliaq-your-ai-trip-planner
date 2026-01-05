@@ -1268,28 +1268,46 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const routesDrawnRef = useRef(false);
   const lastRouteSignatureRef = useRef<string>("");
 
+  // Track the previous activeTab to detect tab switches
+  const prevActiveTabForFlightsRef = useRef<TabType>(activeTab);
+  // Track if we should animate the map (fitBounds) or just redraw markers
+  const shouldAnimateMapRef = useRef(true);
+  
   // Draw route markers from FlightMemory (most up-to-date source)
   // Only show on flights tab - hide on other tabs
+  // CRITICAL: NO map animation when just switching tabs - only when routes actually change
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     const memoryPoints = getRoutePoints();
     
-    // Create a signature to detect real changes vs. just re-renders
-    const routeSignature = JSON.stringify({
-      points: memoryPoints.map(p => ({
+    // Create a signature for the route POINTS only (not including activeTab)
+    // This way we detect when the route itself changes
+    const pointsSignature = JSON.stringify(
+      memoryPoints.map(p => ({
         lat: p.lat.toFixed(4),
         lng: p.lng.toFixed(4),
         type: p.type,
-      })),
-      activeTab, // Include activeTab in signature to trigger update on tab change
-    });
+      }))
+    );
     
-    // Skip if routes haven't changed (prevents redraw on tab switch)
-    if (routeSignature === lastRouteSignatureRef.current && routesDrawnRef.current) {
+    // Detect if this is just a tab switch (routes unchanged) vs. actual route change
+    const wasOnDifferentTab = prevActiveTabForFlightsRef.current !== activeTab;
+    const routeActuallyChanged = pointsSignature !== lastRouteSignatureRef.current;
+    prevActiveTabForFlightsRef.current = activeTab;
+    
+    // Determine if we should animate the map
+    // Animate ONLY when routes actually change, NOT when just switching tabs
+    shouldAnimateMapRef.current = routeActuallyChanged || !routesDrawnRef.current;
+    
+    // If routes haven't changed AND routes are already drawn AND we're just switching back to flights
+    // Then skip completely - the routes are already visible on the map
+    if (!routeActuallyChanged && routesDrawnRef.current && wasOnDifferentTab && activeTab === "flights") {
+      // Routes already drawn, just switching back to flights tab - do nothing at all
       return;
     }
-    lastRouteSignatureRef.current = routeSignature;
+    
+    lastRouteSignatureRef.current = pointsSignature;
 
     // Clear previous memory markers
     memoryMarkersRef.current.forEach((marker) => marker.remove());
@@ -1698,20 +1716,25 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         });
       }, drawDuration + 100);
 
-      // Fit map to show all points
-      map.current.fitBounds(bounds, {
-        padding: { top: 100, bottom: 100, left: 450, right: 50 },
-        maxZoom: 6,
-      });
+      // Fit map to show all points ONLY if routes actually changed
+      // Don't animate when just switching back to flights tab
+      if (shouldAnimateMapRef.current) {
+        map.current.fitBounds(bounds, {
+          padding: { top: 100, bottom: 100, left: 450, right: 50 },
+          maxZoom: 6,
+        });
+      }
       
       // Mark routes as drawn
       routesDrawnRef.current = true;
     } else if (memoryPoints.length === 1) {
-      // Fly to single point
-      map.current.flyTo({
-        center: [memoryPoints[0].lng, memoryPoints[0].lat],
-        zoom: 5,
-      });
+      // Fly to single point ONLY if routes actually changed
+      if (shouldAnimateMapRef.current) {
+        map.current.flyTo({
+          center: [memoryPoints[0].lng, memoryPoints[0].lat],
+          zoom: 5,
+        });
+      }
       routesDrawnRef.current = true;
     }
   }, [getRoutePoints, mapLoaded, onDestinationClick, activeTab]);
