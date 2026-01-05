@@ -12,16 +12,10 @@ export function useMapState() {
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
 
   // Event listener: map zoom from event bus
-  usePlannerEvent(
-    "map:zoom",
-    useCallback((data) => {
-      // Debug: track unexpected zoom resets
-      // (we log a stack so we can identify the emitter)
-      console.debug("[useMapState] map:zoom", data, new Error("map:zoom").stack);
-      setMapCenter(data.center);
-      setMapZoom(data.zoom);
-    }, [])
-  );
+  usePlannerEvent("map:zoom", useCallback((data) => {
+    setMapCenter(data.center);
+    setMapZoom(data.zoom);
+  }, []));
 
   const handleAnimationComplete = useCallback(() => {
     setInitialAnimationDone(true);

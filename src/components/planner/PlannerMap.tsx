@@ -1081,16 +1081,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, []);
 
   // Animate to user location on initial load - single smooth animation
-  // Guarded by sessionStorage so it never re-triggers (e.g. when closing/opening panels).
   useEffect(() => {
     if (!map.current || !mapLoaded || hasAnimatedRef.current || !animateToUserLocation) return;
-
-    // If we've already completed the intro animation in this session, skip it.
-    if (sessionStorage.getItem("travliaq_map_intro_done") === "true") {
-      hasAnimatedRef.current = true;
-      onAnimationComplete?.();
-      return;
-    }
 
     hasAnimatedRef.current = true;
 
@@ -1109,21 +1101,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
               essential: true,
               curve: 1.2, // Gentle curve
             });
-            setTimeout(() => {
-              sessionStorage.setItem("travliaq_map_intro_done", "true");
-              onAnimationComplete?.();
-            }, 1500);
+            setTimeout(() => onAnimationComplete?.(), 1500);
           },
           () => {
             // Already at Europe, just complete
-            sessionStorage.setItem("travliaq_map_intro_done", "true");
             onAnimationComplete?.();
           },
           { timeout: 2000 }
         );
       } else {
         // Already at Europe, just complete
-        sessionStorage.setItem("travliaq_map_intro_done", "true");
         onAnimationComplete?.();
       }
     }, 300); // Brief settle time
@@ -2283,19 +2270,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Note: on stays tab, we apply the same horizontal offset used for accommodation focus,
   // so clicking a city (which updates `center/zoom`) and switching to the tab feel identical.
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!map.current) return;
 
     const offsetX = activeTab === "stays" ? getStaysOffsetX() : 0;
-
-    // Debug: detect unexpected zoom-outs when closing the panel
-    const currentZoomValue = map.current.getZoom();
-    if (zoom < currentZoomValue - 0.25) {
-      console.debug(
-        "[PlannerMap] flyTo zoom-out detected",
-        { activeTab, isPanelOpen, from: currentZoomValue, to: zoom, center },
-        new Error("flyTo zoom-out").stack
-      );
-    }
 
     map.current.flyTo({
       center: [center[0], center[1]],
@@ -2304,7 +2281,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       essential: true,
       offset: [offsetX, 0],
     });
-  }, [center, zoom, activeTab, getStaysOffsetX, mapLoaded, isPanelOpen]);
+  }, [center, zoom, activeTab, getStaysOffsetX]);
 
   return (
     <div className="absolute inset-0 w-full h-full relative" data-tour="map-area">
