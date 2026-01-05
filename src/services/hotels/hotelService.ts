@@ -12,6 +12,7 @@
  */
 
 import { travliaqClient, getErrorMessage } from '@/services/api/travliaqClient';
+import { logger, LogCategory } from '@/utils/logger';
 
 // ============= Types =============
 
@@ -239,6 +240,22 @@ function hashString(str: string): string {
   return Math.abs(hash).toString(36);
 }
 
+function isHotelsDebugEnabled(): boolean {
+  if (import.meta.env.DEV) return true;
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem('hotels_debug') === '1';
+}
+
+function hotelsDebugLog(message: string, data?: unknown) {
+  if (!isHotelsDebugEnabled()) return;
+  // Console-only: very verbose, for local debugging.
+  console.debug(`[HotelsAPI] ${message}`, data);
+  logger.debug(`HotelsAPI: ${message}`, {
+    category: LogCategory.API,
+    metadata: typeof data === 'object' ? { data } : { value: data },
+  });
+}
+
 function sortObject(obj: unknown): unknown {
   if (obj === null || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(sortObject);
@@ -342,11 +359,18 @@ export async function searchHotels(
   if (!forceRefresh) {
     const cached = getFromCache<HotelSearchResponse>('search', params);
     if (cached) {
-      console.log('[HotelService] Cache hit for search');
+      hotelsDebugLog('search: cache hit', {
+        city: params.city,
+        countryCode: params.countryCode,
+        checkIn: params.checkIn,
+        checkOut: params.checkOut,
+        rooms: params.rooms,
+        filters: params.filters,
+      });
       return cached;
     }
   }
-  
+
   try {
     const requestBody = {
       city: params.city,
@@ -367,20 +391,32 @@ export async function searchHotels(
       ...(params.lng !== undefined && { lng: params.lng }),
     };
 
-    const url = forceRefresh 
+    const url = forceRefresh
       ? '/api/v1/hotels/search?force_refresh=true'
       : '/api/v1/hotels/search';
 
+    hotelsDebugLog('search: request', { url, requestBody });
+
     const response = await travliaqClient.post<HotelSearchResponse>(url, requestBody);
-    
+
+    hotelsDebugLog('search: response', {
+      success: response.data?.success,
+      total: response.data?.results?.total,
+      count: response.data?.results?.hotels?.length,
+      cached: response.data?.cache_info?.cached,
+    });
+
     // Cache successful response
     if (response.data.success) {
       setInCache('search', params, response.data);
     }
-    
+
     return response.data;
   } catch (error) {
-    console.error('[HotelService] Search error:', error);
+    hotelsDebugLog('search: error', {
+      message: getErrorMessage(error),
+      raw: error,
+    });
     throw new Error(getErrorMessage(error));
   }
 }
