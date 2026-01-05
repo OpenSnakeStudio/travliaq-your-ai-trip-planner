@@ -460,16 +460,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const staysFocusRef = useRef<{ lng: number; lat: number; zoom: number; city?: string } | null>(null);
 
   const getStaysOffsetX = useCallback(() => {
-    // Goal: when the left overlay panel is open, keep the target city visually centered in the *remaining visible* map.
-    // We shift the camera to the LEFT (negative offset) so the city appears more to the right of center.
+    // When the left overlay panel is open, shift the camera slightly left so the city appears a bit more to the right.
+    // Keep it subtle to avoid "over-shifting".
     if (!isPanelOpen) return 0;
 
     const panelEl = document.querySelector('[data-tour="widgets-panel"]') as HTMLElement | null;
     const panelWidth = panelEl?.getBoundingClientRect().width ?? 420;
 
-    // Shift left by ~1/4 of panel width (smaller shift to keep city closer to true center)
-    const offset = -Math.round(panelWidth / 4);
-    return Math.max(-200, Math.min(-80, offset));
+    // Gentle shift: ~1/6 of panel width, clamped.
+    const offset = -Math.round(panelWidth / 6);
+    return Math.max(-140, Math.min(-40, offset));
   }, [isPanelOpen]);
 
   const focusStaysTarget = useCallback(
@@ -510,8 +510,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
 
     if (targetAccom?.lat && targetAccom?.lng) {
-      // Zoom 10 = city-level view without being too close
-      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 10, city: targetAccom.city };
+      // Balanced city-level view
+      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 11, city: targetAccom.city };
 
       // Small delay to ensure the panel is rendered before we measure its width for the offset
       setTimeout(() => {
