@@ -212,9 +212,12 @@ const HotelSearchResults = ({
   // Refs for each hotel card to enable scrolling
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  // Listen for hover events from map markers
+  // Listen for hover events from map markers ONLY (not from list)
   useEffect(() => {
-    const handleMapHover = (data: { hotel: HotelResult | null }) => {
+    const handleMapHover = (data: { hotel: HotelResult | null; source?: string }) => {
+      // Only react to hovers from the map, ignore hovers from the list
+      if (data.source !== "map") return;
+      
       const hotelId = data.hotel?.id || null;
       setMapHoveredHotelId(hotelId);
       
@@ -335,9 +338,12 @@ const HotelSearchResultsWrapper = (props: HotelSearchResultsProps) => {
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [mapHoveredHotelId, setMapHoveredHotelId] = useState<string | null>(null);
 
-  // Listen for hover events from map markers
+  // Listen for hover events from map markers ONLY (not from list)
   useEffect(() => {
-    const handleMapHover = (data: { hotel: HotelResult | null }) => {
+    const handleMapHover = (data: { hotel: HotelResult | null; source?: string }) => {
+      // Only react to hovers from the map, ignore hovers from the list
+      if (data.source !== "map") return;
+      
       const hotelId = data.hotel?.id || null;
       setMapHoveredHotelId(hotelId);
       
