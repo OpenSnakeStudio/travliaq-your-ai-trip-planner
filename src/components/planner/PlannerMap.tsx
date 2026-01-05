@@ -2137,52 +2137,48 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       const isHovered = hoveredHotelId === hotel.id;
       const isSelected = selectedHotelId === hotel.id;
 
-      // Create marker element
+      // Create marker element with proper structure
       const el = document.createElement("div");
       el.className = `hotel-price-marker ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`;
-      el.style.cssText = `
-        position: relative;
-        cursor: pointer;
-        z-index: ${isHovered || isSelected ? 50 : 10 + index};
-      `;
-
-      // Create price badge
-      const badge = document.createElement("div");
-      badge.style.cssText = `
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 10px;
-        background: ${isSelected ? '#0ea5e9' : isHovered ? '#38bdf8' : '#ffffff'};
-        color: ${isSelected || isHovered ? '#ffffff' : '#1f2937'};
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 13px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
-        border: 2px solid ${isSelected ? '#0284c7' : isHovered ? '#0ea5e9' : '#e5e7eb'};
-        white-space: nowrap;
-        transition: all 0.15s ease;
-        transform: ${isHovered || isSelected ? 'scale(1.1)' : 'scale(1)'};
-      `;
-      badge.textContent = `${hotel.pricePerNight}€`;
       
-      // Create arrow
-      const arrow = document.createElement("div");
-      arrow.style.cssText = `
-        position: absolute;
-        bottom: -6px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 7px solid transparent;
-        border-right: 7px solid transparent;
-        border-top: 7px solid ${isSelected ? '#0ea5e9' : isHovered ? '#38bdf8' : '#ffffff'};
-        filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
-      `;
+      const bgColor = isSelected ? '#0ea5e9' : isHovered ? '#38bdf8' : '#ffffff';
+      const textColor = isSelected || isHovered ? '#ffffff' : '#1f2937';
+      const borderColor = isSelected ? '#0284c7' : isHovered ? '#0ea5e9' : '#e5e7eb';
       
-      el.appendChild(badge);
-      el.appendChild(arrow);
+      el.innerHTML = `
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          cursor: pointer;
+          z-index: ${isHovered || isSelected ? 50 : 10 + index};
+          transform: ${isHovered || isSelected ? 'scale(1.1)' : 'scale(1)'};
+          transition: transform 0.15s ease;
+        ">
+          <div style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            background: ${bgColor};
+            color: ${textColor};
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
+            border: 2px solid ${borderColor};
+            white-space: nowrap;
+          ">${hotel.pricePerNight}€</div>
+          <div style="
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-top: 7px solid ${bgColor};
+            margin-top: -1px;
+          "></div>
+        </div>
+      `;
 
       // Add hover effect
       el.addEventListener("mouseenter", () => {
