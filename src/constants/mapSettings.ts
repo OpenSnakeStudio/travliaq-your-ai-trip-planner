@@ -12,6 +12,6 @@ export function getStaysPanelOffset(isPanelOpen: boolean): number {
   const panelWidth = panelEl?.getBoundingClientRect().width ?? 420;
 
   // Shift left by ~1/4 of panel width for more right placement
-  const offset = -Math.round(panelWidth / 150);
-  return Math.max(160, Math.min(-80, offset));
+  const offset = -Math.round(panelWidth / 4);
+  return Math.max(165, Math.min(-80, offset));
 }
