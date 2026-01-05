@@ -15,3 +15,14 @@ export function getStaysPanelOffset(isPanelOpen: boolean): number {
   const offset = -Math.round(panelWidth / 4);
   return Math.max(0, Math.min(-80, offset));
 }
+
+// Get horizontal pixel offset for hotel click - shifts point to the right of center
+// to account for the left panel taking up space
+export function getHotelClickOffset(): [number, number] {
+  const panelEl = document.querySelector('[data-tour="widgets-panel"]') as HTMLElement | null;
+  const panelWidth = panelEl?.getBoundingClientRect().width ?? 420;
+  
+  // Shift the map so the clicked point appears to the right of center
+  // Negative X = map moves left, point appears on the right
+  return [-(panelWidth / 2 + 50), 0];
+}

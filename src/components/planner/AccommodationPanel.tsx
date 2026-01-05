@@ -1066,12 +1066,14 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     eventBus.emit("hotels:results", { hotels: results });
   };
 
-  // Handle back from results
+  // Handle back from results - clear results and prices from map
   const handleBackFromResults = () => {
     setShowResults(false);
     setSearchResults([]);
     setSelectedHotelId(null);
+    setSelectedHotelForDetail(null);
     setHoveredHotel(null);
+    // Clear hotel markers from map
     eventBus.emit("hotels:results", { hotels: [] });
   };
 
