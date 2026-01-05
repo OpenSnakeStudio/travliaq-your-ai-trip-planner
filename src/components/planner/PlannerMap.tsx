@@ -1067,49 +1067,42 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     };
   }, []);
 
-  // Animate to user location on initial load
+  // Animate to user location on initial load - single smooth animation
   useEffect(() => {
     if (!map.current || !mapLoaded || hasAnimatedRef.current || !animateToUserLocation) return;
 
     hasAnimatedRef.current = true;
 
-    // Add left padding to visually shift the globe to the right (leave space for widget)
+    // Set padding once at start
     map.current.setPadding({ left: 350, top: 0, right: 0, bottom: 0 });
 
-    // Start animation immediately - no delay
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          map.current?.flyTo({
-            center: [position.coords.longitude, position.coords.latitude],
-            zoom: 5.5, // Closer zoom for better view
-            duration: 1800, // Faster animation
-            essential: true,
-          });
-          setTimeout(() => onAnimationComplete?.(), 1800);
-        },
-        () => {
-          // Fallback to Europe
-          map.current?.flyTo({
-            center: [10, 48],
-            zoom: 5.5,
-            duration: 1800,
-            essential: true,
-          });
-          setTimeout(() => onAnimationComplete?.(), 1800);
-        },
-        { timeout: 3000 }
-      );
-    } else {
-      // Fallback to Europe
-      map.current?.flyTo({
-        center: [10, 48],
-        zoom: 5.5,
-        duration: 1800,
-        essential: true,
-      });
-      setTimeout(() => onAnimationComplete?.(), 1800);
-    }
+    // Small delay to let the map settle, then do ONE smooth animation
+    const animateTimeout = setTimeout(() => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            map.current?.flyTo({
+              center: [position.coords.longitude, position.coords.latitude],
+              zoom: 5.5,
+              duration: 1500, // Smooth single animation
+              essential: true,
+              curve: 1.2, // Gentle curve
+            });
+            setTimeout(() => onAnimationComplete?.(), 1500);
+          },
+          () => {
+            // Already at Europe, just complete
+            onAnimationComplete?.();
+          },
+          { timeout: 2000 }
+        );
+      } else {
+        // Already at Europe, just complete
+        onAnimationComplete?.();
+      }
+    }, 300); // Brief settle time
+
+    return () => clearTimeout(animateTimeout);
   }, [mapLoaded, animateToUserLocation, onAnimationComplete]);
 
   // Adjust map padding based on panel visibility

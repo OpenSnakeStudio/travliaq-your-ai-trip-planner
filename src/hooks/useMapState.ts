@@ -6,8 +6,9 @@ import { usePlannerEvent } from "@/lib/eventBus";
  * Includes event bus subscriptions for map updates
  */
 export function useMapState() {
-  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 20]); // Globe view
-  const [mapZoom, setMapZoom] = useState(1.5); // Zoom out to see globe
+  // Start at Europe view to avoid jarring globe-to-location animation
+  const [mapCenter, setMapCenter] = useState<[number, number]>([2.3522, 48.8566]); // Paris/Europe
+  const [mapZoom, setMapZoom] = useState(4.5); // Reasonable zoom for Europe
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
 
   // Event listener: map zoom from event bus
