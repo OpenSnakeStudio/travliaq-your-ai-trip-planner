@@ -69,12 +69,15 @@ const HotelCard = memo(({
       onMouseLeave={() => onHover(false)}
     >
       {/* Image */}
-      <div className="relative h-32 overflow-hidden">
+      <div className="relative h-32 w-full overflow-hidden bg-muted flex-shrink-0">
         <img
           src={hotel.imageUrl}
           alt={hotel.name}
           className="w-full h-full object-cover transition-transform group-hover:scale-105"
           loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop';
+          }}
         />
         {/* Price badge */}
         <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded-lg text-sm font-bold shadow-lg">
