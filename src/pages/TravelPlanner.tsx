@@ -14,7 +14,7 @@ import { AutoDetectDeparture } from "@/components/planner/AutoDetectDeparture";
 import type { Airport } from "@/hooks/useNearestAirports";
 import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
-import { AccommodationMemoryProvider, useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
+import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
 import { usePlannerState } from "@/hooks/usePlannerState";

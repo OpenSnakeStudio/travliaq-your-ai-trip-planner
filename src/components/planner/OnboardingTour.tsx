@@ -19,15 +19,15 @@ interface StepConfig {
 }
 
 const STEP_CONFIG: Record<number, StepConfig> = {
-  0: { panelOpen: false },                  // Welcome intro - nothing highlighted
-  1: { panelOpen: true, tab: "flights" },  // Chat
-  2: { panelOpen: true, tab: "flights" },  // Tabs bar
-  3: { panelOpen: false },                  // Map
-  4: { panelOpen: true, tab: "flights" },  // Flights widget
-  5: { panelOpen: true, tab: "stays" },    // Stays widget
+  0: { panelOpen: false }, // Welcome intro - nothing highlighted
+  1: { panelOpen: true, tab: "flights" }, // Chat
+  2: { panelOpen: true, tab: "flights" }, // Tabs bar
+  3: { panelOpen: false }, // Map
+  4: { panelOpen: true, tab: "flights" }, // Flights widget
+  5: { panelOpen: true, tab: "stays" }, // Stays widget
   6: { panelOpen: true, tab: "activities" }, // Activities widget
   7: { panelOpen: true, tab: "preferences" }, // Preferences widget
-  8: { panelOpen: true },                   // Final - keep current state
+  8: { panelOpen: true, tab: "flights" }, // Final - always return to Flights
 };
 
 // Enhanced CSS with smooth animations for driver.js
@@ -262,10 +262,10 @@ function injectDriverStyles() {
       animation: travliaq-slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both !important;
     }
 
-    .driver-popover-description p {
-      margin: 0 0 12px 0 !important;
-      color: hsl(var(--muted-foreground)) !important;
-    }
+     .driver-popover-description p {
+       margin: 0 0 12px 0 !important;
+       color: hsl(var(--foreground) / 0.88) !important;
+     }
 
     .driver-popover-description p:last-child {
       margin-bottom: 0 !important;
@@ -456,6 +456,25 @@ function injectDriverStyles() {
       display: none !important;
     }
 
+    /* Stop/skip button (explicit in tooltip) */
+    .travliaq-skip-btn {
+      background: transparent !important;
+      border: 1px solid hsl(var(--border)) !important;
+      color: hsl(var(--muted-foreground)) !important;
+      padding: 10px 14px !important;
+      border-radius: 8px !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      margin-right: auto !important;
+    }
+
+    .travliaq-skip-btn:hover {
+      background: hsl(var(--muted) / 0.6) !important;
+      color: hsl(var(--foreground)) !important;
+    }
+
     /* Prev button with smooth transitions */
     .driver-popover-prev-btn {
       background: hsl(var(--background)) !important;
@@ -639,19 +658,22 @@ export default function OnboardingTour({
   const handleComplete = useCallback(() => {
     setIsRunning(false);
     localStorage.setItem(STORAGE_KEY, "true");
+
     // Clean up highlights
     document.querySelectorAll(".travliaq-tab-highlight").forEach((el) => {
       el.classList.remove("travliaq-tab-highlight");
     });
-    // Don't force any state change - keep the user's current view
-    // The tour ends with preferences open, which is fine
+
+    // End-state: always come back to Flights (as requested)
+    onPanelVisibilityChange?.(true);
+    eventBus.emit("tab:change", { tab: "flights" });
 
     setTimeout(() => {
       onRequestAnimation?.();
     }, 300);
 
     onComplete?.();
-  }, [onComplete, onRequestAnimation]);
+  }, [onComplete, onPanelVisibilityChange, onRequestAnimation]);
 
   const highlightTab = useCallback((tab?: TabType) => {
     // Clear previous highlights
@@ -809,9 +831,9 @@ export default function OnboardingTour({
         align: "center",
       },
     },
-    // Step 4: Flights widget - target full widget container
+    // Step 4: Flights widget - target full planner panel (header + content)
     {
-      element: '[data-tour="widget-container"]',
+      element: '[data-tour="widgets-panel"]',
       popover: {
         title: "✈️ Widget Vols",
         description: `
@@ -832,7 +854,7 @@ export default function OnboardingTour({
     },
     // Step 5: Stays widget
     {
-      element: '[data-tour="widget-container"]',
+      element: '[data-tour="widgets-panel"]',
       popover: {
         title: "🏨 Widget Hébergements",
         description: `
@@ -853,7 +875,7 @@ export default function OnboardingTour({
     },
     // Step 6: Activities widget
     {
-      element: '[data-tour="widget-container"]',
+      element: '[data-tour="widgets-panel"]',
       popover: {
         title: "🎭 Widget Activités",
         description: `
@@ -874,7 +896,7 @@ export default function OnboardingTour({
     },
     // Step 7: Preferences widget
     {
-      element: '[data-tour="widget-container"]',
+      element: '[data-tour="widgets-panel"]',
       popover: {
         title: "⚙️ Widget Préférences",
         description: `
@@ -944,11 +966,24 @@ export default function OnboardingTour({
           nextBtnText: "Suivant →",
           prevBtnText: "← Précédent",
           doneBtnText: "C'est parti ! ✨",
-          onPopoverRender: (popover, opts) => {
-            const idx = opts.state.activeIndex ?? 0;
-            const total = opts.config.steps?.length ?? steps.length;
-            renderProgressHeader(popover.wrapper, idx, total, opts.driver);
-          },
+           onPopoverRender: (popover, opts) => {
+             const idx = opts.state.activeIndex ?? 0;
+             const total = opts.config.steps?.length ?? steps.length;
+             renderProgressHeader(popover.wrapper, idx, total, opts.driver);
+
+             // Add an explicit "Arrêter" button inside the tooltip (in the footer)
+             const footer = popover.wrapper.querySelector(".driver-popover-footer");
+             if (footer && !footer.querySelector(".travliaq-skip-btn")) {
+               const skipBtn = document.createElement("button");
+               skipBtn.className = "travliaq-skip-btn";
+               skipBtn.type = "button";
+               skipBtn.textContent = "Arrêter le guide";
+               skipBtn.onclick = () => {
+                 opts.driver.destroy();
+               };
+               footer.prepend(skipBtn);
+             }
+           },
           onHighlightStarted: (_el, step, opts) => {
             const idx = opts.state.activeIndex ?? 0;
             const tab = STEP_CONFIG[idx]?.tab;
