@@ -2132,46 +2132,50 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
       // Create marker element
       const el = document.createElement("div");
-      el.className = "hotel-price-marker";
+      el.className = `hotel-price-marker ${isHovered ? 'hovered' : ''} ${isSelected ? 'selected' : ''}`;
       el.style.cssText = `
         position: relative;
         cursor: pointer;
         z-index: ${isHovered || isSelected ? 50 : 10 + index};
-        transition: all 0.2s ease;
-        transform: ${isHovered || isSelected ? 'scale(1.15)' : 'scale(1)'};
       `;
 
-      el.innerHTML = `
-        <div style="
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 4px 8px;
-          background: ${isSelected ? 'hsl(var(--primary))' : isHovered ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--card))'};
-          color: ${isSelected || isHovered ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))'};
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 12px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-          border: 2px solid ${isSelected ? 'hsl(var(--primary-foreground))' : isHovered ? 'hsl(var(--primary))' : 'hsl(var(--border))'};
-          white-space: nowrap;
-          min-width: 45px;
-          text-align: center;
-        ">
-          ${hotel.pricePerNight}€
-        </div>
-        <div style="
-          position: absolute;
-          bottom: -5px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 0;
-          height: 0;
-          border-left: 6px solid transparent;
-          border-right: 6px solid transparent;
-          border-top: 6px solid ${isSelected ? 'hsl(var(--primary))' : isHovered ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--card))'};
-        "></div>
+      // Create price badge
+      const badge = document.createElement("div");
+      badge.style.cssText = `
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        background: ${isSelected ? '#0ea5e9' : isHovered ? '#38bdf8' : '#ffffff'};
+        color: ${isSelected || isHovered ? '#ffffff' : '#1f2937'};
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
+        border: 2px solid ${isSelected ? '#0284c7' : isHovered ? '#0ea5e9' : '#e5e7eb'};
+        white-space: nowrap;
+        transition: all 0.15s ease;
+        transform: ${isHovered || isSelected ? 'scale(1.1)' : 'scale(1)'};
       `;
+      badge.textContent = `${hotel.pricePerNight}€`;
+      
+      // Create arrow
+      const arrow = document.createElement("div");
+      arrow.style.cssText = `
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 7px solid ${isSelected ? '#0ea5e9' : isHovered ? '#38bdf8' : '#ffffff'};
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+      `;
+      
+      el.appendChild(badge);
+      el.appendChild(arrow);
 
       // Add hover effect
       el.addEventListener("mouseenter", () => {
