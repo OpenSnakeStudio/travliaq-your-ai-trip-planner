@@ -2283,9 +2283,19 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Note: on stays tab, we apply the same horizontal offset used for accommodation focus,
   // so clicking a city (which updates `center/zoom`) and switching to the tab feel identical.
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !mapLoaded) return;
 
     const offsetX = activeTab === "stays" ? getStaysOffsetX() : 0;
+
+    // Debug: detect unexpected zoom-outs when closing the panel
+    const currentZoomValue = map.current.getZoom();
+    if (zoom < currentZoomValue - 0.25) {
+      console.debug(
+        "[PlannerMap] flyTo zoom-out detected",
+        { activeTab, isPanelOpen, from: currentZoomValue, to: zoom, center },
+        new Error("flyTo zoom-out").stack
+      );
+    }
 
     map.current.flyTo({
       center: [center[0], center[1]],
@@ -2294,7 +2304,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       essential: true,
       offset: [offsetX, 0],
     });
-  }, [center, zoom, activeTab, getStaysOffsetX]);
+  }, [center, zoom, activeTab, getStaysOffsetX, mapLoaded, isPanelOpen]);
 
   return (
     <div className="absolute inset-0 w-full h-full relative" data-tour="map-area">
