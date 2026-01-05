@@ -2108,7 +2108,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     };
   }, []);
 
-  // Display hotel markers on map (stays tab only)
+  // Display hotel markers on map (stays tab only) AND auto-fit bounds
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
@@ -2118,6 +2118,20 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     // Only show on stays tab
     if (activeTab !== "stays" || hotelResults.hotels.length === 0) return;
+
+    // Calculate bounds of all hotels
+    const bounds = new mapboxgl.LngLatBounds();
+    hotelResults.hotels.forEach((hotel) => {
+      bounds.extend([hotel.lng, hotel.lat]);
+    });
+
+    // Fit bounds with left padding to avoid panel overlap
+    // Large left padding (500px) ensures pins don't appear behind the panel
+    map.current.fitBounds(bounds, {
+      padding: { top: 80, bottom: 80, left: 520, right: 80 },
+      maxZoom: 14,
+      duration: 800,
+    });
 
     hotelResults.hotels.forEach((hotel, index) => {
       const isHovered = hoveredHotelId === hotel.id;
@@ -2182,11 +2196,12 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       // Click to select
       el.addEventListener("click", () => {
         eventBus.emit("hotels:select", { hotel: hotel as any });
-        // Zoom to hotel
+        // Zoom to hotel with left offset
         map.current?.flyTo({
           center: [hotel.lng, hotel.lat],
           zoom: 15,
           duration: 800,
+          offset: [-200, 0], // Offset left to keep hotel visible
         });
       });
 
