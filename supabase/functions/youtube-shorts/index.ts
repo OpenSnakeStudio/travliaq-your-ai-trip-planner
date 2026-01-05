@@ -58,6 +58,27 @@ const TRAVEL_POSITIVE_KEYWORDS = [
 // Cache TTL: 3 weeks in seconds
 const CACHE_TTL = 60 * 60 * 24 * 21;
 
+// In-memory rate limiting (resets on cold start, but provides basic protection)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const MAX_REQUESTS_PER_HOUR = 15;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600000 });
+    return true;
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_HOUR) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 // Redis cache helpers using Upstash REST API
 async function getFromCache(key: string): Promise<YouTubeVideo[] | null> {
   const redisUrl = Deno.env.get("UPSTASH_REDIS_REST_URL");
@@ -202,6 +223,19 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting by IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (!checkRateLimit(clientIp)) {
+      console.log(`[youtube-shorts] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later.", videos: [], count: 0 }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { city, country } = await req.json();
 
     if (!city) {
@@ -220,7 +254,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[youtube-shorts] Request for: ${city}${country ? `, ${country}` : ""}`);
+    console.log(`[youtube-shorts] Request for: ${city}${country ? `, ${country}` : ""} (IP: ${clientIp})`);
 
     // Build cache key
     const cacheKey = `yt:shorts:${city.toLowerCase().replace(/\s+/g, "_")}${country ? `:${country.toLowerCase().replace(/\s+/g, "_")}` : ""}`;
