@@ -895,7 +895,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         location.lng
       );
       if (onMapMove) {
-        onMapMove([location.lng, location.lat], 12);
+        onMapMove([location.lng, location.lat], 11);
       }
     }
   };
@@ -997,7 +997,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
           setDates(newCityDates.checkIn, newCityDates.checkOut);
         }
         if (onMapMove && location.lat && location.lng) {
-          onMapMove([location.lng, location.lat], 12);
+          onMapMove([location.lng, location.lat], 11);
         }
       }, 50);
       
@@ -1026,7 +1026,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
               setActiveAccommodation(index);
               // Zoom on city when clicking tab
               if (acc.lat && acc.lng && onMapMove) {
-                onMapMove([acc.lng, acc.lat], 12);
+                onMapMove([acc.lng, acc.lat], 11);
               }
             }}
             className={cn(
