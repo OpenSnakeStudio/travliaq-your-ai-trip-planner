@@ -624,15 +624,13 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   const [hoveredHotel, setHoveredHotel] = useState<HotelResult | null>(null);
   const [selectedHotelForDetail, setSelectedHotelForDetail] = useState<HotelResult | null>(null);
 
-  // Listen for hotel selection from map pins
+  // Listen for hotel selection from map pins (highlight only — NEVER open detail)
   useEffect(() => {
     const handleMapHotelSelect = (data: { hotel: { id: string } }) => {
-      // Find the hotel in search results
-      const hotel = searchResults.find(h => h.id === data.hotel.id);
-      if (hotel) {
-        setSelectedHotelId(hotel.id);
-        setSelectedHotelForDetail(hotel);
-      }
+      const hotel = searchResults.find((h) => h.id === data.hotel.id);
+      if (!hotel) return;
+      setSelectedHotelId(hotel.id);
+      // Do NOT open detail here; detail is only via the "Voir détails" button.
     };
 
     eventBus.on("hotels:select", handleMapHotelSelect);
