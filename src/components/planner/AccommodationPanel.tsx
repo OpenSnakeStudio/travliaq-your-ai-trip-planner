@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, useEffect, memo, useCallback } from "react";
 import {
   Building2, Star, Wifi, Car, Coffee, Wind, MapPin, Users, ChevronDown, ChevronUp,
   Search, Waves, BedDouble, Home, Hotel, Castle, Tent, Plus, Minus, X, CalendarDays,
@@ -21,6 +21,8 @@ import RangeCalendar from "@/components/RangeCalendar";
 import type { DateRange } from "react-day-picker";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { STAYS_ZOOM } from "@/constants/mapSettings";
+import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
+import { eventBus } from "@/lib/eventBus";
 
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
@@ -613,6 +615,12 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Search results state
+  const [searchResults, setSearchResults] = useState<HotelResult[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
+  const [hoveredHotel, setHoveredHotel] = useState<HotelResult | null>(null);
 
   const activeAccommodation = getActiveAccommodation();
   const hasMultipleAccommodations = memory.accommodations.length > 1;
@@ -962,13 +970,93 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   // Check if ready to search
   const canSearch = activeAccommodation && activeAccommodation.city.length > 0;
 
+  // Calculate nights for display
+  const searchNights = activeAccommodation?.checkIn && activeAccommodation?.checkOut 
+    ? differenceInDays(activeAccommodation.checkOut, activeAccommodation.checkIn)
+    : 1;
+
+  // Generate mock hotel results based on search criteria
+  const generateMockResults = useCallback((): HotelResult[] => {
+    if (!activeAccommodation) return [];
+    
+    const basePrice = activeAccommodation.priceMin + 
+      Math.random() * (activeAccommodation.priceMax - activeAccommodation.priceMin);
+    
+    const hotelNames = [
+      "Grand Hôtel Central",
+      "Boutique Riviera",
+      "Comfort Inn City",
+      "Palace Royale",
+      "Urban Nest Hotel",
+      "The Heritage House",
+      "Modern Loft Suites",
+      "Garden View Resort",
+      "City Center Lodge",
+      "Premium Towers"
+    ];
+
+    const amenitiesOptions = ["Wifi", "Parking", "Breakfast", "Pool", "Gym", "Spa"];
+    
+    return hotelNames.slice(0, 8 + Math.floor(Math.random() * 4)).map((name, i) => {
+      const price = Math.round(basePrice * (0.7 + Math.random() * 0.6));
+      const lat = (activeAccommodation.lat || 48.8566) + (Math.random() - 0.5) * 0.03;
+      const lng = (activeAccommodation.lng || 2.3522) + (Math.random() - 0.5) * 0.04;
+      
+      return {
+        id: `hotel-${i}-${Date.now()}`,
+        name,
+        imageUrl: `https://images.unsplash.com/photo-${1551882547 + i * 1000}-164bdae091c${i}?w=400&h=300&fit=crop`,
+        rating: 7 + Math.random() * 2.5,
+        reviewCount: 50 + Math.floor(Math.random() * 500),
+        pricePerNight: price,
+        totalPrice: price * searchNights,
+        currency: "EUR",
+        address: `${Math.floor(Math.random() * 200)} Rue du Centre, ${activeAccommodation.city}`,
+        lat,
+        lng,
+        amenities: amenitiesOptions.filter(() => Math.random() > 0.5).slice(0, 4),
+        stars: 3 + Math.floor(Math.random() * 2),
+        distanceFromCenter: `${(Math.random() * 2).toFixed(1)} km`,
+      };
+    }).sort((a, b) => a.pricePerNight - b.pricePerNight);
+  }, [activeAccommodation, searchNights]);
+
   // Handle search
   const handleSearch = async () => {
     if (!canSearch) return;
     setIsSearching(true);
-    // TODO: Implement actual search
+    setShowResults(true);
+    
+    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const results = generateMockResults();
+    setSearchResults(results);
     setIsSearching(false);
+    
+    // Emit hotel results to map
+    eventBus.emit("hotels:results", { hotels: results });
+  };
+
+  // Handle back from results
+  const handleBackFromResults = () => {
+    setShowResults(false);
+    setSearchResults([]);
+    setSelectedHotelId(null);
+    setHoveredHotel(null);
+    eventBus.emit("hotels:results", { hotels: [] });
+  };
+
+  // Handle hotel selection
+  const handleHotelSelect = (hotel: HotelResult) => {
+    setSelectedHotelId(hotel.id);
+    eventBus.emit("hotels:select", { hotel });
+  };
+
+  // Handle hotel hover
+  const handleHotelHover = (hotel: HotelResult | null) => {
+    setHoveredHotel(hotel);
+    eventBus.emit("hotels:hover", { hotel });
   };
 
   if (!activeAccommodation) return null;
@@ -1015,6 +1103,23 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     setNewCitySearch("");
     setNewCityDates({ checkIn: null, checkOut: null });
   };
+
+  // If showing results, render the results view instead
+  if (showResults) {
+    return (
+      <HotelSearchResults
+        results={searchResults}
+        isLoading={isSearching}
+        destination={activeAccommodation.city}
+        nights={searchNights}
+        onBack={handleBackFromResults}
+        onHotelSelect={handleHotelSelect}
+        onHotelHover={handleHotelHover}
+        selectedHotelId={selectedHotelId}
+        onMapMove={onMapMove}
+      />
+    );
+  }
 
   return (
     <div className="space-y-3" data-tour="stays-panel">
