@@ -6,7 +6,7 @@ import {
   ConciergeBell, Droplets, Utensils, ChefHat, Soup, House, Link2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toastInfo } from "@/lib/toast";
+import { toastInfo, toastError } from "@/lib/toast";
 import { useTravelMemory } from "@/contexts/TravelMemoryContext";
 import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan } from "@/contexts/AccommodationMemoryContext";
 import { useFlightMemory } from "@/contexts/FlightMemoryContext";
@@ -24,6 +24,7 @@ import { STAYS_ZOOM } from "@/constants/mapSettings";
 import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
 import HotelDetailView from "./HotelDetailView";
 import { eventBus } from "@/lib/eventBus";
+import { searchHotels, type HotelSearchResult, type HotelRoom } from "@/services/hotels/hotelService";
 
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
@@ -1035,92 +1036,80 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     ? differenceInDays(activeAccommodation.checkOut, activeAccommodation.checkIn)
     : 1;
 
-  // Generate mock hotel results based on search criteria - London & Paris specific
-  const generateMockResults = useCallback((): HotelResult[] => {
-    if (!activeAccommodation) return [];
-    
-    const destLower = activeAccommodation.city.toLowerCase();
-    
-    // London hotels with real coordinates - more variety
-    const londonHotels = [
-      { name: "The Savoy", lat: 51.5103, lng: -0.1205, basePrice: 450, rating: 9.2, stars: 5, address: "Strand, London WC2R 0EZ", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop" },
-      { name: "Claridge's", lat: 51.5127, lng: -0.1469, basePrice: 520, rating: 9.4, stars: 5, address: "Brook St, London W1K 4HR", image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop" },
-      { name: "The Ritz London", lat: 51.5074, lng: -0.1418, basePrice: 580, rating: 9.5, stars: 5, address: "150 Piccadilly, London W1J 9BR", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop" },
-      { name: "Park Plaza Westminster", lat: 51.4994, lng: -0.1248, basePrice: 180, rating: 8.3, stars: 4, address: "200 Westminster Bridge Rd, SE1 7UT", image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop" },
-      { name: "Premier Inn London City", lat: 51.5155, lng: -0.0765, basePrice: 95, rating: 8.1, stars: 3, address: "22-28 Aldgate High St, EC3N 1AH", image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop" },
-      { name: "Travelodge London Central", lat: 51.5194, lng: -0.0973, basePrice: 75, rating: 7.8, stars: 3, address: "60 Farringdon Rd, EC1M 3JB", image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" },
-      { name: "The Langham London", lat: 51.5181, lng: -0.1436, basePrice: 380, rating: 9.0, stars: 5, address: "1C Portland Pl, W1B 1JA", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop" },
-      { name: "Shangri-La The Shard", lat: 51.5045, lng: -0.0865, basePrice: 420, rating: 9.3, stars: 5, address: "31 St Thomas St, SE1 9QU", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
-      { name: "The Hoxton Shoreditch", lat: 51.5253, lng: -0.0787, basePrice: 165, rating: 8.6, stars: 4, address: "81 Great Eastern St, EC2A 3HU", image: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&h=300&fit=crop" },
-      { name: "citizenM Tower of London", lat: 51.5101, lng: -0.0778, basePrice: 145, rating: 8.8, stars: 4, address: "40 Trinity Square, EC3N 4DJ", image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop" },
-      { name: "The Ned", lat: 51.5135, lng: -0.0888, basePrice: 350, rating: 9.1, stars: 5, address: "27 Poultry, EC2R 8AJ", image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop" },
-      { name: "Zedwell Piccadilly", lat: 51.5097, lng: -0.1339, basePrice: 110, rating: 8.2, stars: 3, address: "14 Piccadilly Circus, W1D 7DH", image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop" },
-      { name: "The Connaught", lat: 51.5109, lng: -0.1483, basePrice: 680, rating: 9.7, stars: 5, address: "Carlos Pl, W1K 2AL", image: "https://images.unsplash.com/photo-1568084680786-a84f91d1153c?w=400&h=300&fit=crop" },
-      { name: "Hub by Premier Inn Westminster", lat: 51.4989, lng: -0.1289, basePrice: 85, rating: 7.9, stars: 3, address: "147 Westminster Bridge Rd, SE1 7HR", image: "https://images.unsplash.com/photo-1587985064135-0366536eab42?w=400&h=300&fit=crop" },
-      { name: "The Dorchester", lat: 51.5066, lng: -0.1534, basePrice: 620, rating: 9.4, stars: 5, address: "53 Park Ln, W1K 1QA", image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=400&h=300&fit=crop" },
-    ];
-    
-    // Paris hotels - more variety and coverage
-    const parisHotels = [
-      { name: "Le Meurice", lat: 48.8608, lng: 2.3288, basePrice: 650, rating: 9.4, stars: 5, address: "228 Rue de Rivoli, 75001 Paris", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop" },
-      { name: "Hôtel Plaza Athénée", lat: 48.8669, lng: 2.3010, basePrice: 720, rating: 9.5, stars: 5, address: "25 Av. Montaigne, 75008 Paris", image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop" },
-      { name: "Hôtel Le Bristol", lat: 48.8735, lng: 2.3125, basePrice: 580, rating: 9.3, stars: 5, address: "112 Rue du Fbg St-Honoré, 75008", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop" },
-      { name: "Novotel Paris Centre", lat: 48.8580, lng: 2.3440, basePrice: 185, rating: 8.2, stars: 4, address: "8 Rue Croix des Petits Champs, 75001", image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop" },
-      { name: "Ibis Paris Opéra", lat: 48.8722, lng: 2.3335, basePrice: 95, rating: 7.9, stars: 3, address: "5 Rue de la Michodière, 75002", image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop" },
-      { name: "B&B Hôtel Paris Marais", lat: 48.8565, lng: 2.3520, basePrice: 65, rating: 7.5, stars: 2, address: "16 Rue du Temple, 75004 Paris", image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" },
-      { name: "Hôtel de Crillon", lat: 48.8687, lng: 2.3215, basePrice: 890, rating: 9.6, stars: 5, address: "10 Place de la Concorde, 75008", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop" },
-      { name: "Mama Shelter Paris", lat: 48.8565, lng: 2.3780, basePrice: 120, rating: 8.4, stars: 4, address: "109 Rue de la Roquette, 75011", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
-      { name: "Hôtel Monge", lat: 48.8440, lng: 2.3505, basePrice: 195, rating: 8.9, stars: 4, address: "55 Rue Monge, 75005 Paris", image: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=400&h=300&fit=crop" },
-      { name: "Generator Paris", lat: 48.8821, lng: 2.3598, basePrice: 45, rating: 7.8, stars: 2, address: "9-11 Place du Colonel Fabien, 75010", image: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=400&h=300&fit=crop" },
-      { name: "Le Pavillon de la Reine", lat: 48.8550, lng: 2.3650, basePrice: 380, rating: 9.2, stars: 5, address: "28 Place des Vosges, 75003", image: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=400&h=300&fit=crop" },
-      { name: "citizenM Paris Gare de Lyon", lat: 48.8445, lng: 2.3745, basePrice: 135, rating: 8.5, stars: 4, address: "8 Rue Van Gogh, 75012", image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop" },
-      { name: "Hôtel Lutetia", lat: 48.8510, lng: 2.3265, basePrice: 520, rating: 9.3, stars: 5, address: "45 Bd Raspail, 75006", image: "https://images.unsplash.com/photo-1568084680786-a84f91d1153c?w=400&h=300&fit=crop" },
-      { name: "Le Petit Belloy Saint-Germain", lat: 48.8530, lng: 2.3395, basePrice: 145, rating: 8.1, stars: 3, address: "1 Rue Racine, 75006", image: "https://images.unsplash.com/photo-1587985064135-0366536eab42?w=400&h=300&fit=crop" },
-      { name: "Hôtel Marignan Champs-Élysées", lat: 48.8692, lng: 2.3055, basePrice: 450, rating: 9.0, stars: 5, address: "12 Rue de Marignan, 75008", image: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?w=400&h=300&fit=crop" },
-      { name: "MOB Hôtel Paris Les Puces", lat: 48.8960, lng: 2.3325, basePrice: 85, rating: 8.0, stars: 3, address: "4 Rue Gambetta, 93400 Saint-Ouen", image: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=400&h=300&fit=crop" },
-    ];
-    
-    // Select hotels based on destination
-    let hotels = parisHotels; // default to Paris
-    if (destLower.includes('london') || destLower.includes('londres') || destLower.includes('uk') || destLower.includes('angleterre') || destLower.includes('england')) {
-      hotels = londonHotels;
-    }
+  // Convert API results to HotelResult format
+  const mapApiToHotelResult = useCallback((hotel: HotelSearchResult): HotelResult => ({
+    id: hotel.id,
+    name: hotel.name,
+    imageUrl: hotel.imageUrl,
+    rating: hotel.rating,
+    reviewCount: hotel.reviewCount,
+    pricePerNight: hotel.pricePerNight,
+    totalPrice: hotel.totalPrice,
+    currency: hotel.currency,
+    address: hotel.address,
+    lat: hotel.lat,
+    lng: hotel.lng,
+    amenities: hotel.amenities.map(a => a.charAt(0).toUpperCase() + a.slice(1)), // Capitalize
+    stars: hotel.stars,
+    distanceFromCenter: hotel.distanceFromCenter ? `${hotel.distanceFromCenter} km` : undefined,
+    bookingUrl: hotel.bookingUrl,
+  }), []);
 
-    const amenitiesOptions = ["Wifi", "Parking", "Breakfast", "Pool", "Gym", "Spa"];
-    
-    return hotels.map((hotel, i) => ({
-      id: `hotel-${i}-${Date.now()}`,
-      name: hotel.name,
-      imageUrl: hotel.image,
-      rating: hotel.rating,
-      reviewCount: 100 + Math.floor(Math.random() * 800),
-      pricePerNight: hotel.basePrice,
-      totalPrice: hotel.basePrice * searchNights,
-      currency: destLower.includes('london') || destLower.includes('londres') ? "GBP" : "EUR",
-      address: hotel.address,
-      lat: hotel.lat,
-      lng: hotel.lng,
-      amenities: amenitiesOptions.filter(() => Math.random() > 0.4).slice(0, 4),
-      stars: hotel.stars,
-      distanceFromCenter: `${(Math.random() * 2).toFixed(1)} km`,
-    })).sort((a, b) => a.pricePerNight - b.pricePerNight);
-  }, [activeAccommodation, searchNights]);
-
-  // Handle search
+  // Handle search with real API
   const handleSearch = async () => {
-    if (!canSearch) return;
+    if (!canSearch || !activeAccommodation) return;
     setIsSearching(true);
     setShowHotelResults(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const results = generateMockResults();
-    setHotelSearchResults(results);
-    setIsSearching(false);
-    
-    // Emit hotel results to map
-    eventBus.emit("hotels:results", { hotels: results });
+    try {
+      // Build rooms config for API - use customRooms from memory context
+      const roomsConfig = memory.customRooms.length > 0 ? memory.customRooms : [{ adults: 2, children: 0, childrenAges: [] as number[], id: 'default' }];
+      const rooms: HotelRoom[] = roomsConfig.map(r => ({
+        adults: r.adults,
+        childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
+      }));
+      
+      // Build filters - use correct property names from AccommodationEntry
+      const filters: any = {};
+      if (activeAccommodation.priceMin > 0) filters.priceMin = activeAccommodation.priceMin;
+      if (activeAccommodation.priceMax < 1000) filters.priceMax = activeAccommodation.priceMax;
+      if (activeAccommodation.minRating && activeAccommodation.minRating > 0) filters.minRating = activeAccommodation.minRating;
+      if (activeAccommodation.amenities.length > 0) filters.amenities = activeAccommodation.amenities;
+      if (activeAccommodation.types.length > 0 && !activeAccommodation.types.includes('any')) {
+        filters.types = activeAccommodation.types;
+      }
+      
+      const response = await searchHotels({
+        city: activeAccommodation.city,
+        countryCode: activeAccommodation.countryCode || 'FR',
+        checkIn: activeAccommodation.checkIn ? format(activeAccommodation.checkIn, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        checkOut: activeAccommodation.checkOut ? format(activeAccommodation.checkOut, 'yyyy-MM-dd') : format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
+        rooms,
+        currency: 'EUR',
+        locale: 'fr',
+        filters: Object.keys(filters).length > 0 ? filters : undefined,
+        sort: 'price_asc',
+        limit: 30,
+      });
+      
+      if (response.success && response.results.hotels.length > 0) {
+        const results = response.results.hotels.map(mapApiToHotelResult);
+        setHotelSearchResults(results);
+        eventBus.emit("hotels:results", { hotels: results });
+      } else {
+        setHotelSearchResults([]);
+        eventBus.emit("hotels:results", { hotels: [] });
+        if (response.results.hotels.length === 0) {
+          toastInfo("Aucun résultat", "Aucun hôtel trouvé pour ces critères");
+        }
+      }
+    } catch (error) {
+      console.error('[AccommodationPanel] Search error:', error);
+      toastError("Erreur de recherche", error instanceof Error ? error.message : "Impossible de rechercher les hôtels");
+      setHotelSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   // Handle back from results - clear results and prices from map
