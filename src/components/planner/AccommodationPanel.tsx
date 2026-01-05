@@ -22,6 +22,7 @@ import type { DateRange } from "react-day-picker";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { STAYS_ZOOM } from "@/constants/mapSettings";
 import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
+import HotelDetailView from "./HotelDetailView";
 import { eventBus } from "@/lib/eventBus";
 
 interface AccommodationPanelProps {
@@ -621,7 +622,24 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   const [showResults, setShowResults] = useState(false);
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [hoveredHotel, setHoveredHotel] = useState<HotelResult | null>(null);
+  const [selectedHotelForDetail, setSelectedHotelForDetail] = useState<HotelResult | null>(null);
 
+  // Listen for hotel selection from map pins
+  useEffect(() => {
+    const handleMapHotelSelect = (data: { hotel: { id: string } }) => {
+      // Find the hotel in search results
+      const hotel = searchResults.find(h => h.id === data.hotel.id);
+      if (hotel) {
+        setSelectedHotelId(hotel.id);
+        setSelectedHotelForDetail(hotel);
+      }
+    };
+
+    eventBus.on("hotels:select", handleMapHotelSelect);
+    return () => {
+      eventBus.off("hotels:select", handleMapHotelSelect);
+    };
+  }, [searchResults]);
   const activeAccommodation = getActiveAccommodation();
   const hasMultipleAccommodations = memory.accommodations.length > 1;
   const rooms = memory.useAutoRooms ? getSuggestedRooms() : memory.customRooms;
@@ -1057,10 +1075,16 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     eventBus.emit("hotels:results", { hotels: [] });
   };
 
-  // Handle hotel selection
+  // Handle hotel selection - show detail view
   const handleHotelSelect = (hotel: HotelResult) => {
     setSelectedHotelId(hotel.id);
+    setSelectedHotelForDetail(hotel);
     eventBus.emit("hotels:select", { hotel });
+  };
+  
+  // Handle back from detail view - return to results list
+  const handleBackFromDetail = () => {
+    setSelectedHotelForDetail(null);
   };
 
   // Handle hotel hover
@@ -1113,6 +1137,25 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     setNewCitySearch("");
     setNewCityDates({ checkIn: null, checkOut: null });
   };
+
+  // If showing hotel detail, render the detail view
+  if (selectedHotelForDetail) {
+    return (
+      <HotelDetailView
+        hotel={selectedHotelForDetail}
+        nights={searchNights}
+        onBack={handleBackFromDetail}
+        onBook={() => {
+          // Open booking URL or handle booking
+          if (selectedHotelForDetail.bookingUrl) {
+            window.open(selectedHotelForDetail.bookingUrl, '_blank');
+          } else {
+            toastInfo("Réservation", "La réservation sera bientôt disponible !");
+          }
+        }}
+      />
+    );
+  }
 
   // If showing results, render the results view instead
   if (showResults) {
