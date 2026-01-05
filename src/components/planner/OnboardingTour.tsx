@@ -122,6 +122,7 @@ function injectDriverStyles() {
        POPOVER STYLING - CLEAN & READABLE
        ============================================ */
     .driver-popover {
+      position: relative !important;
       z-index: 10002 !important;
       background: hsl(var(--card)) !important;
       border: 1px solid hsl(var(--border) / 0.6) !important;
@@ -361,19 +362,28 @@ function injectDriverStyles() {
 
     /* Close/Skip button */
     .driver-popover-close-btn {
-      background: transparent !important;
-      border: none !important;
+      position: absolute !important;
+      top: 12px !important;
+      right: 12px !important;
+      width: 32px !important;
+      height: 32px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: hsl(var(--muted) / 0.2) !important;
+      border: 1px solid hsl(var(--border) / 0.4) !important;
       color: hsl(var(--muted-foreground)) !important;
-      font-size: 0.8125rem !important;
+      font-size: 18px !important;
       cursor: pointer !important;
-      padding: 6px 12px !important;
-      border-radius: 8px !important;
+      padding: 0 !important;
+      border-radius: 10px !important;
       transition: all 0.2s !important;
     }
 
     .driver-popover-close-btn:hover {
       color: hsl(var(--foreground)) !important;
-      background: hsl(var(--muted) / 0.5) !important;
+      background: hsl(var(--muted) / 0.6) !important;
+      border-color: hsl(var(--border) / 0.7) !important;
     }
 
     /* Navigation buttons container */
@@ -708,7 +718,7 @@ export default function OnboardingTour({
         
         const driverConfig: Config = {
           showButtons: ['next', 'previous', 'close'],
-          showProgress: false, // We use custom progress
+          showProgress: false, // we render our own progress UI
           allowClose: true,
           overlayOpacity: 0.88,
           stagePadding: 16,
@@ -725,10 +735,28 @@ export default function OnboardingTour({
             const total = opts.config.steps?.length ?? steps.length;
             renderProgressDots(popover.wrapper, idx, total);
           },
+          // Important: we control navigation so the UI can switch tab/panel BEFORE Driver tries to highlight
+          onNextClick: (_el, _step, opts) => {
+            const idx = opts.state.activeIndex ?? 0;
+            const nextIndex = idx + 1;
+            configureStep(nextIndex);
+            setTimeout(() => {
+              opts.driver.refresh();
+              opts.driver.moveNext();
+            }, 280);
+          },
+          onPrevClick: (_el, _step, opts) => {
+            const idx = opts.state.activeIndex ?? 0;
+            const prevIndex = Math.max(0, idx - 1);
+            configureStep(prevIndex);
+            setTimeout(() => {
+              opts.driver.refresh();
+              opts.driver.movePrevious();
+            }, 220);
+          },
           steps: steps.map((step, index) => ({
             ...step,
             onHighlightStarted: () => {
-              configureStep(index);
               const tab = STEP_CONFIG[index]?.tab;
               highlightTabButton(tab);
             },
