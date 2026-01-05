@@ -101,7 +101,10 @@ function injectDriverStyles() {
       padding: 0 !important;
       max-width: 420px !important;
       min-width: 340px !important;
+      max-height: none !important;
       overflow: visible !important;
+      display: flex !important;
+      flex-direction: column !important;
       animation: travliaq-popover-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
       transform-origin: center center !important;
     }
@@ -259,6 +262,8 @@ function injectDriverStyles() {
       padding: 0 20px 16px 20px !important;
       font-size: 0.9375rem !important;
       line-height: 1.6 !important;
+      flex: 1 1 auto !important;
+      overflow: visible !important;
       animation: travliaq-slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both !important;
     }
 
@@ -541,6 +546,12 @@ function injectDriverStyles() {
       max-height: none !important;
       overflow: visible !important;
     }
+
+    /* Larger popover for dense steps (ex: barre d'outils) */
+    .travliaq-popover-large.driver-popover {
+      max-width: 560px !important;
+      min-width: 420px !important;
+    }
     
     /* Intro modal - no element highlighted */
     .intro-modal.driver-popover {
@@ -799,18 +810,18 @@ export default function OnboardingTour({
         title: "🛠️ Barre d'Outils",
         description: `
           <span class="highlight-badge">Navigation rapide</span>
-          <p>Basculez entre les différents aspects de votre voyage :</p>
+          <p>Accédez instantanément à chaque partie de votre voyage, sans perdre le contexte.</p>
           <div class="feature-grid">
             <div class="feature-item">✈️ Vols</div>
             <div class="feature-item">🏨 Hébergements</div>
             <div class="feature-item">🎭 Activités</div>
             <div class="feature-item">⚙️ Préférences</div>
           </div>
-          <div class="tip-box">💡 Chaque onglet ouvre un panneau de configuration dédié</div>
+          <div class="tip-box">💡 Chaque onglet ouvre un panneau dédié, et tout se synchronise avec l'IA</div>
         `,
         side: "bottom",
         align: "center",
-        popoverClass: "center-popover",
+        popoverClass: "center-popover travliaq-popover-large",
       },
     },
     // Step 3: Map
@@ -991,14 +1002,20 @@ export default function OnboardingTour({
           },
           onNextClick: (_el, _step, opts) => {
             const idx = opts.state.activeIndex ?? 0;
-            const nextIndex = idx + 1;
-            if (nextIndex < steps.length) {
-              configureStep(nextIndex);
-              // Small delay to let UI update before driver moves
-              setTimeout(() => {
-                opts.driver.moveNext();
-              }, 150);
+
+            // Last step: "C'est parti !" should end the tour
+            if (idx >= steps.length - 1) {
+              opts.driver.destroy();
+              return;
             }
+
+            const nextIndex = idx + 1;
+            configureStep(nextIndex);
+
+            // Small delay to let UI update before driver moves
+            setTimeout(() => {
+              opts.driver.moveNext();
+            }, 150);
           },
           onPrevClick: (_el, _step, opts) => {
             const idx = opts.state.activeIndex ?? 0;
