@@ -993,16 +993,16 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       { name: "Shangri-La The Shard", lat: 51.5045, lng: -0.0865, basePrice: 420, rating: 9.3, stars: 5, address: "31 St Thomas St, SE1 9QU", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
     ];
     
-    // Paris hotels with real coordinates
+    // Paris hotels - centered in Paris (not too west to avoid panel overlap)
     const parisHotels = [
-      { name: "Le Meurice", lat: 48.8651, lng: 2.3281, basePrice: 650, rating: 9.4, stars: 5, address: "228 Rue de Rivoli, 75001 Paris", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop" },
-      { name: "Hôtel Plaza Athénée", lat: 48.8661, lng: 2.3042, basePrice: 720, rating: 9.5, stars: 5, address: "25 Av. Montaigne, 75008 Paris", image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop" },
-      { name: "Hôtel Le Bristol", lat: 48.8720, lng: 2.3167, basePrice: 580, rating: 9.3, stars: 5, address: "112 Rue du Fbg St-Honoré, 75008", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop" },
-      { name: "Novotel Paris Tour Eiffel", lat: 48.8518, lng: 2.2916, basePrice: 185, rating: 8.2, stars: 4, address: "61 Quai de Grenelle, 75015 Paris", image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop" },
-      { name: "Ibis Paris Montmartre", lat: 48.8849, lng: 2.3432, basePrice: 95, rating: 7.9, stars: 3, address: "5 Rue Caulaincourt, 75018 Paris", image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop" },
-      { name: "B&B Hôtel Paris Villette", lat: 48.8977, lng: 2.3856, basePrice: 65, rating: 7.5, stars: 2, address: "16 Rue de l'Ourcq, 75019 Paris", image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" },
-      { name: "Hôtel de Crillon", lat: 48.8680, lng: 2.3219, basePrice: 890, rating: 9.6, stars: 5, address: "10 Place de la Concorde, 75008", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop" },
-      { name: "Mama Shelter Paris East", lat: 48.8608, lng: 2.3938, basePrice: 120, rating: 8.4, stars: 4, address: "109 Rue de Bagnolet, 75020 Paris", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
+      { name: "Le Meurice", lat: 48.8608, lng: 2.3388, basePrice: 650, rating: 9.4, stars: 5, address: "228 Rue de Rivoli, 75001 Paris", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop" },
+      { name: "Hôtel Plaza Athénée", lat: 48.8669, lng: 2.3510, basePrice: 720, rating: 9.5, stars: 5, address: "25 Av. Montaigne, 75008 Paris", image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop" },
+      { name: "Hôtel Le Bristol", lat: 48.8735, lng: 2.3425, basePrice: 580, rating: 9.3, stars: 5, address: "112 Rue du Fbg St-Honoré, 75008", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop" },
+      { name: "Novotel Paris Centre", lat: 48.8580, lng: 2.3540, basePrice: 185, rating: 8.2, stars: 4, address: "8 Rue Croix des Petits Champs, 75001", image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop" },
+      { name: "Ibis Paris Opéra", lat: 48.8722, lng: 2.3335, basePrice: 95, rating: 7.9, stars: 3, address: "5 Rue de la Michodière, 75002", image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop" },
+      { name: "B&B Hôtel Paris Marais", lat: 48.8565, lng: 2.3620, basePrice: 65, rating: 7.5, stars: 2, address: "16 Rue du Temple, 75004 Paris", image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" },
+      { name: "Hôtel de Crillon", lat: 48.8687, lng: 2.3375, basePrice: 890, rating: 9.6, stars: 5, address: "10 Place de la Concorde, 75008", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop" },
+      { name: "Mama Shelter Paris", lat: 48.8525, lng: 2.3680, basePrice: 120, rating: 8.4, stars: 4, address: "109 Rue de la Roquette, 75011", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
     ];
     
     // Select hotels based on destination
