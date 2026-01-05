@@ -396,17 +396,13 @@ const HotelSearchResultsInner = memo(({
     setIsHeaderSticky(scrollTop > 10);
   };
 
-  // Handle card click - just highlight, don't open details
+  // Handle card click - just highlight on map, don't zoom or open details
   const handleCardClick = (hotel: HotelResult) => {
-    // Emit select event to highlight the marker on map
+    // Emit select event to highlight the marker on map (no zoom change)
     eventBus.emit("hotels:select", { hotel });
-    // Center map on hotel with offset
-    if (onMapMove) {
-      onMapMove([hotel.lng, hotel.lat], 14);
-    }
   };
 
-  // Handle view details button click
+  // Handle view details button click - just open details, no map impact
   const handleViewDetails = (hotel: HotelResult) => {
     onHotelSelect(hotel);
   };
