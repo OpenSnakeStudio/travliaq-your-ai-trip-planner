@@ -1049,22 +1049,40 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     address: hotel.address,
     lat: hotel.lat,
     lng: hotel.lng,
-    amenities: hotel.amenities.map(a => a.charAt(0).toUpperCase() + a.slice(1)), // Capitalize
+    amenities: hotel.amenities,
     stars: hotel.stars,
-    distanceFromCenter: hotel.distanceFromCenter ? `${hotel.distanceFromCenter} km` : undefined,
+    distanceFromCenter: hotel.distanceFromCenter != null ? `${hotel.distanceFromCenter} km` : undefined,
     bookingUrl: hotel.bookingUrl,
   }), []);
 
   // Handle search with real API
   const handleSearch = async () => {
     if (!canSearch || !activeAccommodation) return;
+
+    // Validate required params (show actionable messages)
+    if (!activeAccommodation.countryCode || !activeAccommodation.lat || !activeAccommodation.lng) {
+      toastError(
+        "Destination incomplète",
+        "Sélectionnez une ville dans la liste (pas seulement du texte) pour récupérer le pays et les coordonnées."
+      );
+      return;
+    }
+
+    if (!activeAccommodation.checkIn || !activeAccommodation.checkOut) {
+      toastError(
+        "Dates manquantes",
+        "Choisissez une date d'arrivée et une date de départ pour lancer la recherche d'hébergements."
+      );
+      return;
+    }
+
     setIsSearching(true);
     setShowHotelResults(true);
-    
+
     try {
       // Build rooms config for API - use customRooms from memory context
       const roomsConfig = memory.customRooms.length > 0 ? memory.customRooms : [{ adults: 2, children: 0, childrenAges: [] as number[], id: 'default' }];
-      const rooms: RoomOccupancy[] = roomsConfig.map(r => ({
+      const apiRooms: RoomOccupancy[] = roomsConfig.map(r => ({
         adults: r.adults,
         childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
       }));
@@ -1079,21 +1097,16 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         filters.types = activeAccommodation.types;
       }
       
-      // lat/lng are required by API - use city coordinates from memory
-      if (!activeAccommodation.lat || !activeAccommodation.lng) {
-        toastError("Coordonnées manquantes", "Veuillez sélectionner une ville avec des coordonnées valides");
-        setIsSearching(false);
-        return;
-      }
-      
+      // (coords are required by backend) — already validated above
+
       const response = await searchHotels({
         city: activeAccommodation.city,
-        countryCode: activeAccommodation.countryCode || 'FR',
+        countryCode: activeAccommodation.countryCode,
         lat: activeAccommodation.lat,
         lng: activeAccommodation.lng,
-        checkIn: activeAccommodation.checkIn ? format(activeAccommodation.checkIn, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
-        checkOut: activeAccommodation.checkOut ? format(activeAccommodation.checkOut, 'yyyy-MM-dd') : format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
-        rooms,
+        checkIn: format(activeAccommodation.checkIn, 'yyyy-MM-dd'),
+        checkOut: format(activeAccommodation.checkOut, 'yyyy-MM-dd'),
+        rooms: apiRooms,
         currency: 'EUR',
         locale: 'fr',
         filters: Object.keys(filters).length > 0 ? filters : undefined,

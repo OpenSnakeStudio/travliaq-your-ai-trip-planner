@@ -7,23 +7,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { eventBus } from "@/lib/eventBus";
 
-// Hotel result interface
+// Hotel result interface (aligned with Hotels API)
 export interface HotelResult {
   id: string;
   name: string;
-  imageUrl: string;
-  rating: number;
+  imageUrl: string | null;
+  rating: number | null;
   reviewCount: number;
   pricePerNight: number;
-  totalPrice?: number;
+  totalPrice?: number | null;
   currency: string;
   address: string;
   lat: number;
   lng: number;
   amenities: string[];
-  stars?: number;
-  distanceFromCenter?: string;
-  bookingUrl?: string;
+  stars?: number | null;
+  distanceFromCenter?: string | null;
+  bookingUrl?: string | null;
 }
 
 interface HotelSearchResultsProps {
@@ -81,12 +81,16 @@ const HotelCard = memo(({
       {/* Image */}
       <div className="relative h-32 w-full overflow-hidden bg-muted flex-shrink-0">
         <img
-          src={hotel.imageUrl}
+          src={
+            hotel.imageUrl ??
+            "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"
+          }
           alt={hotel.name}
           className="w-full h-full object-cover transition-transform group-hover:scale-105"
           loading="lazy"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop';
+            (e.target as HTMLImageElement).src =
+              "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop";
           }}
         />
         {/* Price badge */}
@@ -94,7 +98,7 @@ const HotelCard = memo(({
           {hotel.pricePerNight}€<span className="text-xs font-normal opacity-80">/nuit</span>
         </div>
         {/* Stars */}
-        {hotel.stars && (
+        {!!hotel.stars && hotel.stars > 0 && (
           <div className="absolute top-2 left-2 flex gap-0.5">
             {Array.from({ length: hotel.stars }).map((_, i) => (
               <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -110,7 +114,7 @@ const HotelCard = memo(({
           <h3 className="font-semibold text-sm line-clamp-2 flex-1">{hotel.name}</h3>
           <div className="flex items-center gap-1 shrink-0">
             <div className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-xs font-bold">
-              {hotel.rating.toFixed(1)}
+              {hotel.rating === null || hotel.rating === undefined ? "—" : hotel.rating.toFixed(1)}
             </div>
             <span className="text-xs text-muted-foreground">({hotel.reviewCount})</span>
           </div>
