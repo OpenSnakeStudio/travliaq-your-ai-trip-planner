@@ -1,7 +1,7 @@
 // Shared map settings for consistent behavior across components
 
 // Zoom level used for accommodation/stays tab focus
-export const STAYS_ZOOM = 10;
+export const STAYS_ZOOM = 13;
 
 // Calculate horizontal offset for stays tab when panel is open
 // Returns a negative value to shift camera left → city appears more to the right
