@@ -2247,8 +2247,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         eventBus.emit("hotels:hover", { hotel: null, source: "map" });
       });
 
-      // Click to open detail view
+      // Click to open detail view and ensure panel is open
       el.addEventListener("click", () => {
+        eventBus.emit("hotels:openPanel");
         eventBus.emit("hotels:openDetail", { hotel: hotel as any });
       });
 

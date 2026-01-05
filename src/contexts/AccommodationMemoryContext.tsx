@@ -68,6 +68,25 @@ export interface AccommodationEntry {
   advancedFilters: AdvancedFilters;
 }
 
+// Hotel search result (simplified for persistence)
+export interface HotelSearchResult {
+  id: string;
+  name: string;
+  imageUrl: string;
+  rating: number;
+  reviewCount: number;
+  pricePerNight: number;
+  totalPrice?: number;
+  currency: string;
+  address: string;
+  lat: number;
+  lng: number;
+  amenities: string[];
+  stars?: number;
+  distanceFromCenter?: string;
+  bookingUrl?: string;
+}
+
 // Accommodation memory state
 export interface AccommodationMemory {
   // List of accommodations (one per city/segment)
@@ -81,6 +100,10 @@ export interface AccommodationMemory {
   defaultBudgetPreset: BudgetPreset;
   defaultPriceMin: number;
   defaultPriceMax: number;
+  // Hotel search state (persists when panel closes)
+  hotelSearchResults: HotelSearchResult[];
+  showHotelResults: boolean;
+  selectedHotelForDetailId: string | null;
 }
 
 // Context value type
@@ -133,6 +156,12 @@ interface AccommodationMemoryContextValue {
   // Serialization for persistence
   getSerializedState: () => Record<string, unknown>;
 
+  // Hotel search state management
+  setHotelSearchResults: (results: HotelSearchResult[]) => void;
+  setShowHotelResults: (show: boolean) => void;
+  setSelectedHotelForDetailId: (id: string | null) => void;
+  clearHotelSearch: () => void;
+
   // Computed values
   isReadyToSearch: boolean;
   getRoomsSummary: () => string;
@@ -179,6 +208,10 @@ const initialMemory: AccommodationMemory = {
   defaultBudgetPreset: "comfort",
   defaultPriceMin: 80,
   defaultPriceMax: 180,
+  // Hotel search state (runtime only, not persisted to localStorage)
+  hotelSearchResults: [],
+  showHotelResults: false,
+  selectedHotelForDetailId: null,
 };
 
 // Serialize for localStorage (convert Dates to ISO strings)
@@ -221,6 +254,10 @@ function deserializeMemory(json: string): AccommodationMemory | null {
       defaultBudgetPreset: migrated.defaultBudgetPreset || 'comfort',
       defaultPriceMin: migrated.defaultPriceMin ?? 80,
       defaultPriceMax: migrated.defaultPriceMax ?? 180,
+      // Hotel search state is runtime only, never persisted
+      hotelSearchResults: [],
+      showHotelResults: false,
+      selectedHotelForDetailId: null,
     };
   } catch {
     return null;
@@ -626,6 +663,28 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     return JSON.parse(serializeMemory(memory));
   }, [memory]);
 
+  // Hotel search state management
+  const setHotelSearchResults = useCallback((results: HotelSearchResult[]) => {
+    setMemory(prev => ({ ...prev, hotelSearchResults: results }));
+  }, []);
+
+  const setShowHotelResults = useCallback((show: boolean) => {
+    setMemory(prev => ({ ...prev, showHotelResults: show }));
+  }, []);
+
+  const setSelectedHotelForDetailId = useCallback((id: string | null) => {
+    setMemory(prev => ({ ...prev, selectedHotelForDetailId: id }));
+  }, []);
+
+  const clearHotelSearch = useCallback(() => {
+    setMemory(prev => ({
+      ...prev,
+      hotelSearchResults: [],
+      showHotelResults: false,
+      selectedHotelForDetailId: null,
+    }));
+  }, []);
+
   const value: AccommodationMemoryContextValue = {
     memory,
     addAccommodation,
@@ -648,6 +707,10 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     resetMemory,
     updateMemoryBatch,
     getSerializedState,
+    setHotelSearchResults,
+    setShowHotelResults,
+    setSelectedHotelForDetailId,
+    clearHotelSearch,
     isReadyToSearch,
     getRoomsSummary,
     getTotalNights,
