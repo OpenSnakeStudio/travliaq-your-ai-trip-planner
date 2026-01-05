@@ -1,10 +1,11 @@
 import { memo, useRef, useEffect, useState } from "react";
-import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, X, ExternalLink } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { eventBus } from "@/lib/eventBus";
 
 // Hotel result interface
 export interface HotelResult {
@@ -34,6 +35,7 @@ interface HotelSearchResultsProps {
   onHotelSelect: (hotel: HotelResult) => void;
   onHotelHover: (hotel: HotelResult | null) => void;
   selectedHotelId?: string | null;
+  highlightedHotelId?: string | null;
   onMapMove?: (center: [number, number], zoom: number) => void;
 }
 
@@ -49,20 +51,28 @@ const amenityIcons: Record<string, typeof Wifi> = {
 const HotelCard = memo(({
   hotel,
   isSelected,
+  isHighlighted,
   onSelect,
+  onViewDetails,
   onHover,
+  cardRef,
 }: {
   hotel: HotelResult;
   isSelected: boolean;
+  isHighlighted: boolean;
   onSelect: () => void;
+  onViewDetails: () => void;
   onHover: (hovering: boolean) => void;
+  cardRef?: React.RefObject<HTMLDivElement>;
 }) => {
   return (
     <div
+      ref={cardRef}
       className={cn(
         "group relative rounded-xl border bg-card overflow-hidden transition-all cursor-pointer",
         "hover:shadow-lg hover:border-primary/30",
-        isSelected && "ring-2 ring-primary border-primary"
+        isSelected && "ring-2 ring-primary border-primary",
+        isHighlighted && !isSelected && "ring-2 ring-primary/60 border-primary/60 bg-primary/5 shadow-lg"
       )}
       onClick={onSelect}
       onMouseEnter={() => onHover(true)}
@@ -131,13 +141,31 @@ const HotelCard = memo(({
           </div>
         )}
 
-        {/* Total price */}
-        {hotel.totalPrice && (
-          <div className="pt-1 border-t border-border/50 flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Total</span>
-            <span className="font-bold text-primary">{hotel.totalPrice}€</span>
-          </div>
-        )}
+        {/* Total price + View details button */}
+        <div className="pt-1 border-t border-border/50 flex items-center justify-between">
+          {hotel.totalPrice ? (
+            <>
+              <div>
+                <span className="text-xs text-muted-foreground">Total </span>
+                <span className="font-bold text-primary">{hotel.totalPrice}€</span>
+              </div>
+            </>
+          ) : (
+            <div />
+          )}
+          <Button
+            variant="default"
+            size="sm"
+            className="h-7 text-xs gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails();
+            }}
+          >
+            <Eye className="h-3 w-3" />
+            Voir détails
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -173,8 +201,186 @@ const HotelSearchResults = ({
   onHotelSelect,
   onHotelHover,
   selectedHotelId,
+  highlightedHotelId,
   onMapMove,
 }: HotelSearchResultsProps) => {
+  const headerRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+  const [mapHoveredHotelId, setMapHoveredHotelId] = useState<string | null>(null);
+  
+  // Refs for each hotel card to enable scrolling
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // Listen for hover events from map markers
+  useEffect(() => {
+    const handleMapHover = (data: { hotel: HotelResult | null }) => {
+      const hotelId = data.hotel?.id || null;
+      setMapHoveredHotelId(hotelId);
+      
+      // Scroll to the card when hovering on map
+      if (hotelId && cardRefs.current.has(hotelId)) {
+        const cardEl = cardRefs.current.get(hotelId);
+        cardEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+
+    eventBus.on("hotels:hover", handleMapHover);
+    return () => {
+      eventBus.off("hotels:hover", handleMapHover);
+    };
+  }, []);
+
+  // Handle scroll for sticky header effect
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = (e.target as HTMLDivElement).scrollTop;
+    setIsHeaderSticky(scrollTop > 10);
+  };
+
+  // Handle card click - just highlight, don't open details
+  const handleCardClick = (hotel: HotelResult) => {
+    // Emit select event to highlight the marker on map
+    eventBus.emit("hotels:select", { hotel });
+    // Center map on hotel with offset
+    if (onMapMove) {
+      onMapMove([hotel.lng, hotel.lat], 14);
+    }
+  };
+
+  // Handle view details button click
+  const handleViewDetails = (hotel: HotelResult) => {
+    onHotelSelect(hotel);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Sticky header with back button */}
+      <div
+        ref={headerRef}
+        className={cn(
+          "sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-4 py-3 border-b transition-shadow",
+          isHeaderSticky && "shadow-md"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="h-8 w-8 p-0 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-sm truncate">
+              Hébergements à {destination}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {isLoading ? "Recherche en cours..." : `${results.length} résultats · ${nights} nuit${nights > 1 ? "s" : ""}`}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Results list */}
+      <ScrollArea className="flex-1" onScrollCapture={handleScroll}>
+        <div ref={scrollAreaRef} className="p-4 space-y-3">
+          {isLoading ? (
+            // Loading skeletons
+            Array.from({ length: 5 }).map((_, i) => (
+              <HotelCardSkeleton key={i} />
+            ))
+          ) : results.length === 0 ? (
+            // No results
+            <div className="text-center py-12">
+              <div className="text-4xl mb-3">🏨</div>
+              <p className="text-muted-foreground text-sm">
+                Aucun hébergement trouvé pour ces critères
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onBack}
+                className="mt-4"
+              >
+                Modifier la recherche
+              </Button>
+            </div>
+          ) : (
+            // Hotel cards
+            results.map((hotel) => (
+              <HotelCard
+                key={hotel.id}
+                hotel={hotel}
+                isSelected={selectedHotelId === hotel.id}
+                isHighlighted={mapHoveredHotelId === hotel.id || highlightedHotelId === hotel.id}
+                onSelect={() => handleCardClick(hotel)}
+                onViewDetails={() => handleViewDetails(hotel)}
+                onHover={(hovering) => onHotelHover(hovering ? hotel : null)}
+                cardRef={{
+                  current: null,
+                  // Store ref in our map
+                } as React.RefObject<HTMLDivElement>}
+              />
+            ))
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+};
+
+// Wrapper to properly handle refs
+const HotelSearchResultsWrapper = (props: HotelSearchResultsProps) => {
+  const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const [mapHoveredHotelId, setMapHoveredHotelId] = useState<string | null>(null);
+
+  // Listen for hover events from map markers
+  useEffect(() => {
+    const handleMapHover = (data: { hotel: HotelResult | null }) => {
+      const hotelId = data.hotel?.id || null;
+      setMapHoveredHotelId(hotelId);
+      
+      // Scroll to the card when hovering on map
+      if (hotelId && cardRefs.current.has(hotelId)) {
+        const cardEl = cardRefs.current.get(hotelId);
+        cardEl?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    };
+
+    eventBus.on("hotels:hover", handleMapHover);
+    return () => {
+      eventBus.off("hotels:hover", handleMapHover);
+    };
+  }, []);
+
+  return (
+    <HotelSearchResultsInner
+      {...props}
+      cardRefs={cardRefs}
+      mapHoveredHotelId={mapHoveredHotelId}
+    />
+  );
+};
+
+// Inner component with proper ref handling
+const HotelSearchResultsInner = memo(({
+  results,
+  isLoading,
+  destination,
+  nights,
+  onBack,
+  onHotelSelect,
+  onHotelHover,
+  selectedHotelId,
+  highlightedHotelId,
+  onMapMove,
+  cardRefs,
+  mapHoveredHotelId,
+}: HotelSearchResultsProps & {
+  cardRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  mapHoveredHotelId: string | null;
+}) => {
   const headerRef = useRef<HTMLDivElement>(null);
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
 
@@ -182,6 +388,30 @@ const HotelSearchResults = ({
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = (e.target as HTMLDivElement).scrollTop;
     setIsHeaderSticky(scrollTop > 10);
+  };
+
+  // Handle card click - just highlight, don't open details
+  const handleCardClick = (hotel: HotelResult) => {
+    // Emit select event to highlight the marker on map
+    eventBus.emit("hotels:select", { hotel });
+    // Center map on hotel with offset
+    if (onMapMove) {
+      onMapMove([hotel.lng, hotel.lat], 14);
+    }
+  };
+
+  // Handle view details button click
+  const handleViewDetails = (hotel: HotelResult) => {
+    onHotelSelect(hotel);
+  };
+
+  // Set ref for a card
+  const setCardRef = (hotelId: string) => (el: HTMLDivElement | null) => {
+    if (el) {
+      cardRefs.current.set(hotelId, el);
+    } else {
+      cardRefs.current.delete(hotelId);
+    }
   };
 
   return (
@@ -239,27 +469,29 @@ const HotelSearchResults = ({
               </Button>
             </div>
           ) : (
-            // Hotel cards
+            // Hotel cards with proper refs
             results.map((hotel) => (
-              <HotelCard
-                key={hotel.id}
-                hotel={hotel}
-                isSelected={selectedHotelId === hotel.id}
-                onSelect={() => {
-                  onHotelSelect(hotel);
-                  // Center map on hotel
-                  if (onMapMove) {
-                    onMapMove([hotel.lng, hotel.lat], 15);
-                  }
-                }}
-                onHover={(hovering) => onHotelHover(hovering ? hotel : null)}
-              />
+              <div 
+                key={hotel.id} 
+                ref={setCardRef(hotel.id)}
+              >
+                <HotelCard
+                  hotel={hotel}
+                  isSelected={selectedHotelId === hotel.id}
+                  isHighlighted={mapHoveredHotelId === hotel.id || highlightedHotelId === hotel.id}
+                  onSelect={() => handleCardClick(hotel)}
+                  onViewDetails={() => handleViewDetails(hotel)}
+                  onHover={(hovering) => onHotelHover(hovering ? hotel : null)}
+                />
+              </div>
             ))
           )}
         </div>
       </ScrollArea>
     </div>
   );
-};
+});
 
-export default memo(HotelSearchResults);
+HotelSearchResultsInner.displayName = "HotelSearchResultsInner";
+
+export default memo(HotelSearchResultsWrapper);
