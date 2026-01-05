@@ -477,9 +477,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       if (!map.current || !mapLoaded) return;
 
       const offsetX = getStaysOffsetX();
-      const duration = opts?.immediate ? 0 : 1200;
+      const duration = opts?.immediate ? 0 : 800;
 
-      map.current.easeTo({
+      map.current.flyTo({
         center: [target.lng, target.lat],
         zoom: target.zoom,
         duration,
@@ -510,9 +510,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
 
     if (targetAccom?.lat && targetAccom?.lng) {
-      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 11, city: targetAccom.city };
-      
-      // Small delay to ensure panel is fully rendered before calculating offset
+      // Match the exact behavior of clicking an accommodation city tab (zoom = 12)
+      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 12, city: targetAccom.city };
+
+      // Small delay to ensure the panel is rendered before we measure its width for the offset
       setTimeout(() => {
         focusStaysTarget(staysFocusRef.current!);
       }, 50);
@@ -2091,15 +2092,21 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [activeTab, mapLoaded, activityState.search.attractions]);
 
   // Update map center/zoom with fast animation
+  // Note: on stays tab, we apply the same horizontal offset used for accommodation focus,
+  // so clicking a city (which updates `center/zoom`) and switching to the tab feel identical.
   useEffect(() => {
     if (!map.current) return;
+
+    const offsetX = activeTab === "stays" ? getStaysOffsetX() : 0;
+
     map.current.flyTo({
       center: [center[0], center[1]],
       zoom,
       duration: 800, // Fast animation (was default ~2500ms)
       essential: true,
+      offset: [offsetX, 0],
     });
-  }, [center, zoom]);
+  }, [center, zoom, activeTab, getStaysOffsetX]);
 
   return (
     <div className="absolute inset-0 w-full h-full relative" data-tour="map-area">
