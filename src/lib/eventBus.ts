@@ -69,6 +69,7 @@ export type PlannerEvents = {
   "hotels:results": { hotels: HotelResult[] };
   "hotels:select": { hotel: HotelResult };
   "hotels:hover": { hotel: HotelResult | null; source?: "map" | "list" };
+  "hotels:openDetail": { hotel: HotelResult };
   
   // Activities-related
   "activities:search": {

@@ -638,6 +638,21 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       eventBus.off("hotels:select", handleMapHotelSelect);
     };
   }, [searchResults]);
+
+  // Listen for hotel detail open from map pin clicks
+  useEffect(() => {
+    const handleOpenDetail = (data: { hotel: { id: string } }) => {
+      const hotel = searchResults.find((h) => h.id === data.hotel.id);
+      if (!hotel) return;
+      setSelectedHotelId(hotel.id);
+      setSelectedHotelForDetail(hotel);
+    };
+
+    eventBus.on("hotels:openDetail", handleOpenDetail);
+    return () => {
+      eventBus.off("hotels:openDetail", handleOpenDetail);
+    };
+  }, [searchResults]);
   const activeAccommodation = getActiveAccommodation();
   const hasMultipleAccommodations = memory.accommodations.length > 1;
   const rooms = memory.useAutoRooms ? getSuggestedRooms() : memory.customRooms;
