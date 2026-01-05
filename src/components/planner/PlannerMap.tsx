@@ -1779,6 +1779,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [mapLoaded]);
 
   // Display accommodation markers when stays tab is active
+  // ONLY show when NOT in search mode (no hotel price results displayed)
   const accommodationMarkersRef = useRef<mapboxgl.Marker[]>([]);
   
   useEffect(() => {
@@ -1788,8 +1789,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     accommodationMarkersRef.current.forEach((marker) => marker.remove());
     accommodationMarkersRef.current = [];
     
-    // Only show on stays tab
+    // Only show on stays tab AND only when NOT in search mode (no hotel results)
     if (activeTab !== "stays") return;
+    if (hotelResults.hotels.length > 0) return; // Hide pins when search results are displayed
     
     // Get accommodations with valid coordinates
     const accommodations = accommodationMemory.accommodations.filter(
@@ -1882,7 +1884,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       accommodationMarkersRef.current.forEach((marker) => marker.remove());
       accommodationMarkersRef.current = [];
     };
-  }, [activeTab, mapLoaded, accommodationMemory.accommodations]);
+  }, [activeTab, mapLoaded, accommodationMemory.accommodations, hotelResults.hotels.length]);
 
   // Display activity destination markers when activities tab is active
   const activityDestinationMarkersRef = useRef<mapboxgl.Marker[]>([]);
