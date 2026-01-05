@@ -975,64 +975,60 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     ? differenceInDays(activeAccommodation.checkOut, activeAccommodation.checkIn)
     : 1;
 
-  // Generate mock hotel results based on search criteria
+  // Generate mock hotel results based on search criteria - London & Paris specific
   const generateMockResults = useCallback((): HotelResult[] => {
     if (!activeAccommodation) return [];
     
-    const basePrice = activeAccommodation.priceMin + 
-      Math.random() * (activeAccommodation.priceMax - activeAccommodation.priceMin);
+    const destLower = activeAccommodation.city.toLowerCase();
     
-    const hotelNames = [
-      "Grand Hôtel Central",
-      "Boutique Riviera",
-      "Comfort Inn City",
-      "Palace Royale",
-      "Urban Nest Hotel",
-      "The Heritage House",
-      "Modern Loft Suites",
-      "Garden View Resort",
-      "City Center Lodge",
-      "Premium Towers"
+    // London hotels with real coordinates
+    const londonHotels = [
+      { name: "The Savoy", lat: 51.5103, lng: -0.1205, basePrice: 450, rating: 9.2, stars: 5, address: "Strand, London WC2R 0EZ", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop" },
+      { name: "Claridge's", lat: 51.5127, lng: -0.1469, basePrice: 520, rating: 9.4, stars: 5, address: "Brook St, London W1K 4HR", image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop" },
+      { name: "The Ritz London", lat: 51.5074, lng: -0.1418, basePrice: 580, rating: 9.5, stars: 5, address: "150 Piccadilly, London W1J 9BR", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop" },
+      { name: "Park Plaza Westminster", lat: 51.4994, lng: -0.1248, basePrice: 180, rating: 8.3, stars: 4, address: "200 Westminster Bridge Rd, SE1 7UT", image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop" },
+      { name: "Premier Inn London City", lat: 51.5155, lng: -0.0765, basePrice: 95, rating: 8.1, stars: 3, address: "22-28 Aldgate High St, EC3N 1AH", image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop" },
+      { name: "Travelodge London Central", lat: 51.5194, lng: -0.0973, basePrice: 75, rating: 7.8, stars: 3, address: "60 Farringdon Rd, EC1M 3JB", image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" },
+      { name: "The Langham London", lat: 51.5181, lng: -0.1436, basePrice: 380, rating: 9.0, stars: 5, address: "1C Portland Pl, W1B 1JA", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop" },
+      { name: "Shangri-La The Shard", lat: 51.5045, lng: -0.0865, basePrice: 420, rating: 9.3, stars: 5, address: "31 St Thomas St, SE1 9QU", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
     ];
+    
+    // Paris hotels with real coordinates
+    const parisHotels = [
+      { name: "Le Meurice", lat: 48.8651, lng: 2.3281, basePrice: 650, rating: 9.4, stars: 5, address: "228 Rue de Rivoli, 75001 Paris", image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop" },
+      { name: "Hôtel Plaza Athénée", lat: 48.8661, lng: 2.3042, basePrice: 720, rating: 9.5, stars: 5, address: "25 Av. Montaigne, 75008 Paris", image: "https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop" },
+      { name: "Hôtel Le Bristol", lat: 48.8720, lng: 2.3167, basePrice: 580, rating: 9.3, stars: 5, address: "112 Rue du Fbg St-Honoré, 75008", image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop" },
+      { name: "Novotel Paris Tour Eiffel", lat: 48.8518, lng: 2.2916, basePrice: 185, rating: 8.2, stars: 4, address: "61 Quai de Grenelle, 75015 Paris", image: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop" },
+      { name: "Ibis Paris Montmartre", lat: 48.8849, lng: 2.3432, basePrice: 95, rating: 7.9, stars: 3, address: "5 Rue Caulaincourt, 75018 Paris", image: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop" },
+      { name: "B&B Hôtel Paris Villette", lat: 48.8977, lng: 2.3856, basePrice: 65, rating: 7.5, stars: 2, address: "16 Rue de l'Ourcq, 75019 Paris", image: "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" },
+      { name: "Hôtel de Crillon", lat: 48.8680, lng: 2.3219, basePrice: 890, rating: 9.6, stars: 5, address: "10 Place de la Concorde, 75008", image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop" },
+      { name: "Mama Shelter Paris East", lat: 48.8608, lng: 2.3938, basePrice: 120, rating: 8.4, stars: 4, address: "109 Rue de Bagnolet, 75020 Paris", image: "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop" },
+    ];
+    
+    // Select hotels based on destination
+    let hotels = parisHotels; // default to Paris
+    if (destLower.includes('london') || destLower.includes('londres') || destLower.includes('uk') || destLower.includes('angleterre') || destLower.includes('england')) {
+      hotels = londonHotels;
+    }
 
     const amenitiesOptions = ["Wifi", "Parking", "Breakfast", "Pool", "Gym", "Spa"];
     
-    return hotelNames.slice(0, 8 + Math.floor(Math.random() * 4)).map((name, i) => {
-      const price = Math.round(basePrice * (0.7 + Math.random() * 0.6));
-      const lat = (activeAccommodation.lat || 48.8566) + (Math.random() - 0.5) * 0.03;
-      const lng = (activeAccommodation.lng || 2.3522) + (Math.random() - 0.5) * 0.04;
-      
-      // Valid Unsplash hotel images
-      const hotelImages = [
-        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1549294413-26f195200c16?w=400&h=300&fit=crop',
-        'https://images.unsplash.com/photo-1455587734955-081b22074882?w=400&h=300&fit=crop',
-      ];
-      
-      return {
-        id: `hotel-${i}-${Date.now()}`,
-        name,
-        imageUrl: hotelImages[i % hotelImages.length],
-        rating: 7 + Math.random() * 2.5,
-        reviewCount: 50 + Math.floor(Math.random() * 500),
-        pricePerNight: price,
-        totalPrice: price * searchNights,
-        currency: "EUR",
-        address: `${Math.floor(Math.random() * 200)} Rue du Centre, ${activeAccommodation.city}`,
-        lat,
-        lng,
-        amenities: amenitiesOptions.filter(() => Math.random() > 0.5).slice(0, 4),
-        stars: 3 + Math.floor(Math.random() * 2),
-        distanceFromCenter: `${(Math.random() * 2).toFixed(1)} km`,
-      };
-    }).sort((a, b) => a.pricePerNight - b.pricePerNight);
+    return hotels.map((hotel, i) => ({
+      id: `hotel-${i}-${Date.now()}`,
+      name: hotel.name,
+      imageUrl: hotel.image,
+      rating: hotel.rating,
+      reviewCount: 100 + Math.floor(Math.random() * 800),
+      pricePerNight: hotel.basePrice,
+      totalPrice: hotel.basePrice * searchNights,
+      currency: destLower.includes('london') || destLower.includes('londres') ? "GBP" : "EUR",
+      address: hotel.address,
+      lat: hotel.lat,
+      lng: hotel.lng,
+      amenities: amenitiesOptions.filter(() => Math.random() > 0.4).slice(0, 4),
+      stars: hotel.stars,
+      distanceFromCenter: `${(Math.random() * 2).toFixed(1)} km`,
+    })).sort((a, b) => a.pricePerNight - b.pricePerNight);
   }, [activeAccommodation, searchNights]);
 
   // Handle search
