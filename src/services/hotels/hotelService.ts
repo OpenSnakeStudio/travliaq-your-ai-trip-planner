@@ -227,7 +227,7 @@ export async function searchHotels(params: HotelSearchParams): Promise<HotelSear
   }
   
   try {
-    const response = await travliaqClient.post<HotelSearchResponse>('/hotels/search', {
+    const response = await travliaqClient.post<HotelSearchResponse>('/api/v1/hotels/search', {
       city: params.city,
       countryCode: params.countryCode,
       lat: params.lat,
@@ -283,7 +283,7 @@ export async function getHotelDetails(
       return `${r.adults}`;
     }).join(',');
     
-    const response = await travliaqClient.get<HotelDetailResponse>(`/hotels/${hotelId}`, {
+    const response = await travliaqClient.get<HotelDetailResponse>(`/api/v1/hotels/${hotelId}`, {
       params: {
         checkIn,
         checkOut,
@@ -316,7 +316,7 @@ export async function getMapPrices(params: MapPricesParams): Promise<MapPricesRe
   }
   
   try {
-    const response = await travliaqClient.post<MapPricesResponse>('/hotels/map-prices', {
+    const response = await travliaqClient.post<MapPricesResponse>('/api/v1/hotels/map-prices', {
       cities: params.cities.slice(0, 5), // API max 5 cities
       checkIn: params.checkIn,
       checkOut: params.checkOut,
@@ -340,7 +340,7 @@ export async function getMapPrices(params: MapPricesParams): Promise<MapPricesRe
  */
 export async function checkHealth(): Promise<boolean> {
   try {
-    const response = await travliaqClient.get('/hotels/health');
+    const response = await travliaqClient.get('/api/v1/hotels/health');
     return response.data?.status === 'ok';
   } catch {
     return false;
