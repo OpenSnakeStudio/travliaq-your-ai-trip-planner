@@ -533,13 +533,13 @@ function injectDriverStyles() {
     /* Center popover class - position at center of screen */
     .center-popover.driver-popover {
       position: fixed !important;
-      top: 55% !important;
+      top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
       z-index: 10002 !important;
       animation: travliaq-popover-enter-center 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-      max-height: min(75vh, 600px) !important;
-      overflow-y: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
     }
     
     /* Intro modal - no element highlighted */
@@ -577,8 +577,8 @@ function injectDriverStyles() {
       transform: translateY(-50%) !important;
       z-index: 10002 !important;
       animation: travliaq-popover-enter-right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-      max-height: min(80vh, 640px) !important;
-      overflow-y: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
     }
 
     @media (max-width: 768px) {
@@ -953,7 +953,7 @@ export default function OnboardingTour({
         configureStep(0);
         
         const driverConfig: Config = {
-          showButtons: ['next', 'previous'],
+          showButtons: ['next', 'previous', 'close'],
           showProgress: false,
           allowClose: true,
           overlayOpacity: 0.75,
@@ -1007,6 +1007,10 @@ export default function OnboardingTour({
             setTimeout(() => {
               opts.driver.movePrevious();
             }, 150);
+          },
+          onCloseClick: (_el, _step, opts) => {
+            // When user clicks "C'est parti !" (done button) on last step
+            opts.driver.destroy();
           },
           steps: steps,
           onDestroyed: () => {
