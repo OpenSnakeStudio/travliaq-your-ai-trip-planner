@@ -71,6 +71,7 @@ export type PlannerEvents = {
   "hotels:hover": { hotel: HotelResult | null; source?: "map" | "list" };
   "hotels:openDetail": { hotel: HotelResult };
   "hotels:clearSelection": void;
+  "hotels:fitToPrices": void; // Zoom map to fit all hotel price markers
   "hotels:openPanel": void;
   
   // Activities-related

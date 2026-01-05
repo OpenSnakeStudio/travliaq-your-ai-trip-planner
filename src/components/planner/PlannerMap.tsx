@@ -2139,18 +2139,39 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       setSelectedHotelId(null);
     };
 
+    // Handler to fit map to hotel prices (triggered when panel closes)
+    const handleFitToPrices = () => {
+      if (!map.current || !mapLoaded) return;
+      if (hotelResults.hotels.length === 0) return;
+      
+      // Calculate bounds of all hotels
+      const bounds = new mapboxgl.LngLatBounds();
+      hotelResults.hotels.forEach((hotel) => {
+        bounds.extend([hotel.lng, hotel.lat]);
+      });
+
+      // Fit bounds with minimal padding (panel is closed)
+      map.current.fitBounds(bounds, {
+        padding: { top: 80, bottom: 80, left: 80, right: 80 },
+        maxZoom: 14,
+        duration: 800,
+      });
+    };
+
     eventBus.on("hotels:results", handleHotelResults);
     eventBus.on("hotels:hover", handleHotelHover);
     eventBus.on("hotels:select", handleHotelSelect);
     eventBus.on("hotels:clearSelection", handleClearHotelSelection);
+    eventBus.on("hotels:fitToPrices", handleFitToPrices);
 
     return () => {
       eventBus.off("hotels:results", handleHotelResults);
       eventBus.off("hotels:hover", handleHotelHover);
       eventBus.off("hotels:select", handleHotelSelect);
       eventBus.off("hotels:clearSelection", handleClearHotelSelection);
+      eventBus.off("hotels:fitToPrices", handleFitToPrices);
     };
-  }, []);
+  }, [mapLoaded, hotelResults.hotels]);
 
   // Auto-fit bounds when hotel results change (NOT on hover/select changes)
   const previousHotelCountRef = useRef(0);

@@ -14,7 +14,7 @@ import { AutoDetectDeparture } from "@/components/planner/AutoDetectDeparture";
 import type { Airport } from "@/hooks/useNearestAirports";
 import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
-import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
+import { AccommodationMemoryProvider, useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
 import { usePlannerState } from "@/hooks/usePlannerState";
@@ -22,6 +22,7 @@ import { useMapState } from "@/hooks/useMapState";
 import { useFlightState } from "@/hooks/useFlightState";
 import { useDestinationPopup } from "@/hooks/useDestinationPopup";
 import { useChatIntegration } from "@/hooks/useChatIntegration";
+import eventBus from "@/lib/eventBus";
 
 export type TabType = "flights" | "activities" | "stays" | "preferences";
 
@@ -216,7 +217,13 @@ const TravelPlanner = () => {
                               activeTab={activeTab}
                               layout="overlay"
                               isVisible={isPanelVisible}
-                              onClose={() => setIsPanelVisible(false)}
+                              onClose={() => {
+                                // When closing stays tab with hotel results, zoom to fit prices
+                                if (activeTab === "stays") {
+                                  eventBus.emit("hotels:fitToPrices", undefined);
+                                }
+                                setIsPanelVisible(false);
+                              }}
                               onMapMove={(center, zoom) => {
                                 setMapCenter(center);
                                 setMapZoom(zoom);
