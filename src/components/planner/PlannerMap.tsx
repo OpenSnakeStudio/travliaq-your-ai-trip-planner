@@ -519,13 +519,26 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
   }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, focusStaysTarget]);
 
-  // When the stays panel opens/closes, re-center on the same target (center when closed, offset when open)
+  // When the stays panel opens/closes, ONLY adjust the horizontal offset - NO ZOOM CHANGE
+  // This keeps the map at the same zoom level and just shifts it left/right
   useEffect(() => {
     if (activeTab !== "stays") return;
-    if (!staysFocusRef.current) return;
-
-    focusStaysTarget(staysFocusRef.current, { immediate: false });
-  }, [activeTab, isPanelOpen, focusStaysTarget]);
+    if (!map.current || !mapLoaded) return;
+    
+    // Get current center and zoom - we want to keep these exactly the same
+    const currentCenter = map.current.getCenter();
+    const currentZoom = map.current.getZoom();
+    
+    // Only apply horizontal offset adjustment - no zoom change
+    const offsetX = getStaysOffsetX();
+    
+    map.current.easeTo({
+      center: [currentCenter.lng, currentCenter.lat],
+      zoom: currentZoom, // Keep current zoom
+      duration: 300,
+      offset: [offsetX, 0],
+    });
+  }, [activeTab, isPanelOpen, mapLoaded, getStaysOffsetX]);
 
   // Get activity entries for markers
   const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
@@ -2226,15 +2239,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         eventBus.emit("hotels:hover", { hotel: null });
       });
 
-      // Click to select - zoom only on click, not hover
+      // Click to select - emit event for detail view, with gentle pan (NO zoom change)
       el.addEventListener("click", () => {
         eventBus.emit("hotels:select", { hotel: hotel as any });
-        // Zoom to hotel with left offset
-        map.current?.flyTo({
+        // Gently pan to hotel WITHOUT changing zoom level - user can still switch hotels easily
+        const currentZoom = map.current?.getZoom() ?? 13;
+        map.current?.easeTo({
           center: [hotel.lng, hotel.lat],
-          zoom: 15,
-          duration: 800,
-          offset: [-200, 0], // Offset left to keep hotel visible
+          zoom: Math.min(currentZoom, 14), // Don't zoom in more than 14
+          duration: 500,
+          offset: [-150, 0], // Offset left to keep hotel visible
         });
       });
 
