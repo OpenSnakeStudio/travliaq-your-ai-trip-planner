@@ -71,6 +71,7 @@ export type PlannerEvents = {
   "hotels:hover": { hotel: HotelResult | null; source?: "map" | "list" };
   "hotels:openDetail": { hotel: HotelResult };
   "hotels:clearSelection": void;
+  "hotels:openPanel": void;
   
   // Activities-related
   "activities:search": {

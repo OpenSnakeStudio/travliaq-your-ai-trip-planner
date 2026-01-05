@@ -612,17 +612,24 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     setDates,
     setDestination,
     updateMemoryBatch,
+    setHotelSearchResults,
+    setShowHotelResults,
+    setSelectedHotelForDetailId,
+    clearHotelSearch,
   } = useAccommodationMemory();
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  
-  // Search results state
-  const [searchResults, setSearchResults] = useState<HotelResult[]>([]);
-  const [showResults, setShowResults] = useState(false);
-  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [hoveredHotel, setHoveredHotel] = useState<HotelResult | null>(null);
-  const [selectedHotelForDetail, setSelectedHotelForDetail] = useState<HotelResult | null>(null);
+  
+  // Use persisted hotel search state from context
+  const searchResults = memory.hotelSearchResults as HotelResult[];
+  const showResults = memory.showHotelResults;
+  const selectedHotelForDetailId = memory.selectedHotelForDetailId;
+  const selectedHotelForDetail = searchResults.find(h => h.id === selectedHotelForDetailId) || null;
+  
+  // Local state for highlighted card (separate from detail selection)
+  const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
 
   // Listen for hotel selection from map pins (highlight only — NEVER open detail)
   useEffect(() => {
@@ -645,14 +652,14 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       const hotel = searchResults.find((h) => h.id === data.hotel.id);
       if (!hotel) return;
       setSelectedHotelId(hotel.id);
-      setSelectedHotelForDetail(hotel);
+      setSelectedHotelForDetailId(hotel.id);
     };
 
     eventBus.on("hotels:openDetail", handleOpenDetail);
     return () => {
       eventBus.off("hotels:openDetail", handleOpenDetail);
     };
-  }, [searchResults]);
+  }, [searchResults, setSelectedHotelForDetailId]);
 
   // When hovering map pins, we want ONLY the hovered pin highlighted.
   // So we clear any prior selection as soon as the user starts hovering on the map.
@@ -689,9 +696,16 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     setDestinationInput(activeAccommodation?.city || "");
   }, [activeAccommodation?.id, activeAccommodation?.city]);
 
-  // Zoom on map when switching between accommodations (only on index change)
-  const prevIndexRef = useRef(memory.activeAccommodationIndex);
+  // Zoom on map when switching between accommodations (only on EXPLICIT index change, not on component mount)
+  const prevIndexRef = useRef<number | null>(null);
+  const isFirstMountRef = useRef(true);
   useEffect(() => {
+    // Skip zoom on first mount (when panel reopens)
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      prevIndexRef.current = memory.activeAccommodationIndex;
+      return;
+    }
     // Only zoom when we actually switch tabs, not on every render
     if (prevIndexRef.current !== memory.activeAccommodationIndex) {
       prevIndexRef.current = memory.activeAccommodationIndex;
@@ -700,6 +714,13 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       }
     }
   }, [memory.activeAccommodationIndex, activeAccommodation?.lat, activeAccommodation?.lng]);
+
+  // Re-emit hotel results to map when component mounts (if we have persisted results)
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      eventBus.emit("hotels:results", { hotels: searchResults });
+    }
+  }, []); // Only on mount
 
   // Sync accommodations with flight data (multi-destination OR round-trip/one-way)
   const prevFlightSyncRef = useRef<string>("");
@@ -1089,13 +1110,13 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   const handleSearch = async () => {
     if (!canSearch) return;
     setIsSearching(true);
-    setShowResults(true);
+    setShowHotelResults(true);
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     const results = generateMockResults();
-    setSearchResults(results);
+    setHotelSearchResults(results);
     setIsSearching(false);
     
     // Emit hotel results to map
@@ -1104,10 +1125,8 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
   // Handle back from results - clear results and prices from map
   const handleBackFromResults = () => {
-    setShowResults(false);
-    setSearchResults([]);
+    clearHotelSearch();
     setSelectedHotelId(null);
-    setSelectedHotelForDetail(null);
     setHoveredHotel(null);
     // Clear hotel markers from map
     eventBus.emit("hotels:results", { hotels: [] });
@@ -1116,12 +1135,12 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   // Handle hotel selection - show detail view (only when clicking "Voir détails" button)
   const handleHotelSelect = (hotel: HotelResult) => {
     setSelectedHotelId(hotel.id);
-    setSelectedHotelForDetail(hotel);
+    setSelectedHotelForDetailId(hotel.id);
   };
   
   // Handle back from detail view - return to results list, clear selection + map highlight
   const handleBackFromDetail = () => {
-    setSelectedHotelForDetail(null);
+    setSelectedHotelForDetailId(null);
     setSelectedHotelId(null);
     eventBus.emit("hotels:clearSelection");
     eventBus.emit("hotels:hover", { hotel: null, source: "map" });

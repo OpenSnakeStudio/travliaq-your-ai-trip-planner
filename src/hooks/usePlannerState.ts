@@ -29,6 +29,12 @@ export function usePlannerState() {
     setSelectedPin(null);
   }, []));
 
+  // Event listener: open hotel panel (from map pin click when panel is closed)
+  usePlannerEvent("hotels:openPanel", useCallback(() => {
+    setActiveTab("stays");
+    setIsPanelVisible(true);
+  }, []));
+
   // Persist active tab changes
   useEffect(() => {
     localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
