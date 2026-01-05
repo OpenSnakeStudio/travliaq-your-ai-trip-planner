@@ -2242,13 +2242,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       // Click to select - emit event for detail view, with gentle pan (NO zoom change)
       el.addEventListener("click", () => {
         eventBus.emit("hotels:select", { hotel: hotel as any });
-        // Gently pan to hotel WITHOUT changing zoom level - user can still switch hotels easily
+        // Gently pan to hotel WITHOUT changing zoom level
+        // Use dynamic offset to position hotel to the right of center (accounting for left panel)
         const currentZoom = map.current?.getZoom() ?? 13;
+        const { getHotelClickOffset } = require("@/constants/mapSettings");
+        const offset = getHotelClickOffset();
         map.current?.easeTo({
           center: [hotel.lng, hotel.lat],
           zoom: Math.min(currentZoom, 14), // Don't zoom in more than 14
           duration: 500,
-          offset: [-150, 0], // Offset left to keep hotel visible
+          offset: offset, // Dynamic offset based on panel width
         });
       });
 
