@@ -20,6 +20,7 @@ import { fr } from "date-fns/locale";
 import RangeCalendar from "@/components/RangeCalendar";
 import type { DateRange } from "react-day-picker";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { STAYS_ZOOM } from "@/constants/mapSettings";
 
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
@@ -895,7 +896,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         location.lng
       );
       if (onMapMove) {
-        onMapMove([location.lng, location.lat], 11);
+        onMapMove([location.lng, location.lat], STAYS_ZOOM);
       }
     }
   };
@@ -997,7 +998,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
           setDates(newCityDates.checkIn, newCityDates.checkOut);
         }
         if (onMapMove && location.lat && location.lng) {
-          onMapMove([location.lng, location.lat], 11);
+          onMapMove([location.lng, location.lat], STAYS_ZOOM);
         }
       }, 50);
       
@@ -1026,7 +1027,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
               setActiveAccommodation(index);
               // Zoom on city when clicking tab
               if (acc.lat && acc.lng && onMapMove) {
-                onMapMove([acc.lng, acc.lat], 11);
+                onMapMove([acc.lng, acc.lat], STAYS_ZOOM);
               }
             }}
             className={cn(
