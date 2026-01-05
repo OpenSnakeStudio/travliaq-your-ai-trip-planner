@@ -273,6 +273,32 @@ function cssHsl(varName: string, fallbackHsl = "222.2 47.4% 11.2%") {
   return `hsl(${hsl})`;
 }
 
+function injectHotelMarkerAnimations() {
+  if (document.getElementById("travliaq-hotel-marker-animations")) return;
+  const style = document.createElement("style");
+  style.id = "travliaq-hotel-marker-animations";
+  style.textContent = `
+    @keyframes travliaq-hotel-bounce {
+      0% { transform: translateY(0) scale(1); }
+      35% { transform: translateY(-10px) scale(1.06); }
+      65% { transform: translateY(2px) scale(0.98); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* Applied to the first child (our marker wrapper) */
+    .hotel-price-marker.bounce > div {
+      animation: travliaq-hotel-bounce 650ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hotel-price-marker.bounce > div {
+        animation: none;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 interface UserLocation {
   lat: number;
   lng: number;
@@ -2143,7 +2169,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const handleFitToPrices = () => {
       if (!map.current || !mapLoaded) return;
       if (hotelResults.hotels.length === 0) return;
-      
+
       // Calculate bounds of all hotels
       const bounds = new mapboxgl.LngLatBounds();
       hotelResults.hotels.forEach((hotel) => {
@@ -2156,6 +2182,18 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         maxZoom: 14,
         duration: 800,
       });
+
+      // After the camera recenters, bounce all price markers once
+      window.setTimeout(() => {
+        hotelMarkersRef.current.forEach((marker) => {
+          const el = marker.getElement();
+          // restart animation
+          el.classList.remove("bounce");
+          // force reflow
+          void el.offsetWidth;
+          el.classList.add("bounce");
+        });
+      }, 820);
     };
 
     eventBus.on("hotels:results", handleHotelResults);
@@ -2204,6 +2242,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Display hotel markers on map (stays tab only) - updates on hover/select WITHOUT moving map
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
+
+    injectHotelMarkerAnimations();
 
     // Clear existing hotel markers
     hotelMarkersRef.current.forEach((marker) => marker.remove());
