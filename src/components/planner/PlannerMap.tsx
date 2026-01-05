@@ -11,6 +11,7 @@ import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBo
 import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
 import eventBus from "@/lib/eventBus";
+import { STAYS_ZOOM, getStaysPanelOffset } from "@/constants/mapSettings";
 
 
 // Destination click event for popup
@@ -459,21 +460,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Track last focused accommodation target so we can re-center when panel opens/closes
   const staysFocusRef = useRef<{ lng: number; lat: number; zoom: number; city?: string } | null>(null);
 
+  // Use centralized offset function from mapSettings
   const getStaysOffsetX = useCallback(() => {
-    // When the left overlay panel is open, shift the camera slightly left so the city appears a bit more to the right.
-    // Keep it subtle to avoid "over-shifting".
-    if (!isPanelOpen) return 0;
-
-    const panelEl = document.querySelector('[data-tour="widgets-panel"]') as HTMLElement | null;
-    const panelWidth = panelEl?.getBoundingClientRect().width ?? 420;
-
-    // Gentle shift: ~1/6 of panel width, clamped.
-    const offset = -Math.round(panelWidth / 6);
-    return Math.max(-140, Math.min(-40, offset));
+    return getStaysPanelOffset(isPanelOpen);
   }, [isPanelOpen]);
 
   const focusStaysTarget = useCallback(
-    (target: { lng: number; lat: number; zoom: number; city?: string }, opts?: { immediate?: boolean }) => {
+    (target: { lng: number; lat: number; zoom?: number; city?: string }, opts?: { immediate?: boolean }) => {
       if (!map.current || !mapLoaded) return;
 
       const offsetX = getStaysOffsetX();
@@ -481,7 +474,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
       map.current.flyTo({
         center: [target.lng, target.lat],
-        zoom: target.zoom,
+        zoom: target.zoom ?? STAYS_ZOOM,
         duration,
         essential: true,
         offset: [offsetX, 0],
@@ -510,8 +503,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
 
     if (targetAccom?.lat && targetAccom?.lng) {
-      // Balanced city-level view
-      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 11, city: targetAccom.city };
+      // Use shared STAYS_ZOOM constant
+      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: STAYS_ZOOM, city: targetAccom.city };
 
       // Small delay to ensure the panel is rendered before we measure its width for the offset
       setTimeout(() => {
