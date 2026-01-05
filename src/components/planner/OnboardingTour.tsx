@@ -469,6 +469,34 @@ function injectDriverStyles() {
     .driver-popover-next-btn:active {
       transform: translateY(0) scale(0.98) !important;
     }
+
+    /* Center popover class - position at center of screen */
+    .center-popover.driver-popover {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 10002 !important;
+    }
+
+    /* Right popover for widget steps (avoid covering the left widgets panel) */
+    .travliaq-popover-right.driver-popover {
+      position: fixed !important;
+      top: 50% !important;
+      right: 24px !important;
+      left: auto !important;
+      transform: translateY(-50%) !important;
+      z-index: 10002 !important;
+    }
+
+    @media (max-width: 768px) {
+      .travliaq-popover-right.driver-popover {
+        left: 50% !important;
+        right: auto !important;
+        transform: translate(-50%, -50%) !important;
+        width: min(92vw, 420px) !important;
+      }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -621,6 +649,7 @@ export default function OnboardingTour({
         `,
         side: "bottom",
         align: "center",
+        popoverClass: "center-popover",
       },
     },
     // Step 3: Map
@@ -648,16 +677,18 @@ export default function OnboardingTour({
         title: "✈️ Widget Vols",
         description: `
           <span class="highlight-badge">Configurez vos vols</span>
+          <p>Ce widget sert à rechercher et comparer les vols (prix, horaires, escales).</p>
           <ul>
-            <li><strong>Type</strong> : aller-simple, aller-retour</li>
-            <li><strong>Villes</strong> : départ et destination</li>
-            <li><strong>Dates</strong> : calendrier interactif</li>
-            <li><strong>Voyageurs</strong> : adultes, enfants</li>
+            <li><strong>Choisissez</strong> le type : aller-retour, aller simple, multi-destinations</li>
+            <li><strong>Saisissez</strong> départ + destination (aéroports/villes)</li>
+            <li><strong>Définissez</strong> les dates et le nombre de voyageurs</li>
+            <li><strong>Affinez</strong> avec les options (vols directs, dates flexibles…)</li>
           </ul>
           <div class="tip-box">💡 L'onglet Vols est aussi surligné</div>
         `,
         side: "right",
-        align: "start",
+        align: "center",
+        popoverClass: "travliaq-popover-right",
       },
     },
     // Step 5: Stays widget
@@ -667,15 +698,18 @@ export default function OnboardingTour({
         title: "🏨 Widget Hébergements",
         description: `
           <span class="highlight-badge">Trouvez votre logement</span>
+          <p>Ce widget permet de trouver un hébergement adapté à votre budget et vos critères.</p>
           <ul>
-            <li><strong>Destination</strong> : synchro avec vos vols</li>
-            <li><strong>Budget</strong> : fourchette de prix</li>
-            <li><strong>Type</strong> : hôtel, appartement...</li>
+            <li><strong>Destination</strong> synchronisée avec le reste du voyage</li>
+            <li><strong>Budget</strong> par nuit et niveau de confort</li>
+            <li><strong>Type</strong> : hôtel, appart, villa, auberge…</li>
+            <li><strong>Filtres</strong> (note, équipements) + résultats détaillés</li>
           </ul>
           <div class="tip-box">💡 L'onglet Hébergements est surligné</div>
         `,
         side: "right",
-        align: "start",
+        align: "center",
+        popoverClass: "travliaq-popover-right",
       },
     },
     // Step 6: Activities widget
@@ -685,15 +719,18 @@ export default function OnboardingTour({
         title: "🎭 Widget Activités",
         description: `
           <span class="highlight-badge">Découvrez que faire</span>
+          <p>Ce widget sert à explorer des activités et à construire votre programme sur place.</p>
           <ul>
-            <li><strong>Catégories</strong> : culture, nature...</li>
-            <li><strong>Filtres</strong> : prix, durée</li>
-            <li><strong>Recherche</strong> : par ville ou carte</li>
+            <li><strong>Catégories</strong> : culture, nature, gastronomie…</li>
+            <li><strong>Filtres</strong> : prix, durée, popularité</li>
+            <li><strong>Recherche</strong> : par ville et via la carte</li>
+            <li><strong>Détails</strong> : description, horaires, localisation</li>
           </ul>
           <div class="tip-box">💡 L'onglet Activités est surligné</div>
         `,
         side: "right",
-        align: "start",
+        align: "center",
+        popoverClass: "travliaq-popover-right",
       },
     },
     // Step 7: Preferences widget
@@ -702,16 +739,19 @@ export default function OnboardingTour({
       popover: {
         title: "⚙️ Widget Préférences",
         description: `
-          <span class="highlight-badge">Personnalisez</span>
+          <span class="highlight-badge">Personnalisez votre voyage</span>
+          <p>Vos préférences guident l'IA pour proposer des vols/activités/hébergements cohérents.</p>
           <ul>
-            <li><strong>Rythme</strong> : intensif, équilibré</li>
-            <li><strong>Confort</strong> : budget, standard, luxe</li>
-            <li><strong>Centres d'intérêt</strong> : vos passions</li>
+            <li><strong>Rythme</strong> : détente, modéré, intensif</li>
+            <li><strong>Confort</strong> : économique → premium</li>
+            <li><strong>Centres d'intérêt</strong> : culture, nature, plage…</li>
+            <li><strong>Style</strong> : solo, couple, famille, amis</li>
           </ul>
           <div class="tip-box">💡 L'onglet Préférences est surligné</div>
         `,
         side: "right",
-        align: "start",
+        align: "center",
+        popoverClass: "travliaq-popover-right",
       },
     },
     // Step 8: Final
