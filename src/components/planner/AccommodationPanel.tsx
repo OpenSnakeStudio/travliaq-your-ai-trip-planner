@@ -24,7 +24,7 @@ import { STAYS_ZOOM } from "@/constants/mapSettings";
 import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
 import HotelDetailView from "./HotelDetailView";
 import { eventBus } from "@/lib/eventBus";
-import { searchHotels, type HotelSearchResult, type HotelRoom } from "@/services/hotels/hotelService";
+import { searchHotels, type HotelResult as ApiHotelResult, type RoomOccupancy } from "@/services/hotels/hotelService";
 
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
@@ -1037,7 +1037,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     : 1;
 
   // Convert API results to HotelResult format
-  const mapApiToHotelResult = useCallback((hotel: HotelSearchResult): HotelResult => ({
+  const mapApiToHotelResult = useCallback((hotel: ApiHotelResult): HotelResult => ({
     id: hotel.id,
     name: hotel.name,
     imageUrl: hotel.imageUrl,
@@ -1064,7 +1064,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     try {
       // Build rooms config for API - use customRooms from memory context
       const roomsConfig = memory.customRooms.length > 0 ? memory.customRooms : [{ adults: 2, children: 0, childrenAges: [] as number[], id: 'default' }];
-      const rooms: HotelRoom[] = roomsConfig.map(r => ({
+      const rooms: RoomOccupancy[] = roomsConfig.map(r => ({
         adults: r.adults,
         childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
       }));
