@@ -511,7 +511,11 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     if (targetAccom?.lat && targetAccom?.lng) {
       staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: 11, city: targetAccom.city };
-      focusStaysTarget(staysFocusRef.current);
+      
+      // Small delay to ensure panel is fully rendered before calculating offset
+      setTimeout(() => {
+        focusStaysTarget(staysFocusRef.current!);
+      }, 50);
     }
   }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, focusStaysTarget]);
 
