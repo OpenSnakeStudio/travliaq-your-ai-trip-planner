@@ -30,28 +30,44 @@ const STEP_CONFIG: Record<number, StepConfig> = {
   8: { panelOpen: true, tab: "flights" },  // Final
 };
 
-// Simple, clean CSS for driver.js
+// Enhanced CSS with smooth animations for driver.js
 function injectDriverStyles() {
   if (document.getElementById("driver-custom-styles")) return;
   
   const style = document.createElement("style");
   style.id = "driver-custom-styles";
   style.textContent = `
-    /* Overlay */
+    /* Smooth overlay transition */
     .driver-overlay {
       background: rgba(0, 0, 0, 0.75) !important;
+      transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    /* Highlighted element */
+    /* Highlighted element with smooth glow animation */
     .driver-active-element {
       z-index: 10001 !important;
       border-radius: 16px !important;
       box-shadow:
         0 0 0 4px hsl(var(--primary)),
         0 0 30px 10px hsl(var(--primary) / 0.4) !important;
+      animation: travliaq-pulse-glow 2s ease-in-out infinite !important;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    /* Tab highlight */
+    @keyframes travliaq-pulse-glow {
+      0%, 100% {
+        box-shadow:
+          0 0 0 4px hsl(var(--primary)),
+          0 0 30px 10px hsl(var(--primary) / 0.4);
+      }
+      50% {
+        box-shadow:
+          0 0 0 6px hsl(var(--primary)),
+          0 0 50px 15px hsl(var(--primary) / 0.5);
+      }
+    }
+
+    /* Tab highlight with smooth animation */
     .travliaq-tab-highlight {
       position: relative !important;
       z-index: 10001 !important;
@@ -59,9 +75,24 @@ function injectDriverStyles() {
         0 0 0 3px hsl(var(--primary)),
         0 0 20px 5px hsl(var(--primary) / 0.3) !important;
       border-radius: 10px !important;
+      animation: travliaq-tab-glow 1.5s ease-in-out infinite !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
-    /* Popover - clean modern design */
+    @keyframes travliaq-tab-glow {
+      0%, 100% {
+        box-shadow:
+          0 0 0 3px hsl(var(--primary)),
+          0 0 20px 5px hsl(var(--primary) / 0.3);
+      }
+      50% {
+        box-shadow:
+          0 0 0 4px hsl(var(--primary)),
+          0 0 30px 8px hsl(var(--primary) / 0.4);
+      }
+    }
+
+    /* Popover with smooth entrance animation */
     .driver-popover {
       background: hsl(var(--card)) !important;
       border: 1px solid hsl(var(--border)) !important;
@@ -71,13 +102,26 @@ function injectDriverStyles() {
       max-width: 400px !important;
       min-width: 320px !important;
       overflow: visible !important;
+      animation: travliaq-popover-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      transform-origin: center center !important;
+    }
+
+    @keyframes travliaq-popover-enter {
+      0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(10px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
     }
 
     .driver-popover-arrow {
       display: none !important;
     }
 
-    /* Progress header */
+    /* Progress header with fade-in */
     .travliaq-progress-header {
       display: flex !important;
       align-items: center !important;
@@ -86,6 +130,18 @@ function injectDriverStyles() {
       border-bottom: 1px solid hsl(var(--border) / 0.5) !important;
       background: hsl(var(--muted) / 0.3) !important;
       border-radius: 16px 16px 0 0 !important;
+      animation: travliaq-fade-in 0.3s ease-out 0.1s both !important;
+    }
+
+    @keyframes travliaq-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .travliaq-step-counter {
@@ -96,6 +152,7 @@ function injectDriverStyles() {
       padding: 6px 12px !important;
       border-radius: 8px !important;
       border: 1px solid hsl(var(--border) / 0.5) !important;
+      transition: all 0.3s ease !important;
     }
 
     .travliaq-progress-dots {
@@ -108,19 +165,21 @@ function injectDriverStyles() {
       height: 8px !important;
       border-radius: 50% !important;
       background: hsl(var(--muted-foreground) / 0.3) !important;
-      transition: all 0.2s !important;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     }
 
     .travliaq-dot.active {
       background: hsl(var(--primary)) !important;
-      transform: scale(1.25) !important;
+      transform: scale(1.4) !important;
+      box-shadow: 0 0 8px hsl(var(--primary) / 0.5) !important;
     }
 
     .travliaq-dot.completed {
-      background: hsl(var(--primary) / 0.5) !important;
+      background: hsl(var(--primary) / 0.6) !important;
+      transform: scale(1.1) !important;
     }
 
-    /* Close button - positioned in header */
+    /* Close button with smooth hover */
     .travliaq-close-btn {
       width: 28px !important;
       height: 28px !important;
@@ -133,7 +192,7 @@ function injectDriverStyles() {
       color: hsl(var(--muted-foreground)) !important;
       font-size: 16px !important;
       cursor: pointer !important;
-      transition: all 0.15s !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
       margin-left: 12px !important;
     }
 
@@ -141,6 +200,7 @@ function injectDriverStyles() {
       background: hsl(var(--destructive) / 0.1) !important;
       color: hsl(var(--destructive)) !important;
       border-color: hsl(var(--destructive) / 0.3) !important;
+      transform: scale(1.1) !important;
     }
 
     /* Hide default close button */
@@ -148,7 +208,7 @@ function injectDriverStyles() {
       display: none !important;
     }
 
-    /* Title */
+    /* Title with staggered animation */
     .driver-popover-title {
       font-size: 1.25rem !important;
       font-weight: 700 !important;
@@ -156,14 +216,27 @@ function injectDriverStyles() {
       padding: 20px 20px 10px 20px !important;
       margin: 0 !important;
       line-height: 1.3 !important;
+      animation: travliaq-slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s both !important;
     }
 
-    /* Description */
+    @keyframes travliaq-slide-up {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Description with staggered animation */
     .driver-popover-description {
       color: hsl(var(--foreground)) !important;
       padding: 0 20px 16px 20px !important;
       font-size: 0.9375rem !important;
       line-height: 1.6 !important;
+      animation: travliaq-slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both !important;
     }
 
     .driver-popover-description p {
@@ -184,6 +257,18 @@ function injectDriverStyles() {
       border-radius: 6px !important;
       font-size: 0.75rem !important;
       margin-bottom: 12px !important;
+      animation: travliaq-badge-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both !important;
+    }
+
+    @keyframes travliaq-badge-pop {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .driver-popover-description ul {
@@ -202,6 +287,24 @@ function injectDriverStyles() {
       border-radius: 8px !important;
       font-size: 0.875rem !important;
       color: hsl(var(--foreground)) !important;
+      opacity: 0 !important;
+      animation: travliaq-list-item-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+    }
+
+    .driver-popover-description li:nth-child(1) { animation-delay: 0.25s !important; }
+    .driver-popover-description li:nth-child(2) { animation-delay: 0.35s !important; }
+    .driver-popover-description li:nth-child(3) { animation-delay: 0.45s !important; }
+    .driver-popover-description li:nth-child(4) { animation-delay: 0.55s !important; }
+
+    @keyframes travliaq-list-item-enter {
+      from {
+        opacity: 0;
+        transform: translateX(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .driver-popover-description li::before {
@@ -226,6 +329,18 @@ function injectDriverStyles() {
       margin-top: 12px !important;
       font-size: 0.8125rem !important;
       color: hsl(var(--primary)) !important;
+      animation: travliaq-tip-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.5s both !important;
+    }
+
+    @keyframes travliaq-tip-enter {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
     .driver-popover-description .feature-grid {
@@ -245,9 +360,33 @@ function injectDriverStyles() {
       font-size: 0.8125rem !important;
       font-weight: 500 !important;
       color: hsl(var(--foreground)) !important;
+      opacity: 0 !important;
+      animation: travliaq-feature-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+      transition: transform 0.2s ease, background 0.2s ease !important;
     }
 
-    /* Footer */
+    .driver-popover-description .feature-item:hover {
+      transform: scale(1.03) !important;
+      background: hsl(var(--muted) / 0.7) !important;
+    }
+
+    .driver-popover-description .feature-item:nth-child(1) { animation-delay: 0.3s !important; }
+    .driver-popover-description .feature-item:nth-child(2) { animation-delay: 0.4s !important; }
+    .driver-popover-description .feature-item:nth-child(3) { animation-delay: 0.5s !important; }
+    .driver-popover-description .feature-item:nth-child(4) { animation-delay: 0.6s !important; }
+
+    @keyframes travliaq-feature-pop {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Footer with slide-up animation */
     .driver-popover-footer {
       display: flex !important;
       align-items: center !important;
@@ -257,6 +396,18 @@ function injectDriverStyles() {
       border-top: 1px solid hsl(var(--border) / 0.5) !important;
       background: hsl(var(--muted) / 0.2) !important;
       border-radius: 0 0 16px 16px !important;
+      animation: travliaq-footer-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.25s both !important;
+    }
+
+    @keyframes travliaq-footer-enter {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* Hide default progress text in footer */
@@ -264,7 +415,7 @@ function injectDriverStyles() {
       display: none !important;
     }
 
-    /* Prev button */
+    /* Prev button with smooth transitions */
     .driver-popover-prev-btn {
       background: hsl(var(--background)) !important;
       border: 1px solid hsl(var(--border)) !important;
@@ -274,14 +425,19 @@ function injectDriverStyles() {
       font-size: 0.875rem !important;
       font-weight: 600 !important;
       cursor: pointer !important;
-      transition: all 0.15s !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
     .driver-popover-prev-btn:hover {
       background: hsl(var(--muted)) !important;
+      transform: translateX(-2px) !important;
     }
 
-    /* Next button */
+    .driver-popover-prev-btn:active {
+      transform: translateX(-4px) scale(0.98) !important;
+    }
+
+    /* Next button with smooth transitions */
     .driver-popover-next-btn {
       background: hsl(var(--primary)) !important;
       border: none !important;
@@ -291,13 +447,27 @@ function injectDriverStyles() {
       font-size: 0.875rem !important;
       font-weight: 600 !important;
       cursor: pointer !important;
-      transition: all 0.15s !important;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
       box-shadow: 0 4px 12px hsl(var(--primary) / 0.3) !important;
+      animation: travliaq-button-glow 2s ease-in-out infinite !important;
+    }
+
+    @keyframes travliaq-button-glow {
+      0%, 100% {
+        box-shadow: 0 4px 12px hsl(var(--primary) / 0.3);
+      }
+      50% {
+        box-shadow: 0 6px 20px hsl(var(--primary) / 0.5);
+      }
     }
 
     .driver-popover-next-btn:hover {
-      opacity: 0.9 !important;
-      transform: translateY(-1px) !important;
+      transform: translateY(-2px) scale(1.02) !important;
+      box-shadow: 0 8px 25px hsl(var(--primary) / 0.4) !important;
+    }
+
+    .driver-popover-next-btn:active {
+      transform: translateY(0) scale(0.98) !important;
     }
   `;
   document.head.appendChild(style);
