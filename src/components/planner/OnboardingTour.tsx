@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { driver, type DriveStep, type Config } from "driver.js";
 import "driver.js/dist/driver.css";
 import { eventBus } from "@/lib/eventBus";
-import { X, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import type { TabType } from "@/pages/TravelPlanner";
 
 interface OnboardingTourProps {
@@ -31,284 +30,403 @@ const STEP_CONFIG: Record<number, StepConfig> = {
   8: { panelOpen: false },
 };
 
-const STEP_ICONS = ["✨", "💬", "🛠️", "🗺️", "✈️", "🏨", "🎭", "⚙️", "🚀"];
-
-// Inject custom CSS for Driver.js
+// Inject custom CSS for Driver.js with improved visibility
 function injectDriverStyles() {
   if (document.getElementById("driver-custom-styles")) return;
   
   const style = document.createElement("style");
   style.id = "driver-custom-styles";
-   style.textContent = `
-     /* Override Driver.js default styles */
-      .driver-overlay {
-        background: rgba(0, 0, 0, 0.85) !important;
-        z-index: 9998 !important;
-      }
+  style.textContent = `
+    /* ============================================
+       DRIVER.JS OVERLAY & STAGE
+       ============================================ */
+    .driver-overlay {
+      background: rgba(0, 0, 0, 0.88) !important;
+      z-index: 9998 !important;
+    }
 
-      .driver-stage {
-        background: transparent !important;
-        z-index: 9999 !important;
-      }
+    .driver-stage {
+      background: transparent !important;
+      z-index: 9999 !important;
+    }
 
-      .driver-popover {
-        z-index: 10002 !important;
-      }
+    /* ============================================
+       HIGHLIGHTED ELEMENT - MAXIMUM VISIBILITY
+       ============================================ */
+    .driver-active-element {
+      position: relative !important;
+      z-index: 10001 !important;
+      opacity: 1 !important;
+      filter: none !important;
+      isolation: isolate !important;
+      border-radius: 16px !important;
+      background: hsl(var(--card)) !important;
+      animation: travliaq-glow-pulse 2s ease-in-out infinite !important;
+      box-shadow:
+        0 0 0 4px hsl(var(--primary)),
+        0 0 0 8px hsl(var(--primary) / 0.3),
+        0 0 40px 15px hsl(var(--primary) / 0.4),
+        0 0 80px 30px hsl(var(--primary) / 0.2) !important;
+    }
 
-      /* Make sure the highlighted element is truly above the overlay (stacking context safe) */
-      .driver-active-element {
-        position: relative !important;
-        z-index: 10001 !important;
-        opacity: 1 !important;
-        filter: none !important;
-        isolation: isolate !important;
-        border-radius: 16px !important;
-        animation: travliaq-pulse-shadow 2s ease-in-out infinite !important;
+    .driver-active-element * {
+      opacity: 1 !important;
+      filter: none !important;
+    }
+
+    @keyframes travliaq-glow-pulse {
+      0%, 100% {
         box-shadow:
           0 0 0 4px hsl(var(--primary)),
-          0 0 30px 10px hsl(var(--primary) / 0.35),
-          0 0 60px 20px hsl(var(--primary) / 0.18) !important;
+          0 0 0 8px hsl(var(--primary) / 0.3),
+          0 0 40px 15px hsl(var(--primary) / 0.4),
+          0 0 80px 30px hsl(var(--primary) / 0.2);
       }
-
-      .driver-active-element * {
-        opacity: 1 !important;
-        filter: none !important;
+      50% {
+        box-shadow:
+          0 0 0 6px hsl(var(--primary)),
+          0 0 0 12px hsl(var(--primary) / 0.4),
+          0 0 60px 25px hsl(var(--primary) / 0.5),
+          0 0 100px 40px hsl(var(--primary) / 0.25);
       }
+    }
 
-      /* Secondary highlight (ex: tab button while a widget is highlighted) */
-      .travliaq-secondary-highlight {
-        position: relative !important;
-        z-index: 10001 !important;
-        border-radius: 14px !important;
+    /* ============================================
+       SECONDARY HIGHLIGHT (Tab buttons)
+       ============================================ */
+    .travliaq-secondary-highlight {
+      position: relative !important;
+      z-index: 10001 !important;
+      border-radius: 12px !important;
+      background: hsl(var(--primary) / 0.15) !important;
+      box-shadow:
+        0 0 0 3px hsl(var(--primary)),
+        0 0 20px 8px hsl(var(--primary) / 0.35) !important;
+      animation: travliaq-tab-pulse 1.5s ease-in-out infinite !important;
+    }
+
+    @keyframes travliaq-tab-pulse {
+      0%, 100% {
         box-shadow:
           0 0 0 3px hsl(var(--primary)),
-          0 0 24px 8px hsl(var(--primary) / 0.30) !important;
+          0 0 20px 8px hsl(var(--primary) / 0.35);
       }
+      50% {
+        box-shadow:
+          0 0 0 4px hsl(var(--primary)),
+          0 0 30px 12px hsl(var(--primary) / 0.45);
+      }
+    }
 
-      @keyframes travliaq-pulse-shadow {
-        0%, 100% {
-          box-shadow:
-            0 0 0 4px hsl(var(--primary)),
-            0 0 30px 10px hsl(var(--primary) / 0.35),
-            0 0 60px 20px hsl(var(--primary) / 0.18);
-        }
-        50% {
-          box-shadow:
-            0 0 0 6px hsl(var(--primary)),
-            0 0 50px 18px hsl(var(--primary) / 0.45),
-            0 0 90px 32px hsl(var(--primary) / 0.26);
-        }
-      }
+    /* ============================================
+       POPOVER STYLING - CLEAN & READABLE
+       ============================================ */
+    .driver-popover {
+      z-index: 10002 !important;
+      background: hsl(var(--card)) !important;
+      border: 1px solid hsl(var(--border) / 0.6) !important;
+      border-radius: 20px !important;
+      box-shadow: 
+        0 25px 60px -15px rgba(0, 0, 0, 0.6),
+        0 0 0 1px hsl(var(--border) / 0.3) !important;
+      padding: 0 !important;
+      max-width: min(440px, calc(100vw - 40px)) !important;
+      min-width: 320px !important;
+      overflow: hidden !important;
+    }
 
-      /* Custom popover styling */
-      .driver-popover {
-        background: hsl(var(--card)) !important;
-        border: 1px solid hsl(var(--border) / 0.5) !important;
-        border-radius: 16px !important;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-        padding: 0 !important;
-        max-width: min(420px, calc(100vw - 32px)) !important;
-        overflow: hidden !important;
-      }
+    .driver-popover-arrow {
+      display: none !important;
+    }
 
-      .driver-popover-arrow {
-        display: none !important;
-      }
+    /* ============================================
+       POPOVER HEADER
+       ============================================ */
+    .driver-popover-title {
+      display: flex !important;
+      align-items: center !important;
+      gap: 12px !important;
+      font-size: 1.25rem !important;
+      font-weight: 700 !important;
+      color: hsl(var(--foreground)) !important;
+      padding: 24px 24px 8px 24px !important;
+      margin: 0 !important;
+      line-height: 1.3 !important;
+    }
 
-      /* Popover header */
-      .driver-popover-title {
-        display: flex !important;
-        align-items: center !important;
-        gap: 12px !important;
-        font-size: 1.125rem !important;
-        font-weight: 700 !important;
-        color: hsl(var(--foreground)) !important;
-        padding: 20px 20px 0 20px !important;
-        margin: 0 !important;
-      }
+    /* ============================================
+       POPOVER DESCRIPTION - WELL STRUCTURED
+       ============================================ */
+    .driver-popover-description {
+      color: hsl(var(--foreground)) !important;
+      padding: 8px 24px 16px 24px !important;
+      margin: 0 !important;
+      font-size: 0.9375rem !important;
+      line-height: 1.7 !important;
+    }
 
-      .driver-popover-title::before {
-        content: attr(data-icon);
-        font-size: 1.75rem;
-      }
+    .driver-popover-description p {
+      margin: 0 0 12px 0 !important;
+    }
 
-      /* Popover description */
-      .driver-popover-description {
-        color: hsl(var(--foreground) / 0.9) !important;
-        padding: 12px 20px !important;
-        margin: 0 !important;
-        font-size: 0.9375rem !important;
-        line-height: 1.6 !important;
-      }
+    .driver-popover-description p:last-child {
+      margin-bottom: 0 !important;
+    }
 
-      .driver-popover-description .highlight-text {
-        color: hsl(var(--primary)) !important;
-        font-weight: 600 !important;
-      }
+    .driver-popover-description .highlight-label {
+      display: inline-block !important;
+      background: hsl(var(--primary) / 0.15) !important;
+      color: hsl(var(--primary)) !important;
+      font-weight: 600 !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important;
+      font-size: 0.8125rem !important;
+      margin-bottom: 12px !important;
+    }
 
-      .driver-popover-description ul {
-        margin: 8px 0 !important;
-        padding-left: 20px !important;
-      }
+    .driver-popover-description .intro-text {
+      color: hsl(var(--muted-foreground)) !important;
+      font-size: 0.875rem !important;
+      margin-bottom: 16px !important;
+    }
 
-      .driver-popover-description li {
-        margin: 4px 0 !important;
-        color: hsl(var(--muted-foreground)) !important;
-        font-size: 0.875rem !important;
-      }
+    .driver-popover-description ul {
+      margin: 12px 0 !important;
+      padding: 0 !important;
+      list-style: none !important;
+    }
 
-      .driver-popover-description strong {
-        color: hsl(var(--foreground)) !important;
-      }
+    .driver-popover-description li {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 10px !important;
+      margin: 8px 0 !important;
+      padding: 8px 12px !important;
+      background: hsl(var(--muted) / 0.4) !important;
+      border-radius: 10px !important;
+      font-size: 0.875rem !important;
+      color: hsl(var(--foreground)) !important;
+    }
 
-      .driver-popover-description .tip {
-        font-size: 0.75rem !important;
-        color: hsl(var(--primary) / 0.8) !important;
-        margin-top: 12px !important;
-      }
+    .driver-popover-description li::before {
+      content: "•" !important;
+      color: hsl(var(--primary)) !important;
+      font-weight: bold !important;
+      font-size: 1.2em !important;
+      line-height: 1 !important;
+    }
 
-      .driver-popover-description .cta-box {
-        background: hsl(var(--primary) / 0.1) !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
-        margin-top: 12px !important;
-      }
+    .driver-popover-description strong {
+      color: hsl(var(--foreground)) !important;
+      font-weight: 600 !important;
+    }
 
-      .driver-popover-description .cta-box-title {
-        font-weight: 600 !important;
-        color: hsl(var(--primary)) !important;
-        margin-bottom: 4px !important;
-      }
+    .driver-popover-description .tip-box {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 10px !important;
+      background: hsl(var(--primary) / 0.1) !important;
+      border: 1px solid hsl(var(--primary) / 0.2) !important;
+      border-radius: 12px !important;
+      padding: 12px 14px !important;
+      margin-top: 16px !important;
+      font-size: 0.8125rem !important;
+      color: hsl(var(--primary)) !important;
+    }
 
-      .driver-popover-description .grid-2 {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 8px !important;
-        margin-top: 8px !important;
-      }
+    .driver-popover-description .tip-box strong {
+      color: hsl(var(--primary)) !important;
+    }
 
-      .driver-popover-description .grid-item {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        background: hsl(var(--muted) / 0.5) !important;
-        border-radius: 8px !important;
-        padding: 6px 10px !important;
-        font-size: 0.875rem !important;
-      }
+    /* Feature grid for tabs overview */
+    .driver-popover-description .feature-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 8px !important;
+      margin: 12px 0 !important;
+    }
 
-      /* Progress indicator */
-      .driver-popover-progress-text {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 10px 20px 0 20px !important;
-        padding: 6px 10px !important;
-        border-radius: 999px !important;
-        background: hsl(var(--muted) / 0.6) !important;
-        border: 1px solid hsl(var(--border) / 0.35) !important;
-        color: hsl(var(--muted-foreground)) !important;
-        font-size: 0.75rem !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.02em !important;
-      }
+    .driver-popover-description .feature-item {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      background: hsl(var(--muted) / 0.5) !important;
+      border-radius: 10px !important;
+      padding: 10px 12px !important;
+      font-size: 0.875rem !important;
+      font-weight: 500 !important;
+      color: hsl(var(--foreground)) !important;
+    }
 
-      .travliaq-progress-dots {
-        display: flex !important;
-        gap: 6px !important;
-        align-items: center !important;
-        margin: 8px 20px 0 20px !important;
-      }
+    .driver-popover-description .feature-item .icon {
+      font-size: 1.25rem !important;
+    }
 
-      .travliaq-dot {
-        width: 7px;
-        height: 7px;
-        border-radius: 999px;
-        background: hsl(var(--muted-foreground) / 0.25);
-        border: 1px solid hsl(var(--border) / 0.4);
-      }
+    /* CTA box for final step */
+    .driver-popover-description .cta-box {
+      background: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.05)) !important;
+      border: 1px solid hsl(var(--primary) / 0.2) !important;
+      border-radius: 14px !important;
+      padding: 16px !important;
+      margin-top: 16px !important;
+    }
 
-      .travliaq-dot.is-active {
-        background: hsl(var(--primary));
-        border-color: hsl(var(--primary));
-        box-shadow: 0 0 0 3px hsl(var(--primary) / 0.18);
-        transform: scale(1.15);
-      }
+    .driver-popover-description .cta-title {
+      font-weight: 700 !important;
+      color: hsl(var(--primary)) !important;
+      margin-bottom: 8px !important;
+      font-size: 0.9375rem !important;
+    }
 
-      /* Footer with buttons */
-      .driver-popover-footer {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        padding: 16px 20px !important;
-        border-top: 1px solid hsl(var(--border) / 0.3) !important;
-        margin: 0 !important;
-      }
+    .driver-popover-description .cta-list {
+      margin: 0 !important;
+      padding: 0 !important;
+    }
 
-      /* Skip button */
-      .driver-popover-close-btn {
-        background: transparent !important;
-        border: none !important;
-        color: hsl(var(--muted-foreground)) !important;
-        font-size: 0.875rem !important;
-        cursor: pointer !important;
-        padding: 4px 8px !important;
-        transition: color 0.2s !important;
-      }
+    .driver-popover-description .cta-list li {
+      background: transparent !important;
+      padding: 4px 0 !important;
+      margin: 0 !important;
+    }
 
-      .driver-popover-close-btn:hover {
-        color: hsl(var(--foreground)) !important;
-      }
+    .driver-popover-description .cta-list li::before {
+      content: "→" !important;
+    }
 
-      /* Navigation buttons container */
-      .driver-popover-navigation-btns {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-      }
+    /* ============================================
+       PROGRESS INDICATOR
+       ============================================ */
+    .driver-popover-progress-text {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 6px 14px !important;
+      border-radius: 20px !important;
+      background: hsl(var(--muted) / 0.6) !important;
+      border: 1px solid hsl(var(--border) / 0.4) !important;
+      color: hsl(var(--muted-foreground)) !important;
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.03em !important;
+    }
 
-      /* Previous button */
-      .driver-popover-prev-btn {
-        background: transparent !important;
-        border: 1px solid hsl(var(--border)) !important;
-        color: hsl(var(--foreground)) !important;
-        padding: 8px 16px !important;
-        border-radius: 8px !important;
-        font-size: 0.875rem !important;
-        font-weight: 500 !important;
-        cursor: pointer !important;
-        transition: all 0.2s !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-      }
+    .travliaq-progress-container {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 12px 24px !important;
+      border-bottom: 1px solid hsl(var(--border) / 0.3) !important;
+      margin-bottom: 0 !important;
+    }
 
-      .driver-popover-prev-btn:hover {
-        background: hsl(var(--muted)) !important;
-      }
+    .travliaq-progress-dots {
+      display: flex !important;
+      gap: 6px !important;
+      align-items: center !important;
+    }
 
-      /* Next button */
-      .driver-popover-next-btn {
-        background: hsl(var(--primary)) !important;
-        border: none !important;
-        color: hsl(var(--primary-foreground)) !important;
-        padding: 8px 20px !important;
-        border-radius: 8px !important;
-        font-size: 0.875rem !important;
-        font-weight: 500 !important;
-        cursor: pointer !important;
-        transition: all 0.2s !important;
-        box-shadow: 0 4px 12px hsl(var(--primary) / 0.25) !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-      }
+    .travliaq-dot {
+      width: 8px !important;
+      height: 8px !important;
+      border-radius: 50% !important;
+      background: hsl(var(--muted-foreground) / 0.25) !important;
+      border: 1px solid hsl(var(--border) / 0.4) !important;
+      transition: all 0.2s ease !important;
+    }
 
-      .driver-popover-next-btn:hover {
-        background: hsl(var(--primary) / 0.9) !important;
-        transform: translateY(-1px) !important;
-      }
-    `;
+    .travliaq-dot.is-active {
+      background: hsl(var(--primary)) !important;
+      border-color: hsl(var(--primary)) !important;
+      box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2) !important;
+      transform: scale(1.2) !important;
+    }
+
+    .travliaq-dot.is-completed {
+      background: hsl(var(--primary) / 0.5) !important;
+      border-color: hsl(var(--primary) / 0.5) !important;
+    }
+
+    /* ============================================
+       FOOTER WITH BUTTONS
+       ============================================ */
+    .driver-popover-footer {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: 16px 24px !important;
+      border-top: 1px solid hsl(var(--border) / 0.3) !important;
+      background: hsl(var(--muted) / 0.2) !important;
+      margin: 0 !important;
+    }
+
+    /* Close/Skip button */
+    .driver-popover-close-btn {
+      background: transparent !important;
+      border: none !important;
+      color: hsl(var(--muted-foreground)) !important;
+      font-size: 0.8125rem !important;
+      cursor: pointer !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      transition: all 0.2s !important;
+    }
+
+    .driver-popover-close-btn:hover {
+      color: hsl(var(--foreground)) !important;
+      background: hsl(var(--muted) / 0.5) !important;
+    }
+
+    /* Navigation buttons container */
+    .driver-popover-navigation-btns {
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+    }
+
+    /* Previous button */
+    .driver-popover-prev-btn {
+      background: hsl(var(--background)) !important;
+      border: 1px solid hsl(var(--border)) !important;
+      color: hsl(var(--foreground)) !important;
+      padding: 10px 18px !important;
+      border-radius: 10px !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+    }
+
+    .driver-popover-prev-btn:hover {
+      background: hsl(var(--muted)) !important;
+      border-color: hsl(var(--border)) !important;
+    }
+
+    /* Next button */
+    .driver-popover-next-btn {
+      background: hsl(var(--primary)) !important;
+      border: none !important;
+      color: hsl(var(--primary-foreground)) !important;
+      padding: 10px 22px !important;
+      border-radius: 10px !important;
+      font-size: 0.875rem !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+      box-shadow: 0 4px 14px hsl(var(--primary) / 0.3) !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+    }
+
+    .driver-popover-next-btn:hover {
+      background: hsl(var(--primary) / 0.9) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 20px hsl(var(--primary) / 0.4) !important;
+    }
+  `;
   document.head.appendChild(style);
 }
 
@@ -334,10 +452,9 @@ export default function OnboardingTour({
       if (config.tab) {
         setTimeout(() => {
           eventBus.emit("tab:change", { tab: config.tab! });
-          // Important: driver calcule la scène sur l'élément actif; après un changement d'onglet,
-          // on force un refresh pour éviter les highlights "vides" (souvent sur le widget Vols au 1er passage).
-          setTimeout(() => driverRef.current?.refresh(), 80);
-        }, 100);
+          // Refresh driver after tab change to recalculate element positions
+          setTimeout(() => driverRef.current?.refresh(), 120);
+        }, 150);
       }
     },
     [onPanelVisibilityChange]
@@ -365,7 +482,7 @@ export default function OnboardingTour({
   const highlightTabButton = useCallback((tab?: TabType) => {
     clearSecondaryHighlights();
     if (!tab) return;
-    const el = document.querySelector(`[data-tour=\"${tab}-tab\"]`);
+    const el = document.querySelector(`[data-tour="${tab}-tab"]`);
     if (el instanceof HTMLElement) {
       el.classList.add("travliaq-secondary-highlight");
     }
@@ -373,168 +490,205 @@ export default function OnboardingTour({
 
   const renderProgressDots = useCallback(
     (popoverEl: HTMLElement, currentIndex: number, total: number) => {
-      let dots = popoverEl.querySelector(".travliaq-progress-dots") as HTMLElement | null;
-      if (!dots) {
-        dots = document.createElement("div");
-        dots.className = "travliaq-progress-dots";
-        const progressText = popoverEl.querySelector(".driver-popover-progress-text");
-        if (progressText?.parentElement) {
-          progressText.parentElement.insertBefore(dots, progressText.nextSibling);
-        } else {
-          popoverEl.prepend(dots);
-        }
-      }
+      // Remove old progress container if exists
+      const oldContainer = popoverEl.querySelector(".travliaq-progress-container");
+      if (oldContainer) oldContainer.remove();
 
-      dots.innerHTML = "";
+      // Create new progress container
+      const container = document.createElement("div");
+      container.className = "travliaq-progress-container";
+
+      // Step counter
+      const counter = document.createElement("span");
+      counter.className = "driver-popover-progress-text";
+      counter.textContent = `${currentIndex + 1} / ${total}`;
+      container.appendChild(counter);
+
+      // Dots
+      const dots = document.createElement("div");
+      dots.className = "travliaq-progress-dots";
       for (let i = 0; i < total; i++) {
         const dot = document.createElement("span");
-        dot.className = `travliaq-dot${i === currentIndex ? " is-active" : ""}`;
+        dot.className = `travliaq-dot${i === currentIndex ? " is-active" : i < currentIndex ? " is-completed" : ""}`;
         dots.appendChild(dot);
+      }
+      container.appendChild(dots);
+
+      // Insert at the top of popover
+      const title = popoverEl.querySelector(".driver-popover-title");
+      if (title) {
+        title.parentElement?.insertBefore(container, title);
+      } else {
+        popoverEl.prepend(container);
+      }
+
+      // Hide the default progress text
+      const defaultProgress = popoverEl.querySelector(".driver-popover-progress-text:not(.travliaq-progress-container .driver-popover-progress-text)");
+      if (defaultProgress && defaultProgress.parentElement?.classList.contains("driver-popover-footer")) {
+        (defaultProgress as HTMLElement).style.display = "none";
       }
     },
     []
   );
 
   const steps: DriveStep[] = [
+    // Step 0: Welcome
     {
       element: "#root",
       popover: {
-        title: "Bienvenue sur Travliaq !",
+        title: "✨ Bienvenue sur Travliaq !",
         description: `
-          <p>Planifiez votre voyage de façon simple et fluide.</p>
-          <p style="color: hsl(var(--muted-foreground)); font-size: 0.875rem; margin-top: 8px;">
-            Ce guide vous montre les fonctionnalités principales. Vous pouvez le passer à tout moment.
+          <p class="intro-text">Planifiez votre voyage de façon simple et fluide grâce à notre assistant intelligent.</p>
+          <p style="color: hsl(var(--muted-foreground)); font-size: 0.8125rem;">
+            Ce guide vous présente les fonctionnalités principales.<br/>
+            Vous pouvez le passer à tout moment.
           </p>
         `,
       },
     },
+    // Step 1: Chat panel
     {
       element: '[data-tour="chat-panel"]',
       popover: {
         title: "💬 Votre Assistant IA",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : le chat intelligent</p>
-          <p style="margin-top: 8px;">Parlez naturellement à l'assistant : <em>"Je veux partir à Barcelone en mars"</em></p>
+          <span class="highlight-label">Zone surlignée : le chat intelligent</span>
+          <p>Parlez naturellement à l'assistant pour planifier votre voyage.</p>
           <ul>
-            <li>Demandez des recommandations de destinations</li>
-            <li>Configurez votre voyage par la conversation</li>
-            <li>L'IA synchronise tout automatiquement</li>
+            <li><strong>Demandez</strong> des recommandations de destinations</li>
+            <li><strong>Configurez</strong> votre voyage par la conversation</li>
+            <li><strong>L'IA synchronise</strong> tout automatiquement</li>
           </ul>
         `,
       },
     },
+    // Step 2: Tabs navigation - target the actual nav bar
     {
       element: '[data-tour="tabs-nav"]',
       popover: {
         title: "🛠️ Barre d'Outils",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : les onglets de navigation</p>
-          <p style="margin-top: 8px;">Accédez rapidement à chaque aspect de votre voyage :</p>
-          <div class="grid-2">
-            <div class="grid-item"><span>✈️</span> <span>Vols</span></div>
-            <div class="grid-item"><span>🏨</span> <span>Hébergements</span></div>
-            <div class="grid-item"><span>🎭</span> <span>Activités</span></div>
-            <div class="grid-item"><span>⚙️</span> <span>Préférences</span></div>
+          <span class="highlight-label">Zone surlignée : les onglets de navigation</span>
+          <p>Accédez rapidement à chaque aspect de votre voyage :</p>
+          <div class="feature-grid">
+            <div class="feature-item"><span class="icon">✈️</span> Vols</div>
+            <div class="feature-item"><span class="icon">🏨</span> Hébergements</div>
+            <div class="feature-item"><span class="icon">🎭</span> Activités</div>
+            <div class="feature-item"><span class="icon">⚙️</span> Préférences</div>
           </div>
         `,
       },
     },
+    // Step 3: Map area
     {
       element: '[data-tour="map-area"]',
       popover: {
         title: "🗺️ Carte Interactive",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : la carte du monde</p>
-          <p style="margin-top: 8px;">Visualisez votre voyage en temps réel :</p>
+          <span class="highlight-label">Zone surlignée : la carte du monde</span>
+          <p>Visualisez votre voyage en temps réel :</p>
           <ul>
-            <li>Cliquez sur une ville pour voir les prix</li>
-            <li>Les itinéraires s'affichent automatiquement</li>
-            <li>Zoomez pour découvrir plus d'options</li>
+            <li><strong>Cliquez</strong> sur une ville pour voir les prix</li>
+            <li><strong>Les itinéraires</strong> s'affichent automatiquement</li>
+            <li><strong>Zoomez</strong> pour découvrir plus d'options</li>
           </ul>
         `,
       },
     },
+    // Step 4: Flights widget - target the wrapper div
     {
       element: '[data-tour="widget-flights"]',
       popover: {
         title: "✈️ Widget Vols",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : le widget Vols</p>
-          <p style="margin-top: 8px;">Configurez vos vols ici :</p>
+          <span class="highlight-label">Zone surlignée : le widget Vols</span>
+          <p>Configurez vos vols ici :</p>
           <ul>
             <li><strong>Type de trajet</strong> : aller-simple, aller-retour, multi-destinations</li>
             <li><strong>Villes</strong> : départ et destination</li>
             <li><strong>Dates</strong> : calendrier interactif</li>
             <li><strong>Voyageurs</strong> : adultes, enfants, bagages</li>
           </ul>
-          <p class="tip">💡 L'onglet <strong>Vols</strong> est aussi mis en avant pour montrer où cliquer</p>
+          <div class="tip-box">
+            💡 <span>L'onglet <strong>Vols</strong> est aussi mis en avant</span>
+          </div>
         `,
       },
     },
+    // Step 5: Stays widget
     {
       element: '[data-tour="widget-stays"]',
       popover: {
         title: "🏨 Widget Hébergements",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : le widget Hébergements</p>
-          <p style="margin-top: 8px;">Trouvez le logement idéal :</p>
+          <span class="highlight-label">Zone surlignée : le widget Hébergements</span>
+          <p>Trouvez le logement idéal :</p>
           <ul>
             <li><strong>Destination</strong> : synchronisée avec vos vols</li>
             <li><strong>Budget</strong> : définissez votre fourchette de prix</li>
             <li><strong>Type</strong> : hôtel, appartement, villa...</li>
             <li><strong>Équipements</strong> : wifi, piscine, parking...</li>
           </ul>
-          <p class="tip">💡 L'onglet <strong>Hébergements</strong> est aussi mis en avant</p>
+          <div class="tip-box">
+            💡 <span>L'onglet <strong>Hébergements</strong> est aussi mis en avant</span>
+          </div>
         `,
       },
     },
+    // Step 6: Activities widget
     {
       element: '[data-tour="widget-activities"]',
       popover: {
         title: "🎭 Widget Activités",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : le widget Activités</p>
-          <p style="margin-top: 8px;">Découvrez que faire sur place :</p>
+          <span class="highlight-label">Zone surlignée : le widget Activités</span>
+          <p>Découvrez que faire sur place :</p>
           <ul>
             <li><strong>Catégories</strong> : culture, nature, gastronomie...</li>
             <li><strong>Filtres</strong> : prix, durée, accessibilité</li>
-            <li><strong>Recherche</strong> : par ville ou directement sur la carte</li>
+            <li><strong>Recherche</strong> : par ville ou sur la carte</li>
           </ul>
-          <p class="tip">💡 L'onglet <strong>Activités</strong> est aussi mis en avant</p>
+          <div class="tip-box">
+            💡 <span>L'onglet <strong>Activités</strong> est aussi mis en avant</span>
+          </div>
         `,
       },
     },
+    // Step 7: Preferences widget
     {
       element: '[data-tour="widget-preferences"]',
       popover: {
         title: "⚙️ Widget Préférences",
         description: `
-          <p><span class="highlight-text">Zone surlignée</span> : le widget Préférences</p>
-          <p style="margin-top: 8px;">Personnalisez votre expérience :</p>
+          <span class="highlight-label">Zone surlignée : le widget Préférences</span>
+          <p>Personnalisez votre expérience :</p>
           <ul>
             <li><strong>Rythme</strong> : intensif, équilibré, détendu</li>
             <li><strong>Confort</strong> : budget, standard, luxe</li>
             <li><strong>Centres d'intérêt</strong> : ce qui vous passionne</li>
             <li><strong>Restrictions</strong> : alimentaires, accessibilité</li>
           </ul>
-          <p class="tip">💡 L'onglet <strong>Préférences</strong> est aussi mis en avant</p>
+          <div class="tip-box">
+            💡 <span>L'onglet <strong>Préférences</strong> est aussi mis en avant</span>
+          </div>
         `,
       },
     },
+    // Step 8: Final
     {
       element: "#root",
       popover: {
         title: "🚀 C'est parti !",
         description: `
-          <p style="font-weight: 500;">Vous êtes prêt à planifier votre prochain voyage.</p>
+          <p style="font-weight: 600; font-size: 1rem;">Vous êtes prêt à planifier votre prochain voyage.</p>
           <div class="cta-box">
-            <p class="cta-box-title">Commencez par :</p>
-            <ul style="color: hsl(var(--muted-foreground)); margin: 0; padding-left: 20px;">
+            <p class="cta-title">Commencez par :</p>
+            <ul class="cta-list">
               <li>Dire bonjour à l'assistant 💬</li>
               <li>Ou configurer vos vols directement ✈️</li>
             </ul>
           </div>
-          <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 12px;">
+          <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin-top: 14px;">
             Vous pouvez relancer ce guide à tout moment depuis les paramètres.
           </p>
         `,
@@ -554,21 +708,18 @@ export default function OnboardingTour({
         
         const driverConfig: Config = {
           showButtons: ['next', 'previous', 'close'],
-          showProgress: true,
+          showProgress: false, // We use custom progress
           allowClose: true,
-          overlayOpacity: 0.85,
-          stagePadding: 12,
-          stageRadius: 16,
+          overlayOpacity: 0.88,
+          stagePadding: 16,
+          stageRadius: 20,
           animate: true,
           smoothScroll: false,
-          // Important: garder l'UI du popover cliquable même quand on cible des conteneurs larges.
-          // (Avec certains targets comme body/#root, le mode "disableActiveInteraction" peut bloquer les clics.)
           disableActiveInteraction: false,
           popoverClass: "travliaq-popover",
           nextBtnText: "Suivant →",
           prevBtnText: "← Précédent",
           doneBtnText: "C'est parti ! ✨",
-          progressText: "{{current}} / {{total}}",
           onPopoverRender: (popover, opts) => {
             const idx = opts.state.activeIndex ?? 0;
             const total = opts.config.steps?.length ?? steps.length;
@@ -596,12 +747,12 @@ export default function OnboardingTour({
         
         setTimeout(() => {
           driverRef.current?.drive();
-        }, 100);
+        }, 150);
       }, forceShow ? 0 : 800);
 
       return () => clearTimeout(timer);
     }
-  }, [forceShow, onPanelVisibilityChange, configureStep, handleComplete]);
+  }, [forceShow, onPanelVisibilityChange, configureStep, handleComplete, highlightTabButton, clearSecondaryHighlights, renderProgressDots, steps]);
 
   // Cleanup on unmount
   useEffect(() => {
