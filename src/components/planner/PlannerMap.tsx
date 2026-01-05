@@ -492,6 +492,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Track last focused accommodation target so we can re-center when panel opens/closes
   const staysFocusRef = useRef<{ lng: number; lat: number; zoom: number; city?: string } | null>(null);
 
+  // When we open the stays panel from a hotel price marker click,
+  // we must NOT auto-zoom back to the accommodation city (it feels like a "dézoom").
+  const suppressNextStaysAutoZoomRef = useRef(false);
+
   // Use centralized offset function from mapSettings
   const getStaysOffsetX = useCallback(() => {
     return getStaysPanelOffset(isPanelOpen);
@@ -525,6 +529,12 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     // Only trigger when switching TO stays tab (not when already on it)
     if (activeTab !== "stays" || previousTab === "stays") return;
 
+    // If we came from a hotel marker click, keep current zoom/center (no auto-zoom)
+    if (suppressNextStaysAutoZoomRef.current) {
+      suppressNextStaysAutoZoomRef.current = false;
+      return;
+    }
+
     // Get the active accommodation or fallback to first one with coordinates
     const activeAccom = getActiveAccommodation();
     const accommodations = accommodationMemory.accommodations;
@@ -550,18 +560,18 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   useEffect(() => {
     if (activeTab !== "stays") return;
     if (!map.current || !mapLoaded) return;
-    
+
     // Get current center and zoom - we want to keep these exactly the same
     const currentCenter = map.current.getCenter();
     const currentZoom = map.current.getZoom();
-    
+
     // Only apply horizontal offset adjustment - no zoom change
     const offsetX = getStaysOffsetX();
-    
+
     map.current.easeTo({
       center: [currentCenter.lng, currentCenter.lat],
       zoom: currentZoom, // Keep current zoom
-      duration: 300,
+      duration: isPanelOpen ? 300 : 0,
       offset: [offsetX, 0],
     });
   }, [activeTab, isPanelOpen, mapLoaded, getStaysOffsetX]);
@@ -1148,11 +1158,12 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Animate padding change when panel opens/closes
+    // Animate padding change when panel opens/closes.
+    // When closing, apply instantly to avoid a "zoom/pan" animation fighting with fitBounds.
     const leftPadding = isPanelOpen ? 450 : 350;
     map.current.easeTo({
       padding: { left: leftPadding, top: 0, right: 0, bottom: 0 },
-      duration: 300,
+      duration: isPanelOpen ? 300 : 0,
     });
   }, [isPanelOpen, mapLoaded]);
 
@@ -2161,6 +2172,12 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       setSelectedHotelId(data.hotel.id);
     };
 
+    // When a user clicks a hotel price marker, we open the stays panel.
+    // Important: do NOT trigger the stays auto-zoom (it feels like a big "dézoom").
+    const handleHotelOpenPanel = () => {
+      suppressNextStaysAutoZoomRef.current = true;
+    };
+
     const handleClearHotelSelection = () => {
       setSelectedHotelId(null);
     };
@@ -2199,6 +2216,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     eventBus.on("hotels:results", handleHotelResults);
     eventBus.on("hotels:hover", handleHotelHover);
     eventBus.on("hotels:select", handleHotelSelect);
+    eventBus.on("hotels:openPanel", handleHotelOpenPanel);
     eventBus.on("hotels:clearSelection", handleClearHotelSelection);
     eventBus.on("hotels:fitToPrices", handleFitToPrices);
 
@@ -2206,6 +2224,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       eventBus.off("hotels:results", handleHotelResults);
       eventBus.off("hotels:hover", handleHotelHover);
       eventBus.off("hotels:select", handleHotelSelect);
+      eventBus.off("hotels:openPanel", handleHotelOpenPanel);
       eventBus.off("hotels:clearSelection", handleClearHotelSelection);
       eventBus.off("hotels:fitToPrices", handleFitToPrices);
     };
