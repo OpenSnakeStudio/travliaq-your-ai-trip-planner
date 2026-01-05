@@ -1079,9 +1079,18 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         filters.types = activeAccommodation.types;
       }
       
+      // lat/lng are required by API - use city coordinates from memory
+      if (!activeAccommodation.lat || !activeAccommodation.lng) {
+        toastError("Coordonnées manquantes", "Veuillez sélectionner une ville avec des coordonnées valides");
+        setIsSearching(false);
+        return;
+      }
+      
       const response = await searchHotels({
         city: activeAccommodation.city,
         countryCode: activeAccommodation.countryCode || 'FR',
+        lat: activeAccommodation.lat,
+        lng: activeAccommodation.lng,
         checkIn: activeAccommodation.checkIn ? format(activeAccommodation.checkIn, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         checkOut: activeAccommodation.checkOut ? format(activeAccommodation.checkOut, 'yyyy-MM-dd') : format(new Date(Date.now() + 86400000), 'yyyy-MM-dd'),
         rooms,

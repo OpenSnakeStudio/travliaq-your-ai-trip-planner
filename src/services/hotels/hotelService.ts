@@ -26,6 +26,8 @@ export interface HotelSearchFilters {
 export interface HotelSearchParams {
   city: string;
   countryCode: string;
+  lat: number;  // Required by API
+  lng: number;  // Required by API
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD
   rooms: HotelRoom[];
@@ -228,6 +230,8 @@ export async function searchHotels(params: HotelSearchParams): Promise<HotelSear
     const response = await travliaqClient.post<HotelSearchResponse>('/hotels/search', {
       city: params.city,
       countryCode: params.countryCode,
+      lat: params.lat,
+      lng: params.lng,
       checkIn: params.checkIn,
       checkOut: params.checkOut,
       rooms: params.rooms,
