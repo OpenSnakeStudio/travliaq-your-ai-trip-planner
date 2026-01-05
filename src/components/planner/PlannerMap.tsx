@@ -1081,8 +1081,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, []);
 
   // Animate to user location on initial load - single smooth animation
+  // Guarded by sessionStorage so it never re-triggers (e.g. when closing/opening panels).
   useEffect(() => {
     if (!map.current || !mapLoaded || hasAnimatedRef.current || !animateToUserLocation) return;
+
+    // If we've already completed the intro animation in this session, skip it.
+    if (sessionStorage.getItem("travliaq_map_intro_done") === "true") {
+      hasAnimatedRef.current = true;
+      onAnimationComplete?.();
+      return;
+    }
 
     hasAnimatedRef.current = true;
 
@@ -1101,16 +1109,21 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
               essential: true,
               curve: 1.2, // Gentle curve
             });
-            setTimeout(() => onAnimationComplete?.(), 1500);
+            setTimeout(() => {
+              sessionStorage.setItem("travliaq_map_intro_done", "true");
+              onAnimationComplete?.();
+            }, 1500);
           },
           () => {
             // Already at Europe, just complete
+            sessionStorage.setItem("travliaq_map_intro_done", "true");
             onAnimationComplete?.();
           },
           { timeout: 2000 }
         );
       } else {
         // Already at Europe, just complete
+        sessionStorage.setItem("travliaq_map_intro_done", "true");
         onAnimationComplete?.();
       }
     }, 300); // Brief settle time

@@ -111,6 +111,9 @@ const TravelPlanner = () => {
 
   // Callback to start animation after onboarding
   const handleRequestAnimation = useCallback(() => {
+    // Allow re-running the intro animation only when explicitly requested
+    sessionStorage.removeItem("travliaq_map_intro_done");
+
     // Reset animation state to trigger the fly-to-user animation
     setInitialAnimationDone(false);
   }, [setInitialAnimationDone]);
