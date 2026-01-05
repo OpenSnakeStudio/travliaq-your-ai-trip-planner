@@ -68,7 +68,7 @@ export type PlannerEvents = {
   // Hotel search results
   "hotels:results": { hotels: HotelResult[] };
   "hotels:select": { hotel: HotelResult };
-  "hotels:hover": { hotel: HotelResult | null };
+  "hotels:hover": { hotel: HotelResult | null; source?: "map" | "list" };
   
   // Activities-related
   "activities:search": {

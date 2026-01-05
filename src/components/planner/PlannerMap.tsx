@@ -2232,11 +2232,11 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
       // Add hover effect - emit events with source="map" to distinguish from list hovers
       el.addEventListener("mouseenter", () => {
-        eventBus.emit("hotels:hover", { hotel: hotel as any, source: "map" } as any);
+        eventBus.emit("hotels:hover", { hotel: hotel as any, source: "map" });
       });
 
       el.addEventListener("mouseleave", () => {
-        eventBus.emit("hotels:hover", { hotel: null, source: "map" } as any);
+        eventBus.emit("hotels:hover", { hotel: null, source: "map" });
       });
 
       // Click to select - emit event for detail view, with gentle pan (NO zoom change)
