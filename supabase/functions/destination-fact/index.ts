@@ -5,18 +5,126 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Cache TTL: 7 days in seconds
+const CACHE_TTL = 60 * 60 * 24 * 7;
+
+// In-memory rate limiting (resets on cold start, but provides basic protection)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const MAX_REQUESTS_PER_HOUR = 20;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600000 });
+    return true;
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_HOUR) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Redis cache helpers using Upstash REST API
+async function getFromCache(key: string): Promise<string | null> {
+  const redisUrl = Deno.env.get("UPSTASH_REDIS_REST_URL");
+  const redisToken = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
+  
+  if (!redisUrl || !redisToken) {
+    console.log("[destination-fact] Redis not configured, skipping cache");
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${redisUrl}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${redisToken}` },
+    });
+    
+    if (!response.ok) {
+      console.log(`[destination-fact] Cache miss or error for key: ${key}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    if (data.result) {
+      console.log(`[destination-fact] Cache HIT for key: ${key}`);
+      return data.result;
+    }
+    
+    console.log(`[destination-fact] Cache miss for key: ${key}`);
+    return null;
+  } catch (error) {
+    console.error("[destination-fact] Redis GET error:", error);
+    return null;
+  }
+}
+
+async function setInCache(key: string, value: string): Promise<void> {
+  const redisUrl = Deno.env.get("UPSTASH_REDIS_REST_URL");
+  const redisToken = Deno.env.get("UPSTASH_REDIS_REST_TOKEN");
+  
+  if (!redisUrl || !redisToken) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${redisUrl}/set/${encodeURIComponent(key)}/${encodeURIComponent(value)}/ex/${CACHE_TTL}`,
+      { headers: { Authorization: `Bearer ${redisToken}` } }
+    );
+    
+    if (response.ok) {
+      console.log(`[destination-fact] Cached fact for key: ${key} (TTL: ${CACHE_TTL}s)`);
+    }
+  } catch (error) {
+    console.error("[destination-fact] Redis SET error:", error);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Rate limiting by IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (!checkRateLimit(clientIp)) {
+      console.log(`[destination-fact] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later.", fact: null }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { city, country } = await req.json();
     
     if (!city) {
       return new Response(
         JSON.stringify({ error: "City is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Normalize city name for cache key
+    const normalizedCity = city.toLowerCase().trim().replace(/\s+/g, "_");
+    const normalizedCountry = country ? country.toLowerCase().trim().replace(/\s+/g, "_") : "";
+    const cacheKey = `dest_fact:${normalizedCity}${normalizedCountry ? `:${normalizedCountry}` : ""}`;
+
+    // Check cache first
+    const cachedFact = await getFromCache(cacheKey);
+    if (cachedFact) {
+      console.log(`[destination-fact] Returning cached fact for ${city}`);
+      return new Response(
+        JSON.stringify({ city, fact: cachedFact, cached: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -49,7 +157,7 @@ Exemples de bons faits:
 
 Réponds UNIQUEMENT avec le fait, rien d'autre.`;
 
-    console.log(`Fetching fact for city: ${city}`);
+    console.log(`[destination-fact] Fetching fact from Azure OpenAI for city: ${city}`);
 
     const response = await fetch(url, {
       method: "POST",
@@ -73,14 +181,19 @@ Réponds UNIQUEMENT avec le fait, rien d'autre.`;
     const data = await response.json();
     const fact = data.choices?.[0]?.message?.content?.trim() || null;
 
-    console.log(`Destination fact for ${city}: ${fact}`);
+    console.log(`[destination-fact] New fact for ${city}: ${fact}`);
+
+    // Cache the result for future requests
+    if (fact) {
+      await setInCache(cacheKey, fact);
+    }
 
     return new Response(
-      JSON.stringify({ city, fact }),
+      JSON.stringify({ city, fact, cached: false }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("destination-fact error:", error);
+    console.error("[destination-fact] Error:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error", fact: null }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

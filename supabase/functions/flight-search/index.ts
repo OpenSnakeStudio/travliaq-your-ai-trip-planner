@@ -5,6 +5,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// In-memory rate limiting (resets on cold start, but provides basic protection)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const MAX_SEARCHES_PER_HOUR = 30;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600000 });
+    return true;
+  }
+  
+  if (record.count >= MAX_SEARCHES_PER_HOUR) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 // Types from the external API response
 interface ExternalFlightSegment {
   departure_airport: {
@@ -228,6 +249,19 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Rate limiting by IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (!checkRateLimit(clientIp)) {
+      console.log(`[flight-search] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again later.", flights: [] }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await req.json();
     
     const {
@@ -243,7 +277,7 @@ Deno.serve(async (req) => {
       countryCode = "FR",
     } = body;
 
-    console.log(`[flight-search] Searching flights ${origin} → ${destination} on ${departureDate}${returnDate ? ` (return: ${returnDate})` : ''}`);
+    console.log(`[flight-search] Searching flights ${origin} → ${destination} on ${departureDate}${returnDate ? ` (return: ${returnDate})` : ''} (IP: ${clientIp})`);
 
     // Build request to external API
     const apiRequest = {
