@@ -218,11 +218,14 @@ const TravelPlanner = () => {
                               layout="overlay"
                               isVisible={isPanelVisible}
                               onClose={() => {
-                                // When closing stays tab with hotel results, zoom to fit prices
-                                if (activeTab === "stays") {
-                                  eventBus.emit("hotels:fitToPrices", undefined);
-                                }
+                                // First close panel to update padding
                                 setIsPanelVisible(false);
+                                // Then after padding animation completes, fit to prices
+                                if (activeTab === "stays") {
+                                  setTimeout(() => {
+                                    eventBus.emit("hotels:fitToPrices", undefined);
+                                  }, 350); // After padding animation (300ms) + buffer
+                                }
                               }}
                               onMapMove={(center, zoom) => {
                                 setMapCenter(center);
