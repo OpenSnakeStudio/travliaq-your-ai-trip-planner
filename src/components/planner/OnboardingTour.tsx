@@ -19,7 +19,7 @@ interface StepConfig {
 }
 
 const STEP_CONFIG: Record<number, StepConfig> = {
-  0: { panelOpen: true, tab: "flights" },  // Welcome - show flights panel
+  0: { panelOpen: false },                  // Welcome intro - nothing highlighted
   1: { panelOpen: true, tab: "flights" },  // Chat
   2: { panelOpen: true, tab: "flights" },  // Tabs bar
   3: { panelOpen: false },                  // Map
@@ -27,7 +27,7 @@ const STEP_CONFIG: Record<number, StepConfig> = {
   5: { panelOpen: true, tab: "stays" },    // Stays widget
   6: { panelOpen: true, tab: "activities" }, // Activities widget
   7: { panelOpen: true, tab: "preferences" }, // Preferences widget
-  8: { panelOpen: true, tab: "flights" },  // Final
+  8: { panelOpen: true },                   // Final - keep current state
 };
 
 // Enhanced CSS with smooth animations for driver.js
@@ -99,8 +99,8 @@ function injectDriverStyles() {
       border-radius: 16px !important;
       box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.5) !important;
       padding: 0 !important;
-      max-width: 400px !important;
-      min-width: 320px !important;
+      max-width: 420px !important;
+      min-width: 340px !important;
       overflow: visible !important;
       animation: travliaq-popover-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
       transform-origin: center center !important;
@@ -114,6 +114,29 @@ function injectDriverStyles() {
       100% {
         opacity: 1;
         transform: scale(1) translateY(0);
+      }
+    }
+    
+    /* Separate animations for fixed popovers to avoid transform conflicts */
+    @keyframes travliaq-popover-enter-center {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.92);
+      }
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+    
+    @keyframes travliaq-popover-enter-right {
+      0% {
+        opacity: 0;
+        transform: translateY(-50%) scale(0.92);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
       }
     }
 
@@ -287,19 +310,19 @@ function injectDriverStyles() {
       border-radius: 8px !important;
       font-size: 0.875rem !important;
       color: hsl(var(--foreground)) !important;
-      opacity: 0 !important;
+      opacity: 1 !important;
       animation: travliaq-list-item-enter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
     }
 
-    .driver-popover-description li:nth-child(1) { animation-delay: 0.25s !important; }
-    .driver-popover-description li:nth-child(2) { animation-delay: 0.35s !important; }
-    .driver-popover-description li:nth-child(3) { animation-delay: 0.45s !important; }
-    .driver-popover-description li:nth-child(4) { animation-delay: 0.55s !important; }
+    .driver-popover-description li:nth-child(1) { animation-delay: 0.1s !important; }
+    .driver-popover-description li:nth-child(2) { animation-delay: 0.15s !important; }
+    .driver-popover-description li:nth-child(3) { animation-delay: 0.2s !important; }
+    .driver-popover-description li:nth-child(4) { animation-delay: 0.25s !important; }
 
     @keyframes travliaq-list-item-enter {
       from {
-        opacity: 0;
-        transform: translateX(-10px);
+        opacity: 0.5;
+        transform: translateX(-8px);
       }
       to {
         opacity: 1;
@@ -311,6 +334,24 @@ function injectDriverStyles() {
       content: "•" !important;
       color: hsl(var(--primary)) !important;
       font-weight: bold !important;
+    }
+    
+    /* Fallback for reduced motion users */
+    @media (prefers-reduced-motion: reduce) {
+      .driver-popover,
+      .driver-popover *,
+      .feature-item,
+      .driver-popover-description li {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .center-popover.driver-popover {
+        transform: translate(-50%, -50%) !important;
+      }
+      .travliaq-popover-right.driver-popover {
+        transform: translateY(-50%) !important;
+      }
     }
 
     .driver-popover-description strong {
@@ -360,8 +401,8 @@ function injectDriverStyles() {
       font-size: 0.8125rem !important;
       font-weight: 500 !important;
       color: hsl(var(--foreground)) !important;
-      opacity: 0 !important;
-      animation: travliaq-feature-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+      opacity: 1 !important;
+      animation: travliaq-feature-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
       transition: transform 0.2s ease, background 0.2s ease !important;
     }
 
@@ -370,15 +411,15 @@ function injectDriverStyles() {
       background: hsl(var(--muted) / 0.7) !important;
     }
 
-    .driver-popover-description .feature-item:nth-child(1) { animation-delay: 0.3s !important; }
-    .driver-popover-description .feature-item:nth-child(2) { animation-delay: 0.4s !important; }
-    .driver-popover-description .feature-item:nth-child(3) { animation-delay: 0.5s !important; }
-    .driver-popover-description .feature-item:nth-child(4) { animation-delay: 0.6s !important; }
+    .driver-popover-description .feature-item:nth-child(1) { animation-delay: 0.1s !important; }
+    .driver-popover-description .feature-item:nth-child(2) { animation-delay: 0.15s !important; }
+    .driver-popover-description .feature-item:nth-child(3) { animation-delay: 0.2s !important; }
+    .driver-popover-description .feature-item:nth-child(4) { animation-delay: 0.25s !important; }
 
     @keyframes travliaq-feature-pop {
       0% {
-        opacity: 0;
-        transform: scale(0.8);
+        opacity: 0.6;
+        transform: scale(0.92);
       }
       100% {
         opacity: 1;
@@ -473,10 +514,39 @@ function injectDriverStyles() {
     /* Center popover class - position at center of screen */
     .center-popover.driver-popover {
       position: fixed !important;
+      top: 55% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 10002 !important;
+      animation: travliaq-popover-enter-center 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      max-height: min(75vh, 600px) !important;
+      overflow-y: auto !important;
+    }
+    
+    /* Intro modal - no element highlighted */
+    .intro-modal.driver-popover {
+      position: fixed !important;
       top: 50% !important;
       left: 50% !important;
       transform: translate(-50%, -50%) !important;
       z-index: 10002 !important;
+      animation: travliaq-popover-enter-center 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      max-width: 460px !important;
+      border: 2px solid hsl(var(--primary) / 0.3) !important;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 60px hsl(var(--primary) / 0.15) !important;
+    }
+    
+    /* Outro/finish modal */
+    .outro-modal.driver-popover {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 10002 !important;
+      animation: travliaq-popover-enter-center 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      max-width: 480px !important;
+      border: 2px solid hsl(var(--primary) / 0.4) !important;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 80px hsl(var(--primary) / 0.2) !important;
     }
 
     /* Right popover for widget steps (avoid covering the left widgets panel) */
@@ -487,15 +557,54 @@ function injectDriverStyles() {
       left: auto !important;
       transform: translateY(-50%) !important;
       z-index: 10002 !important;
+      animation: travliaq-popover-enter-right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      max-height: min(80vh, 640px) !important;
+      overflow-y: auto !important;
     }
 
     @media (max-width: 768px) {
-      .travliaq-popover-right.driver-popover {
+      .travliaq-popover-right.driver-popover,
+      .center-popover.driver-popover,
+      .intro-modal.driver-popover,
+      .outro-modal.driver-popover {
         left: 50% !important;
         right: auto !important;
+        top: 50% !important;
         transform: translate(-50%, -50%) !important;
-        width: min(92vw, 420px) !important;
+        width: min(92vw, 400px) !important;
+        max-height: min(85vh, 600px) !important;
+        animation: travliaq-popover-enter-center 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
       }
+    }
+    
+    /* Progress bar under dots */
+    .travliaq-progress-bar-container {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+    
+    .travliaq-progress-bar {
+      width: 60px !important;
+      height: 3px !important;
+      background: hsl(var(--muted) / 0.5) !important;
+      border-radius: 2px !important;
+      overflow: hidden !important;
+    }
+    
+    .travliaq-progress-bar-fill {
+      height: 100% !important;
+      background: hsl(var(--primary)) !important;
+      border-radius: 2px !important;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    
+    .travliaq-step-label {
+      font-size: 0.6875rem !important;
+      color: hsl(var(--muted-foreground)) !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      font-weight: 500 !important;
     }
   `;
   document.head.appendChild(style);
@@ -534,15 +643,15 @@ export default function OnboardingTour({
     document.querySelectorAll(".travliaq-tab-highlight").forEach((el) => {
       el.classList.remove("travliaq-tab-highlight");
     });
-    onPanelVisibilityChange?.(false);
-    eventBus.emit("tab:change", { tab: "flights" });
+    // Don't force any state change - keep the user's current view
+    // The tour ends with preferences open, which is fine
 
     setTimeout(() => {
       onRequestAnimation?.();
     }, 300);
 
     onComplete?.();
-  }, [onComplete, onPanelVisibilityChange, onRequestAnimation]);
+  }, [onComplete, onRequestAnimation]);
 
   const highlightTab = useCallback((tab?: TabType) => {
     // Clear previous highlights
@@ -558,6 +667,9 @@ export default function OnboardingTour({
     }
   }, []);
 
+  // Step labels for progress indicator
+  const stepLabels = ["Intro", "Chat", "Outils", "Carte", "Vols", "Séjours", "Activités", "Préfs", "Fin"];
+
   const renderProgressHeader = useCallback(
     (popoverEl: HTMLElement, currentIndex: number, total: number, driverInstance: ReturnType<typeof driver>) => {
       // Remove old header if exists
@@ -568,11 +680,30 @@ export default function OnboardingTour({
       const header = document.createElement("div");
       header.className = "travliaq-progress-header";
 
-      // Step counter
+      // Left side: step counter + label
+      const leftGroup = document.createElement("div");
+      leftGroup.className = "travliaq-progress-bar-container";
+      
       const counter = document.createElement("span");
       counter.className = "travliaq-step-counter";
-      counter.textContent = `${currentIndex + 1} / ${total}`;
-      header.appendChild(counter);
+      counter.textContent = `${currentIndex + 1}/${total}`;
+      leftGroup.appendChild(counter);
+      
+      const stepLabel = document.createElement("span");
+      stepLabel.className = "travliaq-step-label";
+      stepLabel.textContent = stepLabels[currentIndex] || "";
+      leftGroup.appendChild(stepLabel);
+      
+      header.appendChild(leftGroup);
+
+      // Center: progress bar
+      const progressBar = document.createElement("div");
+      progressBar.className = "travliaq-progress-bar";
+      const progressFill = document.createElement("div");
+      progressFill.className = "travliaq-progress-bar-fill";
+      progressFill.style.width = `${((currentIndex + 1) / total) * 100}%`;
+      progressBar.appendChild(progressFill);
+      header.appendChild(progressBar);
 
       // Dots
       const dots = document.createElement("div");
@@ -601,17 +732,23 @@ export default function OnboardingTour({
   );
 
   const steps: DriveStep[] = [
-    // Step 0: Welcome - target chat panel
+    // Step 0: Welcome - centered intro modal, no element highlighted
     {
-      element: '[data-tour="chat-panel"]',
+      element: "body",
       popover: {
         title: "✨ Bienvenue sur Travliaq !",
         description: `
-          <p>Planifiez votre voyage simplement grâce à notre assistant intelligent.</p>
-          <p style="font-size: 0.8125rem;">Ce guide rapide vous présente les fonctionnalités principales. Vous pouvez le passer à tout moment.</p>
+          <p style="font-size: 1rem; margin-bottom: 16px;">Planifiez votre voyage idéal en quelques minutes grâce à notre assistant intelligent.</p>
+          <div style="background: hsl(var(--muted) / 0.5); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+            <p style="font-size: 0.875rem; margin: 0; color: hsl(var(--foreground));">
+              <strong>Ce guide rapide</strong> vous présente les fonctionnalités principales en <strong>30 secondes</strong>.
+            </p>
+          </div>
+          <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">Vous pouvez passer ce guide à tout moment avec le bouton ×</p>
         `,
-        side: "right",
+        side: "over",
         align: "center",
+        popoverClass: "intro-modal",
       },
     },
     // Step 1: Chat
@@ -623,10 +760,11 @@ export default function OnboardingTour({
           <span class="highlight-badge">Chat intelligent</span>
           <p>Parlez naturellement pour planifier votre voyage.</p>
           <ul>
-            <li><strong>Demandez</strong> des recommandations</li>
-            <li><strong>Configurez</strong> votre voyage</li>
-            <li><strong>L'IA synchronise</strong> tout automatiquement</li>
+            <li><strong>Demandez</strong> des recommandations personnalisées</li>
+            <li><strong>Configurez</strong> vos vols, hébergements, activités</li>
+            <li><strong>L'IA synchronise</strong> tout automatiquement dans les widgets</li>
           </ul>
+          <div class="tip-box">💡 Exemple : "Je veux partir à Bali en avril pour 2 semaines"</div>
         `,
         side: "right",
         align: "center",
@@ -639,13 +777,14 @@ export default function OnboardingTour({
         title: "🛠️ Barre d'Outils",
         description: `
           <span class="highlight-badge">Navigation rapide</span>
-          <p>Accédez à chaque aspect de votre voyage :</p>
+          <p>Basculez entre les différents aspects de votre voyage :</p>
           <div class="feature-grid">
             <div class="feature-item">✈️ Vols</div>
             <div class="feature-item">🏨 Hébergements</div>
             <div class="feature-item">🎭 Activités</div>
             <div class="feature-item">⚙️ Préférences</div>
           </div>
+          <div class="tip-box">💡 Chaque onglet ouvre un panneau de configuration dédié</div>
         `,
         side: "bottom",
         align: "center",
@@ -661,30 +800,30 @@ export default function OnboardingTour({
           <span class="highlight-badge">Visualisation en temps réel</span>
           <p>Explorez votre voyage sur la carte :</p>
           <ul>
-            <li><strong>Cliquez</strong> sur une ville pour les prix</li>
-            <li><strong>Itinéraires</strong> affichés automatiquement</li>
-            <li><strong>Zoomez</strong> pour plus d'options</li>
+            <li><strong>Prix en direct</strong> — cliquez sur une destination pour voir les tarifs</li>
+            <li><strong>Itinéraires</strong> — vos trajets s'affichent automatiquement</li>
+            <li><strong>Zoom</strong> — découvrez plus de destinations en zoomant</li>
           </ul>
         `,
         side: "left",
         align: "center",
       },
     },
-    // Step 4: Flights widget
+    // Step 4: Flights widget - target full widget container
     {
-      element: '[data-tour="widget-flights"]',
+      element: '[data-tour="widget-container"]',
       popover: {
         title: "✈️ Widget Vols",
         description: `
-          <span class="highlight-badge">Configurez vos vols</span>
-          <p>Ce widget sert à rechercher et comparer les vols (prix, horaires, escales).</p>
+          <span class="highlight-badge">Recherchez et comparez</span>
+          <p style="margin-bottom: 10px;">Ce panneau complet vous permet de configurer tous les détails de vos vols.</p>
           <ul>
-            <li><strong>Choisissez</strong> le type : aller-retour, aller simple, multi-destinations</li>
-            <li><strong>Saisissez</strong> départ + destination (aéroports/villes)</li>
-            <li><strong>Définissez</strong> les dates et le nombre de voyageurs</li>
-            <li><strong>Affinez</strong> avec les options (vols directs, dates flexibles…)</li>
+            <li><strong>Type de voyage</strong> — aller-retour, aller simple, multi-destinations</li>
+            <li><strong>Origine & destination</strong> — aéroports ou villes</li>
+            <li><strong>Dates & voyageurs</strong> — flexible ou fixe</li>
+            <li><strong>Options avancées</strong> — vols directs, bagages, classe…</li>
           </ul>
-          <div class="tip-box">💡 L'onglet Vols est aussi surligné</div>
+          <div class="tip-box">💡 Les résultats apparaissent ici même après la recherche</div>
         `,
         side: "right",
         align: "center",
@@ -693,19 +832,19 @@ export default function OnboardingTour({
     },
     // Step 5: Stays widget
     {
-      element: '[data-tour="widget-stays"]',
+      element: '[data-tour="widget-container"]',
       popover: {
         title: "🏨 Widget Hébergements",
         description: `
-          <span class="highlight-badge">Trouvez votre logement</span>
-          <p>Ce widget permet de trouver un hébergement adapté à votre budget et vos critères.</p>
+          <span class="highlight-badge">Trouvez votre logement idéal</span>
+          <p style="margin-bottom: 10px;">Recherchez parmi des milliers d'options d'hébergement.</p>
           <ul>
-            <li><strong>Destination</strong> synchronisée avec le reste du voyage</li>
-            <li><strong>Budget</strong> par nuit et niveau de confort</li>
-            <li><strong>Type</strong> : hôtel, appart, villa, auberge…</li>
-            <li><strong>Filtres</strong> (note, équipements) + résultats détaillés</li>
+            <li><strong>Destination</strong> — synchronisée avec vos vols automatiquement</li>
+            <li><strong>Budget & confort</strong> — définissez votre fourchette de prix</li>
+            <li><strong>Type</strong> — hôtel, appartement, villa, auberge…</li>
+            <li><strong>Équipements</strong> — piscine, WiFi, parking, petit-déj…</li>
           </ul>
-          <div class="tip-box">💡 L'onglet Hébergements est surligné</div>
+          <div class="tip-box">💡 Les prix s'affichent aussi sur la carte</div>
         `,
         side: "right",
         align: "center",
@@ -714,19 +853,19 @@ export default function OnboardingTour({
     },
     // Step 6: Activities widget
     {
-      element: '[data-tour="widget-activities"]',
+      element: '[data-tour="widget-container"]',
       popover: {
         title: "🎭 Widget Activités",
         description: `
-          <span class="highlight-badge">Découvrez que faire</span>
-          <p>Ce widget sert à explorer des activités et à construire votre programme sur place.</p>
+          <span class="highlight-badge">Découvrez quoi faire</span>
+          <p style="margin-bottom: 10px;">Explorez les meilleures activités de votre destination.</p>
           <ul>
-            <li><strong>Catégories</strong> : culture, nature, gastronomie…</li>
-            <li><strong>Filtres</strong> : prix, durée, popularité</li>
-            <li><strong>Recherche</strong> : par ville et via la carte</li>
-            <li><strong>Détails</strong> : description, horaires, localisation</li>
+            <li><strong>Catégories</strong> — culture, nature, gastronomie, aventure…</li>
+            <li><strong>Filtres</strong> — prix, durée, popularité, accessibilité</li>
+            <li><strong>Localisation</strong> — visualisez les activités sur la carte</li>
+            <li><strong>Détails</strong> — photos, avis, horaires, réservation</li>
           </ul>
-          <div class="tip-box">💡 L'onglet Activités est surligné</div>
+          <div class="tip-box">💡 Ajoutez des activités à votre itinéraire d'un clic</div>
         `,
         side: "right",
         align: "center",
@@ -735,39 +874,46 @@ export default function OnboardingTour({
     },
     // Step 7: Preferences widget
     {
-      element: '[data-tour="widget-preferences"]',
+      element: '[data-tour="widget-container"]',
       popover: {
         title: "⚙️ Widget Préférences",
         description: `
-          <span class="highlight-badge">Personnalisez votre voyage</span>
-          <p>Vos préférences guident l'IA pour proposer des vols/activités/hébergements cohérents.</p>
+          <span class="highlight-badge">Personnalisez l'expérience</span>
+          <p style="margin-bottom: 10px;">Vos préférences guident l'IA pour des recommandations sur-mesure.</p>
           <ul>
-            <li><strong>Rythme</strong> : détente, modéré, intensif</li>
-            <li><strong>Confort</strong> : économique → premium</li>
-            <li><strong>Centres d'intérêt</strong> : culture, nature, plage…</li>
-            <li><strong>Style</strong> : solo, couple, famille, amis</li>
+            <li><strong>Rythme</strong> — détente, modéré ou intensif</li>
+            <li><strong>Budget</strong> — économique, confort ou premium</li>
+            <li><strong>Intérêts</strong> — culture, plage, montagne, vie nocturne…</li>
+            <li><strong>Style</strong> — solo, couple, famille, groupe d'amis</li>
           </ul>
-          <div class="tip-box">💡 L'onglet Préférences est surligné</div>
+          <div class="tip-box">💡 Plus vos préférences sont précises, meilleures sont les suggestions</div>
         `,
         side: "right",
         align: "center",
         popoverClass: "travliaq-popover-right",
       },
     },
-    // Step 8: Final
+    // Step 8: Final - centered outro modal
     {
-      element: '[data-tour="chat-panel"]',
+      element: "body",
       popover: {
-        title: "🚀 C'est parti !",
+        title: "🚀 Vous êtes prêt !",
         description: `
-          <p style="font-weight: 600; color: hsl(var(--foreground));">Vous êtes prêt à planifier votre voyage.</p>
-          <div class="tip-box" style="background: hsl(var(--primary) / 0.15);">
-            🎯 <span><strong>Commencez par :</strong> dites bonjour à l'assistant ou configurez vos vols !</span>
+          <p style="font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 16px;">
+            Votre assistant de voyage vous attend.
+          </p>
+          <div class="tip-box" style="background: hsl(var(--primary) / 0.15); margin-bottom: 14px;">
+            🎯 <span><strong>Pour commencer :</strong> dites bonjour à l'assistant ou configurez directement vos vols !</span>
           </div>
-          <p style="font-size: 0.75rem; margin-top: 12px;">Relancez ce guide depuis les paramètres à tout moment.</p>
+          <div style="background: hsl(var(--muted) / 0.4); border-radius: 10px; padding: 12px;">
+            <p style="font-size: 0.8125rem; margin: 0; color: hsl(var(--muted-foreground));">
+              ✨ Vous pouvez relancer ce guide depuis les paramètres à tout moment.
+            </p>
+          </div>
         `,
-        side: "right",
+        side: "over",
         align: "center",
+        popoverClass: "outro-modal",
       },
     },
   ];
