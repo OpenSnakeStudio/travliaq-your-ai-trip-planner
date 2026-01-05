@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toastInfo, toastError } from "@/lib/toast";
+import { logger, LogCategory } from "@/utils/logger";
 import { useTravelMemory } from "@/contexts/TravelMemoryContext";
 import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan } from "@/contexts/AccommodationMemoryContext";
 import { useFlightMemory } from "@/contexts/FlightMemoryContext";
@@ -1065,6 +1066,17 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         "Destination incomplète",
         "Sélectionnez une ville dans la liste (pas seulement du texte) pour récupérer le pays et les coordonnées."
       );
+
+      logger.warn("Hotels search blocked: destination incomplete", {
+        category: LogCategory.VALIDATION,
+        metadata: {
+          city: activeAccommodation.city,
+          countryCode: activeAccommodation.countryCode,
+          hasLat: Boolean(activeAccommodation.lat),
+          hasLng: Boolean(activeAccommodation.lng),
+        },
+      });
+
       return;
     }
 
@@ -1073,6 +1085,17 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         "Dates manquantes",
         "Choisissez une date d'arrivée et une date de départ pour lancer la recherche d'hébergements."
       );
+
+      logger.warn("Hotels search blocked: dates missing", {
+        category: LogCategory.VALIDATION,
+        metadata: {
+          city: activeAccommodation.city,
+          countryCode: activeAccommodation.countryCode,
+          checkIn: activeAccommodation.checkIn ? format(activeAccommodation.checkIn, 'yyyy-MM-dd') : null,
+          checkOut: activeAccommodation.checkOut ? format(activeAccommodation.checkOut, 'yyyy-MM-dd') : null,
+        },
+      });
+
       return;
     }
 
@@ -1081,12 +1104,15 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
     try {
       // Build rooms config for API - use customRooms from memory context
-      const roomsConfig = memory.customRooms.length > 0 ? memory.customRooms : [{ adults: 2, children: 0, childrenAges: [] as number[], id: 'default' }];
+      const roomsConfig = memory.customRooms.length > 0
+        ? memory.customRooms
+        : [{ adults: 2, children: 0, childrenAges: [] as number[], id: 'default' }];
+
       const apiRooms: RoomOccupancy[] = roomsConfig.map(r => ({
         adults: r.adults,
         childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
       }));
-      
+
       // Build filters - use correct property names from AccommodationEntry
       const filters: any = {};
       if (activeAccommodation.priceMin > 0) filters.priceMin = activeAccommodation.priceMin;
@@ -1096,10 +1122,8 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       if (activeAccommodation.types.length > 0 && !activeAccommodation.types.includes('any')) {
         filters.types = activeAccommodation.types;
       }
-      
-      // (coords are required by backend) — already validated above
 
-      const response = await searchHotels({
+      const requestParams = {
         city: activeAccommodation.city,
         countryCode: activeAccommodation.countryCode,
         lat: activeAccommodation.lat,
@@ -1107,13 +1131,30 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         checkIn: format(activeAccommodation.checkIn, 'yyyy-MM-dd'),
         checkOut: format(activeAccommodation.checkOut, 'yyyy-MM-dd'),
         rooms: apiRooms,
-        currency: 'EUR',
-        locale: 'fr',
+        currency: 'EUR' as const,
+        locale: 'fr' as const,
         filters: Object.keys(filters).length > 0 ? filters : undefined,
-        sort: 'price_asc',
+        sort: 'price_asc' as const,
         limit: 30,
+      };
+
+      logger.info("Hotels search: start", {
+        category: LogCategory.API,
+        metadata: requestParams,
       });
-      
+
+      const response = await searchHotels(requestParams);
+
+      logger.info("Hotels search: done", {
+        category: LogCategory.API,
+        metadata: {
+          success: response.success,
+          total: response.results?.total,
+          count: response.results?.hotels?.length,
+          cached: response.cache_info?.cached,
+        },
+      });
+
       if (response.success && response.results.hotels.length > 0) {
         const results = response.results.hotels.map(mapApiToHotelResult);
         setHotelSearchResults(results);
@@ -1126,8 +1167,19 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         }
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Impossible de rechercher les hôtels";
+
+      logger.error("Hotels search: failed", {
+        category: LogCategory.API,
+        error: error instanceof Error ? error : new Error(String(error)),
+        metadata: {
+          city: activeAccommodation.city,
+          countryCode: activeAccommodation.countryCode,
+        },
+      });
+
       console.error('[AccommodationPanel] Search error:', error);
-      toastError("Erreur de recherche", error instanceof Error ? error.message : "Impossible de rechercher les hôtels");
+      toastError("Erreur de recherche", message);
       setHotelSearchResults([]);
     } finally {
       setIsSearching(false);
