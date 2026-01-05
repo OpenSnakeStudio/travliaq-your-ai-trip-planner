@@ -1077,11 +1077,10 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     eventBus.emit("hotels:results", { hotels: [] });
   };
 
-  // Handle hotel selection - show detail view
+  // Handle hotel selection - show detail view (only when clicking "Voir détails" button)
   const handleHotelSelect = (hotel: HotelResult) => {
     setSelectedHotelId(hotel.id);
     setSelectedHotelForDetail(hotel);
-    eventBus.emit("hotels:select", { hotel });
   };
   
   // Handle back from detail view - return to results list
