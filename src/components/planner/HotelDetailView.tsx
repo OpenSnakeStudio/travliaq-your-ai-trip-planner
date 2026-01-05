@@ -74,21 +74,30 @@ const HotelDetailView = ({
   const images = getMockImages(hotel);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const description = getHotelDescription(hotel);
   const highlights = getHighlights(hotel);
 
-  // Force scroll to top immediately when hotel changes - use useLayoutEffect for synchronous update
+  // Force scroll to top immediately when hotel changes
   useLayoutEffect(() => {
     setCurrentImageIndex(0);
-    // Immediate scroll reset
-    if (scrollAreaRef.current) {
+
+    // 1) Ensure the surrounding panel scrolls back to the top
+    rootRef.current?.scrollIntoView({ block: "start" });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+    // 2) Reset Radix ScrollArea viewport scroll
+    const resetInnerScroll = () => {
+      if (!scrollAreaRef.current) return;
       const viewport = scrollAreaRef.current.querySelector(
         "[data-radix-scroll-area-viewport]"
       ) as HTMLElement | null;
-      if (viewport) {
-        viewport.scrollTop = 0;
-      }
-    }
+      if (viewport) viewport.scrollTop = 0;
+    };
+
+    resetInnerScroll();
+    requestAnimationFrame(resetInnerScroll);
+    setTimeout(resetInnerScroll, 0);
   }, [hotel.id]);
 
   const nextImage = useCallback(() => {
@@ -103,7 +112,7 @@ const HotelDetailView = ({
   const pricePerNightPerPerson = Math.round(hotel.pricePerNight / 2);
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div ref={rootRef} className="flex flex-col h-full bg-background animate-enter">
       {/* Header with back button */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-4 py-3 border-b flex items-center gap-3">
         <Button

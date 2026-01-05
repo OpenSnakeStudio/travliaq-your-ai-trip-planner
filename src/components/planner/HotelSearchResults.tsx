@@ -417,7 +417,7 @@ const HotelSearchResultsInner = memo(({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full animate-enter">
       {/* Sticky header with back button */}
       <div
         ref={headerRef}

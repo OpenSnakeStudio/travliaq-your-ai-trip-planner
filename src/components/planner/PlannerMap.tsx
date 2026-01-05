@@ -2124,23 +2124,29 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const handleHotelResults = (data: { hotels: typeof hotelResults.hotels }) => {
       setHotelResults(data);
     };
-    
+
     const handleHotelHover = (data: { hotel: { id: string } | null }) => {
       setHoveredHotelId(data.hotel?.id || null);
     };
-    
+
     const handleHotelSelect = (data: { hotel: { id: string } }) => {
       setSelectedHotelId(data.hotel.id);
+    };
+
+    const handleClearHotelSelection = () => {
+      setSelectedHotelId(null);
     };
 
     eventBus.on("hotels:results", handleHotelResults);
     eventBus.on("hotels:hover", handleHotelHover);
     eventBus.on("hotels:select", handleHotelSelect);
+    eventBus.on("hotels:clearSelection", handleClearHotelSelection);
 
     return () => {
       eventBus.off("hotels:results", handleHotelResults);
       eventBus.off("hotels:hover", handleHotelHover);
       eventBus.off("hotels:select", handleHotelSelect);
+      eventBus.off("hotels:clearSelection", handleClearHotelSelection);
     };
   }, []);
 
@@ -2230,8 +2236,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         </div>
       `;
 
-      // Add hover effect - emit events with source="map" to distinguish from list hovers
+      // Add hover effect - when the user hovers the map pins, we clear any prior selection
+      // so there is NEVER a "selected" pin + a different "hovered" pin at the same time.
       el.addEventListener("mouseenter", () => {
+        eventBus.emit("hotels:clearSelection");
         eventBus.emit("hotels:hover", { hotel: hotel as any, source: "map" });
       });
 

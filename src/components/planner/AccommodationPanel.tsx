@@ -653,6 +653,14 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       eventBus.off("hotels:openDetail", handleOpenDetail);
     };
   }, [searchResults]);
+
+  // When hovering map pins, we want ONLY the hovered pin highlighted.
+  // So we clear any prior selection as soon as the user starts hovering on the map.
+  useEffect(() => {
+    const clearSelection = () => setSelectedHotelId(null);
+    eventBus.on("hotels:clearSelection", clearSelection);
+    return () => eventBus.off("hotels:clearSelection", clearSelection);
+  }, []);
   const activeAccommodation = getActiveAccommodation();
   const hasMultipleAccommodations = memory.accommodations.length > 1;
   const rooms = memory.useAutoRooms ? getSuggestedRooms() : memory.customRooms;
@@ -1111,10 +1119,12 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     setSelectedHotelForDetail(hotel);
   };
   
-  // Handle back from detail view - return to results list, clear selection
+  // Handle back from detail view - return to results list, clear selection + map highlight
   const handleBackFromDetail = () => {
     setSelectedHotelForDetail(null);
-    setSelectedHotelId(null); // Clear selection so no card stays highlighted
+    setSelectedHotelId(null);
+    eventBus.emit("hotels:clearSelection");
+    eventBus.emit("hotels:hover", { hotel: null, source: "map" });
   };
 
   // Handle hotel hover
