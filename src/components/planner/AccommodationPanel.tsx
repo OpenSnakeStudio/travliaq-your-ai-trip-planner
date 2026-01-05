@@ -1002,10 +1002,24 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       const lat = (activeAccommodation.lat || 48.8566) + (Math.random() - 0.5) * 0.03;
       const lng = (activeAccommodation.lng || 2.3522) + (Math.random() - 0.5) * 0.04;
       
+      // Valid Unsplash hotel images
+      const hotelImages = [
+        'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1549294413-26f195200c16?w=400&h=300&fit=crop',
+        'https://images.unsplash.com/photo-1455587734955-081b22074882?w=400&h=300&fit=crop',
+      ];
+      
       return {
         id: `hotel-${i}-${Date.now()}`,
         name,
-        imageUrl: `https://images.unsplash.com/photo-${1551882547 + i * 1000}-164bdae091c${i}?w=400&h=300&fit=crop`,
+        imageUrl: hotelImages[i % hotelImages.length],
         rating: 7 + Math.random() * 2.5,
         reviewCount: 50 + Math.floor(Math.random() * 500),
         pricePerNight: price,
