@@ -28,7 +28,7 @@ describe('hotelService.searchHotels (request building)', () => {
     });
   });
 
-  it('calls /api/v1/hotels/search by default and does not include filters when undefined', async () => {
+  it('sends only documented API params (no lat, lng, locale, offset)', async () => {
     const params: HotelSearchParams = {
       city: 'Doha',
       countryCode: 'QA',
@@ -46,7 +46,7 @@ describe('hotelService.searchHotels (request building)', () => {
     const [url, body] = postMock.mock.calls[0];
     expect(url).toBe('/api/v1/hotels/search');
 
-    // Critical: no "filters" key when params.filters is undefined
+    // Only documented params should be present
     expect(body).toMatchObject({
       city: 'Doha',
       countryCode: 'QA',
@@ -54,9 +54,14 @@ describe('hotelService.searchHotels (request building)', () => {
       checkOut: '2026-01-15',
       currency: 'EUR',
       limit: 10,
-      offset: 0,
       rooms: [{ adults: 2, childrenAges: [] }],
     });
+
+    // Non-documented params must NOT be present
+    expect('lat' in body).toBe(false);
+    expect('lng' in body).toBe(false);
+    expect('locale' in body).toBe(false);
+    expect('offset' in body).toBe(false);
     expect('filters' in body).toBe(false);
   });
 
