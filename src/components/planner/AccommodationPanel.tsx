@@ -25,9 +25,9 @@ import { STAYS_ZOOM } from "@/constants/mapSettings";
 import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
 import HotelDetailView from "./HotelDetailView";
 import { eventBus } from "@/lib/eventBus";
-import { searchHotels, type HotelResult as ApiHotelResult, type RoomOccupancy } from "@/services/hotels/hotelService";
+import type { RoomOccupancy, HotelResult as ApiHotelResult } from "@/services/hotels/hotelService";
+import { searchHotelsWithRetry } from "@/services/hotels/searchHotelsWithRetry";
 import { buildHotelFilters } from "./hotels/buildHotelFilters";
-
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
 }
@@ -1164,18 +1164,16 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       const requestParams = {
         city: activeAccommodation.city,
         countryCode: activeAccommodation.countryCode,
-        lat: activeAccommodation.lat,
-        lng: activeAccommodation.lng,
         checkIn: format(activeAccommodation.checkIn, "yyyy-MM-dd"),
         checkOut: format(activeAccommodation.checkOut, "yyyy-MM-dd"),
         rooms: apiRooms,
         currency: "EUR" as const,
         locale: "fr" as const,
         filters,
-        sort: "price_asc" as const,
+        // Important: backend behaves reliably with popularity; price_asc was yielding 0 results for many combos.
+        sort: "popularity" as const,
         limit: 30,
       };
-
 
       logger.info("Hotels search: start", {
         category: LogCategory.API,
@@ -1188,17 +1186,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         console.groupEnd();
       }
 
-      let response = await searchHotels(requestParams);
-
-      // If the server-side cache contains an empty result for these params,
-      // retry once with force_refresh=true to validate real availability.
-      if (response.success && response.results?.hotels?.length === 0) {
-        logger.info("Hotels search: empty -> retry with force_refresh", {
-          category: LogCategory.API,
-          metadata: requestParams,
-        });
-        response = await searchHotels(requestParams, true);
-      }
+      const response = await searchHotelsWithRetry(requestParams);
 
       logger.info("Hotels search: done", {
         category: LogCategory.API,
@@ -1718,6 +1706,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
       {/* Search Button */}
       <Button
+        data-testid="hotels-search-button"
         onClick={handleSearch}
         disabled={!canSearch || isSearching}
         className="w-full h-10 text-sm font-medium"
