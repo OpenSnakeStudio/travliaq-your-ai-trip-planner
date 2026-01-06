@@ -554,6 +554,31 @@ function injectDriverStyles() {
       max-width: 520px !important;
       min-width: 0 !important;
     }
+
+    /* Re-designed "Barre d'Outils" step popover (no transparency/glass) */
+    .travliaq-toolbar-popover.driver-popover {
+      background: hsl(var(--card)) !important;
+      border: 1px solid hsl(var(--border)) !important;
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.55) !important;
+    }
+
+    .travliaq-toolbar-popover .travliaq-progress-header {
+      background: hsl(var(--card)) !important;
+      border-bottom: 1px solid hsl(var(--border)) !important;
+    }
+
+    .travliaq-toolbar-popover .driver-popover-description {
+      padding-top: 6px !important;
+    }
+
+    .travliaq-toolbar-popover .driver-popover-description ul {
+      margin-top: 8px !important;
+    }
+
+    .travliaq-toolbar-popover .driver-popover-description li {
+      background: hsl(var(--muted) / 0.35) !important;
+      border: 1px solid hsl(var(--border) / 0.6) !important;
+    }
     
     /* Intro modal - no element highlighted */
     .intro-modal.driver-popover {
@@ -811,19 +836,19 @@ export default function OnboardingTour({
       popover: {
         title: "🛠️ Barre d'Outils",
         description: `
-          <span class="highlight-badge">Navigation rapide</span>
-          <p>Accédez instantanément à chaque partie de votre voyage, sans perdre le contexte.</p>
-          <div class="feature-grid">
-            <div class="feature-item">✈️ Vols</div>
-            <div class="feature-item">🏨 Hébergements</div>
-            <div class="feature-item">🎭 Activités</div>
-            <div class="feature-item">⚙️ Préférences</div>
-          </div>
-          <div class="tip-box">💡 Chaque onglet ouvre un panneau dédié, et tout se synchronise avec l'IA</div>
+          <span class="highlight-badge">Accès instantané</span>
+          <p>Utilisez ces boutons pour passer d'un widget à l'autre, sans perdre le fil de votre conversation.</p>
+          <ul>
+            <li><strong>✈️ Vols</strong> — configurer itinéraire, dates, passagers</li>
+            <li><strong>🏨 Hébergements</strong> — choisir une zone + filtrer selon vos critères</li>
+            <li><strong>🎭 Activités</strong> — explorer, filtrer et ajouter à l'itinéraire</li>
+            <li><strong>⚙️ Préférences</strong> — affiner le style de voyage pour guider l'IA</li>
+          </ul>
+          <div class="tip-box">💡 Astuce : cliquez sur un onglet, puis dites à l'IA ce que vous voulez — tout se remplit automatiquement.</div>
         `,
         side: "bottom",
         align: "center",
-        popoverClass: "center-popover travliaq-popover-large",
+        popoverClass: "travliaq-toolbar-popover travliaq-popover-large",
       },
     },
     // Step 3: Map
