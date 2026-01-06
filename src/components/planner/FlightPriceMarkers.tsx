@@ -1,18 +1,9 @@
-import { memo, useEffect, useRef, useState, useCallback } from "react";
+import { memo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import mapboxgl from "mapbox-gl";
 import type { AirportMarker } from "@/hooks/useAirportsInBounds";
-import type { MapPrice, MapPricesResult } from "@/hooks/useMapPrices";
+import type { MapPricesResult } from "@/hooks/useMapPrices";
 import eventBus from "@/lib/eventBus";
-
-interface PriceMarkerData {
-  hubId: string;
-  airport: AirportMarker;
-  screenPos: { x: number; y: number };
-  price: number | null | undefined; // undefined = loading, null = no flight
-  isOrigin: boolean;
-  visible: boolean;
-}
 
 interface FlightPriceMarkersProps {
   map: mapboxgl.Map | null;
@@ -51,140 +42,140 @@ function getHubPrice(airport: AirportMarker, prices: MapPricesResult): number | 
   return minPrice;
 }
 
-// Single price marker component - memoized for stability
-const PriceMarker = memo(function PriceMarker({
-  data,
-  onClick,
-}: {
-  data: PriceMarkerData;
-  onClick: (airport: AirportMarker) => void;
-}) {
-  const { airport, screenPos, price, isOrigin, visible } = data;
-  
-  if (!visible) return null;
+// Create loading dots HTML
+function createLoadingDots(): string {
+  return `
+    <span class="loading-dots">
+      <span style="animation: bounce-dot 1s infinite; animation-delay: 0ms;">•</span>
+      <span style="animation: bounce-dot 1s infinite; animation-delay: 150ms;">•</span>
+      <span style="animation: bounce-dot 1s infinite; animation-delay: 300ms;">•</span>
+    </span>
+  `;
+}
+
+// Create marker DOM element
+function createMarkerElement(
+  airport: AirportMarker,
+  isOrigin: boolean,
+  price: number | null | undefined,
+  onClick: (airport: AirportMarker) => void
+): HTMLDivElement | null {
+  // Don't create marker for no-flight destinations
+  if (price === null && !isOrigin) return null;
   
   const cityName = airport.cityName || airport.name;
-  
-  // Determine display text
-  let priceContent: React.ReactNode;
+  let priceContent: string;
   let priceColor = "#0369a1";
   
   if (isOrigin) {
     priceContent = "Départ";
     priceColor = "#64748b";
   } else if (price === undefined) {
-    // Loading state with animated dots
-    priceContent = (
-      <span className="loading-dots" style={{ display: "inline-flex", gap: 2 }}>
-        <span style={{ animation: "bounce-dot 1s infinite", animationDelay: "0ms" }}>•</span>
-        <span style={{ animation: "bounce-dot 1s infinite", animationDelay: "150ms" }}>•</span>
-        <span style={{ animation: "bounce-dot 1s infinite", animationDelay: "300ms" }}>•</span>
-      </span>
-    );
-  } else if (price === null) {
-    // No flight - this shouldn't render (filtered out)
-    return null;
+    priceContent = createLoadingDots();
   } else {
     priceContent = `${price}€`;
   }
   
-  return (
-    <div
-      className="flight-price-marker"
-      style={{
-        position: "absolute",
-        left: screenPos.x,
-        top: screenPos.y,
-        transform: "translate(-50%, -100%)",
-        zIndex: 10,
-        pointerEvents: isOrigin ? "none" : "auto",
-        cursor: isOrigin ? "default" : "pointer",
-        transition: "opacity 0.15s ease-out",
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (!isOrigin) onClick(airport);
-      }}
-    >
-      <div
-        className="airport-badge"
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          transition: "transform 0.15s ease-out, filter 0.15s ease-out",
-          filter: "drop-shadow(0 3px 8px rgba(0,0,0,0.35))",
-        }}
-        onMouseEnter={(e) => {
-          if (!isOrigin) {
-            e.currentTarget.style.transform = "scale(1.08)";
-            e.currentTarget.style.filter = "drop-shadow(0 4px 10px rgba(0,0,0,0.3))";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.filter = "drop-shadow(0 3px 8px rgba(0,0,0,0.35))";
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            background: "linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)",
-            padding: "6px 12px 5px",
-            borderRadius: 10,
-            border: "1.5px solid rgba(0,0,0,0.12)",
-            minWidth: 48,
-            boxShadow: "inset 0 1px 2px rgba(255,255,255,0.8)",
-          }}
-        >
-          <span
-            style={{
-              color: "#0f172a",
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: "0.01em",
-              lineHeight: 1.1,
-              maxWidth: 85,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {cityName}
-          </span>
-          <span
-            className="airport-price"
-            style={{
-              color: priceColor,
-              fontSize: 13,
-              fontWeight: 800,
-              lineHeight: 1.2,
-              marginTop: 2,
-            }}
-          >
-            {priceContent}
-          </span>
-        </div>
-        {/* Arrow pointer */}
-        <div
-          style={{
-            width: 0,
-            height: 0,
-            borderLeft: "7px solid transparent",
-            borderRight: "7px solid transparent",
-            borderTop: "8px solid #ffffff",
-            marginTop: -1,
-            filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.15))",
-          }}
-        />
+  const el = document.createElement("div");
+  el.className = "flight-price-marker";
+  el.style.cssText = `
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 10;
+    pointer-events: ${isOrigin ? "none" : "auto"};
+    cursor: ${isOrigin ? "default" : "pointer"};
+    will-change: transform;
+  `;
+  
+  el.innerHTML = `
+    <div class="airport-badge" style="
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      filter: drop-shadow(0 3px 8px rgba(0,0,0,0.35));
+      transition: transform 0.15s ease-out, filter 0.15s ease-out;
+    ">
+      <div style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+        padding: 6px 12px 5px;
+        border-radius: 10px;
+        border: 1.5px solid rgba(0,0,0,0.12);
+        min-width: 48px;
+        box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);
+      ">
+        <span style="
+          color: #0f172a;
+          font-size: 10px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          line-height: 1.1;
+          max-width: 85px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        ">${cityName}</span>
+        <span class="airport-price" style="
+          color: ${priceColor};
+          font-size: 13px;
+          font-weight: 800;
+          line-height: 1.2;
+          margin-top: 2px;
+        ">${priceContent}</span>
       </div>
+      <div style="
+        width: 0;
+        height: 0;
+        border-left: 7px solid transparent;
+        border-right: 7px solid transparent;
+        border-top: 8px solid #ffffff;
+        margin-top: -1px;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+      "></div>
     </div>
-  );
-});
+  `;
+  
+  // Hover effects
+  const badge = el.querySelector(".airport-badge") as HTMLElement;
+  if (badge && !isOrigin) {
+    el.addEventListener("mouseenter", () => {
+      badge.style.transform = "scale(1.08)";
+      badge.style.filter = "drop-shadow(0 4px 10px rgba(0,0,0,0.3))";
+    });
+    el.addEventListener("mouseleave", () => {
+      badge.style.transform = "scale(1)";
+      badge.style.filter = "drop-shadow(0 3px 8px rgba(0,0,0,0.35))";
+    });
+    el.addEventListener("click", (e) => {
+      e.stopPropagation();
+      onClick(airport);
+    });
+  }
+  
+  return el;
+}
 
-// Main component that manages all price markers via React Portal
+// Update marker price content
+function updateMarkerPrice(el: HTMLElement, price: number | null | undefined, isOrigin: boolean) {
+  const priceSpan = el.querySelector(".airport-price") as HTMLElement;
+  if (!priceSpan) return;
+  
+  if (isOrigin) {
+    priceSpan.innerHTML = "Départ";
+    priceSpan.style.color = "#64748b";
+  } else if (price === undefined) {
+    priceSpan.innerHTML = createLoadingDots();
+    priceSpan.style.color = "#0369a1";
+  } else if (price !== null) {
+    priceSpan.innerHTML = `${price}€`;
+    priceSpan.style.color = "#0369a1";
+  }
+}
+
+// Main component using direct DOM manipulation for smooth updates
 function FlightPriceMarkersInner({
   map,
   airports,
@@ -195,70 +186,127 @@ function FlightPriceMarkersInner({
   currentZoom,
   isFlightsTab,
 }: FlightPriceMarkersProps) {
-  const [markers, setMarkers] = useState<PriceMarkerData[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const markersRef = useRef<Map<string, { el: HTMLElement; airport: AirportMarker; isOrigin: boolean }>>(new Map());
   const rafRef = useRef<number | null>(null);
+  const dataRef = useRef({ airports, prices, departureIata, departureCity, departureAirports, currentZoom });
   
-  // Update screen positions on map move
+  // Keep data ref updated
+  dataRef.current = { airports, prices, departureIata, departureCity, departureAirports, currentZoom };
+  
+  // Handle marker click
+  const handleClick = useCallback((airport: AirportMarker) => {
+    console.log(`[FlightPriceMarkers] Hub clicked: ${getHubId(airport)} - ${airport.cityName}`);
+    eventBus.emit("airports:click", { airport });
+  }, []);
+  
+  // Update positions using transform3d for GPU acceleration - NO React state
   const updatePositions = useCallback(() => {
-    if (!map || !isFlightsTab) return;
+    if (!map || !containerRef.current) return;
     
-    const userDepIata = departureIata?.toUpperCase();
-    const userDepCity = departureCity?.toLowerCase().trim();
-    const depSet = new Set(departureAirports.map((d) => d.toUpperCase()));
-    const hideDeparturePin = currentZoom < 7;
+    const canvas = map.getCanvas();
+    const bounds = canvas.getBoundingClientRect();
+    const margin = 50;
+    const hideDeparturePin = dataRef.current.currentZoom < 7;
     
-    const newMarkers: PriceMarkerData[] = [];
-    
-    for (const airport of airports) {
-      const hubId = getHubId(airport);
-      const price = getHubPrice(airport, prices);
-      
-      // Check if origin
-      const isOrigin =
-        (userDepIata && airport.iata.toUpperCase() === userDepIata) ||
-        (userDepCity && airport.cityName?.toLowerCase().trim() === userDepCity) ||
-        depSet.has(airport.iata.toUpperCase());
-      
-      // Hide origin when zoomed out, or hide destinations with null price (no flight)
-      if ((isOrigin && hideDeparturePin) || (price === null && !isOrigin)) {
-        continue;
+    markersRef.current.forEach(({ el, airport, isOrigin }, hubId) => {
+      // Hide origin when zoomed out
+      if (isOrigin && hideDeparturePin) {
+        el.style.display = "none";
+        return;
       }
       
-      // Project to screen coordinates
       const point = map.project([airport.lng, airport.lat]);
-      const canvas = map.getCanvas();
-      const bounds = canvas.getBoundingClientRect();
       
-      // Check if in viewport (with some margin)
-      const margin = 50;
+      // Check viewport
       const inViewport =
         point.x >= -margin &&
         point.x <= bounds.width + margin &&
         point.y >= -margin &&
         point.y <= bounds.height + margin;
       
-      newMarkers.push({
-        hubId,
-        airport,
-        screenPos: { x: point.x, y: point.y },
-        price,
-        isOrigin,
-        visible: inViewport,
-      });
-    }
-    
-    setMarkers(newMarkers);
-  }, [map, airports, prices, departureIata, departureCity, departureAirports, currentZoom, isFlightsTab]);
+      if (!inViewport) {
+        el.style.display = "none";
+        return;
+      }
+      
+      el.style.display = "block";
+      // Use translate3d for GPU-accelerated smooth movement
+      el.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) translate(-50%, -100%)`;
+    });
+  }, [map]);
   
-  // Set up map event listeners for position updates
+  // Sync markers with airports data
   useEffect(() => {
-    if (!map || !isFlightsTab) {
-      setMarkers([]);
+    if (!map || !isFlightsTab || !containerRef.current) {
+      // Clear all markers when not on flights tab
+      markersRef.current.forEach(({ el }) => el.remove());
+      markersRef.current.clear();
       return;
     }
     
-    // Create container for portal if needed
+    const { departureIata: depIata, departureCity: depCity, departureAirports: depAirports } = dataRef.current;
+    const userDepIata = depIata?.toUpperCase();
+    const userDepCity = depCity?.toLowerCase().trim();
+    const depSet = new Set(depAirports.map((d) => d.toUpperCase()));
+    
+    const currentHubIds = new Set<string>();
+    
+    // Create/update markers for each airport
+    for (const airport of airports) {
+      const hubId = getHubId(airport);
+      currentHubIds.add(hubId);
+      
+      const isOrigin =
+        (userDepIata && airport.iata.toUpperCase() === userDepIata) ||
+        (userDepCity && airport.cityName?.toLowerCase().trim() === userDepCity) ||
+        depSet.has(airport.iata.toUpperCase());
+      
+      const price = getHubPrice(airport, prices);
+      
+      // Skip destinations with no flights
+      if (price === null && !isOrigin) {
+        // Remove existing marker if any
+        const existing = markersRef.current.get(hubId);
+        if (existing) {
+          existing.el.remove();
+          markersRef.current.delete(hubId);
+        }
+        continue;
+      }
+      
+      const existing = markersRef.current.get(hubId);
+      
+      if (existing) {
+        // Update existing marker's price
+        updateMarkerPrice(existing.el, price, isOrigin);
+      } else {
+        // Create new marker
+        const el = createMarkerElement(airport, isOrigin, price, handleClick);
+        if (el) {
+          containerRef.current!.appendChild(el);
+          markersRef.current.set(hubId, { el, airport, isOrigin });
+        }
+      }
+    }
+    
+    // Remove markers for airports no longer in bounds
+    markersRef.current.forEach(({ el }, hubId) => {
+      if (!currentHubIds.has(hubId)) {
+        el.remove();
+        markersRef.current.delete(hubId);
+      }
+    });
+    
+    // Update positions immediately
+    updatePositions();
+  }, [map, airports, prices, isFlightsTab, handleClick, updatePositions]);
+  
+  // Set up smooth position updates on map move
+  useEffect(() => {
+    if (!map || !isFlightsTab) return;
+    
+    // Create container
     if (!containerRef.current) {
       const container = document.createElement("div");
       container.id = "flight-price-markers-container";
@@ -272,73 +320,51 @@ function FlightPriceMarkersInner({
         overflow: hidden;
         z-index: 5;
       `;
-      // Make individual markers clickable
-      container.querySelectorAll(".flight-price-marker").forEach((el) => {
-        (el as HTMLElement).style.pointerEvents = "auto";
-      });
-      
-      const mapContainer = map.getContainer();
-      mapContainer.appendChild(container);
+      map.getContainer().appendChild(container);
       containerRef.current = container;
     }
     
-    // Update function with RAF throttling
-    const scheduleUpdate = () => {
+    // Smooth update using RAF - fires on every frame during map movement
+    const onMove = () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(updatePositions);
     };
     
-    // Initial update
-    updatePositions();
+    // Also update during render for maximum smoothness
+    const onRender = () => {
+      updatePositions();
+    };
     
-    // Listen to map events
-    map.on("move", scheduleUpdate);
-    map.on("zoom", scheduleUpdate);
-    map.on("resize", scheduleUpdate);
+    map.on("move", onMove);
+    map.on("render", onRender);
+    map.on("resize", updatePositions);
+    
+    // Initial position
+    updatePositions();
     
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      map.off("move", scheduleUpdate);
-      map.off("zoom", scheduleUpdate);
-      map.off("resize", scheduleUpdate);
+      map.off("move", onMove);
+      map.off("render", onRender);
+      map.off("resize", updatePositions);
     };
   }, [map, isFlightsTab, updatePositions]);
   
-  // Update positions when airports or prices change
-  useEffect(() => {
-    updatePositions();
-  }, [airports, prices, updatePositions]);
-  
-  // Cleanup container on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (containerRef.current) {
         containerRef.current.remove();
         containerRef.current = null;
       }
+      markersRef.current.clear();
     };
   }, []);
   
-  // Handle marker click
-  const handleClick = useCallback((airport: AirportMarker) => {
-    console.log(`[FlightPriceMarkers] Hub clicked: ${getHubId(airport)} - ${airport.cityName}`);
-    eventBus.emit("airports:click", { airport });
-  }, []);
-  
-  // Render via portal
-  if (!containerRef.current || !isFlightsTab) return null;
-  
-  return createPortal(
-    <>
-      {markers.map((marker) => (
-        <PriceMarker key={marker.hubId} data={marker} onClick={handleClick} />
-      ))}
-    </>,
-    containerRef.current
-  );
+  return null; // No React rendering - all DOM manipulation
 }
 
-// Inject bounce-dot animation styles once
+// Inject styles once
 function injectStyles() {
   if (document.getElementById("flight-price-markers-styles")) return;
   
@@ -358,6 +384,11 @@ function injectStyles() {
     
     #flight-price-markers-container .flight-price-marker {
       pointer-events: auto;
+    }
+    
+    .loading-dots {
+      display: inline-flex;
+      gap: 2px;
     }
   `;
   document.head.appendChild(style);
