@@ -619,6 +619,19 @@ function injectDriverStyles() {
       overflow: visible !important;
     }
 
+    /* Left popover for map step (avoid covering the map) */
+    .travliaq-popover-left.driver-popover {
+      position: fixed !important;
+      top: 50% !important;
+      left: 24px !important;
+      right: auto !important;
+      transform: translateY(-50%) !important;
+      z-index: 10002 !important;
+      animation: travliaq-popover-enter-right 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
     @media (max-width: 768px) {
       .travliaq-popover-right.driver-popover,
       .center-popover.driver-popover,
@@ -713,7 +726,7 @@ export default function OnboardingTour({
     onComplete?.();
   }, [onComplete, onPanelVisibilityChange, onRequestAnimation]);
 
-  const highlightTab = useCallback((tab?: TabType) => {
+  const highlightTab = useCallback((tab?: TabType, alsoHighlightButton?: boolean) => {
     // Clear previous highlights
     document.querySelectorAll(".travliaq-tab-highlight").forEach((el) => {
       el.classList.remove("travliaq-tab-highlight");
@@ -721,9 +734,12 @@ export default function OnboardingTour({
     
     if (!tab) return;
     
-    const tabEl = document.querySelector(`[data-tour="${tab}-tab"]`);
-    if (tabEl) {
-      tabEl.classList.add("travliaq-tab-highlight");
+    // If we should also highlight the tab button (for widget steps 4-7)
+    if (alsoHighlightButton) {
+      const tabBtn = document.querySelector(`[data-tour="${tab}-tab"]`);
+      if (tabBtn) {
+        tabBtn.classList.add("travliaq-tab-highlight");
+      }
     }
   }, []);
 
@@ -830,7 +846,7 @@ export default function OnboardingTour({
         align: "center",
       },
     },
-    // Step 2: Tabs bar
+    // Step 2: Tabs bar - tooltip BELOW the tabs bar (not above)
     {
       element: '[data-tour="tabs-nav"]',
       popover: {
@@ -846,12 +862,12 @@ export default function OnboardingTour({
           </ul>
           <div class="tip-box">💡 Astuce : cliquez sur un onglet, puis dites à l'IA ce que vous voulez — tout se remplit automatiquement.</div>
         `,
-        side: "bottom",
-        align: "center",
-        popoverClass: "travliaq-toolbar-popover travliaq-popover-large",
+        side: "right",
+        align: "start",
+        popoverClass: "travliaq-toolbar-popover travliaq-popover-large travliaq-popover-right",
       },
     },
-    // Step 3: Map
+    // Step 3: Map - tooltip on LEFT side (not overlapping the map)
     {
       element: '[data-tour="map-area"]',
       popover: {
@@ -867,7 +883,7 @@ export default function OnboardingTour({
         `,
         side: "left",
         align: "center",
-        popoverClass: "center-popover",
+        popoverClass: "travliaq-popover-left",
       },
     },
     // Step 4: Flights widget - target full planner panel (header + content)
@@ -1026,7 +1042,9 @@ export default function OnboardingTour({
           onHighlightStarted: (_el, step, opts) => {
             const idx = opts.state.activeIndex ?? 0;
             const tab = STEP_CONFIG[idx]?.tab;
-            highlightTab(tab);
+            // Steps 4-7 (Vols, Hébergements, Activités, Préférences widgets): also highlight the tab button
+            const shouldHighlightButton = idx >= 4 && idx <= 7;
+            highlightTab(tab, shouldHighlightButton);
           },
           onNextClick: (_el, _step, opts) => {
             const idx = opts.state.activeIndex ?? 0;
