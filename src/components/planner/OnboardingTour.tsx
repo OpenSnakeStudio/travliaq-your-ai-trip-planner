@@ -67,28 +67,36 @@ function injectDriverStyles() {
       }
     }
 
-    /* Tab highlight with smooth animation */
+    /* Tab highlight with smooth animation - MUST be above driver.js overlay */
     .travliaq-tab-highlight {
       position: relative !important;
-      z-index: 10001 !important;
+      z-index: 100002 !important;
       box-shadow:
-        0 0 0 3px hsl(var(--primary)),
-        0 0 20px 5px hsl(var(--primary) / 0.3) !important;
-      border-radius: 10px !important;
-      animation: travliaq-tab-glow 1.5s ease-in-out infinite !important;
+        0 0 0 4px hsl(var(--primary)),
+        0 0 30px 10px hsl(var(--primary) / 0.5),
+        inset 0 0 0 1px hsl(var(--primary) / 0.3) !important;
+      border-radius: 12px !important;
+      animation: travliaq-tab-glow 1.2s ease-in-out infinite !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      background: hsl(var(--primary) / 0.15) !important;
+      outline: 2px solid hsl(var(--primary-foreground) / 0.8) !important;
+      outline-offset: 2px !important;
     }
 
     @keyframes travliaq-tab-glow {
       0%, 100% {
         box-shadow:
-          0 0 0 3px hsl(var(--primary)),
-          0 0 20px 5px hsl(var(--primary) / 0.3);
+          0 0 0 4px hsl(var(--primary)),
+          0 0 30px 10px hsl(var(--primary) / 0.5),
+          inset 0 0 0 1px hsl(var(--primary) / 0.3);
+        transform: scale(1);
       }
       50% {
         box-shadow:
-          0 0 0 4px hsl(var(--primary)),
-          0 0 30px 8px hsl(var(--primary) / 0.4);
+          0 0 0 6px hsl(var(--primary)),
+          0 0 50px 15px hsl(var(--primary) / 0.6),
+          inset 0 0 0 2px hsl(var(--primary) / 0.4);
+        transform: scale(1.03);
       }
     }
 
