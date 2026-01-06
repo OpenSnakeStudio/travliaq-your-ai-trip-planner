@@ -48,12 +48,22 @@ let cacheLoaded = false;
 // Track pending destinations to avoid duplicate requests
 const pendingRequests = new Set<string>();
 
+function normalizeIata(iata: string): string {
+  return (iata || "").trim().toUpperCase();
+}
+
+function normalizeIatas(list: string[]): string[] {
+  return (list || []).map(normalizeIata).filter(Boolean);
+}
+
 function getCacheKey(origins: string[], destination: string): string {
-  return `${[...origins].sort().join(',')}-${destination}`;
+  const o = normalizeIatas(origins).sort();
+  const d = normalizeIata(destination);
+  return `${o.join(',')}-${d}`;
 }
 
 function getOriginsKey(origins: string[]): string {
-  return [...origins].sort().join(',');
+  return normalizeIatas(origins).sort().join(',');
 }
 
 // Get TTL - same for all (null = no flight, we remember that)
@@ -235,8 +245,11 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
       return;
     }
 
-    const originsKey = getOriginsKey(origins);
-    
+    const normalizedOrigins = normalizeIatas(origins);
+    const normalizedDestinations = normalizeIatas(destinations);
+
+    const originsKey = getOriginsKey(normalizedOrigins);
+
     // If origins changed, clear the accumulated prices
     if (originsKey !== lastOriginsKey.current) {
       console.log(`[useMapPrices] Origins changed: ${lastOriginsKey.current} -> ${originsKey}, resetting prices`);
@@ -252,20 +265,20 @@ export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesRes
     // Check if we will actually fetch anything
     const now = Date.now();
     const uncachedDestinations: string[] = [];
-    
-    for (const dest of destinations) {
-      const cacheKey = getCacheKey(origins, dest);
+
+    for (const dest of normalizedDestinations) {
+      const cacheKey = getCacheKey(normalizedOrigins, dest);
       const cached = pricesCache.get(cacheKey);
-      
+
       if (cached && now - cached.timestamp < CACHE_TTL) {
         // Hydrate from cache immediately (includes null = no flight)
         pricesRef.current[dest] = cached.data;
         continue;
       }
-      
+
       if (pricesRef.current[dest] !== undefined) continue;
       if (pendingRequests.has(cacheKey)) continue;
-      
+
       uncachedDestinations.push(dest);
     }
 
