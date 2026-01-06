@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { HotelResult } from "./HotelSearchResults";
-import type { HotelDetails, RoomOption } from "@/services/hotels/hotelService";
+import type { HotelDetails, RoomOption, PropertyBadge } from "@/services/hotels/hotelService";
 
 interface HotelDetailViewProps {
   hotel: HotelResult;
@@ -42,6 +42,23 @@ const amenityIcons: Record<string, typeof Wifi> = {
   roomservice: Phone,
   "air conditioning": Snowflake,
   tv: Tv,
+};
+
+// Badge icon mapping based on icon hint from API
+const getBadgeIcon = (iconHint?: string) => {
+  const iconClass = "h-3 w-3";
+  switch (iconHint) {
+    case "coffee": return <Coffee className={iconClass} />;
+    case "wifi": return <Wifi className={iconClass} />;
+    case "waves": return <Waves className={iconClass} />;
+    case "shield": return <Shield className={iconClass} />;
+    case "car": return <Car className={iconClass} />;
+    case "sparkles": return <Sparkles className={iconClass} />;
+    case "dumbbell": return <Dumbbell className={iconClass} />;
+    case "utensils": return <Utensils className={iconClass} />;
+    case "snowflake": return <Snowflake className={iconClass} />;
+    default: return <Check className={iconClass} />;
+  }
 };
 
 // Get hotel description - use real description if available
@@ -317,13 +334,28 @@ const HotelDetailView = ({
             {highlights.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {highlights.map((highlight, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="outline" 
+                  <Badge
+                    key={idx}
+                    variant="outline"
                     className="text-xs bg-primary/5 border-primary/20 text-primary gap-1.5"
                   >
                     <Sparkles className="h-3 w-3" />
                     {highlight}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Property badges from API */}
+            {hotelDetails?.badges && hotelDetails.badges.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {hotelDetails.badges.map((badge, idx) => (
+                  <Badge
+                    key={idx}
+                    className="text-xs bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 gap-1.5"
+                  >
+                    {getBadgeIcon(badge.icon)}
+                    {badge.label}
                   </Badge>
                 ))}
               </div>
@@ -365,6 +397,37 @@ const HotelDetailView = ({
                 <span className="text-xl font-bold text-primary">{totalPrice}€</span>
               </div>
             </div>
+
+            {/* Rating breakdown */}
+            {hotelDetails?.ratingBreakdown && (
+              <section className="space-y-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary fill-primary" />
+                  Notes détaillées
+                </h3>
+                <div className="grid gap-2">
+                  {[
+                    { key: 'cleanliness', label: 'Propreté', value: hotelDetails.ratingBreakdown.cleanliness },
+                    { key: 'staff', label: 'Personnel', value: hotelDetails.ratingBreakdown.staff },
+                    { key: 'location', label: 'Emplacement', value: hotelDetails.ratingBreakdown.location },
+                    { key: 'facilities', label: 'Équipements', value: hotelDetails.ratingBreakdown.facilities },
+                    { key: 'comfort', label: 'Confort', value: hotelDetails.ratingBreakdown.comfort },
+                    { key: 'valueForMoney', label: 'Rapport qualité/prix', value: hotelDetails.ratingBreakdown.valueForMoney },
+                  ].filter(item => item.value != null).map((item) => (
+                    <div key={item.key} className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground w-32 shrink-0">{item.label}</span>
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${(item.value! / 10) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium w-8 text-right">{item.value!.toFixed(1)}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Amenities */}
             {amenitiesForDisplay.length > 0 && (

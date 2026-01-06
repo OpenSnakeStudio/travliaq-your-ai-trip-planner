@@ -122,6 +122,23 @@ export interface HotelPolicies {
   cancellation: string | null;
 }
 
+// Rating breakdown (sub-scores)
+export interface RatingBreakdown {
+  cleanliness?: number;     // Propreté (0-10)
+  staff?: number;           // Personnel (0-10)
+  location?: number;        // Emplacement (0-10)
+  facilities?: number;      // Équipements (0-10)
+  comfort?: number;         // Confort (0-10)
+  valueForMoney?: number;   // Rapport qualité/prix (0-10)
+}
+
+// Property badge (visible advantage)
+export interface PropertyBadge {
+  code: string;            // "free_breakfast", "pool", "spa"
+  label: string;           // "Petit-déjeuner inclus"
+  icon?: string;           // Icon hint: "coffee", "waves", "shield"
+}
+
 // Room option
 export interface RoomOption {
   id: string;
@@ -150,6 +167,8 @@ export interface HotelDetails {
   images: string[];              // URLs des photos
   amenities: AmenityDetail[];
   highlights: string[];
+  badges?: PropertyBadge[];      // Badges équipements (petit-déj, piscine, etc.)
+  ratingBreakdown?: RatingBreakdown;  // Sous-notes détaillées
   policies: HotelPolicies | null;
   rooms: RoomOption[];
   bookingUrl: string | null;
