@@ -1154,10 +1154,14 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
       }));
 
-      // Build filters - use correct property names from AccommodationEntry
+      // Build filters
+      // IMPORTANT: do not send budget filters by default (they can wipe results).
+      // Only send priceMin/priceMax if user explicitly modified the budget.
       const filters: any = {};
-      if (activeAccommodation.priceMin > 0) filters.priceMin = activeAccommodation.priceMin;
-      if (activeAccommodation.priceMax < 1000) filters.priceMax = activeAccommodation.priceMax;
+      if (activeAccommodation.userModifiedBudget) {
+        if (activeAccommodation.priceMin > 0) filters.priceMin = activeAccommodation.priceMin;
+        if (activeAccommodation.priceMax < 1000) filters.priceMax = activeAccommodation.priceMax;
+      }
       if (activeAccommodation.minRating && activeAccommodation.minRating > 0) filters.minRating = activeAccommodation.minRating;
       if (activeAccommodation.amenities.length > 0) filters.amenities = activeAccommodation.amenities;
       if (activeAccommodation.types.length > 0 && !activeAccommodation.types.includes("any")) {
