@@ -67,6 +67,7 @@ const HotelCard = memo(({
 }) => {
   return (
     <div
+      data-testid="hotel-card"
       ref={cardRef}
       className={cn(
         "group relative rounded-xl border bg-card overflow-hidden transition-all cursor-pointer",
