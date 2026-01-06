@@ -947,11 +947,29 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
           if (priceSpan) {
             if (activeTab === "flights") {
-              const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
-              const newPriceText = isOrigin ? "Départ" : displayPrice;
-              if (priceSpan.textContent !== newPriceText) {
-                priceSpan.textContent = newPriceText;
-                priceSpan.style.color = isOrigin ? "#475569" : "#0d9488";
+              if (isOrigin) {
+                // Origin: always plain text
+                if (priceSpan.textContent !== "Départ") priceSpan.textContent = "Départ";
+                priceSpan.style.color = "#475569";
+              } else if (priceValue === undefined) {
+                // Loading: keep animated dots (use innerHTML)
+                const loadingDotsHtml = `<span class="loading-dots" style="display: inline-flex; gap: 2px;">
+                  <span style="animation: bounce-dot 1s infinite; animation-delay: 0ms;">•</span>
+                  <span style="animation: bounce-dot 1s infinite; animation-delay: 150ms;">•</span>
+                  <span style="animation: bounce-dot 1s infinite; animation-delay: 300ms;">•</span>
+                </span>`;
+
+                if (priceSpan.innerHTML !== loadingDotsHtml) {
+                  priceSpan.innerHTML = loadingDotsHtml;
+                }
+                priceSpan.style.color = "#0369a1";
+              } else {
+                // Has a price
+                const nextText = `${priceValue}€`;
+                if (priceSpan.textContent !== nextText) {
+                  priceSpan.textContent = nextText;
+                }
+                priceSpan.style.color = "#0369a1";
               }
               priceSpan.style.display = "";
             } else {
