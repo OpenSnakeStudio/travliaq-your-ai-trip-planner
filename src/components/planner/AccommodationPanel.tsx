@@ -26,6 +26,7 @@ import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
 import HotelDetailView from "./HotelDetailView";
 import { eventBus } from "@/lib/eventBus";
 import { searchHotels, type HotelResult as ApiHotelResult, type RoomOccupancy } from "@/services/hotels/hotelService";
+import { buildHotelFilters } from "./hotels/buildHotelFilters";
 
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
@@ -1156,18 +1157,9 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
       // Build filters
       // IMPORTANT: do not send budget filters by default (they can wipe results).
-      // We only apply priceMin/priceMax when user chose a custom budget.
-      const filters: any = {};
-      const shouldApplyBudget = activeAccommodation.budgetPreset === "custom";
-      if (shouldApplyBudget) {
-        if (activeAccommodation.priceMin > 0) filters.priceMin = activeAccommodation.priceMin;
-        if (activeAccommodation.priceMax < 1000) filters.priceMax = activeAccommodation.priceMax;
-      }
-      if (activeAccommodation.minRating && activeAccommodation.minRating > 0) filters.minRating = activeAccommodation.minRating;
-      if (activeAccommodation.amenities.length > 0) filters.amenities = activeAccommodation.amenities;
-      if (activeAccommodation.types.length > 0 && !activeAccommodation.types.includes("any")) {
-        filters.types = activeAccommodation.types;
-      }
+      // Budget filters must ONLY be applied when the user explicitly changed the budget.
+      const filters = buildHotelFilters(activeAccommodation);
+
 
       const requestParams = {
         city: activeAccommodation.city,
@@ -1179,10 +1171,11 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         rooms: apiRooms,
         currency: "EUR" as const,
         locale: "fr" as const,
-        filters: Object.keys(filters).length > 0 ? filters : undefined,
+        filters,
         sort: "price_asc" as const,
         limit: 30,
       };
+
 
       logger.info("Hotels search: start", {
         category: LogCategory.API,
