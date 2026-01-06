@@ -1188,7 +1188,17 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         console.groupEnd();
       }
 
-      const response = await searchHotels(requestParams);
+      let response = await searchHotels(requestParams);
+
+      // If the server-side cache contains an empty result for these params,
+      // retry once with force_refresh=true to validate real availability.
+      if (response.success && response.results?.hotels?.length === 0) {
+        logger.info("Hotels search: empty -> retry with force_refresh", {
+          category: LogCategory.API,
+          metadata: requestParams,
+        });
+        response = await searchHotels(requestParams, true);
+      }
 
       logger.info("Hotels search: done", {
         category: LogCategory.API,
