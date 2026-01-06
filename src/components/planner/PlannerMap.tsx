@@ -977,7 +977,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           transition: opacity 0.2s ease-out;
         `;
 
-        // Travliaq-style airport badge
+        // Travliaq-style airport badge - high contrast for visibility on green map
         el.innerHTML = `
           <div class="airport-badge" style="
             display: flex;
@@ -987,46 +987,47 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
             transition: transform 0.15s ease-out, filter 0.15s ease-out;
             transform: scale(0.92);
             transform-origin: bottom center;
-            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+            filter: drop-shadow(0 3px 8px rgba(0,0,0,0.35));
           ">
             <div style="
               display: flex;
               flex-direction: column;
               align-items: center;
-              background: linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.95) 100%);
-              padding: 5px 10px 4px;
+              background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+              padding: 6px 12px 5px;
               border-radius: 10px;
-              border: 1px solid rgba(0,0,0,0.08);
-              min-width: 44px;
+              border: 1.5px solid rgba(0,0,0,0.12);
+              min-width: 48px;
+              box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);
             ">
               <span style="
-                color: #1e293b;
-                font-size: 9px;
+                color: #0f172a;
+                font-size: 10px;
                 font-weight: 600;
                 letter-spacing: 0.01em;
                 line-height: 1.1;
-                max-width: 80px;
+                max-width: 85px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
               ">${cityName}</span>
               <span class="airport-price" style="
-                color: ${isOrigin ? "#475569" : "#0d9488"};
-                font-size: 11px;
-                font-weight: 700;
+                color: ${isOrigin ? "#64748b" : "#0369a1"};
+                font-size: 13px;
+                font-weight: 800;
                 line-height: 1.2;
-                margin-top: 1px;
+                margin-top: 2px;
                 display: ${showPrice ? "block" : "none"};
               ">${priceText}</span>
             </div>
             <div style="
               width: 0;
               height: 0;
-              border-left: 6px solid transparent;
-              border-right: 6px solid transparent;
-              border-top: 7px solid rgba(255,255,255,0.98);
+              border-left: 7px solid transparent;
+              border-right: 7px solid transparent;
+              border-top: 8px solid #ffffff;
               margin-top: -1px;
-              filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
             "></div>
           </div>
         `;
