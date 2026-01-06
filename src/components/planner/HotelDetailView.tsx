@@ -1,5 +1,5 @@
-import { memo, useState, useCallback, useEffect, useRef, useLayoutEffect } from "react";
-import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Sparkles, Shield, Heart, Utensils, Dumbbell, Wind, Bath, Tv, Phone, Snowflake, Loader2 } from "lucide-react";
+import { memo, useState, useCallback, useRef, useLayoutEffect } from "react";
+import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Sparkles, Shield, Heart, Utensils, Dumbbell, Bath, Tv, Phone, Snowflake, Loader2, Award, Flame, ThumbsUp, Building2, MapPinned } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,17 +72,71 @@ const getHotelDescription = (hotel: HotelResult): string => {
   return "";
 };
 
-// Get highlights based on hotel features
-const getHighlights = (hotel: HotelResult): string[] => {
-  const highlights = [];
-  if (hotel.rating >= 9) highlights.push("Excellentes notes des voyageurs");
-  if (hotel.stars && hotel.stars >= 4) highlights.push("Service premium");
-  if (hotel.amenities.some(a => a.toLowerCase().includes("breakfast"))) highlights.push("Petit-déjeuner inclus");
-  if (hotel.amenities.some(a => a.toLowerCase().includes("pool"))) highlights.push("Piscine disponible");
-  if (hotel.amenities.some(a => a.toLowerCase().includes("spa"))) highlights.push("Spa & bien-être");
-  if (hotel.amenities.some(a => a.toLowerCase().includes("wifi"))) highlights.push("WiFi gratuit haut débit");
-  if (hotel.distanceFromCenter && parseFloat(hotel.distanceFromCenter) < 1) highlights.push("À deux pas du centre");
-  return highlights.slice(0, 4);
+// Get rating label based on score
+const getRatingLabel = (rating: number): { label: string; color: string } => {
+  if (rating >= 9) return { label: "Exceptionnel", color: "text-green-600 bg-green-500/10 border-green-500/30" };
+  if (rating >= 8) return { label: "Très bien", color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" };
+  if (rating >= 7) return { label: "Bien", color: "text-blue-600 bg-blue-500/10 border-blue-500/30" };
+  if (rating >= 6) return { label: "Correct", color: "text-amber-600 bg-amber-500/10 border-amber-500/30" };
+  return { label: "Passable", color: "text-muted-foreground bg-muted border-border" };
+};
+
+// Get key selling points based on hotel features
+const getKeyBadges = (hotel: HotelResult, hotelDetails?: HotelDetails | null): { icon: typeof Wifi; label: string; variant: "highlight" | "feature" | "location" }[] => {
+  const badges: { icon: typeof Wifi; label: string; variant: "highlight" | "feature" | "location" }[] = [];
+  
+  // Rating based badge
+  if (hotel.rating && hotel.rating >= 9) {
+    badges.push({ icon: Award, label: "Excellent choix", variant: "highlight" });
+  } else if (hotel.rating && hotel.rating >= 8.5) {
+    badges.push({ icon: ThumbsUp, label: "Très apprécié", variant: "highlight" });
+  }
+  
+  // Location badge
+  if (hotel.distanceFromCenter) {
+    const distance = typeof hotel.distanceFromCenter === 'string' 
+      ? parseFloat(hotel.distanceFromCenter) 
+      : hotel.distanceFromCenter;
+    if (distance < 0.5) {
+      badges.push({ icon: MapPinned, label: "Centre-ville", variant: "location" });
+    } else if (distance < 1.5) {
+      badges.push({ icon: MapPin, label: "Proche centre", variant: "location" });
+    }
+  }
+  
+  // Breakfast included
+  const hasBreakfast = hotel.amenities.some(a => a.toLowerCase().includes("breakfast")) ||
+    hotelDetails?.amenities?.some(a => a.code?.toLowerCase().includes("breakfast"));
+  if (hasBreakfast) {
+    badges.push({ icon: Coffee, label: "Petit-déj inclus", variant: "feature" });
+  }
+  
+  // Pool
+  const hasPool = hotel.amenities.some(a => a.toLowerCase().includes("pool")) ||
+    hotelDetails?.amenities?.some(a => a.code?.toLowerCase().includes("pool"));
+  if (hasPool) {
+    badges.push({ icon: Waves, label: "Piscine", variant: "feature" });
+  }
+  
+  // Spa
+  const hasSpa = hotel.amenities.some(a => a.toLowerCase().includes("spa")) ||
+    hotelDetails?.amenities?.some(a => a.code?.toLowerCase().includes("spa"));
+  if (hasSpa) {
+    badges.push({ icon: Bath, label: "Spa", variant: "feature" });
+  }
+  
+  // Free cancellation from rooms
+  const hasFreeCancellation = hotelDetails?.rooms?.some(r => r.cancellationFree);
+  if (hasFreeCancellation) {
+    badges.push({ icon: Shield, label: "Annulation gratuite", variant: "highlight" });
+  }
+  
+  // Popular/trending
+  if (hotel.reviewCount && hotel.reviewCount > 500) {
+    badges.push({ icon: Flame, label: "Populaire", variant: "highlight" });
+  }
+  
+  return badges.slice(0, 5);
 };
 
 const HotelDetailView = ({
@@ -103,9 +157,10 @@ const HotelDetailView = ({
 
   // Use hotelDetails description if available
   const description = hotelDetails?.description || getHotelDescription(hotel);
-  const highlights = hotelDetails?.highlights?.length
-    ? hotelDetails.highlights.slice(0, 4)
-    : getHighlights(hotel);
+  
+  // Get smart badges based on real data
+  const keyBadges = getKeyBadges(hotel, hotelDetails);
+  const ratingInfo = hotel.rating ? getRatingLabel(hotel.rating) : null;
 
   // Get rooms from details API
   const rooms = hotelDetails?.rooms || [];
@@ -316,35 +371,65 @@ const HotelDetailView = ({
 
           {/* Content */}
           <div className="p-4 space-y-5">
-            {/* Hotel name and quick stats */}
-            <div>
-              <h1 className="text-lg font-bold">{hotel.name}</h1>
-              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{hotel.address}</span>
-              </div>
-              {hotel.distanceFromCenter && (
-                <p className="text-xs text-muted-foreground mt-0.5 ml-5">
-                  À {hotel.distanceFromCenter} du centre-ville
-                </p>
-              )}
-            </div>
-
-            {/* Highlights */}
-            {highlights.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {highlights.map((highlight, idx) => (
-                  <Badge
-                    key={idx}
-                    variant="outline"
-                    className="text-xs bg-primary/5 border-primary/20 text-primary gap-1.5"
-                  >
-                    <Sparkles className="h-3 w-3" />
-                    {highlight}
-                  </Badge>
-                ))}
+            {/* Rating & Reviews - Hero section */}
+            {ratingInfo && (
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold",
+                  ratingInfo.color
+                )}>
+                  <span className="text-lg">{hotel.rating.toFixed(1)}</span>
+                  <span className="text-sm">{ratingInfo.label}</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  {hotel.reviewCount.toLocaleString()} avis
+                </span>
               </div>
             )}
+
+            {/* Key badges - Quick scan info */}
+            {keyBadges.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {keyBadges.map((badge, idx) => {
+                  const Icon = badge.icon;
+                  const variantStyles = {
+                    highlight: "bg-primary/10 border-primary/30 text-primary",
+                    feature: "bg-blue-500/10 border-blue-500/30 text-blue-600",
+                    location: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600",
+                  };
+                  return (
+                    <Badge 
+                      key={idx} 
+                      variant="outline" 
+                      className={cn("text-xs gap-1.5", variantStyles[badge.variant])}
+                    >
+                      <Icon className="h-3 w-3" />
+                      {badge.label}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Location summary - Simple, scannable */}
+            <div className="flex items-center gap-4 text-sm">
+              {hotel.distanceFromCenter && (
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  <span>À {hotel.distanceFromCenter} du centre</span>
+                </div>
+              )}
+              {hotel.stars && hotel.stars > 0 && (
+                <div className="flex items-center gap-1">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: hotel.stars }).map((_, i) => (
+                      <Star key={i} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Property badges from API */}
             {hotelDetails?.badges && hotelDetails.badges.length > 0 && (
