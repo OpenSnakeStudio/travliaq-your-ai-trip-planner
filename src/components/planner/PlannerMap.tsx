@@ -12,6 +12,7 @@ import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
 import eventBus from "@/lib/eventBus";
 import { STAYS_ZOOM, getStaysPanelOffset } from "@/constants/mapSettings";
+import FlightPriceMarkers from "./FlightPriceMarkers";
 
 
 // Destination click event for popup
@@ -751,367 +752,27 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     eventBus.emit("airports:loading", { isLoading: isLoadingAirports });
   }, [isLoadingAirports]);
 
-  // Track which airports are currently displayed (by hub id)
+  // Track which airports are currently displayed (by hub id) - LEGACY markers (now handled by FlightPriceMarkers)
+  // Keep refs for cleanup but rendering is done by React Portal component
   const displayedAirportsRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const airportRemovalTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  // Constants for marker management
-  const MAX_PERSISTENT_MARKERS = 100; // Limit persistent markers to avoid clutter
-  const MAX_DISTANCE_DEGREES = 60; // Remove markers more than 60° from center
-
-  // Display airport markers when on flights tab - OPTIMIZED to avoid flickering
+  // Cleanup old DOM markers when switching to new Portal system
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    // Remove all flight markers when leaving the flights tab
-    // (We remove instead of hiding to guarantee no stale flight prices remain visible.)
-    if (activeTab !== "flights") {
+    if (activeTab === "flights") {
+      // Clear any legacy DOM markers - React Portal now handles rendering
       airportRemovalTimeoutsRef.current.forEach((t) => clearTimeout(t));
       airportRemovalTimeoutsRef.current.clear();
-
       displayedAirportsRef.current.forEach((marker) => marker.remove());
       displayedAirportsRef.current.clear();
-      return;
     }
-
-
-    // If no departure is selected, still show airport/city markers (without prices).
-    // Prices will appear as soon as a departure is set.
-
-    // Get user's departure airport info
-    const userDepartureIata = flightMem?.departure?.iata?.toUpperCase();
-    const userDepartureCity = flightMem?.departure?.city?.toLowerCase().trim();
-
-    // Hide departure city badge when zoomed out (< 7) to avoid overlapping with nearby cities
-    // The user location pulsing dot remains visible - we don't filter the airport, just skip rendering its marker
-    const hideDeparturePin = currentZoom < 7;
-
-    // Sort airports (large hubs first) - NO filtering, we handle visibility in the render loop
-    const filteredAirports = airports
-      .sort((a, b) => {
-        // Large hubs first
-        if (a.type === "large" && b.type !== "large") return -1;
-        if (a.type !== "large" && b.type === "large") return 1;
-        return 0;
-      });
-
-    const hubIdOf = (a: AirportMarker) => a.hubId ?? a.cityName?.toLowerCase().trim() ?? a.iata;
-
-    // Current hubs in response
-    const currentHubIds = new Set(filteredAirports.map(hubIdOf));
-
-    // Helper: check if a marker has a confirmed price (not loading, not null)
-    const markerHasPrice = (hubId: string): boolean => {
-      const marker = displayedAirportsRef.current.get(hubId);
-      if (!marker) return false;
-      const priceSpan = marker.getElement()?.querySelector('.airport-price') as HTMLElement | null;
-      if (!priceSpan) return false;
-      const txt = priceSpan.textContent || '';
-      // Has price if it ends with "€" and is not "…" or "—"
-      return txt.endsWith('€') && !['…', '—'].includes(txt);
-    };
-
-    // Helper: get marker distance from map center
-    const getMarkerDistance = (marker: mapboxgl.Marker): number => {
-      if (!map.current) return 0;
-      const center = map.current.getCenter();
-      const pos = marker.getLngLat();
-      // Simple degree-based distance (not great-circle, but fast approximation)
-      const dLng = Math.abs(pos.lng - center.lng);
-      const dLat = Math.abs(pos.lat - center.lat);
-      return Math.sqrt(dLng * dLng + dLat * dLat);
-    };
-
-    // Graceful marker removal:
-    // - Markers WITH a confirmed price AND within distance: keep them
-    // - Markers without price or too far away: remove after grace period
-    const REMOVAL_GRACE_NO_PRICE_MS = 2_000;
-    const REMOVAL_GRACE_FAR_AWAY_MS = 500;
-
-    // If a hub is present again, cancel its pending removal.
-    currentHubIds.forEach((hubId) => {
-      const t = airportRemovalTimeoutsRef.current.get(hubId);
-      if (t) {
-        clearTimeout(t);
-        airportRemovalTimeoutsRef.current.delete(hubId);
-      }
-    });
-
-    // Schedule removal for hubs no longer in API response OR too far from center
-    displayedAirportsRef.current.forEach((marker, hubId) => {
-      if (currentHubIds.has(hubId)) return;
-      if (airportRemovalTimeoutsRef.current.has(hubId)) return;
-
-      const hasPrice = markerHasPrice(hubId);
-      const distance = getMarkerDistance(marker);
-      const isTooFar = distance > MAX_DISTANCE_DEGREES;
-      
-      // If marker has price AND is within distance, keep it (no removal)
-      if (hasPrice && !isTooFar) return;
-
-      // Determine grace period based on reason
-      const graceMs = isTooFar ? REMOVAL_GRACE_FAR_AWAY_MS : REMOVAL_GRACE_NO_PRICE_MS;
-
-      const timeout = setTimeout(() => {
-        marker.remove();
-        displayedAirportsRef.current.delete(hubId);
-        airportRemovalTimeoutsRef.current.delete(hubId);
-      }, graceMs);
-
-      airportRemovalTimeoutsRef.current.set(hubId, timeout);
-    });
-
-    // Limit persistent markers: if too many with prices, remove the farthest ones
-    const markersWithPrices: { hubId: string; marker: mapboxgl.Marker; distance: number }[] = [];
-    displayedAirportsRef.current.forEach((marker, hubId) => {
-      if (markerHasPrice(hubId) && !currentHubIds.has(hubId)) {
-        markersWithPrices.push({ hubId, marker, distance: getMarkerDistance(marker) });
-      }
-    });
-
-    if (markersWithPrices.length > MAX_PERSISTENT_MARKERS) {
-      // Sort by distance (farthest first) and remove excess
-      markersWithPrices.sort((a, b) => b.distance - a.distance);
-      const toRemove = markersWithPrices.slice(0, markersWithPrices.length - MAX_PERSISTENT_MARKERS);
-      toRemove.forEach(({ hubId, marker }) => {
-        marker.remove();
-        displayedAirportsRef.current.delete(hubId);
-        const t = airportRemovalTimeoutsRef.current.get(hubId);
-        if (t) {
-          clearTimeout(t);
-          airportRemovalTimeoutsRef.current.delete(hubId);
-        }
-      });
-      console.log(`[PlannerMap] Cleaned up ${toRemove.length} distant markers (limit: ${MAX_PERSISTENT_MARKERS})`);
-    }
-
-    // Add or update markers for current hubs
-    // IMPORTANT: Each airport is wrapped in try-catch to isolate failures
-    filteredAirports.forEach((airport, idx) => {
-      try {
-        const hubId = hubIdOf(airport);
-        const existingMarker = displayedAirportsRef.current.get(hubId);
-        
-        // Check if this is the departure city (origin) - check all departure airports
-        const isOrigin =
-          (userDepartureIata && airport.iata.toUpperCase() === userDepartureIata) ||
-          (userDepartureCity && airport.cityName?.toLowerCase().trim() === userDepartureCity) ||
-          departureAirports.some(da => da.toUpperCase() === airport.iata.toUpperCase());
-        
-        // Get price data for this airport - use minimum price across all airports in the hub
-        const hubIatas = airport.allIatas && airport.allIatas.length > 0 ? airport.allIatas : [airport.iata];
-        let priceValue: number | null | undefined = undefined;
-        let hasAnyPrice = false;
-        
-        for (const iata of hubIatas) {
-          const pd = prices[iata];
-          if (pd !== undefined) {
-            hasAnyPrice = true;
-            if (pd !== null && pd.price !== null && pd.price !== undefined) {
-              if (priceValue === undefined || priceValue === null || pd.price < priceValue) {
-                priceValue = pd.price;
-              }
-            } else if (priceValue === undefined) {
-              priceValue = null;
-            }
-          }
-        }
-        
-        // RULE: Hide destinations with null price (no flight available)
-        // - priceValue === undefined: still loading, show "…"
-        // - priceValue === null: no flight, HIDE marker (cached for 6h, won't re-request)
-        // - priceValue > 0: show price
-        const shouldHideBecauseNoFlight = priceValue === null && !isOrigin;
-        
-        // Hide departure city when zoomed out OR hide if no flight available
-        if ((isOrigin && hideDeparturePin) || shouldHideBecauseNoFlight) {
-          if (existingMarker) {
-            existingMarker.remove();
-            displayedAirportsRef.current.delete(hubId);
-          }
-          return; // Skip creating/showing this marker
-        }
-
-        if (existingMarker) {
-          // Keep the marker, only update position if it really changed
-          const prev = existingMarker.getLngLat();
-          if (Math.abs(prev.lng - airport.lng) > 0.0001 || Math.abs(prev.lat - airport.lat) > 0.0001) {
-            existingMarker.setLngLat([airport.lng, airport.lat]);
-          }
-
-          const el = existingMarker.getElement();
-          el.style.opacity = "1";
-          el.style.pointerEvents = "auto";
-          
-          // Update price text in existing marker (only show prices on flights tab)
-          const priceSpan = el.querySelector('.airport-price') as HTMLElement | null;
-          if (priceSpan) {
-            if (activeTab === "flights") {
-              if (isOrigin) {
-                // Origin: always plain text
-                if (priceSpan.textContent !== "Départ") priceSpan.textContent = "Départ";
-                priceSpan.style.color = "#475569";
-              } else if (priceValue === undefined) {
-                // Loading: keep animated dots (use innerHTML)
-                const loadingDotsHtml = `<span class="loading-dots" style="display: inline-flex; gap: 2px;">
-                  <span style="animation: bounce-dot 1s infinite; animation-delay: 0ms;">•</span>
-                  <span style="animation: bounce-dot 1s infinite; animation-delay: 150ms;">•</span>
-                  <span style="animation: bounce-dot 1s infinite; animation-delay: 300ms;">•</span>
-                </span>`;
-
-                if (priceSpan.innerHTML !== loadingDotsHtml) {
-                  priceSpan.innerHTML = loadingDotsHtml;
-                }
-                priceSpan.style.color = "#0369a1";
-              } else {
-                // Has a price
-                const nextText = `${priceValue}€`;
-                if (priceSpan.textContent !== nextText) {
-                  priceSpan.textContent = nextText;
-                }
-                priceSpan.style.color = "#0369a1";
-              }
-              priceSpan.style.display = "";
-            } else {
-              // Hide price on other tabs
-              priceSpan.style.display = "none";
-            }
-          }
-          return;
-        }
-
-        // Create new marker
-        const el = document.createElement("div");
-        el.className = "airport-marker";
-
-        const cityName = airport.cityName || airport.name;
-        // Only show prices on flights tab
-        const showPrice = activeTab === "flights";
-        // Animated loading dots when price is undefined
-        const loadingDotsHtml = `<span class="loading-dots" style="display: inline-flex; gap: 2px;">
-          <span style="animation: bounce-dot 1s infinite; animation-delay: 0ms;">•</span>
-          <span style="animation: bounce-dot 1s infinite; animation-delay: 150ms;">•</span>
-          <span style="animation: bounce-dot 1s infinite; animation-delay: 300ms;">•</span>
-        </span>`;
-        const displayPrice = priceValue === undefined ? loadingDotsHtml : `${priceValue}€`;
-        const priceText = isOrigin ? "Départ" : displayPrice;
-
-        el.style.cssText = `
-          opacity: 0;
-          transition: opacity 0.2s ease-out;
-        `;
-
-        // Travliaq-style airport badge - high contrast for visibility on green map
-        el.innerHTML = `
-          <div class="airport-badge" style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: ${isOrigin ? "default" : "pointer"};
-            transition: transform 0.15s ease-out, filter 0.15s ease-out;
-            transform: scale(0.92);
-            transform-origin: bottom center;
-            filter: drop-shadow(0 3px 8px rgba(0,0,0,0.35));
-          ">
-            <div style="
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-              padding: 6px 12px 5px;
-              border-radius: 10px;
-              border: 1.5px solid rgba(0,0,0,0.12);
-              min-width: 48px;
-              box-shadow: inset 0 1px 2px rgba(255,255,255,0.8);
-            ">
-              <span style="
-                color: #0f172a;
-                font-size: 10px;
-                font-weight: 600;
-                letter-spacing: 0.01em;
-                line-height: 1.1;
-                max-width: 85px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-              ">${cityName}</span>
-              <span class="airport-price" style="
-                color: ${isOrigin ? "#64748b" : "#0369a1"};
-                font-size: 13px;
-                font-weight: 800;
-                line-height: 1.2;
-                margin-top: 2px;
-                display: ${showPrice ? "block" : "none"};
-              ">${priceText}</span>
-            </div>
-            <div style="
-              width: 0;
-              height: 0;
-              border-left: 7px solid transparent;
-              border-right: 7px solid transparent;
-              border-top: 8px solid #ffffff;
-              margin-top: -1px;
-              filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
-            "></div>
-          </div>
-        `;
-
-        // Animate in with staggered delay (capped)
-        const delay = Math.min(idx * 15, 300);
-        const badge = el.querySelector(".airport-badge") as HTMLElement | null;
-
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            el.style.opacity = "1";
-            if (badge) badge.style.transform = "scale(1)";
-          }, delay);
-        });
-
-        // Hover effects (disabled for origin)
-        if (!isOrigin) {
-          badge?.addEventListener("mouseenter", () => {
-            badge.style.transform = "scale(1.08)";
-            badge.style.filter = "drop-shadow(0 4px 10px rgba(0,0,0,0.3))";
-          });
-          badge?.addEventListener("mouseleave", () => {
-            badge.style.transform = "scale(1)";
-            badge.style.filter = "drop-shadow(0 2px 6px rgba(0,0,0,0.25))";
-          });
-        }
-
-        // Click handler (disabled for origin)
-        badge?.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (isOrigin) return;
-          console.log(`[PlannerMap] Hub clicked: ${hubId} (cheapest=${airport.iata}) - ${airport.cityName}`);
-          eventBus.emit("airports:click", { airport });
-        });
-
-        const marker = new mapboxgl.Marker({
-          element: el,
-          anchor: "center",
-        })
-          .setLngLat([airport.lng, airport.lat])
-          .addTo(map.current!);
-
-        displayedAirportsRef.current.set(hubId, marker);
-      } catch (err) {
-        // Isolate failure: skip this airport, log warning, continue with others
-        console.warn(`[PlannerMap] Failed to render marker for ${airport?.iata ?? 'unknown'}:`, err);
-      }
-    });
-
-    return () => {
-      // Don't clear on every change - only on unmount
-    };
-  }, [activeTab, mapLoaded, airports, flightMem, prices, isLoadingPrices, departureAirports, priceVersion, currentZoom]);
+  }, [activeTab]);
 
   // Cleanup all airport markers on unmount
   useEffect(() => {
     return () => {
       airportRemovalTimeoutsRef.current.forEach((t) => clearTimeout(t));
       airportRemovalTimeoutsRef.current.clear();
-
       displayedAirportsRef.current.forEach((marker) => marker.remove());
       displayedAirportsRef.current.clear();
     };
@@ -2367,6 +2028,18 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   return (
     <div className="absolute inset-0 w-full h-full relative" data-tour="map-area">
       <div ref={mapContainer} className="absolute inset-0 w-full h-full" style={{ minHeight: "100%" }} />
+
+      {/* Flight Price Markers - React Portal for stable rendering */}
+      <FlightPriceMarkers
+        map={map.current}
+        airports={airports}
+        prices={prices}
+        departureIata={flightMem?.departure?.iata}
+        departureCity={flightMem?.departure?.city}
+        departureAirports={departureAirports}
+        currentZoom={currentZoom}
+        isFlightsTab={activeTab === "flights"}
+      />
 
       {/* Search in Area Button - Only visible on activities tab */}
       {activeTab === "activities" && (
