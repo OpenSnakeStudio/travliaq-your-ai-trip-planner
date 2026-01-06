@@ -840,6 +840,7 @@ export default function OnboardingTour({
         `,
         side: "left",
         align: "center",
+        popoverClass: "center-popover",
       },
     },
     // Step 4: Flights widget - target full planner panel (header + content)
