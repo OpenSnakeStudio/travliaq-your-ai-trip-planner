@@ -2160,7 +2160,16 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
   // Listen for hotel events and update state
   useEffect(() => {
+    const debugHotels =
+      import.meta.env.DEV ||
+      (typeof window !== "undefined" && window.localStorage.getItem("hotels_debug") === "1");
+
     const handleHotelResults = (data: { hotels: typeof hotelResults.hotels }) => {
+      if (debugHotels) {
+        console.groupCollapsed("[HotelsMap] hotels:results received");
+        console.log({ count: data.hotels?.length, first: data.hotels?.[0] });
+        console.groupEnd();
+      }
       setHotelResults(data);
     };
 
