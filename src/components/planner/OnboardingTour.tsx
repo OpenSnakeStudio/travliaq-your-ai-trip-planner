@@ -547,10 +547,12 @@ function injectDriverStyles() {
       overflow: visible !important;
     }
 
-    /* Larger popover for dense steps (ex: barre d'outils) */
+    /* Larger popover for dense steps (ex: barre d'outils)
+       Keep it responsive to avoid weird stretched layouts on smaller screens. */
     .travliaq-popover-large.driver-popover {
-      max-width: 560px !important;
-      min-width: 420px !important;
+      width: min(92vw, 520px) !important;
+      max-width: 520px !important;
+      min-width: 0 !important;
     }
     
     /* Intro modal - no element highlighted */
