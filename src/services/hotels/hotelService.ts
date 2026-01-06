@@ -109,10 +109,31 @@ export interface HotelSearchResponse {
   cache_info: { cached: boolean };
 }
 
-// Amenity detail
+// Amenity categories
+export type AmenityCategory =
+  | 'connectivity'   // WiFi, Internet
+  | 'food'           // Breakfast, Restaurant, Bar
+  | 'wellness'       // Pool, Spa, Gym
+  | 'room'           // AC, TV, Kitchen
+  | 'services'       // Parking, Laundry
+  | 'general';       // Others
+
+// Amenity detail with category and free/paid status
 export interface AmenityDetail {
-  code: string;      // "wifi"
-  label: string;     // "Free WiFi"
+  code: string;                    // "wifi"
+  label: string;                   // "Free WiFi"
+  category?: AmenityCategory;      // "connectivity"
+  isFree?: boolean | null;         // true = free, false = paid, null = unknown
+}
+
+// Amenities grouped by category
+export interface CategorizedAmenities {
+  connectivity: AmenityDetail[];   // WiFi, Internet
+  food: AmenityDetail[];           // Breakfast, Restaurant, Bar
+  wellness: AmenityDetail[];       // Pool, Spa, Gym
+  room: AmenityDetail[];           // AC, TV, Kitchen
+  services: AmenityDetail[];       // Parking, Laundry
+  general: AmenityDetail[];        // Others
 }
 
 // Hotel policies
@@ -164,11 +185,12 @@ export interface HotelDetails {
   address: string;
   distanceFromCenter: number | null;
   description: string | null;
-  images: string[];              // URLs des photos
-  amenities: AmenityDetail[];
+  images: string[];                             // URLs des photos
+  amenities: AmenityDetail[];                   // Flat list (backward compat)
+  amenitiesByCategory?: CategorizedAmenities;   // Grouped by category
   highlights: string[];
-  badges?: PropertyBadge[];      // Badges équipements (petit-déj, piscine, etc.)
-  ratingBreakdown?: RatingBreakdown;  // Sous-notes détaillées
+  badges?: PropertyBadge[];                     // Badges équipements (petit-déj, piscine, etc.)
+  ratingBreakdown?: RatingBreakdown;            // Sous-notes détaillées
   policies: HotelPolicies | null;
   rooms: RoomOption[];
   bookingUrl: string | null;

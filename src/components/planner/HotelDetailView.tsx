@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef, useLayoutEffect } from "react";
-import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Shield, Heart, Utensils, Dumbbell, Bath, Tv, Phone, Snowflake, Loader2, Award, Flame, ThumbsUp, MapPinned, Sparkles } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Shield, Heart, Utensils, Dumbbell, Bath, Tv, Phone, Snowflake, Loader2, Award, Flame, ThumbsUp, MapPinned, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { HotelResult } from "./HotelSearchResults";
-import type { HotelDetails, RoomOption, PropertyBadge } from "@/services/hotels/hotelService";
+import type { HotelDetails, RoomOption, PropertyBadge, AmenityCategory, AmenityDetail, CategorizedAmenities } from "@/services/hotels/hotelService";
 
 interface HotelDetailViewProps {
   hotel: HotelResult;
@@ -98,6 +98,82 @@ const getBadgeIcon = (iconHint?: string) => {
     case "snowflake": return <Snowflake className={iconClass} />;
     default: return <Check className={iconClass} />;
   }
+};
+
+// Category configuration for amenities
+const CATEGORY_CONFIG: Record<AmenityCategory, { icon: typeof Wifi; label: string; color: string }> = {
+  connectivity: { icon: Wifi, label: "Connectivité", color: "text-blue-600" },
+  food: { icon: Utensils, label: "Restauration", color: "text-orange-600" },
+  wellness: { icon: Bath, label: "Bien-être", color: "text-teal-600" },
+  room: { icon: Bed, label: "Chambre", color: "text-purple-600" },
+  services: { icon: Phone, label: "Services", color: "text-green-600" },
+  general: { icon: Check, label: "Autres", color: "text-gray-600" },
+};
+
+const CATEGORY_ORDER: AmenityCategory[] = ['connectivity', 'food', 'wellness', 'room', 'services', 'general'];
+
+// Free/Paid status badge component
+const FreeStatusBadge = ({ isFree }: { isFree?: boolean | null }) => {
+  if (isFree === null || isFree === undefined) return null;
+  return isFree ? (
+    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/30">Gratuit</Badge>
+  ) : (
+    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">Payant</Badge>
+  );
+};
+
+// Collapsible amenity category section
+const AmenityCategorySection = ({
+  category,
+  amenities,
+  defaultOpen = false
+}: {
+  category: AmenityCategory;
+  amenities: AmenityDetail[];
+  defaultOpen?: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const config = CATEGORY_CONFIG[category];
+
+  if (amenities.length === 0) return null;
+
+  const Icon = config.icon;
+
+  return (
+    <div className="border rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Icon className={cn("h-4 w-4", config.color)} />
+          <span className="font-medium text-sm">{config.label}</span>
+          <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">{amenities.length}</Badge>
+        </div>
+        <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
+      </button>
+      {isOpen && (
+        <div className="p-3 pt-0 grid gap-1.5">
+          {amenities.map((amenity, idx) => {
+            const AmenityIcon = amenityIcons[amenity.code] || Check;
+            return (
+              <div
+                key={`${amenity.code}-${idx}`}
+                className="flex items-center justify-between p-2 rounded bg-muted/30"
+              >
+                <div className="flex items-center gap-2">
+                  <AmenityIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-sm">{amenity.label}</span>
+                </div>
+                <FreeStatusBadge isFree={amenity.isFree} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // Get hotel description - use real description if available
@@ -530,27 +606,43 @@ const HotelDetailView = ({
               </section>
             )}
 
-            {/* Amenities */}
-            {amenitiesForDisplay.length > 0 && (
+            {/* Amenities - Categorized or flat */}
+            {(hotelDetails?.amenitiesByCategory || amenitiesForDisplay.length > 0) && (
               <section className="space-y-3">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
                   Ce que propose cet établissement
                 </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {amenitiesForDisplay.map((amenity) => {
-                    const Icon = amenityIcons[amenity.code] || Check;
-                    return (
-                      <div
-                        key={amenity.code}
-                        className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 text-sm"
-                      >
-                        <Icon className="h-4 w-4 text-primary shrink-0" />
-                        <span>{amenity.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+
+                {hotelDetails?.amenitiesByCategory ? (
+                  /* Categorized view with collapsible sections */
+                  <div className="space-y-2">
+                    {CATEGORY_ORDER.map(category => (
+                      <AmenityCategorySection
+                        key={category}
+                        category={category}
+                        amenities={hotelDetails.amenitiesByCategory![category]}
+                        defaultOpen={category === 'connectivity' || category === 'food'}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  /* Fallback: flat grid for legacy data */
+                  <div className="grid grid-cols-2 gap-2">
+                    {amenitiesForDisplay.map((amenity) => {
+                      const Icon = amenityIcons[amenity.code] || Check;
+                      return (
+                        <div
+                          key={amenity.code}
+                          className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 text-sm"
+                        >
+                          <Icon className="h-4 w-4 text-primary shrink-0" />
+                          <span>{amenity.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </section>
             )}
 
