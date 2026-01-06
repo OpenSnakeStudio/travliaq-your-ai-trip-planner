@@ -212,5 +212,15 @@ All colors MUST be HSL.
   .stagger-item {
     animation-fill-mode: both;
   }
+
+  /* Loading dots bounce animation for map price markers */
+  @keyframes bounce-dot {
+    0%, 80%, 100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-4px);
+    }
+  }
 }
 

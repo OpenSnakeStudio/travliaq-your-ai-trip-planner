@@ -1176,7 +1176,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         filters,
         // Important: backend behaves reliably with popularity; price_asc was yielding 0 results for many combos.
         sort: "popularity" as const,
-        limit: 30,
+        limit: 50,
       };
 
       logger.info("Hotels search: start", {

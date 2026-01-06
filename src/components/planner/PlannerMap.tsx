@@ -969,7 +969,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         const cityName = airport.cityName || airport.name;
         // Only show prices on flights tab
         const showPrice = activeTab === "flights";
-        const displayPrice = priceValue === undefined ? "…" : `${priceValue}€`;
+        // Animated loading dots when price is undefined
+        const loadingDotsHtml = `<span class="loading-dots" style="display: inline-flex; gap: 2px;">
+          <span style="animation: bounce-dot 1s infinite; animation-delay: 0ms;">•</span>
+          <span style="animation: bounce-dot 1s infinite; animation-delay: 150ms;">•</span>
+          <span style="animation: bounce-dot 1s infinite; animation-delay: 300ms;">•</span>
+        </span>`;
+        const displayPrice = priceValue === undefined ? loadingDotsHtml : `${priceValue}€`;
         const priceText = isOrigin ? "Départ" : displayPrice;
 
         el.style.cssText = `
