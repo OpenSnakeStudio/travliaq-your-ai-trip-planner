@@ -1,14 +1,18 @@
 import { memo, useState, useCallback, useEffect, useRef, useLayoutEffect } from "react";
-import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Sparkles, Shield, Heart, Utensils, Dumbbell, Wind, Bath, Tv, Phone, Snowflake } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Sparkles, Shield, Heart, Utensils, Dumbbell, Wind, Bath, Tv, Phone, Snowflake, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { HotelResult } from "./HotelSearchResults";
+import type { HotelDetails, RoomOption } from "@/services/hotels/hotelService";
 
 interface HotelDetailViewProps {
   hotel: HotelResult;
+  hotelDetails?: HotelDetails | null;
+  isLoading?: boolean;
   nights: number;
   onBack: () => void;
   onBook?: () => void;
@@ -66,16 +70,38 @@ const getHighlights = (hotel: HotelResult): string[] => {
 
 const HotelDetailView = ({
   hotel,
+  hotelDetails,
+  isLoading = false,
   nights,
   onBack,
   onBook,
 }: HotelDetailViewProps) => {
-  const images = getHotelImages(hotel);
+  // Use hotelDetails when available, fallback to hotel (search result)
+  const images = hotelDetails?.images?.length
+    ? hotelDetails.images
+    : getHotelImages(hotel);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  const description = getHotelDescription(hotel);
-  const highlights = getHighlights(hotel);
+
+  // Use hotelDetails description if available
+  const description = hotelDetails?.description || getHotelDescription(hotel);
+  const highlights = hotelDetails?.highlights?.length
+    ? hotelDetails.highlights.slice(0, 4)
+    : getHighlights(hotel);
+
+  // Get rooms from details API
+  const rooms = hotelDetails?.rooms || [];
+
+  // Get policies from details API
+  const policies = hotelDetails?.policies;
+  const checkInTime = policies?.checkIn || "15:00";
+  const checkOutTime = policies?.checkOut || "11:00";
+
+  // Get amenities - prefer detailed amenities with labels
+  const amenitiesForDisplay = hotelDetails?.amenities?.length
+    ? hotelDetails.amenities
+    : hotel.amenities.map(a => ({ code: a.toLowerCase(), label: a }));
 
   // Force scroll to top immediately when hotel changes
   useLayoutEffect(() => {
@@ -109,6 +135,50 @@ const HotelDetailView = ({
 
   const totalPrice = hotel.totalPrice ?? hotel.pricePerNight * nights;
   const pricePerNightPerPerson = Math.round(hotel.pricePerNight / 2);
+
+  // Show loading skeleton while fetching details
+  if (isLoading) {
+    return (
+      <div ref={rootRef} className="flex flex-col h-full bg-background animate-enter">
+        {/* Header with back button */}
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm px-4 py-3 border-b flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="h-8 w-8 p-0 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <Skeleton className="h-5 w-48 mb-1" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+        </div>
+        {/* Image skeleton */}
+        <Skeleton className="aspect-[16/10] w-full" />
+        {/* Content skeletons */}
+        <div className="p-4 space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+        {/* Loading indicator */}
+        <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-sm">Chargement des détails...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className="flex flex-col h-full bg-background animate-enter">
@@ -270,22 +340,22 @@ const HotelDetailView = ({
             </div>
 
             {/* Amenities */}
-            {hotel.amenities.length > 0 && (
+            {amenitiesForDisplay.length > 0 && (
               <section className="space-y-3">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
                   <Check className="h-4 w-4 text-primary" />
                   Ce que propose cet établissement
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
-                  {hotel.amenities.map((amenity) => {
-                    const Icon = amenityIcons[amenity.toLowerCase()] || Check;
+                  {amenitiesForDisplay.map((amenity) => {
+                    const Icon = amenityIcons[amenity.code] || Check;
                     return (
                       <div
-                        key={amenity}
+                        key={amenity.code}
                         className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 text-sm"
                       >
                         <Icon className="h-4 w-4 text-primary shrink-0" />
-                        <span>{amenity}</span>
+                        <span>{amenity.label}</span>
                       </div>
                     );
                   })}
@@ -293,40 +363,95 @@ const HotelDetailView = ({
               </section>
             )}
 
-            {/* Room info */}
-            <section className="space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Bed className="h-4 w-4 text-primary" />
-                Chambre disponible
-              </h3>
-              <div className="rounded-xl border bg-card p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium">Chambre Double Standard</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">Vue sur la ville • 25m²</p>
+            {/* Room options from API */}
+            {rooms.length > 0 ? (
+              <section className="space-y-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Bed className="h-4 w-4 text-primary" />
+                  Chambres disponibles ({rooms.length})
+                </h3>
+                {rooms.slice(0, 3).map((room, index) => (
+                  <div key={room.id || index} className="rounded-xl border bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{room.name}</p>
+                        {room.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{room.description}</p>
+                        )}
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-primary font-bold">{room.pricePerNight}€</span>
+                        <span className="text-xs text-muted-foreground">/nuit</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3 w-3" />
+                        {room.maxOccupancy} pers. max
+                      </span>
+                      {room.bedType && (
+                        <span className="flex items-center gap-1">
+                          <Bed className="h-3 w-3" />
+                          {room.bedType}
+                        </span>
+                      )}
+                      {room.amenities?.includes('wifi') && (
+                        <span className="flex items-center gap-1">
+                          <Wifi className="h-3 w-3" />
+                          WiFi inclus
+                        </span>
+                      )}
+                    </div>
+                    {room.cancellationFree && (
+                      <div className="flex items-center gap-2 pt-2 border-t text-xs">
+                        <Shield className="h-3.5 w-3.5 text-green-600" />
+                        <span className="text-green-600 font-medium">Annulation gratuite</span>
+                      </div>
+                    )}
                   </div>
-                  <Badge variant="outline" className="text-xs shrink-0">Meilleur prix</Badge>
+                ))}
+                {rooms.length > 3 && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    +{rooms.length - 3} autres chambres disponibles
+                  </p>
+                )}
+              </section>
+            ) : (
+              /* Fallback - default room info when no API details */
+              <section className="space-y-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Bed className="h-4 w-4 text-primary" />
+                  Chambre disponible
+                </h3>
+                <div className="rounded-xl border bg-card p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium">Chambre Double Standard</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Vue sur la ville</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs shrink-0">Meilleur prix</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      2 adultes max
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Bed className="h-3 w-3" />
+                      1 lit double
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Wifi className="h-3 w-3" />
+                      WiFi inclus
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t text-xs">
+                    <Shield className="h-3.5 w-3.5 text-green-600" />
+                    <span className="text-green-600 font-medium">Annulation gratuite jusqu'à 24h avant</span>
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    2 adultes max
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Bed className="h-3 w-3" />
-                    1 lit king-size
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Wifi className="h-3 w-3" />
-                    WiFi inclus
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 pt-2 border-t text-xs">
-                  <Shield className="h-3.5 w-3.5 text-green-600" />
-                  <span className="text-green-600 font-medium">Annulation gratuite jusqu'à 24h avant</span>
-                </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* Check-in info */}
             <section className="space-y-3">
@@ -337,13 +462,19 @@ const HotelDetailView = ({
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <p className="text-xs text-muted-foreground">Check-in</p>
-                  <p className="font-semibold text-sm">À partir de 15h00</p>
+                  <p className="font-semibold text-sm">À partir de {checkInTime}</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-3 text-center">
                   <p className="text-xs text-muted-foreground">Check-out</p>
-                  <p className="font-semibold text-sm">Jusqu'à 11h00</p>
+                  <p className="font-semibold text-sm">Jusqu'à {checkOutTime}</p>
                 </div>
               </div>
+              {policies?.cancellation && (
+                <div className="rounded-lg bg-muted/50 p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Politique d'annulation</p>
+                  <p className="text-sm">{policies.cancellation}</p>
+                </div>
+              )}
             </section>
 
             {/* Why book here */}

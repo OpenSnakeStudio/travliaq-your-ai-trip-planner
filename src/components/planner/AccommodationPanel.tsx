@@ -25,7 +25,8 @@ import { STAYS_ZOOM } from "@/constants/mapSettings";
 import HotelSearchResults, { type HotelResult } from "./HotelSearchResults";
 import HotelDetailView from "./HotelDetailView";
 import { eventBus } from "@/lib/eventBus";
-import type { RoomOccupancy, HotelResult as ApiHotelResult } from "@/services/hotels/hotelService";
+import type { RoomOccupancy, HotelResult as ApiHotelResult, HotelDetails } from "@/services/hotels/hotelService";
+import { getHotelDetails } from "@/services/hotels/hotelService";
 import { searchHotelsWithRetry } from "@/services/hotels/searchHotelsWithRetry";
 import { buildHotelFilters } from "./hotels/buildHotelFilters";
 interface AccommodationPanelProps {
@@ -619,6 +620,9 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     setShowHotelResults,
     setSelectedHotelForDetailId,
     clearHotelSearch,
+    setHotelDetails,
+    getHotelDetailsFromCache,
+    setIsLoadingHotelDetails,
   } = useAccommodationMemory();
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -1251,10 +1255,61 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     eventBus.emit("hotels:results", { hotels: [] });
   };
 
-  // Handle hotel selection - show detail view (only when clicking "Voir détails" button)
-  const handleHotelSelect = (hotel: HotelResult) => {
+  // Handle hotel selection - show detail view and load full details from API
+  const handleHotelSelect = async (hotel: HotelResult) => {
     setSelectedHotelId(hotel.id);
     setSelectedHotelForDetailId(hotel.id);
+
+    // Check if details are already cached
+    const cachedDetails = getHotelDetailsFromCache(hotel.id);
+    if (cachedDetails) {
+      console.log('[AccommodationPanel] Using cached hotel details for:', hotel.id);
+      return;
+    }
+
+    // Load details from API
+    if (!activeAccommodation?.checkIn || !activeAccommodation?.checkOut) {
+      console.warn('[AccommodationPanel] Cannot load hotel details: missing dates');
+      return;
+    }
+
+    setIsLoadingHotelDetails(true);
+
+    try {
+      // Build rooms config for API
+      const roomsConfig = memory.customRooms.length > 0
+        ? memory.customRooms.map(r => ({
+            adults: r.adults,
+            childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
+          }))
+        : [{ adults: 2 }];
+
+      const response = await getHotelDetails(
+        hotel.id,
+        format(activeAccommodation.checkIn, 'yyyy-MM-dd'),
+        format(activeAccommodation.checkOut, 'yyyy-MM-dd'),
+        roomsConfig,
+        'EUR',
+        'fr'
+      );
+
+      if (response.success && response.hotel) {
+        console.log('[AccommodationPanel] Hotel details loaded:', {
+          id: response.hotel.id,
+          imagesCount: response.hotel.images?.length || 0,
+          roomsCount: response.hotel.rooms?.length || 0,
+          hasDescription: !!response.hotel.description,
+        });
+        setHotelDetails(hotel.id, response.hotel);
+      } else {
+        console.warn('[AccommodationPanel] Failed to load hotel details:', response);
+      }
+    } catch (error) {
+      console.error('[AccommodationPanel] Error loading hotel details:', error);
+      // Don't show error toast - we'll fallback to search result data
+    } finally {
+      setIsLoadingHotelDetails(false);
+    }
   };
   
   // Handle back from detail view - return to results list, clear selection + map highlight
@@ -1318,15 +1373,21 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
   // If showing hotel detail, render the detail view
   if (selectedHotelForDetail) {
+    // Get loaded details from cache (may be null if still loading or API failed)
+    const loadedHotelDetails = getHotelDetailsFromCache(selectedHotelForDetail.id);
+
     return (
       <HotelDetailView
         hotel={selectedHotelForDetail}
+        hotelDetails={loadedHotelDetails}
+        isLoading={memory.isLoadingHotelDetails}
         nights={searchNights}
         onBack={handleBackFromDetail}
         onBook={() => {
           // Open booking URL or handle booking
-          if (selectedHotelForDetail.bookingUrl) {
-            window.open(selectedHotelForDetail.bookingUrl, '_blank');
+          const bookingUrl = loadedHotelDetails?.bookingUrl || selectedHotelForDetail.bookingUrl;
+          if (bookingUrl) {
+            window.open(bookingUrl, '_blank');
           } else {
             toastInfo("Réservation", "La réservation sera bientôt disponible !");
           }

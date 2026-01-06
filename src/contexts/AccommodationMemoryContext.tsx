@@ -5,6 +5,7 @@ import { usePreferenceMemory } from "./PreferenceMemoryContext";
 import { migrateAccommodationMemory } from "@/lib/memoryMigration";
 import { toastSuccess } from "@/lib/toast";
 import { eventBus } from "@/lib/eventBus";
+import type { HotelDetails } from "@/services/hotels/hotelService";
 
 const STORAGE_KEY = "travliaq_accommodation_memory";
 
@@ -104,6 +105,10 @@ export interface AccommodationMemory {
   hotelSearchResults: HotelSearchResult[];
   showHotelResults: boolean;
   selectedHotelForDetailId: string | null;
+  // Hotel details cache (keyed by hotelId)
+  hotelDetailsCache: Record<string, HotelDetails>;
+  // Loading state for hotel details
+  isLoadingHotelDetails: boolean;
 }
 
 // Context value type
@@ -162,6 +167,11 @@ interface AccommodationMemoryContextValue {
   setSelectedHotelForDetailId: (id: string | null) => void;
   clearHotelSearch: () => void;
 
+  // Hotel details cache management
+  setHotelDetails: (hotelId: string, details: HotelDetails) => void;
+  getHotelDetailsFromCache: (hotelId: string) => HotelDetails | null;
+  setIsLoadingHotelDetails: (loading: boolean) => void;
+
   // Computed values
   isReadyToSearch: boolean;
   getRoomsSummary: () => string;
@@ -212,6 +222,9 @@ const initialMemory: AccommodationMemory = {
   hotelSearchResults: [],
   showHotelResults: false,
   selectedHotelForDetailId: null,
+  // Hotel details cache (runtime only)
+  hotelDetailsCache: {},
+  isLoadingHotelDetails: false,
 };
 
 // Serialize for localStorage (convert Dates to ISO strings)
@@ -258,6 +271,9 @@ function deserializeMemory(json: string): AccommodationMemory | null {
       hotelSearchResults: [],
       showHotelResults: false,
       selectedHotelForDetailId: null,
+      // Hotel details cache (runtime only)
+      hotelDetailsCache: {},
+      isLoadingHotelDetails: false,
     };
   } catch {
     return null;
@@ -685,6 +701,25 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     }));
   }, []);
 
+  // Hotel details cache management
+  const setHotelDetails = useCallback((hotelId: string, details: HotelDetails) => {
+    setMemory(prev => ({
+      ...prev,
+      hotelDetailsCache: {
+        ...prev.hotelDetailsCache,
+        [hotelId]: details,
+      },
+    }));
+  }, []);
+
+  const getHotelDetailsFromCache = useCallback((hotelId: string): HotelDetails | null => {
+    return memory.hotelDetailsCache[hotelId] || null;
+  }, [memory.hotelDetailsCache]);
+
+  const setIsLoadingHotelDetails = useCallback((loading: boolean) => {
+    setMemory(prev => ({ ...prev, isLoadingHotelDetails: loading }));
+  }, []);
+
   const value: AccommodationMemoryContextValue = {
     memory,
     addAccommodation,
@@ -711,6 +746,9 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
     setShowHotelResults,
     setSelectedHotelForDetailId,
     clearHotelSearch,
+    setHotelDetails,
+    getHotelDetailsFromCache,
+    setIsLoadingHotelDetails,
     isReadyToSearch,
     getRoomsSummary,
     getTotalNights,
