@@ -654,19 +654,74 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   }, [searchResults]);
 
   // Listen for hotel detail open from map pin clicks
+  // This handler also triggers the API call for hotel details (same as "Voir détails" button)
   useEffect(() => {
-    const handleOpenDetail = (data: { hotel: { id: string } }) => {
+    const handleOpenDetail = async (data: { hotel: { id: string } }) => {
       const hotel = searchResults.find((h) => h.id === data.hotel.id);
       if (!hotel) return;
+      
       setSelectedHotelId(hotel.id);
       setSelectedHotelForDetailId(hotel.id);
+
+      // Check if details are already cached
+      const cachedDetails = getHotelDetailsFromCache(hotel.id);
+      if (cachedDetails) {
+        console.log('[AccommodationPanel] Using cached hotel details for map click:', hotel.id);
+        return;
+      }
+
+      // Get active accommodation for dates
+      const currentAccommodation = getActiveAccommodation();
+      
+      // Load details from API (same logic as handleHotelSelect)
+      if (!currentAccommodation?.checkIn || !currentAccommodation?.checkOut) {
+        console.warn('[AccommodationPanel] Cannot load hotel details from map click: missing dates');
+        return;
+      }
+
+      setIsLoadingHotelDetails(true);
+
+      try {
+        // Build rooms config for API
+        const roomsConfig = memory.customRooms.length > 0
+          ? memory.customRooms.map(r => ({
+              adults: r.adults,
+              childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
+            }))
+          : [{ adults: 2 }];
+
+        const response = await getHotelDetails(
+          hotel.id,
+          format(currentAccommodation.checkIn, 'yyyy-MM-dd'),
+          format(currentAccommodation.checkOut, 'yyyy-MM-dd'),
+          roomsConfig,
+          'EUR',
+          'fr'
+        );
+
+        if (response.success && response.hotel) {
+          console.log('[AccommodationPanel] Hotel details loaded from map click:', {
+            id: response.hotel.id,
+            imagesCount: response.hotel.images?.length || 0,
+            roomsCount: response.hotel.rooms?.length || 0,
+            hasDescription: !!response.hotel.description,
+          });
+          setHotelDetails(hotel.id, response.hotel);
+        } else {
+          console.warn('[AccommodationPanel] Failed to load hotel details from map click:', response);
+        }
+      } catch (error) {
+        console.error('[AccommodationPanel] Error loading hotel details from map click:', error);
+      } finally {
+        setIsLoadingHotelDetails(false);
+      }
     };
 
     eventBus.on("hotels:openDetail", handleOpenDetail);
     return () => {
       eventBus.off("hotels:openDetail", handleOpenDetail);
     };
-  }, [searchResults, setSelectedHotelForDetailId]);
+  }, [searchResults, setSelectedHotelForDetailId, getHotelDetailsFromCache, getActiveAccommodation, memory.customRooms, setIsLoadingHotelDetails, setHotelDetails]);
 
   // When hovering map pins, we want ONLY the hovered pin highlighted.
   // So we clear any prior selection as soon as the user starts hovering on the map.

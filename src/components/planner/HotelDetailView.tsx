@@ -108,9 +108,8 @@ const HotelDetailView = ({
     setCurrentImageIndex(0);
 
     // 1) Ensure the surrounding panel scrolls back to the top
-    rootRef.current?.scrollIntoView({ block: "start" });
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-
+    rootRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
+    
     // 2) Reset Radix ScrollArea viewport scroll
     const resetInnerScroll = () => {
       if (!scrollAreaRef.current) return;
@@ -120,9 +119,37 @@ const HotelDetailView = ({
       if (viewport) viewport.scrollTop = 0;
     };
 
+    // 3) Also scroll the panel container directly
+    const scrollPanel = () => {
+      // Find parent scrollable container
+      let parent = rootRef.current?.parentElement;
+      while (parent) {
+        if (parent.scrollTop > 0 || parent.scrollHeight > parent.clientHeight) {
+          parent.scrollTop = 0;
+        }
+        // Also check for data-radix-scroll-area-viewport in parent chain
+        const viewport = parent.querySelector("[data-radix-scroll-area-viewport]") as HTMLElement | null;
+        if (viewport) viewport.scrollTop = 0;
+        parent = parent.parentElement;
+      }
+    };
+
     resetInnerScroll();
-    requestAnimationFrame(resetInnerScroll);
-    setTimeout(resetInnerScroll, 0);
+    scrollPanel();
+    
+    // Multiple attempts to ensure scroll reset (handles async rendering)
+    requestAnimationFrame(() => {
+      resetInnerScroll();
+      scrollPanel();
+    });
+    setTimeout(() => {
+      resetInnerScroll();
+      scrollPanel();
+    }, 0);
+    setTimeout(() => {
+      resetInnerScroll();
+      scrollPanel();
+    }, 50);
   }, [hotel.id]);
 
   const nextImage = useCallback(() => {
