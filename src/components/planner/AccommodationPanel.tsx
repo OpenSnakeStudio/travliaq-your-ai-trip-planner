@@ -1060,6 +1060,29 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
   const handleSearch = async () => {
     if (!canSearch || !activeAccommodation) return;
 
+    const debugHotels =
+      import.meta.env.DEV ||
+      (typeof window !== "undefined" && window.localStorage.getItem("hotels_debug") === "1");
+
+    if (debugHotels) {
+      console.groupCollapsed("[HotelsUI] Search requested");
+      console.log("activeAccommodation", {
+        city: activeAccommodation.city,
+        countryCode: activeAccommodation.countryCode,
+        lat: activeAccommodation.lat,
+        lng: activeAccommodation.lng,
+        checkIn: activeAccommodation.checkIn,
+        checkOut: activeAccommodation.checkOut,
+        priceMin: activeAccommodation.priceMin,
+        priceMax: activeAccommodation.priceMax,
+        minRating: activeAccommodation.minRating,
+        amenities: activeAccommodation.amenities,
+        types: activeAccommodation.types,
+      });
+      console.log("rooms (memory.customRooms)", memory.customRooms);
+      console.groupEnd();
+    }
+
     // Validate required params (show actionable messages)
     if (!activeAccommodation.countryCode || !activeAccommodation.lat || !activeAccommodation.lng) {
       toastError(
@@ -1077,6 +1100,15 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         },
       });
 
+      if (debugHotels) {
+        console.warn("[HotelsUI] Blocked: destination incomplete", {
+          city: activeAccommodation.city,
+          countryCode: activeAccommodation.countryCode,
+          lat: activeAccommodation.lat,
+          lng: activeAccommodation.lng,
+        });
+      }
+
       return;
     }
 
@@ -1091,10 +1123,18 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         metadata: {
           city: activeAccommodation.city,
           countryCode: activeAccommodation.countryCode,
-          checkIn: activeAccommodation.checkIn ? format(activeAccommodation.checkIn, 'yyyy-MM-dd') : null,
-          checkOut: activeAccommodation.checkOut ? format(activeAccommodation.checkOut, 'yyyy-MM-dd') : null,
+          checkIn: activeAccommodation.checkIn ? format(activeAccommodation.checkIn, "yyyy-MM-dd") : null,
+          checkOut: activeAccommodation.checkOut ? format(activeAccommodation.checkOut, "yyyy-MM-dd") : null,
         },
       });
+
+      if (debugHotels) {
+        console.warn("[HotelsUI] Blocked: dates missing", {
+          city: activeAccommodation.city,
+          checkIn: activeAccommodation.checkIn,
+          checkOut: activeAccommodation.checkOut,
+        });
+      }
 
       return;
     }
@@ -1104,11 +1144,12 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
     try {
       // Build rooms config for API - use customRooms from memory context
-      const roomsConfig = memory.customRooms.length > 0
-        ? memory.customRooms
-        : [{ adults: 2, children: 0, childrenAges: [] as number[], id: 'default' }];
+      const roomsConfig =
+        memory.customRooms.length > 0
+          ? memory.customRooms
+          : [{ adults: 2, children: 0, childrenAges: [] as number[], id: "default" }];
 
-      const apiRooms: RoomOccupancy[] = roomsConfig.map(r => ({
+      const apiRooms: RoomOccupancy[] = roomsConfig.map((r) => ({
         adults: r.adults,
         childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
       }));
@@ -1119,7 +1160,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
       if (activeAccommodation.priceMax < 1000) filters.priceMax = activeAccommodation.priceMax;
       if (activeAccommodation.minRating && activeAccommodation.minRating > 0) filters.minRating = activeAccommodation.minRating;
       if (activeAccommodation.amenities.length > 0) filters.amenities = activeAccommodation.amenities;
-      if (activeAccommodation.types.length > 0 && !activeAccommodation.types.includes('any')) {
+      if (activeAccommodation.types.length > 0 && !activeAccommodation.types.includes("any")) {
         filters.types = activeAccommodation.types;
       }
 
@@ -1128,13 +1169,13 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         countryCode: activeAccommodation.countryCode,
         lat: activeAccommodation.lat,
         lng: activeAccommodation.lng,
-        checkIn: format(activeAccommodation.checkIn, 'yyyy-MM-dd'),
-        checkOut: format(activeAccommodation.checkOut, 'yyyy-MM-dd'),
+        checkIn: format(activeAccommodation.checkIn, "yyyy-MM-dd"),
+        checkOut: format(activeAccommodation.checkOut, "yyyy-MM-dd"),
         rooms: apiRooms,
-        currency: 'EUR' as const,
-        locale: 'fr' as const,
+        currency: "EUR" as const,
+        locale: "fr" as const,
         filters: Object.keys(filters).length > 0 ? filters : undefined,
-        sort: 'price_asc' as const,
+        sort: "price_asc" as const,
         limit: 30,
       };
 
@@ -1142,6 +1183,12 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         category: LogCategory.API,
         metadata: requestParams,
       });
+
+      if (debugHotels) {
+        console.groupCollapsed("[HotelsUI] Request params (sent to API)");
+        console.log(requestParams);
+        console.groupEnd();
+      }
 
       const response = await searchHotels(requestParams);
 
@@ -1155,8 +1202,21 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         },
       });
 
+      if (debugHotels) {
+        console.groupCollapsed("[HotelsUI] Raw API response");
+        console.log(response);
+        console.groupEnd();
+      }
+
       if (response.success && response.results.hotels.length > 0) {
         const results = response.results.hotels.map(mapApiToHotelResult);
+
+        if (debugHotels) {
+          console.groupCollapsed("[HotelsUI] Mapped results (used by UI/map)");
+          console.log({ count: results.length, first: results[0] });
+          console.groupEnd();
+        }
+
         setHotelSearchResults(results);
         eventBus.emit("hotels:results", { hotels: results });
       } else {
@@ -1178,7 +1238,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         },
       });
 
-      console.error('[AccommodationPanel] Search error:', error);
+      console.error("[HotelsUI] Search failed", error);
       toastError("Erreur de recherche", message);
       setHotelSearchResults([]);
     } finally {
