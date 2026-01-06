@@ -359,12 +359,14 @@ const HotelDetailView = ({
   const [showAllRooms, setShowAllRooms] = useState(false);
   const [expandedRoomId, setExpandedRoomId] = useState<string | null>(null);
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [isRatingBreakdownOpen, setIsRatingBreakdownOpen] = useState(false);
+  const [isAmenitiesOpen, setIsAmenitiesOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Use hotelDetails description if available
   const description = hotelDetails?.description || getHotelDescription(hotel);
-  
+
   // Get smart badges based on real data
   const keyBadges = getKeyBadges(hotel, hotelDetails);
   const ratingInfo = hotel.rating ? getRatingLabel(hotel.rating) : null;
@@ -374,6 +376,10 @@ const HotelDetailView = ({
 
   // Get policies from details API
   const policies = hotelDetails?.policies;
+
+  // Check-in/Check-out with fallback defaults
+  const checkInTime = policies?.checkIn || "15:00";
+  const checkOutTime = policies?.checkOut || "11:00";
 
   // Get amenities - prefer detailed amenities with labels
   const amenitiesForDisplay = hotelDetails?.amenities?.length
@@ -386,6 +392,8 @@ const HotelDetailView = ({
     setShowAllRooms(false);
     setExpandedRoomId(null);
     setIsDescExpanded(false);
+    setIsRatingBreakdownOpen(false);
+    setIsAmenitiesOpen(false);
 
     // 1) Ensure the surrounding panel scrolls back to the top
     rootRef.current?.scrollIntoView({ block: "start", behavior: "instant" });
@@ -569,82 +577,82 @@ const HotelDetailView = ({
           </div>
 
           {/* Content */}
-          <div className="p-4 space-y-5">
-            {/* Rating & Reviews - Hero section */}
-            {ratingInfo && (
-              <div className="flex items-center gap-3">
-                <div className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-semibold",
-                  ratingInfo.color
-                )}>
-                  <span className="text-lg">{hotel.rating.toFixed(1)}</span>
-                  <span className="text-sm">{ratingInfo.label}</span>
+          <div className="p-4 space-y-4">
+            {/* HERO CARD - Rating + Prix + Check-in/out en un coup d'œil */}
+            <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-4 space-y-3">
+              {/* Ligne 1: Rating + Prix */}
+              <div className="flex items-center justify-between">
+                {/* Rating */}
+                {ratingInfo ? (
+                  <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-sm font-semibold", ratingInfo.color)}>
+                    <span className="text-base">{hotel.rating.toFixed(1)}</span>
+                    <span className="text-xs">{ratingInfo.label}</span>
+                    <span className="text-xs text-muted-foreground">({hotel.reviewCount.toLocaleString()})</span>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">Pas encore noté</div>
+                )}
+                {/* Prix */}
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-primary">{hotel.pricePerNight}€</span>
+                  <span className="text-xs text-muted-foreground">/nuit</span>
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {hotel.reviewCount.toLocaleString()} avis
-                </span>
               </div>
-            )}
 
-            {/* Key badges - Quick scan info */}
-            {keyBadges.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {keyBadges.map((badge, idx) => {
-                  const Icon = badge.icon;
-                  const variantStyles = {
-                    highlight: "bg-primary/10 border-primary/30 text-primary",
-                    feature: "bg-blue-500/10 border-blue-500/30 text-blue-600",
-                    location: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600",
-                  };
-                  return (
-                    <Badge 
-                      key={idx} 
-                      variant="outline" 
-                      className={cn("text-xs gap-1.5", variantStyles[badge.variant])}
-                    >
-                      <Icon className="h-3 w-3" />
-                      {badge.label}
-                    </Badge>
-                  );
-                })}
+              {/* Ligne 2: Check-in / Check-out */}
+              <div className="flex items-center justify-between pt-3 border-t">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-green-600" />
+                    <span className="text-muted-foreground">Arrivée:</span>
+                    <span className="font-medium">{checkInTime}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 text-amber-600" />
+                    <span className="text-muted-foreground">Départ:</span>
+                    <span className="font-medium">{checkOutTime}</span>
+                  </div>
+                </div>
+                {/* Prix total */}
+                <div className="text-right">
+                  <span className="text-sm text-muted-foreground">{nights} nuit{nights > 1 ? "s" : ""}: </span>
+                  <span className="font-semibold">{totalPrice}€</span>
+                </div>
               </div>
-            )}
 
-            {/* Property badges from API */}
-            {hotelDetails?.badges && hotelDetails.badges.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {hotelDetails.badges.map((badge, idx) => (
-                  <Badge
-                    key={idx}
-                    className="text-xs bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-400 gap-1.5"
-                  >
-                    {getBadgeIcon(badge.icon)}
-                    {badge.label}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Points Forts - Highlights from API */}
-            {hotelDetails?.highlights && hotelDetails.highlights.length > 0 && (
-              <section className="space-y-2">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  Points forts
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  {hotelDetails.highlights.map((highlight, idx) => (
+              {/* Ligne 3: Key badges (fusionnés) */}
+              {(keyBadges.length > 0 || (hotelDetails?.highlights && hotelDetails.highlights.length > 0)) && (
+                <div className="flex flex-wrap gap-1.5 pt-2 border-t">
+                  {keyBadges.slice(0, 4).map((badge, idx) => {
+                    const Icon = badge.icon;
+                    const variantStyles = {
+                      highlight: "bg-primary/10 border-primary/30 text-primary",
+                      feature: "bg-blue-500/10 border-blue-500/30 text-blue-600",
+                      location: "bg-emerald-500/10 border-emerald-500/30 text-emerald-600",
+                    };
+                    return (
+                      <Badge
+                        key={idx}
+                        variant="outline"
+                        className={cn("text-[10px] gap-1 px-1.5 py-0 h-5", variantStyles[badge.variant])}
+                      >
+                        <Icon className="h-2.5 w-2.5" />
+                        {badge.label}
+                      </Badge>
+                    );
+                  })}
+                  {hotelDetails?.highlights?.slice(0, 2).map((highlight, idx) => (
                     <Badge
-                      key={idx}
+                      key={`hl-${idx}`}
                       variant="secondary"
-                      className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                      className="text-[10px] px-1.5 py-0 h-5 bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
                     >
                       {highlight}
                     </Badge>
                   ))}
                 </div>
-              </section>
-            )}
+              )}
+            </div>
 
             {/* Quick Amenities Scan - Top amenities for quick overview */}
             {amenitiesForDisplay.length > 0 && (
@@ -686,130 +694,7 @@ const HotelDetailView = ({
               </section>
             )}
 
-            {/* Description - Collapsible for long text */}
-            {description && (
-              <section className="space-y-2">
-                <h3 className="font-semibold text-sm">À propos de cet établissement</h3>
-                <p className={cn(
-                  "text-sm text-muted-foreground leading-relaxed",
-                  !isDescExpanded && description.length > 300 && "line-clamp-4"
-                )}>
-                  {description}
-                </p>
-                {description.length > 300 && (
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0 text-primary"
-                    onClick={() => setIsDescExpanded(!isDescExpanded)}
-                  >
-                    {isDescExpanded ? "Voir moins" : "Lire la suite"}
-                  </Button>
-                )}
-              </section>
-            )}
-
-            {/* Price summary card */}
-            <div className="rounded-xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-2xl font-bold text-primary">{hotel.pricePerNight}€</span>
-                  <span className="text-sm text-muted-foreground"> / nuit</span>
-                </div>
-                <Badge variant="secondary" className="text-xs">
-                  ~{pricePerNightPerPerson}€/pers/nuit
-                </Badge>
-              </div>
-              <Separator />
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{hotel.pricePerNight}€ × {nights} nuit{nights > 1 ? "s" : ""}</span>
-                  <span>{totalPrice}€</span>
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Taxes et frais inclus</span>
-                  <span>✓</span>
-                </div>
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <span className="font-semibold">Total du séjour</span>
-                <span className="text-xl font-bold text-primary">{totalPrice}€</span>
-              </div>
-            </div>
-
-            {/* Rating breakdown */}
-            {hotelDetails?.ratingBreakdown && (
-              <section className="space-y-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Star className="h-4 w-4 text-primary fill-primary" />
-                  Notes détaillées
-                </h3>
-                <div className="grid gap-2">
-                  {[
-                    { key: 'cleanliness', label: 'Propreté', value: hotelDetails.ratingBreakdown.cleanliness },
-                    { key: 'staff', label: 'Personnel', value: hotelDetails.ratingBreakdown.staff },
-                    { key: 'location', label: 'Emplacement', value: hotelDetails.ratingBreakdown.location },
-                    { key: 'facilities', label: 'Équipements', value: hotelDetails.ratingBreakdown.facilities },
-                    { key: 'comfort', label: 'Confort', value: hotelDetails.ratingBreakdown.comfort },
-                    { key: 'valueForMoney', label: 'Rapport qualité/prix', value: hotelDetails.ratingBreakdown.valueForMoney },
-                  ].filter(item => item.value != null).map((item) => (
-                    <div key={item.key} className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground w-32 shrink-0">{item.label}</span>
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${(item.value! / 10) * 100}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium w-8 text-right">{item.value!.toFixed(1)}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Amenities - Categorized or flat */}
-            {(hotelDetails?.amenitiesByCategory || amenitiesForDisplay.length > 0) && (
-              <section className="space-y-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Check className="h-4 w-4 text-primary" />
-                  Ce que propose cet établissement
-                </h3>
-
-                {hotelDetails?.amenitiesByCategory ? (
-                  /* Categorized view with collapsible sections */
-                  <div className="space-y-2">
-                    {CATEGORY_ORDER.map(category => (
-                      <AmenityCategorySection
-                        key={category}
-                        category={category}
-                        amenities={hotelDetails.amenitiesByCategory![category]}
-                        defaultOpen={category === 'connectivity' || category === 'food'}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  /* Fallback: flat grid for legacy data */
-                  <div className="grid grid-cols-2 gap-2">
-                    {amenitiesForDisplay.map((amenity) => {
-                      const Icon = amenityIcons[amenity.code] || Check;
-                      return (
-                        <div
-                          key={amenity.code}
-                          className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 text-sm"
-                        >
-                          <Icon className="h-4 w-4 text-primary shrink-0" />
-                          <span>{amenity.label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* Room options from API - All visible with expandable details */}
+            {/* Room options - Moved up for better UX (decision info first) */}
             {rooms.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -854,35 +739,131 @@ const HotelDetailView = ({
               </section>
             )}
 
-            {/* Check-in info - Only show if we have real data from API */}
-            {policies && (policies.checkIn || policies.checkOut || policies.cancellation) && (
-              <section className="space-y-3">
+            {/* Description - Collapsible for long text */}
+            {description && (
+              <section className="space-y-2">
+                <h3 className="font-semibold text-sm">À propos de cet établissement</h3>
+                <p className={cn(
+                  "text-sm text-muted-foreground leading-relaxed",
+                  !isDescExpanded && description.length > 300 && "line-clamp-4"
+                )}>
+                  {description}
+                </p>
+                {description.length > 300 && (
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-primary"
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                  >
+                    {isDescExpanded ? "Voir moins" : "Lire la suite"}
+                  </Button>
+                )}
+              </section>
+            )}
+
+            {/* Rating breakdown - Collapsible */}
+            {hotelDetails?.ratingBreakdown && (
+              <section className="rounded-xl border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsRatingBreakdownOpen(!isRatingBreakdownOpen)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <Star className="h-4 w-4 text-primary fill-primary" />
+                    Notes détaillées
+                  </h3>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isRatingBreakdownOpen && "rotate-180")} />
+                </button>
+                {isRatingBreakdownOpen && (
+                  <div className="px-4 pb-4 grid gap-2">
+                    {[
+                      { key: 'cleanliness', label: 'Propreté', value: hotelDetails.ratingBreakdown.cleanliness },
+                      { key: 'staff', label: 'Personnel', value: hotelDetails.ratingBreakdown.staff },
+                      { key: 'location', label: 'Emplacement', value: hotelDetails.ratingBreakdown.location },
+                      { key: 'facilities', label: 'Équipements', value: hotelDetails.ratingBreakdown.facilities },
+                      { key: 'comfort', label: 'Confort', value: hotelDetails.ratingBreakdown.comfort },
+                      { key: 'valueForMoney', label: 'Rapport qualité/prix', value: hotelDetails.ratingBreakdown.valueForMoney },
+                    ].filter(item => item.value != null).map((item) => (
+                      <div key={item.key} className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground w-32 shrink-0">{item.label}</span>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${(item.value! / 10) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium w-8 text-right">{item.value!.toFixed(1)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Amenities - Collapsible section */}
+            {(hotelDetails?.amenitiesByCategory || amenitiesForDisplay.length > 0) && (
+              <section className="rounded-xl border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsAmenitiesOpen(!isAmenitiesOpen)}
+                  className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                >
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <Check className="h-4 w-4 text-primary" />
+                    Ce que propose cet établissement
+                    <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 ml-1">
+                      {amenitiesForDisplay.length}
+                    </Badge>
+                  </h3>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isAmenitiesOpen && "rotate-180")} />
+                </button>
+
+                {isAmenitiesOpen && (
+                  <div className="px-4 pb-4">
+                    {hotelDetails?.amenitiesByCategory ? (
+                      /* Categorized view with collapsible sections */
+                      <div className="space-y-2">
+                        {CATEGORY_ORDER.map(category => (
+                          <AmenityCategorySection
+                            key={category}
+                            category={category}
+                            amenities={hotelDetails.amenitiesByCategory![category]}
+                            defaultOpen={category === 'connectivity' || category === 'food'}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      /* Fallback: flat grid for legacy data */
+                      <div className="grid grid-cols-2 gap-2">
+                        {amenitiesForDisplay.map((amenity) => {
+                          const Icon = amenityIcons[amenity.code] || Check;
+                          return (
+                            <div
+                              key={amenity.code}
+                              className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/50 text-sm"
+                            >
+                              <Icon className="h-4 w-4 text-primary shrink-0" />
+                              <span>{amenity.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Cancellation policy - Only shown if available (check-in/out in Hero Card) */}
+            {policies?.cancellation && (
+              <section className="rounded-lg bg-muted/50 p-4 space-y-2">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-primary" />
-                  Informations pratiques
+                  <Shield className="h-4 w-4 text-primary" />
+                  Politique d'annulation
                 </h3>
-                {(policies.checkIn || policies.checkOut) && (
-                  <div className="grid grid-cols-2 gap-3">
-                    {policies.checkIn && (
-                      <div className="rounded-lg bg-muted/50 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">Check-in</p>
-                        <p className="font-semibold text-sm">À partir de {policies.checkIn}</p>
-                      </div>
-                    )}
-                    {policies.checkOut && (
-                      <div className="rounded-lg bg-muted/50 p-3 text-center">
-                        <p className="text-xs text-muted-foreground">Check-out</p>
-                        <p className="font-semibold text-sm">Jusqu'à {policies.checkOut}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-                {policies.cancellation && (
-                  <div className="rounded-lg bg-muted/50 p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Politique d'annulation</p>
-                    <p className="text-sm">{policies.cancellation}</p>
-                  </div>
-                )}
+                <p className="text-sm text-muted-foreground">{policies.cancellation}</p>
               </section>
             )}
 
