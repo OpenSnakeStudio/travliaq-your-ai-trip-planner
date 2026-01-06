@@ -1156,9 +1156,10 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
       // Build filters
       // IMPORTANT: do not send budget filters by default (they can wipe results).
-      // Only send priceMin/priceMax if user explicitly modified the budget.
+      // We only apply priceMin/priceMax when user chose a custom budget.
       const filters: any = {};
-      if (activeAccommodation.userModifiedBudget) {
+      const shouldApplyBudget = activeAccommodation.budgetPreset === "custom";
+      if (shouldApplyBudget) {
         if (activeAccommodation.priceMin > 0) filters.priceMin = activeAccommodation.priceMin;
         if (activeAccommodation.priceMax < 1000) filters.priceMax = activeAccommodation.priceMax;
       }
