@@ -14,16 +14,15 @@ interface HotelDetailViewProps {
   onBook?: () => void;
 }
 
-// Mock extra images for demo (in real app, these would come from hotel data)
-const getMockImages = (hotel: HotelResult): string[] => {
-  const baseImages = [
-    hotel.imageUrl,
-    "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop",
-    "https://images.unsplash.com/photo-1595576508898-0ad5c879a061?w=800&h=600&fit=crop",
-  ];
-  return baseImages;
+// Get hotel images - use real images from hotel data if available, fallback to main image only
+const getHotelImages = (hotel: HotelResult): string[] => {
+  // If hotel has additional images property (from API details), use them
+  const hotelWithImages = hotel as HotelResult & { images?: string[] };
+  if (hotelWithImages.images && hotelWithImages.images.length > 0) {
+    return hotelWithImages.images;
+  }
+  // Otherwise just return the main image
+  return hotel.imageUrl ? [hotel.imageUrl] : [];
 };
 
 // Amenity icons mapping with better coverage
@@ -41,15 +40,15 @@ const amenityIcons: Record<string, typeof Wifi> = {
   tv: Tv,
 };
 
-// Generate mock description based on hotel name and stars
+// Get hotel description - use real description if available
 const getHotelDescription = (hotel: HotelResult): string => {
-  const starDescriptions: Record<number, string> = {
-    5: "Établissement d'exception offrant un service impeccable et des prestations haut de gamme. Chaque détail a été pensé pour vous offrir une expérience inoubliable, du lobby majestueux aux chambres somptueusement décorées.",
-    4: "Un hébergement de qualité supérieure alliant confort moderne et service attentionné. Idéalement situé, cet établissement vous garantit un séjour agréable avec toutes les commodités nécessaires.",
-    3: "Un excellent rapport qualité-prix dans un cadre accueillant. Les chambres sont confortables et bien équipées, parfaites pour les voyageurs à la recherche d'un hébergement pratique.",
-    2: "Une option économique et fonctionnelle pour les voyageurs. Les chambres sont propres et bien entretenues, offrant l'essentiel pour un séjour reposant.",
-  };
-  return starDescriptions[hotel.stars || 3] || starDescriptions[3];
+  // Use real description from API if available
+  const hotelWithDesc = hotel as HotelResult & { description?: string };
+  if (hotelWithDesc.description) {
+    return hotelWithDesc.description;
+  }
+  // No fallback description - return empty if no real data
+  return "";
 };
 
 // Get highlights based on hotel features
@@ -71,7 +70,7 @@ const HotelDetailView = ({
   onBack,
   onBook,
 }: HotelDetailViewProps) => {
-  const images = getMockImages(hotel);
+  const images = getHotelImages(hotel);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);

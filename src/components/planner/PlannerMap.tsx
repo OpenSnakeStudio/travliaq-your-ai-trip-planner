@@ -23,30 +23,6 @@ export interface DestinationClickEvent {
   screenPosition: { x: number; y: number };
 }
 
-// Mock data for pins
-const mockFlightPins: MapPin[] = [
-  { id: "cdg", type: "flights", lat: 49.0097, lng: 2.5479, title: "Paris CDG", subtitle: "Aéroport", price: 0 },
-  { id: "jfk", type: "flights", lat: 40.6413, lng: -73.7781, title: "New York JFK", subtitle: "Aéroport", price: 450 },
-  { id: "lhr", type: "flights", lat: 51.47, lng: -0.4543, title: "Londres Heathrow", subtitle: "Aéroport", price: 120 },
-  { id: "bcn", type: "flights", lat: 41.2974, lng: 2.0833, title: "Barcelone", subtitle: "Aéroport", price: 85 },
-  { id: "fco", type: "flights", lat: 41.8003, lng: 12.2389, title: "Rome Fiumicino", subtitle: "Aéroport", price: 95 },
-];
-
-const mockActivityPins: MapPin[] = [
-  { id: "eiffel", type: "activities", lat: 48.8584, lng: 2.2945, title: "Tour Eiffel", subtitle: "Monument", rating: 4.7, image: "https://images.unsplash.com/photo-1511739001486-6bfe10ce65f4?w=400", duration: "2h" },
-  { id: "louvre", type: "activities", lat: 48.8606, lng: 2.3376, title: "Musée du Louvre", subtitle: "Musée", rating: 4.8, image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400", duration: "4h" },
-  { id: "sacre", type: "activities", lat: 48.8867, lng: 2.3431, title: "Sacré-Cœur", subtitle: "Monument", rating: 4.6, image: "https://images.unsplash.com/photo-1550340499-a6c60fc8287c?w=400", duration: "1h30" },
-  { id: "versailles", type: "activities", lat: 48.8049, lng: 2.1204, title: "Château de Versailles", subtitle: "Château", rating: 4.7, image: "https://images.unsplash.com/photo-1551410224-699683e15636?w=400", duration: "5h" },
-];
-
-const mockStayPins: MapPin[] = [
-  { id: "hotel1", type: "stays", lat: 48.8698, lng: 2.3075, title: "Le Meurice", subtitle: "5 étoiles", price: 850, rating: 4.9 },
-  { id: "hotel2", type: "stays", lat: 48.8652, lng: 2.3218, title: "Hôtel Costes", subtitle: "5 étoiles", price: 520, rating: 4.7 },
-  { id: "hotel3", type: "stays", lat: 48.8566, lng: 2.3522, title: "Hôtel de Ville B&B", subtitle: "3 étoiles", price: 120, rating: 4.3 },
-  { id: "hotel4", type: "stays", lat: 48.8738, lng: 2.295, title: "Renaissance Arc", subtitle: "4 étoiles", price: 280, rating: 4.5 },
-];
-
-
 // City coordinates mapping (common cities with French & English variants)
 const cityCoordinates: Record<string, { lat: number; lng: number }> = {
   // France
@@ -1300,17 +1276,6 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         .addTo(map.current!);
 
       markersRef.current.push(marker);
-    });
-
-    // Clean up old mock flight routes
-    mockFlightPins.forEach((destPin) => {
-      const sourceId = `route-${destPin.id}`;
-      if (map.current?.getSource(sourceId)) {
-        if (map.current.getLayer(sourceId)) {
-          map.current.removeLayer(sourceId);
-        }
-        map.current.removeSource(sourceId);
-      }
     });
   }, [activeTab, mapLoaded, selectedPinId, onPinClick, getPinsForTab]);
 
