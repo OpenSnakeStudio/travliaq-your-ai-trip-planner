@@ -406,8 +406,8 @@ export async function searchHotels(
       cached: response.data?.cache_info?.cached,
     });
 
-    // Cache successful response
-    if (response.data.success) {
+    // Cache successful response (avoid caching empty results to prevent "sticky" no-result UI)
+    if (response.data.success && (response.data.results?.hotels?.length ?? 0) > 0) {
       setInCache('search', params, response.data);
     }
 

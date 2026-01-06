@@ -91,4 +91,33 @@ describe('hotelService.searchHotels (request building)', () => {
     const [, body] = postMock.mock.calls[0];
     expect(body.filters).toEqual({ priceMax: 250, minRating: 8 });
   });
+
+  it('does not cache empty successful search responses (prevents sticky 0-results)', async () => {
+    // Ensure cache is empty
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith('travliaq_hotel_search_'))
+      .forEach((k) => localStorage.removeItem(k));
+
+    postMock.mockResolvedValueOnce({
+      data: {
+        success: true,
+        results: { hotels: [], total: 0, hasMore: false },
+        filters_applied: {},
+        cache_info: { cached: false },
+      },
+    });
+
+    const params: HotelSearchParams = {
+      city: 'Paris',
+      countryCode: 'FR',
+      checkIn: '2026-02-15',
+      checkOut: '2026-02-17',
+      rooms: [{ adults: 2 }],
+    };
+
+    await searchHotels(params, false);
+
+    const cachedKeys = Object.keys(localStorage).filter((k) => k.startsWith('travliaq_hotel_search_'));
+    expect(cachedKeys.length).toBe(0);
+  });
 });
