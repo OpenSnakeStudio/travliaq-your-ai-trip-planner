@@ -1,5 +1,5 @@
 import { memo, useState, useCallback, useRef, useLayoutEffect } from "react";
-import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Sparkles, Shield, Heart, Utensils, Dumbbell, Bath, Tv, Phone, Snowflake, Loader2, Award, Flame, ThumbsUp, Building2, MapPinned } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Shield, Heart, Utensils, Dumbbell, Bath, Tv, Phone, Snowflake, Loader2, Award, Flame, ThumbsUp, MapPinned, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,19 +29,58 @@ const getHotelImages = (hotel: HotelResult): string[] => {
   return hotel.imageUrl ? [hotel.imageUrl] : [];
 };
 
-// Amenity icons mapping with better coverage
+// Extended amenity icons mapping with many more options
 const amenityIcons: Record<string, typeof Wifi> = {
+  // Connectivity
   wifi: Wifi,
+  "free wifi": Wifi,
+  "free_wifi": Wifi,
+  internet: Wifi,
+  // Parking
   parking: Car,
-  breakfast: Utensils,
-  pool: Waves,
-  gym: Dumbbell,
-  spa: Bath,
+  "free parking": Car,
+  "free_parking": Car,
+  // Food & Drinks
+  breakfast: Coffee,
+  "free breakfast": Coffee,
+  "free_breakfast": Coffee,
   restaurant: Utensils,
   bar: Coffee,
   roomservice: Phone,
+  "room service": Phone,
+  "room_service": Phone,
+  minibar: Coffee,
+  // Wellness & Fitness
+  pool: Waves,
+  "swimming pool": Waves,
+  "swimming_pool": Waves,
+  "indoor pool": Waves,
+  "outdoor pool": Waves,
+  gym: Dumbbell,
+  fitness: Dumbbell,
+  "fitness center": Dumbbell,
+  "fitness_center": Dumbbell,
+  spa: Bath,
+  sauna: Bath,
+  hammam: Bath,
+  massage: Bath,
+  wellness: Bath,
+  jacuzzi: Waves,
+  // Room amenities
   "air conditioning": Snowflake,
+  "air_conditioning": Snowflake,
+  ac: Snowflake,
+  aircon: Snowflake,
   tv: Tv,
+  "flat-screen tv": Tv,
+  "flat_screen_tv": Tv,
+  // Services
+  concierge: Phone,
+  reception: Clock,
+  "24h reception": Clock,
+  "24h_reception": Clock,
+  laundry: Check,
+  cleaning: Check,
 };
 
 // Badge icon mapping based on icon hint from API
@@ -167,8 +206,6 @@ const HotelDetailView = ({
 
   // Get policies from details API
   const policies = hotelDetails?.policies;
-  const checkInTime = policies?.checkIn || "15:00";
-  const checkOutTime = policies?.checkOut || "11:00";
 
   // Get amenities - prefer detailed amenities with labels
   const amenitiesForDisplay = hotelDetails?.amenities?.length
@@ -293,22 +330,13 @@ const HotelDetailView = ({
         </Button>
         <div className="flex-1 min-w-0">
           <h2 className="font-semibold text-sm truncate">{hotel.name}</h2>
-          <div className="flex items-center gap-1.5">
-            {hotel.stars && (
-              <div className="flex gap-0.5">
-                {Array.from({ length: hotel.stars }).map((_, i) => (
-                  <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-            )}
-            <span className="text-xs text-muted-foreground">·</span>
-            <div className="flex items-center gap-0.5">
-              <div className="bg-primary/10 text-primary px-1 py-0.5 rounded text-[10px] font-bold">
-                {hotel.rating.toFixed(1)}
-              </div>
-              <span className="text-xs text-muted-foreground">({hotel.reviewCount} avis)</span>
+          {hotel.stars && hotel.stars > 0 && (
+            <div className="flex gap-0.5 mt-0.5">
+              {Array.from({ length: hotel.stars }).map((_, i) => (
+                <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -412,24 +440,12 @@ const HotelDetailView = ({
             )}
 
             {/* Location summary - Simple, scannable */}
-            <div className="flex items-center gap-4 text-sm">
-              {hotel.distanceFromCenter && (
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  <span>À {hotel.distanceFromCenter} du centre</span>
-                </div>
-              )}
-              {hotel.stars && hotel.stars > 0 && (
-                <div className="flex items-center gap-1">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: hotel.stars }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {hotel.distanceFromCenter && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>À {hotel.distanceFromCenter} du centre-ville</span>
+              </div>
+            )}
 
             {/* Property badges from API */}
             {hotelDetails?.badges && hotelDetails.badges.length > 0 && (
@@ -591,66 +607,39 @@ const HotelDetailView = ({
                   </p>
                 )}
               </section>
-            ) : (
-              /* Fallback - default room info when no API details */
+            ) : null}
+
+            {/* Check-in info - Only show if we have real data from API */}
+            {policies && (policies.checkIn || policies.checkOut || policies.cancellation) && (
               <section className="space-y-3">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Bed className="h-4 w-4 text-primary" />
-                  Chambre disponible
+                  <Clock className="h-4 w-4 text-primary" />
+                  Informations pratiques
                 </h3>
-                <div className="rounded-xl border bg-card p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium">Chambre Double Standard</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">Vue sur la ville</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs shrink-0">Meilleur prix</Badge>
+                {(policies.checkIn || policies.checkOut) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {policies.checkIn && (
+                      <div className="rounded-lg bg-muted/50 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">Check-in</p>
+                        <p className="font-semibold text-sm">À partir de {policies.checkIn}</p>
+                      </div>
+                    )}
+                    {policies.checkOut && (
+                      <div className="rounded-lg bg-muted/50 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">Check-out</p>
+                        <p className="font-semibold text-sm">Jusqu'à {policies.checkOut}</p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      2 adultes max
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Bed className="h-3 w-3" />
-                      1 lit double
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Wifi className="h-3 w-3" />
-                      WiFi inclus
-                    </span>
+                )}
+                {policies.cancellation && (
+                  <div className="rounded-lg bg-muted/50 p-3">
+                    <p className="text-xs text-muted-foreground mb-1">Politique d'annulation</p>
+                    <p className="text-sm">{policies.cancellation}</p>
                   </div>
-                  <div className="flex items-center gap-2 pt-2 border-t text-xs">
-                    <Shield className="h-3.5 w-3.5 text-green-600" />
-                    <span className="text-green-600 font-medium">Annulation gratuite jusqu'à 24h avant</span>
-                  </div>
-                </div>
+                )}
               </section>
             )}
-
-            {/* Check-in info */}
-            <section className="space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                Informations pratiques
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg bg-muted/50 p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Check-in</p>
-                  <p className="font-semibold text-sm">À partir de {checkInTime}</p>
-                </div>
-                <div className="rounded-lg bg-muted/50 p-3 text-center">
-                  <p className="text-xs text-muted-foreground">Check-out</p>
-                  <p className="font-semibold text-sm">Jusqu'à {checkOutTime}</p>
-                </div>
-              </div>
-              {policies?.cancellation && (
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground mb-1">Politique d'annulation</p>
-                  <p className="text-sm">{policies.cancellation}</p>
-                </div>
-              )}
-            </section>
 
             {/* Why book here */}
             <section className="rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 p-4 space-y-2">
