@@ -63,7 +63,7 @@ export type SortBy =
   | 'rating' 
   | 'distance';
 
-// Search request params
+// Search request params (matches official API docs)
 export interface HotelSearchParams {
   city: string;              // Required - "Paris", "Lyon"
   countryCode: string;       // Required - "FR", "GB" (2 letters)
@@ -71,14 +71,10 @@ export interface HotelSearchParams {
   checkOut: string;          // Required - "2025-03-17"
   rooms: RoomOccupancy[];    // Required - Configuration des chambres
   
-  // Optional
-  lat?: number;              // Optional - Latitude (non utilisé par API)
-  lng?: number;              // Optional - Longitude (non utilisé par API)
+  // Optional (documented by API)
   currency?: string;         // "EUR" par défaut
-  locale?: string;           // "en" par défaut
   sort?: SortBy;             // "popularity" par défaut
   limit?: number;            // 30 par défaut (max 100)
-  offset?: number;           // 0 par défaut
   filters?: HotelFilters;    // Filtres optionnels
 }
 
@@ -372,7 +368,10 @@ export async function searchHotels(
   }
 
   try {
-    const requestBody = {
+    // Build request body with ONLY documented API parameters
+    // API docs: city, countryCode, checkIn, checkOut, rooms, currency, limit, sort, filters
+    // NOT supported: lat, lng, locale, offset
+    const requestBody: Record<string, unknown> = {
       city: params.city,
       countryCode: params.countryCode,
       checkIn: params.checkIn,
@@ -382,14 +381,18 @@ export async function searchHotels(
         childrenAges: r.childrenAges || [],
       })),
       currency: params.currency || 'EUR',
-      locale: params.locale || 'fr',
-      sort: params.sort || 'popularity',
       limit: params.limit || 30,
-      offset: params.offset || 0,
-      ...(params.filters && { filters: params.filters }),
-      ...(params.lat !== undefined && { lat: params.lat }),
-      ...(params.lng !== undefined && { lng: params.lng }),
     };
+
+    // Only add sort if specified (API defaults to popularity)
+    if (params.sort) {
+      requestBody.sort = params.sort;
+    }
+
+    // Only add filters if provided and non-empty
+    if (params.filters && Object.keys(params.filters).length > 0) {
+      requestBody.filters = params.filters;
+    }
 
     const url = forceRefresh
       ? '/api/v1/hotels/search?force_refresh=true'

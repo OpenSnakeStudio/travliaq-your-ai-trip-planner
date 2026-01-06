@@ -6,12 +6,9 @@ function sleep(ms: number) {
 }
 
 function sanitizeParamsForFallback(params: HotelSearchParams): HotelSearchParams {
-  // API docs say lat/lng are "non utilisé"; some backend combos can still behave oddly.
-  // Also, 'popularity' is the safest default sort.
-  // Only override when needed; keep other params identical.
-  const { lat, lng, ...rest } = params;
+  // Use 'popularity' as safest default sort (most reliable backend behavior).
   return {
-    ...rest,
+    ...params,
     sort: 'popularity',
   };
 }
@@ -20,8 +17,8 @@ function sanitizeParamsForFallback(params: HotelSearchParams): HotelSearchParams
  * Wrapper that retries when the first call returns 0 hotels.
  * Strategy:
  * 1) normal call
- * 2) if empty -> retry with sanitized params (no lat/lng + sort=popularity)
- * 3) if still empty -> retry sanitized params with force_refresh=true
+ * 2) if empty -> retry with sort=popularity
+ * 3) if still empty -> retry with force_refresh=true
  *
  * Note: we've seen cases where the backend returns an empty cached response first,
  * then returns data a moment later once cache warms. When the first response is
