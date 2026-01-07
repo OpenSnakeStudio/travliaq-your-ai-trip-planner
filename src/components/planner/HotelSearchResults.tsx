@@ -370,7 +370,19 @@ const HotelSearchResultsWrapper = (props: HotelSearchResultsProps) => {
 
   return (
     <HotelSearchResultsInner
-      {...props}
+      results={props.results}
+      isLoading={props.isLoading}
+      destination={props.destination}
+      nights={props.nights}
+      onBack={props.onBack}
+      onHotelSelect={props.onHotelSelect}
+      onHotelHover={props.onHotelHover}
+      selectedHotelId={props.selectedHotelId}
+      highlightedHotelId={props.highlightedHotelId}
+      onMapMove={props.onMapMove}
+      mapCenter={props.mapCenter}
+      onSearchInArea={props.onSearchInArea}
+      isSearchingInArea={props.isSearchingInArea}
       cardRefs={cardRefs}
       mapHoveredHotelId={mapHoveredHotelId}
     />
