@@ -7,6 +7,6 @@ export { InterestPicker } from "./InterestPicker";
 export { MustHavesSwitches } from "./MustHavesSwitches";
 export { TravelStyleSelector } from "./TravelStyleSelector";
 export { OccasionSelector } from "./OccasionSelector";
-export { ProfileCompletionCard } from "./ProfileCompletionCard";
 export { PreferenceSummary } from "./PreferenceSummary";
 export { DietaryPicker } from "./DietaryPicker";
+export { AIConflictBadge } from "./AIConflictBadge";

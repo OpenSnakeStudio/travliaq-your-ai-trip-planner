@@ -22,6 +22,7 @@ import { useMapState } from "@/hooks/useMapState";
 import { useFlightState } from "@/hooks/useFlightState";
 import { useDestinationPopup } from "@/hooks/useDestinationPopup";
 import { useChatIntegration } from "@/hooks/useChatIntegration";
+import { usePreferencesToHotels } from "@/hooks/usePreferencesToHotels";
 import eventBus from "@/lib/eventBus";
 
 export type TabType = "flights" | "activities" | "stays" | "preferences";

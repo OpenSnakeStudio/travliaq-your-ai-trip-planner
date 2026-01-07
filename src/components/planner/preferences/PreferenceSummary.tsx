@@ -187,9 +187,13 @@ Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`;
       {/* Content */}
       <div className="text-sm leading-relaxed min-h-[40px]">
         {isLoading ? (
-          <div className="flex items-center gap-2 text-primary/80">
-            <Sparkles className="h-4 w-4 animate-pulse" />
-            <span className="animate-pulse">Création de ton profil voyageur...</span>
+          <div className="flex items-center gap-2 text-primary/70">
+            <span className="flex gap-1">
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </span>
+            <span className="text-xs">Analyse de ton style...</span>
           </div>
         ) : summary ? (
           <p className="text-foreground/90">{summary}</p>

@@ -28,6 +28,7 @@ import {
   OccasionSelector,
   PreferenceSummary,
   DietaryPicker,
+  AIConflictBadge,
 } from "./preferences";
 import { eventBus } from "@/lib/eventBus";
 
@@ -268,12 +269,19 @@ const PreferencesPanel = () => {
 
   return (
     <div className="space-y-4" data-tour="preferences-panel">
+      {/* AI Conflict Badge */}
+      <AIConflictBadge 
+        onApply={(field, value) => {
+          updatePreferences({ [field]: value }, true);
+        }}
+      />
+
       {/* AI Detection Badge */}
       {preferences.detectedFromChat && (
         <div className="px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-blue-500" />
           <span className="text-xs text-blue-700 dark:text-blue-400">
-            Préférences détectées par l'IA depuis votre conversation
+            Préférences détectées par l'IA
           </span>
         </div>
       )}

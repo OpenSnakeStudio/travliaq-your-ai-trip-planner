@@ -1,6 +1,6 @@
 /**
  * Dietary Restrictions Picker Component
- * Grid of checkbox cards - always visible, no collapsible needed
+ * Compact grid of cards - smaller buttons, smaller icons
  */
 
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ const DIETARY_OPTIONS: DietaryOption[] = [
   { id: "pescatarian", label: "Pescétarien", icon: Fish, color: "hsl(190, 70%, 50%)" },
   { id: "lactose-free", label: "Sans lactose", icon: Milk, color: "hsl(210, 50%, 60%)" },
   { id: "no-eggs", label: "Sans œufs", icon: Egg, color: "hsl(50, 60%, 55%)" },
-  { id: "no-nuts", label: "Sans fruits à coque", icon: Nut, color: "hsl(25, 60%, 45%)" },
+  { id: "no-nuts", label: "Fruits à coque", icon: Nut, color: "hsl(25, 60%, 45%)" },
 ];
 
 interface DietaryPickerProps {
@@ -32,7 +32,7 @@ interface DietaryPickerProps {
 
 export function DietaryPicker({ selected, onToggle }: DietaryPickerProps) {
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-1.5">
       {DIETARY_OPTIONS.map((option) => {
         const Icon = option.icon;
         const isSelected = selected.includes(option.id);
@@ -42,28 +42,28 @@ export function DietaryPicker({ selected, onToggle }: DietaryPickerProps) {
             key={option.id}
             onClick={() => onToggle(option.id)}
             className={cn(
-              "relative flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all",
+              "relative flex flex-col items-center gap-1 p-2 rounded-lg transition-all",
               isSelected
-                ? "bg-primary/15 border-2 border-primary shadow-sm"
-                : "bg-muted/30 border-2 border-transparent hover:bg-muted/50 hover:border-muted"
+                ? "bg-primary/15 border border-primary shadow-sm"
+                : "bg-muted/30 border border-transparent hover:bg-muted/50"
             )}
           >
             {/* Selected checkmark */}
             {isSelected && (
-              <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                <Check className="w-2.5 h-2.5 text-primary-foreground" strokeWidth={3} />
+              <div className="absolute top-1 right-1 w-3 h-3 rounded-full bg-primary flex items-center justify-center">
+                <Check className="w-2 h-2 text-primary-foreground" strokeWidth={3} />
               </div>
             )}
             
-            {/* Icon with color */}
+            {/* Smaller icon */}
             <Icon 
-              className="w-5 h-5" 
+              className="w-4 h-4" 
               style={{ color: isSelected ? option.color : "hsl(var(--muted-foreground))" }}
             />
             
-            {/* Full Label - NO truncation */}
+            {/* Full label - no truncation */}
             <span className={cn(
-              "text-[10px] font-medium text-center leading-tight",
+              "text-[9px] font-medium text-center leading-tight",
               isSelected ? "text-foreground" : "text-muted-foreground"
             )}>
               {option.label}
