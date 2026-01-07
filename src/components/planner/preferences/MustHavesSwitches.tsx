@@ -1,6 +1,6 @@
 /**
  * Must-Haves Switches Component
- * Toggle switches for essential travel requirements
+ * Compact toggle switches for essential travel requirements
  */
 
 import { Switch } from "@/components/ui/switch";
@@ -10,35 +10,14 @@ import type { MustHaves } from "@/contexts/PreferenceMemoryContext";
 interface MustHaveConfig {
   key: keyof MustHaves;
   label: string;
-  description: string;
   emoji: string;
 }
 
 const MUST_HAVES_CONFIG: MustHaveConfig[] = [
-  {
-    key: "accessibilityRequired",
-    label: "Accessibilité PMR",
-    description: "Hébergements et activités accessibles",
-    emoji: "♿",
-  },
-  {
-    key: "highSpeedWifi",
-    label: "WiFi Haut Débit",
-    description: "Essentiel pour le travail à distance",
-    emoji: "📶",
-  },
-  {
-    key: "petFriendly",
-    label: "Accepte animaux",
-    description: "Voyage avec votre compagnon",
-    emoji: "🐾",
-  },
-  {
-    key: "familyFriendly",
-    label: "Adapté enfants",
-    description: "Activités et hébergements famille",
-    emoji: "👨‍👩‍👧",
-  },
+  { key: "accessibilityRequired", label: "Accessibilité PMR", emoji: "♿" },
+  { key: "highSpeedWifi", label: "WiFi Haut Débit", emoji: "📶" },
+  { key: "petFriendly", label: "Accepte animaux", emoji: "🐾" },
+  { key: "familyFriendly", label: "Adapté enfants", emoji: "👶" },
 ];
 
 interface MustHavesSwitchesProps {
@@ -49,32 +28,29 @@ interface MustHavesSwitchesProps {
 
 export function MustHavesSwitches({ mustHaves, onToggle, compact = false }: MustHavesSwitchesProps) {
   return (
-    <div className={cn("space-y-3", compact && "space-y-2")}>
-      {MUST_HAVES_CONFIG.map(({ key, label, description, emoji }) => (
-        <div
+    <div className={cn("grid grid-cols-2 gap-2", compact && "gap-1.5")}>
+      {MUST_HAVES_CONFIG.map(({ key, label, emoji }) => (
+        <button
           key={key}
+          onClick={() => onToggle(key)}
           className={cn(
-            "flex items-center justify-between p-3 rounded-xl transition-colors",
+            "flex items-center justify-between p-2.5 rounded-xl transition-colors text-left",
             mustHaves[key] 
-              ? "bg-primary/10 border border-primary/30" 
-              : "bg-muted/30 border border-border/30",
+              ? "bg-primary/15 border-2 border-primary" 
+              : "bg-muted/30 border border-border/30 hover:bg-muted/50",
             compact && "p-2"
           )}
         >
-          <div className="flex items-center gap-3">
-            <span className={cn("text-lg", compact && "text-base")}>{emoji}</span>
-            <div>
-              <div className="text-sm font-medium text-foreground">{label}</div>
-              {!compact && (
-                <div className="text-[10px] text-muted-foreground">{description}</div>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <span className="text-base">{emoji}</span>
+            <span className="text-xs font-medium text-foreground">{label}</span>
           </div>
           <Switch
             checked={mustHaves[key]}
             onCheckedChange={() => onToggle(key)}
+            className="scale-75"
           />
-        </div>
+        </button>
       ))}
     </div>
   );
