@@ -1,6 +1,6 @@
 /**
  * Travel Style Selector Component
- * Visual cards for selecting travel style (solo, couple, family, etc.)
+ * Compact single-line travel style selection (no pet option)
  */
 
 import { cn } from "@/lib/utils";
@@ -10,15 +10,13 @@ interface TravelStyleOption {
   id: TravelStyle;
   label: string;
   emoji: string;
-  description: string;
 }
 
 const TRAVEL_STYLES: TravelStyleOption[] = [
-  { id: "solo", label: "Solo", emoji: "🧑", description: "Aventure en solitaire" },
-  { id: "couple", label: "Couple", emoji: "💑", description: "Escapade romantique" },
-  { id: "family", label: "Famille", emoji: "👨‍👩‍👧", description: "Voyage en famille" },
-  { id: "friends", label: "Amis", emoji: "👯", description: "Entre amis" },
-  { id: "pet", label: "Avec animal", emoji: "🐾", description: "Avec votre compagnon" },
+  { id: "solo", label: "Solo", emoji: "🧑" },
+  { id: "couple", label: "Couple", emoji: "💑" },
+  { id: "family", label: "Famille", emoji: "👨‍👩‍👧" },
+  { id: "friends", label: "Amis", emoji: "👯" },
 ];
 
 interface TravelStyleSelectorProps {
@@ -29,10 +27,7 @@ interface TravelStyleSelectorProps {
 
 export function TravelStyleSelector({ selected, onSelect, compact = false }: TravelStyleSelectorProps) {
   return (
-    <div className={cn(
-      "grid gap-2",
-      compact ? "grid-cols-5" : "grid-cols-2 sm:grid-cols-3"
-    )}>
+    <div className="flex items-center gap-2">
       {TRAVEL_STYLES.map((style) => {
         const isSelected = selected === style.id;
         
@@ -41,28 +36,20 @@ export function TravelStyleSelector({ selected, onSelect, compact = false }: Tra
             key={style.id}
             onClick={() => onSelect(style.id)}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all",
-              compact && "p-2 gap-1",
+              "relative flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all flex-1 justify-center",
+              compact && "px-2 py-1.5",
               isSelected
-                ? "bg-primary/10 text-primary border-2 border-primary shadow-sm"
+                ? "bg-primary/15 text-primary border-2 border-primary shadow-sm"
                 : "bg-muted/30 text-muted-foreground border border-border/30 hover:bg-muted/50 hover:text-foreground"
             )}
           >
-            <span className={cn("text-2xl", compact && "text-xl")}>{style.emoji}</span>
+            <span className={cn("text-lg", compact && "text-base")}>{style.emoji}</span>
             <span className={cn(
               "text-xs font-medium",
               compact && "text-[10px]"
             )}>
               {style.label}
             </span>
-            {!compact && (
-              <span className="text-[10px] text-muted-foreground text-center">
-                {style.description}
-              </span>
-            )}
-            {isSelected && (
-              <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary" />
-            )}
           </button>
         );
       })}
