@@ -146,6 +146,78 @@ const accommodationExtractionTool = {
   }
 };
 
+// Tool definition for extracting travel preferences from user message
+const preferenceExtractionTool = {
+  type: "function",
+  function: {
+    name: "update_preferences",
+    description: "Détecte les préférences de voyage de l'utilisateur. À appeler dès qu'un indice est détecté dans la conversation. Cette extraction est TOUJOURS active.",
+    parameters: {
+      type: "object",
+      properties: {
+        travelStyle: {
+          type: "string",
+          enum: ["solo", "couple", "family", "friends"],
+          description: "Style de voyage: 'avec ma femme/mari/copine'=couple, 'en famille'=family, 'entre potes/amis'=friends, 'solo/seul'=solo"
+        },
+        pace: {
+          type: "string",
+          enum: ["relaxed", "moderate", "intense"],
+          description: "Rythme souhaité: 'se reposer/chill/détente/relax'=relaxed, 'équilibré'=moderate, 'tout visiter/intensif/actif'=intense"
+        },
+        chillVsIntense: {
+          type: "number",
+          description: "Niveau d'intensité 0-100: 'repos/chill'=20, 'équilibré'=50, 'actif/sportif/tout voir'=80"
+        },
+        cityVsNature: {
+          type: "number",
+          description: "Préférence urbain/nature 0-100: 'ville/musées/shopping'=20, 'mixte'=50, 'nature/plage/montagne'=80"
+        },
+        ecoVsLuxury: {
+          type: "number",
+          description: "Niveau budget 0-100: 'pas cher/budget serré'=20, 'confortable'=50, 'luxe/haut de gamme'=85"
+        },
+        touristVsLocal: {
+          type: "number",
+          description: "Préférence touristique/authentique 0-100: 'sites touristiques'=20, 'mixte'=50, 'hors des sentiers battus/local/authentique'=80"
+        },
+        interests: {
+          type: "array",
+          items: { type: "string" },
+          description: "Centres d'intérêt détectés: 'gastronomie/restaurants'=food, 'musées/art'=culture, 'plage'=beach, 'randonnée'=nature, 'sport'=sport, 'spa/bien-être'=wellness, 'shopping', 'vie nocturne/bars'=nightlife, 'aventure'"
+        },
+        occasion: {
+          type: "string",
+          enum: ["honeymoon", "anniversary", "birthday", "vacation", "workation"],
+          description: "Occasion du voyage: 'lune de miel'=honeymoon, 'anniversaire de mariage'=anniversary, 'anniversaire'=birthday, 'vacances'=vacation, 'télétravail/digital nomad'=workation"
+        },
+        needsWifi: {
+          type: "boolean",
+          description: "'télétravail', 'digital nomad', 'besoin de wifi', 'travailler'=true"
+        },
+        petFriendly: {
+          type: "boolean",
+          description: "'avec mon chien/chat', 'animal de compagnie'=true"
+        },
+        accessibilityRequired: {
+          type: "boolean",
+          description: "'fauteuil roulant', 'mobilité réduite', 'handicap'=true"
+        },
+        familyFriendly: {
+          type: "boolean",
+          description: "'avec enfants', 'adapté aux enfants', 'activités pour enfants'=true"
+        },
+        dietaryRestrictions: {
+          type: "array",
+          items: { type: "string" },
+          description: "Restrictions alimentaires: 'végétarien', 'végan', 'halal', 'casher', 'sans gluten', 'sans lactose', 'allergies'"
+        }
+      },
+      required: []
+    }
+  }
+};
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -326,7 +398,7 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
         ],
         temperature: 0.7,
         max_tokens: 500,
-        tools: [flightExtractionTool, accommodationExtractionTool],
+        tools: [flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool],
         tool_choice: "auto",
         stream: false, // First call is never streamed to handle tools
       }),
@@ -348,6 +420,7 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
     let content = choice?.message?.content || "";
     let flightData = null;
     let accommodationData = null;
+    let preferencesData = null;
 
     // Check if the model called any extraction tools
     if (choice?.message?.tool_calls) {
@@ -387,6 +460,25 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
             }
           } catch (e) {
             console.error("Failed to parse accommodation data:", e);
+          }
+        }
+        
+        if (toolCall.function?.name === "update_preferences") {
+          try {
+            preferencesData = JSON.parse(toolCall.function.arguments);
+            console.log("Preferences data extracted:", preferencesData);
+            
+            // Filter out empty values
+            preferencesData = Object.fromEntries(
+              Object.entries(preferencesData).filter(([_, v]) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0))
+            );
+            
+            // Only return preferencesData if it has actual content
+            if (Object.keys(preferencesData).length === 0) {
+              preferencesData = null;
+            }
+          } catch (e) {
+            console.error("Failed to parse preferences data:", e);
           }
         }
       }
@@ -443,9 +535,15 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
             if (flightData) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "flightData", flightData })}\n\n`));
             }
-            // Send accommodationData as a special event
-            if (accommodationData) {
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "accommodationData", accommodationData })}\n\n`));
+          if (accommodationData) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "accommodationData", accommodationData })}\n\n`));
+          }
+          if (preferencesData) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "preferencesData", preferencesData })}\n\n`));
+          }
+            // Send preferencesData as a special event
+            if (preferencesData) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "preferencesData", preferencesData })}\n\n`));
             }
 
             const reader = followUpResponse.body!.getReader();
@@ -553,9 +651,9 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
       content = "Désolé, je n'ai pas pu générer de réponse.";
     }
 
-    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData);
+    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData, "preferencesData:", preferencesData);
 
-    return new Response(JSON.stringify({ content, flightData, accommodationData }), {
+    return new Response(JSON.stringify({ content, flightData, accommodationData, preferencesData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

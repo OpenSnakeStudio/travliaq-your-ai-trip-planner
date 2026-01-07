@@ -1,9 +1,9 @@
 /**
- * Preferences Panel v2 - Hub Central Intelligent
- * Features: Compact design, style equalizer, AI-generated summary
+ * Preferences Panel v2.1 - Hub Central Intelligent
+ * Features: Compact design, style equalizer, AI-generated summary, quick presets
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -12,10 +12,14 @@ import {
   Sliders,
   Shield,
   Utensils,
-  Users
+  Users,
+  Heart,
+  PartyPopper,
+  Briefcase,
+  Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePreferenceMemory } from "@/contexts/PreferenceMemoryContext";
+import { usePreferenceMemory, type TravelStyle, type StyleAxes, type TripContext } from "@/contexts/PreferenceMemoryContext";
 import { 
   StyleEqualizer, 
   InterestPicker, 
@@ -24,8 +28,112 @@ import {
   OccasionSelector,
   PreferenceSummary,
   DietaryPicker,
+  ProfileCompletionCard,
 } from "./preferences";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { eventBus } from "@/lib/eventBus";
+
+// ============================================================================
+// QUICK PRESETS
+// ============================================================================
+
+interface PresetConfig {
+  id: string;
+  label: string;
+  emoji: string;
+  icon: React.ElementType;
+  travelStyle: TravelStyle;
+  styleAxes: Partial<StyleAxes>;
+  interests: string[];
+  occasion?: TripContext["occasion"];
+  color: string;
+}
+
+const QUICK_PRESETS: PresetConfig[] = [
+  {
+    id: "romantic",
+    label: "Escapade romantique",
+    emoji: "💑",
+    icon: Heart,
+    travelStyle: "couple",
+    styleAxes: { chillVsIntense: 30, ecoVsLuxury: 75, cityVsNature: 50 },
+    interests: ["food", "wellness", "culture"],
+    occasion: "honeymoon",
+    color: "rose",
+  },
+  {
+    id: "adventure",
+    label: "Aventure entre amis",
+    emoji: "🎒",
+    icon: PartyPopper,
+    travelStyle: "friends",
+    styleAxes: { chillVsIntense: 80, ecoVsLuxury: 35, cityVsNature: 70, touristVsLocal: 65 },
+    interests: ["adventure", "nature", "nightlife"],
+    occasion: "vacation",
+    color: "orange",
+  },
+  {
+    id: "family",
+    label: "Vacances en famille",
+    emoji: "👨‍👩‍👧‍👦",
+    icon: Users,
+    travelStyle: "family",
+    styleAxes: { chillVsIntense: 40, ecoVsLuxury: 55, cityVsNature: 45 },
+    interests: ["culture", "beach", "nature"],
+    occasion: "vacation",
+    color: "blue",
+  },
+  {
+    id: "workation",
+    label: "Workation",
+    emoji: "💻",
+    icon: Briefcase,
+    travelStyle: "solo",
+    styleAxes: { chillVsIntense: 45, ecoVsLuxury: 60, cityVsNature: 25 },
+    interests: ["workation", "food", "culture"],
+    occasion: "workation",
+    color: "violet",
+  },
+];
+
+interface QuickPresetsProps {
+  onApply: (preset: PresetConfig) => void;
+}
+
+function QuickPresets({ onApply }: QuickPresetsProps) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {QUICK_PRESETS.map((preset) => {
+        const Icon = preset.icon;
+        return (
+          <button
+            key={preset.id}
+            onClick={() => onApply(preset)}
+            className={cn(
+              "flex items-center gap-2 p-2.5 rounded-xl border border-border/50 text-left transition-all",
+              "hover:border-primary/50 hover:bg-primary/5 group"
+            )}
+          >
+            <div className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center text-lg",
+              preset.color === "rose" && "bg-rose-100 dark:bg-rose-900/30",
+              preset.color === "orange" && "bg-orange-100 dark:bg-orange-900/30",
+              preset.color === "blue" && "bg-blue-100 dark:bg-blue-900/30",
+              preset.color === "violet" && "bg-violet-100 dark:bg-violet-900/30",
+            )}>
+              {preset.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">{preset.label}</p>
+              <p className="text-[10px] text-muted-foreground">Remplir en 1 clic</p>
+            </div>
+            <Zap className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // ============================================================================
 // STEP INDICATOR
@@ -125,12 +233,40 @@ const PreferencesPanel = () => {
     setOccasion,
     toggleDietaryRestriction,
     getProfileCompletion,
+    updatePreferences,
+    getPreferenceSummary,
   } = usePreferenceMemory();
 
   const [currentStep, setCurrentStep] = useState<Step>("base");
   const [showDietary, setShowDietary] = useState(false);
+  const [showPresets, setShowPresets] = useState(true);
 
   const completion = getProfileCompletion();
+
+  const handleApplyPreset = useCallback((preset: PresetConfig) => {
+    // Apply all preset values at once
+    updatePreferences({
+      travelStyle: preset.travelStyle,
+      styleAxes: {
+        ...preferences.styleAxes,
+        ...preset.styleAxes,
+      },
+      interests: preset.interests,
+      tripContext: {
+        ...preferences.tripContext,
+        occasion: preset.occasion,
+      },
+    }, false);
+    
+    setShowPresets(false);
+    
+    // Emit event for other widgets
+    eventBus.emit("preferences:updated", {
+      preferences: { ...preferences, ...preset },
+      source: "manual",
+      fields: ["travelStyle", "styleAxes", "interests", "occasion"],
+    });
+  }, [preferences, updatePreferences]);
 
   return (
     <div className="space-y-4" data-tour="preferences-panel">
@@ -139,7 +275,7 @@ const PreferencesPanel = () => {
         <div className="px-3 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-blue-500" />
           <span className="text-xs text-blue-700 dark:text-blue-400">
-            Préférences mises à jour par l'IA
+            Préférences détectées par l'IA depuis votre conversation
           </span>
         </div>
       )}
@@ -154,6 +290,25 @@ const PreferencesPanel = () => {
       {/* STEP 1: BASE */}
       {currentStep === "base" && (
         <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Quick Presets (collapsible) */}
+          {showPresets && completion < 30 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-500" />
+                  Démarrage rapide
+                </span>
+                <button
+                  onClick={() => setShowPresets(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Fermer
+                </button>
+              </div>
+              <QuickPresets onApply={handleApplyPreset} />
+            </div>
+          )}
+
           {/* Travel Style - Single line */}
           <div data-tour="preferences-widget">
             <SectionHeader icon={Users} title="Voyageurs" />
@@ -171,6 +326,14 @@ const PreferencesPanel = () => {
               onSelect={setOccasion}
             />
           </div>
+
+          {/* Profile Completion Card with AI Summary */}
+          <ProfileCompletionCard
+            completion={completion}
+            summary={getPreferenceSummary()}
+            lastUpdated={preferences.lastUpdated}
+            detectedFromChat={preferences.detectedFromChat}
+          />
 
           {/* AI Summary */}
           <PreferenceSummary />
