@@ -28,9 +28,7 @@ import {
   OccasionSelector,
   PreferenceSummary,
   DietaryPicker,
-  ProfileCompletionCard,
 } from "./preferences";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { eventBus } from "@/lib/eventBus";
 
 // ============================================================================
@@ -327,15 +325,7 @@ const PreferencesPanel = () => {
             />
           </div>
 
-          {/* Profile Completion Card with AI Summary */}
-          <ProfileCompletionCard
-            completion={completion}
-            summary={getPreferenceSummary()}
-            lastUpdated={preferences.lastUpdated}
-            detectedFromChat={preferences.detectedFromChat}
-          />
-
-          {/* AI Summary */}
+          {/* AI Summary - only this, no ProfileCompletionCard */}
           <PreferenceSummary />
 
           {/* Next step hint */}
@@ -394,33 +384,24 @@ const PreferencesPanel = () => {
             />
           </div>
 
-          {/* Dietary Restrictions (Collapsible) */}
-          <Collapsible open={showDietary} onOpenChange={setShowDietary}>
-            <CollapsibleTrigger asChild>
-              <button className="w-full flex items-center justify-between py-2 px-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
-                <div className="flex items-center gap-2">
-                  <Utensils className="w-3.5 h-3.5" />
-                  <span>Restrictions alimentaires</span>
-                  {preferences.dietaryRestrictions.length > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">
-                      {preferences.dietaryRestrictions.length}
-                    </span>
-                  )}
-                </div>
-                {showDietary ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2">
-              <DietaryPicker
-                selected={preferences.dietaryRestrictions}
-                onToggle={toggleDietaryRestriction}
-              />
-            </CollapsibleContent>
-          </Collapsible>
+          {/* Dietary Restrictions - ALWAYS visible, no collapsible */}
+          <div>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="h-5 w-5 rounded-md bg-primary/10 flex items-center justify-center">
+                <Utensils className="h-3 w-3 text-primary" />
+              </div>
+              <span className="text-xs font-medium text-foreground">Restrictions alimentaires</span>
+              {preferences.dietaryRestrictions.length > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">
+                  {preferences.dietaryRestrictions.length}
+                </span>
+              )}
+            </div>
+            <DietaryPicker
+              selected={preferences.dietaryRestrictions}
+              onToggle={toggleDietaryRestriction}
+            />
+          </div>
 
           {/* Final summary in Base step - show button to go back */}
           <button

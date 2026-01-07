@@ -151,10 +151,7 @@ Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`;
     return (
       <div className={cn("text-xs text-muted-foreground italic", className)}>
         {isLoading ? (
-          <span className="flex items-center gap-1">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            Analyse en cours...
-          </span>
+          <span className="text-primary/70">✨ Génération du profil...</span>
         ) : summary ? (
           <span className="line-clamp-2">{summary}</span>
         ) : (
@@ -188,11 +185,11 @@ Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`;
       </div>
 
       {/* Content */}
-      <div className="text-sm leading-relaxed">
+      <div className="text-sm leading-relaxed min-h-[40px]">
         {isLoading ? (
-          <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>L'IA analyse ton style...</span>
+          <div className="flex items-center gap-2 text-primary/80">
+            <Sparkles className="h-4 w-4 animate-pulse" />
+            <span className="animate-pulse">Création de ton profil voyageur...</span>
           </div>
         ) : summary ? (
           <p className="text-foreground/90">{summary}</p>
