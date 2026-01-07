@@ -18,6 +18,13 @@ export interface TripPreferences {
     min: number;
     max: number;
   };
+  // New: Style Axes from PreferenceMemoryContext
+  styleAxes?: {
+    chillVsIntense?: number;      // 0-100 (0=Chill, 100=Intense)
+    cityVsNature?: number;        // 0-100 (0=Ville, 100=Nature)
+    ecoVsLuxury?: number;         // 0-100 (0=Éco, 100=Luxe)
+    touristVsLocal?: number;      // 0-100 (0=Touristique, 100=Authentique)
+  };
 }
 
 /**
@@ -65,8 +72,36 @@ export function autoSelectFilters(preferences: TripPreferences): SmartFilters {
     });
   });
 
+  // === 1b. STYLE AXES → ADDITIONAL CATEGORIES ===
+  const styleAxes = preferences.styleAxes;
+  
+  if (styleAxes?.cityVsNature !== undefined) {
+    // Nature preference (>60) → nature, outdoor, adventure
+    if (styleAxes.cityVsNature > 60) {
+      ["nature", "adventure", "outdoor"].forEach(cat => {
+        if (!selectedCategories.includes(cat)) selectedCategories.push(cat);
+      });
+    }
+    // City preference (<40) → culture, nightlife, shopping
+    else if (styleAxes.cityVsNature < 40) {
+      ["culture", "nightlife", "shopping"].forEach(cat => {
+        if (!selectedCategories.includes(cat)) selectedCategories.push(cat);
+      });
+    }
+  }
+  
+  if (styleAxes?.touristVsLocal !== undefined) {
+    // Authentic preference (>60) → local experiences, food tours
+    if (styleAxes.touristVsLocal > 60) {
+      ["food", "local-experiences"].forEach(cat => {
+        if (!selectedCategories.includes(cat)) selectedCategories.push(cat);
+      });
+    }
+  }
+
   // === 2. COMFORT LEVEL → PRICE RANGE ===
-  const comfortLevel = preferences.comfortLevel ?? 50;
+  // Use styleAxes.ecoVsLuxury if available, else fallback to comfortLevel
+  const comfortLevel = styleAxes?.ecoVsLuxury ?? preferences.comfortLevel ?? 50;
   let priceRange: [number, number] = [0, 500];
 
   if (comfortLevel < 25) {

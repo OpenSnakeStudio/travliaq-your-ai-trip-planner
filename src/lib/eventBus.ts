@@ -106,6 +106,20 @@ export type PlannerEvents = {
     attraction: ViatorActivity;
   };
   
+  // Preferences-related (NEW)
+  "preferences:updated": { 
+    preferences: Record<string, unknown>; 
+    source: "chat" | "manual";
+    fields: string[];
+  };
+  "preferences:applyToHotels": void;
+  "preferences:applyToActivities": void;
+  "preferences:conflictDetected": { 
+    field: string; 
+    chatValue: unknown; 
+    manualValue: unknown;
+  };
+  
   // Chat interactions
   "chat:injectMessage": { role: "assistant" | "system"; text: string };
   "chat:offerFlightSearch": { from: string; to: string };
