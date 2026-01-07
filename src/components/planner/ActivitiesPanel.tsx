@@ -796,46 +796,46 @@ const ActivitiesPanel = () => {
               </Button>
 
               {/* Map Bounds Search Button */}
-              <Button
-                onClick={handleMapBoundsSearch}
-                disabled={!activeCity || isSearching}
-                variant="outline"
-                className="w-full gap-2"
-                size="lg"
-              >
-                {isSearching ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Recherche...
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="h-4 w-4" />
-                    Rechercher dans cette zone
-                    <Compass className="h-3.5 w-3.5 ml-auto text-muted-foreground" />
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleMapBoundsSearch}
+                  disabled={!activeCity || isSearching}
+                  variant="outline"
+                  className="flex-1 h-9 text-xs gap-1.5"
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Recherche...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="h-3.5 w-3.5" />
+                      Ici
+                    </>
+                  )}
+                </Button>
 
-              {/* Recommendations Button */}
-              <Button
-                onClick={handleLoadRecommendations}
-                variant="outline"
-                disabled={!activeCity || activityState.isLoadingRecommendations}
-                className="w-full gap-2"
-              >
-                {activityState.isLoadingRecommendations ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Chargement...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4" />
-                    Suggestions IA
-                  </>
-                )}
-              </Button>
+                {/* Recommendations Button */}
+                <Button
+                  onClick={handleLoadRecommendations}
+                  variant="outline"
+                  disabled={!activeCity || activityState.isLoadingRecommendations}
+                  className="flex-1 h-9 text-xs gap-1.5"
+                >
+                  {activityState.isLoadingRecommendations ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Chargement...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Suggestions IA
+                    </>
+                  )}
+                </Button>
+              </div>
 
               {/* Planned Activities Preview */}
               {plannedActivities.length > 0 && (
