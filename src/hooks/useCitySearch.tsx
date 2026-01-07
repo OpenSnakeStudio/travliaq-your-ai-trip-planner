@@ -41,19 +41,25 @@ export const useCitySearch = (searchTerm: string, enabled: boolean = true) => {
           .order("name")
           .limit(50);
 
-        if (error) throw error;
-        return data as City[];
-      }
+      if (error) throw error;
+      return data as City[];
+    }
 
-      // Normaliser le terme de recherche
-      const normalizedSearch = debouncedSearch.toLowerCase().trim();
+    // Escape PostgREST special characters to prevent filter injection
+    const escapePostgRESTFilter = (str: string): string => {
+      return str.replace(/[,().\\]/g, '\\$&');
+    };
 
-      // Recherche avec ILIKE pour correspondance partielle
-      // On recherche dans name, country et search_text
-      const { data, error } = await supabase
-        .from("cities")
-        .select("*")
-        .or(`name.ilike.%${normalizedSearch}%,country.ilike.%${normalizedSearch}%,search_text.ilike.%${normalizedSearch}%`)
+    // Normaliser et échapper le terme de recherche
+    const rawSearch = debouncedSearch.toLowerCase().trim();
+    const normalizedSearch = escapePostgRESTFilter(rawSearch);
+
+    // Recherche avec ILIKE pour correspondance partielle
+    // On recherche dans name, country et search_text
+    const { data, error } = await supabase
+      .from("cities")
+      .select("*")
+      .or(`name.ilike.%${normalizedSearch}%,country.ilike.%${normalizedSearch}%,search_text.ilike.%${normalizedSearch}%`)
         .order("name")
         .limit(50);
 
@@ -64,15 +70,15 @@ export const useCitySearch = (searchTerm: string, enabled: boolean = true) => {
         const normalizedNameA = a.name.toLowerCase();
         const normalizedNameB = b.name.toLowerCase();
         
-        // Priorité 1 : correspondance exacte
-        const aExact = normalizedNameA === normalizedSearch;
-        const bExact = normalizedNameB === normalizedSearch;
+        // Priorité 1 : correspondance exacte (use rawSearch, not escaped version)
+        const aExact = normalizedNameA === rawSearch;
+        const bExact = normalizedNameB === rawSearch;
         if (aExact && !bExact) return -1;
         if (!aExact && bExact) return 1;
         
         // Priorité 2 : commence par le terme de recherche
-        const aStarts = normalizedNameA.startsWith(normalizedSearch);
-        const bStarts = normalizedNameB.startsWith(normalizedSearch);
+        const aStarts = normalizedNameA.startsWith(rawSearch);
+        const bStarts = normalizedNameB.startsWith(rawSearch);
         if (aStarts && !bStarts) return -1;
         if (!aStarts && bStarts) return 1;
         
