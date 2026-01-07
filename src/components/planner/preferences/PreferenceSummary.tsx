@@ -1,11 +1,10 @@
 /**
  * Preference Summary Component
- * Displays an AI-generated summary of user preferences
- * Updates automatically when preferences change
+ * Displays an engaging AI-generated summary with fixed height placeholder
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePreferenceMemory, type TripPreferences } from "@/contexts/PreferenceMemoryContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,10 +21,11 @@ function getPreferencesHash(prefs: TripPreferences): string {
     interests: prefs.interests.sort(),
     mustHaves: prefs.mustHaves,
     occasion: prefs.tripContext.occasion,
-    comfort: prefs.comfortLevel,
   });
   return btoa(key).slice(0, 20);
 }
+
+const PLACEHOLDER_TEXT = "✨ Complétez vos préférences et je vous décrirai votre profil de voyageur unique...";
 
 export function PreferenceSummary({ className }: PreferenceSummaryProps) {
   const { memory: { preferences } } = usePreferenceMemory();
@@ -42,7 +42,11 @@ export function PreferenceSummary({ className }: PreferenceSummaryProps) {
     lastHashRef.current = hash;
     
     // Don't generate if profile is too empty
-    if (prefs.interests.length === 0 && prefs.travelStyle === "couple") {
+    const hasInterests = prefs.interests.length > 0;
+    const hasOccasion = !!prefs.tripContext.occasion;
+    const hasStyleChange = Object.values(prefs.styleAxes).some(v => v !== 50);
+    
+    if (!hasInterests && !hasOccasion && !hasStyleChange) {
       setSummary("");
       return;
     }
@@ -54,19 +58,20 @@ export function PreferenceSummary({ className }: PreferenceSummaryProps) {
         body: {
           messages: [{
             role: "user",
-            content: `Génère un résumé de profil voyageur en 1-2 phrases maximum (40 mots max). Sois concis et naturel.
+            content: `Tu es un copywriter créatif. Génère un résumé de profil voyageur FUN et ENGAGEANT en 2 phrases maximum (50 mots max).
 
-Profil:
-- Voyageurs: ${prefs.travelStyle}
-- Rythme: ${prefs.styleAxes.chillVsIntense < 40 ? "détente" : prefs.styleAxes.chillVsIntense > 60 ? "intense" : "modéré"}
-- Environnement: ${prefs.styleAxes.cityVsNature < 40 ? "urbain" : prefs.styleAxes.cityVsNature > 60 ? "nature" : "mixte"}
-- Budget: ${prefs.styleAxes.ecoVsLuxury < 40 ? "économique" : prefs.styleAxes.ecoVsLuxury > 60 ? "luxe" : "confortable"}
-- Style: ${prefs.styleAxes.touristVsLocal < 40 ? "touristique" : prefs.styleAxes.touristVsLocal > 60 ? "authentique" : "équilibré"}
-- Intérêts: ${prefs.interests.join(", ") || "non définis"}
-- Occasion: ${prefs.tripContext.occasion || "vacances"}
-- Besoins: ${Object.entries(prefs.mustHaves).filter(([, v]) => v).map(([k]) => k).join(", ") || "aucun spécifique"}
+STYLE : Utilise des expressions vivantes, des touches d'humour subtil, et donne envie de partir ! Sois enthousiaste mais pas excessif.
 
-Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`
+Profil à décrire :
+- Type: ${prefs.travelStyle === "solo" ? "aventurier solo" : prefs.travelStyle === "couple" ? "duo romantique" : prefs.travelStyle === "family" ? "tribu familiale" : "bande d'amis"}
+- Énergie: ${prefs.styleAxes.chillVsIntense < 35 ? "mode zen, tranquille" : prefs.styleAxes.chillVsIntense > 65 ? "hyperactif, veut tout voir" : "équilibré"}
+- Terrain: ${prefs.styleAxes.cityVsNature < 35 ? "citadin dans l'âme" : prefs.styleAxes.cityVsNature > 65 ? "amoureux de grands espaces" : "polyvalent"}
+- Budget: ${prefs.styleAxes.ecoVsLuxury < 35 ? "malin et économe" : prefs.styleAxes.ecoVsLuxury > 65 ? "amateur de belles choses" : "raisonnable"}
+- Vibe: ${prefs.styleAxes.touristVsLocal < 35 ? "touriste assumé" : prefs.styleAxes.touristVsLocal > 65 ? "chasseur d'authenticité" : "curieux de tout"}
+- Passions: ${prefs.interests.length > 0 ? prefs.interests.join(", ") : "à découvrir"}
+- Occasion: ${prefs.tripContext.occasion || "évasion"}
+
+IMPORTANT : Réponds UNIQUEMENT avec le résumé, sans guillemets, sans "Voici", sans préfixe. Commence directement par une phrase accrocheuse.`
           }],
           mode: "quick",
         },
@@ -90,7 +95,7 @@ Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`
     
     debounceRef.current = setTimeout(() => {
       generateSummary(preferences);
-    }, 1500); // Wait 1.5s after last change
+    }, 2000); // Wait 2s after last change
 
     return () => {
       if (debounceRef.current) {
@@ -99,39 +104,42 @@ Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`
     };
   }, [preferences, generateSummary]);
 
-  // Don't show anything if no summary yet
-  if (!summary && !isLoading) return null;
+  const displayText = summary || PLACEHOLDER_TEXT;
+  const isEmpty = !summary;
 
   return (
     <div className={cn(
-      "relative p-3 rounded-xl bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 border border-primary/20",
+      "relative p-3 rounded-xl border min-h-[72px]",
+      isEmpty 
+        ? "bg-muted/20 border-dashed border-muted-foreground/30" 
+        : "bg-gradient-to-br from-primary/5 via-accent/5 to-secondary/5 border-primary/20",
       className
     )}>
-      <div className="flex items-start gap-2">
-        <div className="h-6 w-6 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+      <div className="flex items-start gap-2.5">
+        <div className={cn(
+          "h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0",
+          isEmpty ? "bg-muted/40" : "bg-primary/15"
+        )}>
           {isLoading ? (
-            <RefreshCw className="h-3.5 w-3.5 text-primary animate-spin" />
+            <Wand2 className="h-4 w-4 text-primary animate-pulse" />
           ) : (
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <Sparkles className={cn("h-4 w-4", isEmpty ? "text-muted-foreground" : "text-primary")} />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-wide text-primary font-medium mb-1">
-            Votre profil voyageur
+          <div className={cn(
+            "text-[10px] uppercase tracking-wider font-semibold mb-1",
+            isEmpty ? "text-muted-foreground" : "text-primary"
+          )}>
+            {isEmpty ? "Votre profil" : "Votre profil voyageur"}
           </div>
-          {isLoading ? (
-            <div className="h-10 flex items-center">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                <div className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: "300ms" }} />
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-foreground/80 leading-relaxed">
-              {summary}
-            </p>
-          )}
+          <p className={cn(
+            "text-sm leading-relaxed transition-all duration-300",
+            isEmpty ? "text-muted-foreground/70 italic" : "text-foreground",
+            isLoading && "opacity-50"
+          )}>
+            {isLoading ? "Je prépare votre description..." : displayText}
+          </p>
         </div>
       </div>
     </div>
