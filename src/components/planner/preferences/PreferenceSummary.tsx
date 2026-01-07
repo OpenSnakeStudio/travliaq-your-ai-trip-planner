@@ -54,6 +54,7 @@ function getAuthLabel(touristVsLocal: number): string {
 }
 
 const PLACEHOLDER = "Affinez vos préférences pour découvrir votre profil voyageur unique...";
+const CHANGES_THRESHOLD = 3; // Regenerate every N changes to optimize LLM costs
 
 export function PreferenceSummary({ className, compact = false }: PreferenceSummaryProps) {
   const { getPreferences, getProfileCompletion } = usePreferenceMemory();
@@ -61,21 +62,35 @@ export function PreferenceSummary({ className, compact = false }: PreferenceSumm
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const lastHashRef = useRef<string>("");
+  const changeCountRef = useRef<number>(0);
   const prefs = getPreferences();
   const completion = getProfileCompletion();
 
-  const generateSummary = useCallback(async () => {
+  const generateSummary = useCallback(async (force = false) => {
     const currentHash = getPreferencesHash(prefs);
     
+    // Track changes
+    if (currentHash !== lastHashRef.current) {
+      changeCountRef.current += 1;
+    }
+    
     // Skip if nothing changed
-    if (currentHash === lastHashRef.current) return;
+    if (currentHash === lastHashRef.current && !force) return;
     
     // Skip if profile too sparse (less than 20% complete)
     if (completion < 20) {
       setSummary("");
       return;
     }
-
+    
+    // Only regenerate every N changes (or on force/first time)
+    const isFirstGeneration = !lastHashRef.current || !summary;
+    if (!force && !isFirstGeneration && changeCountRef.current < CHANGES_THRESHOLD) {
+      return;
+    }
+    
+    // Reset counter and update hash
+    changeCountRef.current = 0;
     lastHashRef.current = currentHash;
     setIsLoading(true);
 
@@ -143,8 +158,7 @@ Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`;
   }, [generateSummary]);
 
   const handleRefresh = () => {
-    lastHashRef.current = ""; // Force regeneration
-    generateSummary();
+    generateSummary(true); // Force regeneration
   };
 
   if (compact) {
