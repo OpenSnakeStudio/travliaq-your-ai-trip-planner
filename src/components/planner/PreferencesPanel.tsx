@@ -23,6 +23,7 @@ import {
   TravelStyleSelector,
   OccasionSelector,
   PreferenceSummary,
+  DietaryPicker,
 } from "./preferences";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -237,6 +238,11 @@ const PreferencesPanel = () => {
                 <div className="flex items-center gap-2">
                   <Utensils className="w-3.5 h-3.5" />
                   <span>Restrictions alimentaires</span>
+                  {preferences.dietaryRestrictions.length > 0 && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/20 text-primary">
+                      {preferences.dietaryRestrictions.length}
+                    </span>
+                  )}
                 </div>
                 {showDietary ? (
                   <ChevronUp className="w-4 h-4" />
@@ -246,31 +252,10 @@ const PreferencesPanel = () => {
               </button>
             </CollapsibleTrigger>
             <CollapsibleContent className="pt-2">
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { id: "vegetarian", label: "Végétarien" },
-                  { id: "vegan", label: "Végan" },
-                  { id: "halal", label: "Halal" },
-                  { id: "kosher", label: "Kosher" },
-                  { id: "gluten-free", label: "Sans gluten" },
-                ].map((diet) => {
-                  const isSelected = preferences.dietaryRestrictions.includes(diet.id);
-                  return (
-                    <button
-                      key={diet.id}
-                      onClick={() => toggleDietaryRestriction(diet.id)}
-                      className={cn(
-                        "px-2.5 py-1 rounded-full text-xs font-medium transition-all",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
-                      )}
-                    >
-                      {diet.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <DietaryPicker
+                selected={preferences.dietaryRestrictions}
+                onToggle={toggleDietaryRestriction}
+              />
             </CollapsibleContent>
           </Collapsible>
 
