@@ -227,6 +227,7 @@ const TravelPlanner = () => {
                                   }, 350); // After padding animation (300ms) + buffer
                                 }
                               }}
+                              mapCenter={mapCenter}
                               onMapMove={(center, zoom) => {
                                 setMapCenter(center);
                                 setMapZoom(zoom);

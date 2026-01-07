@@ -29,8 +29,10 @@ import type { RoomOccupancy, HotelResult as ApiHotelResult, HotelDetails } from 
 import { getHotelDetails } from "@/services/hotels/hotelService";
 import { searchHotelsWithRetry } from "@/services/hotels/searchHotelsWithRetry";
 import { buildHotelFilters } from "./hotels/buildHotelFilters";
+import { supabase } from "@/integrations/supabase/client";
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
+  mapCenter?: [number, number];
 }
 
 // Destination input with autocomplete (cities only, 3 chars min)
@@ -589,7 +591,7 @@ const ACCESSIBILITY_OPTIONS: { id: string; label: string; icon: React.ElementTyp
   { id: "Animaux acceptés", label: "Animaux", icon: Dog },
 ];
 
-const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
+const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) => {
   const { 
     memory: travelMemory, 
     updateTravelers,
@@ -627,6 +629,7 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isSearchingInArea, setIsSearchingInArea] = useState(false);
   const [hoveredHotel, setHoveredHotel] = useState<HotelResult | null>(null);
   
   // Use persisted hotel search state from context
@@ -1310,6 +1313,84 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
     eventBus.emit("hotels:results", { hotels: [] });
   };
 
+  // Handle search in area - uses reverse geocode to get city from map center
+  const handleSearchInArea = async (lat: number, lng: number) => {
+    if (!activeAccommodation?.checkIn || !activeAccommodation?.checkOut) {
+      toastError("Dates manquantes", "Veuillez d'abord sélectionner des dates");
+      return;
+    }
+
+    setIsSearchingInArea(true);
+
+    try {
+      // Step 1: Reverse geocode to get city name
+      const { data: geoData, error: geoError } = await supabase.functions.invoke('reverse-geocode', {
+        body: { lat, lon: lng }
+      });
+
+      if (geoError || !geoData?.city) {
+        console.warn('[AccommodationPanel] Reverse geocode failed:', geoError);
+        toastError("Localisation impossible", "Impossible de déterminer la ville à cet emplacement");
+        return;
+      }
+
+      const { city, countryCode } = geoData;
+      
+      logger.info("Search in area: geocoded", {
+        category: LogCategory.API,
+        metadata: { lat, lng, city, countryCode },
+      });
+
+      // Step 2: Update destination in memory
+      const country = geoData.country || "";
+      setDestination(city, country, countryCode?.toUpperCase() || activeAccommodation.countryCode, lat, lng);
+
+      // Step 3: Search hotels in this new city
+      const roomsConfig =
+        memory.customRooms.length > 0
+          ? memory.customRooms
+          : [{ adults: 2, children: 0, childrenAges: [] as number[], id: "default" }];
+
+      const apiRooms: RoomOccupancy[] = roomsConfig.map((r) => ({
+        adults: r.adults,
+        childrenAges: r.childrenAges.length > 0 ? r.childrenAges : undefined,
+      }));
+
+      const filters = buildHotelFilters(activeAccommodation);
+
+      const requestParams = {
+        city,
+        countryCode: countryCode?.toUpperCase() || activeAccommodation.countryCode,
+        checkIn: format(activeAccommodation.checkIn, "yyyy-MM-dd"),
+        checkOut: format(activeAccommodation.checkOut, "yyyy-MM-dd"),
+        rooms: apiRooms,
+        currency: "EUR" as const,
+        locale: "fr" as const,
+        filters,
+        sort: "popularity" as const,
+        limit: 50,
+      };
+
+      const response = await searchHotelsWithRetry(requestParams);
+
+      if (response.success && response.results.hotels.length > 0) {
+        const results = response.results.hotels.map(mapApiToHotelResult);
+        setHotelSearchResults(results);
+        eventBus.emit("hotels:results", { hotels: results });
+        toastInfo("Nouvelle zone", `${results.length} hébergements trouvés à ${city}`);
+      } else {
+        setHotelSearchResults([]);
+        eventBus.emit("hotels:results", { hotels: [] });
+        toastInfo("Aucun résultat", `Aucun hôtel trouvé à ${city}`);
+      }
+    } catch (error) {
+      console.error('[AccommodationPanel] Search in area failed:', error);
+      toastError("Erreur", "Impossible de rechercher dans cette zone");
+    } finally {
+      setIsSearchingInArea(false);
+    }
+  };
+
   // Handle hotel selection - show detail view and load full details from API
   const handleHotelSelect = async (hotel: HotelResult) => {
     setSelectedHotelId(hotel.id);
@@ -1464,6 +1545,9 @@ const AccommodationPanel = ({ onMapMove }: AccommodationPanelProps) => {
         onHotelHover={handleHotelHover}
         selectedHotelId={selectedHotelId}
         onMapMove={onMapMove}
+        mapCenter={mapCenter}
+        onSearchInArea={handleSearchInArea}
+        isSearchingInArea={isSearchingInArea}
       />
     );
   }

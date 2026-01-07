@@ -35,6 +35,7 @@ export type { FlightRoutePoint, CountrySelectionEvent };
 interface PlannerPanelProps {
   activeTab: TabType;
   onMapMove: (center: [number, number], zoom: number) => void;
+  mapCenter?: [number, number];
   layout?: "sidebar" | "overlay";
   onClose?: () => void;
   isVisible?: boolean;
@@ -62,7 +63,7 @@ const tabLabels: Record<TabType, string> = {
   preferences: "Préférences",
 };
 
-const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, onAskAirportConfirmation, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected, onSearchReady, triggerSearch, onSearchTriggered, confirmedMultiAirports, onConfirmedMultiAirportsConsumed }: PlannerPanelProps) => {
+const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, onAskAirportConfirmation, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected, onSearchReady, triggerSearch, onSearchTriggered, confirmedMultiAirports, onConfirmedMultiAirportsConsumed }: PlannerPanelProps) => {
   if (!isVisible && layout === "overlay") return null;
 
   const wrapperClass =
@@ -105,7 +106,7 @@ const PlannerPanel = ({ activeTab, onMapMove, layout = "sidebar", onClose, isVis
           </div>
           <div data-tour="widget-stays" style={{ display: activeTab === "stays" ? "block" : "none" }}>
             <Suspense fallback={<AccommodationPanelSkeleton />}>
-              <AccommodationPanel onMapMove={onMapMove} />
+              <AccommodationPanel onMapMove={onMapMove} mapCenter={mapCenter} />
             </Suspense>
           </div>
           <div data-tour="widget-preferences" style={{ display: activeTab === "preferences" ? "block" : "none" }}>
