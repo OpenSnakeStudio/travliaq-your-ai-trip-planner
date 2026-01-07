@@ -1904,25 +1904,41 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Search Button */}
-      <Button
-        data-testid="hotels-search-button"
-        onClick={handleSearch}
-        disabled={!canSearch || isSearching}
-        className="w-full h-10 text-sm font-medium"
-      >
-        {isSearching ? (
-          <>
-            <div className="h-4 w-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-2" />
-            Recherche...
-          </>
-        ) : (
-          <>
-            <Search className="h-4 w-4 mr-2" />
-            Rechercher
-          </>
-        )}
-      </Button>
+      {/* Search Buttons */}
+      <div className="flex gap-2">
+        <Button
+          data-testid="hotels-search-button"
+          onClick={handleSearch}
+          disabled={!canSearch || isSearching}
+          className="flex-1 h-9 text-xs font-medium"
+        >
+          {isSearching ? (
+            <>
+              <div className="h-3.5 w-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-1.5" />
+              Recherche...
+            </>
+          ) : (
+            <>
+              <Search className="h-3.5 w-3.5 mr-1.5" />
+              Rechercher
+            </>
+          )}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => mapCenter && handleSearchInArea(mapCenter[1], mapCenter[0])}
+          disabled={!mapCenter || !activeAccommodation?.checkIn || !activeAccommodation?.checkOut || isSearchingInArea}
+          className="h-9 text-xs font-medium gap-1.5 px-3"
+          title="Rechercher des hébergements au centre de la carte"
+        >
+          {isSearchingInArea ? (
+            <div className="h-3.5 w-3.5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+          ) : (
+            <MapPin className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden sm:inline">Ici</span>
+        </Button>
+      </div>
     </div>
   );
 };
