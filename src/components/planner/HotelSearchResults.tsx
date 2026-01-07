@@ -1,5 +1,5 @@
 import { memo, useRef, useEffect, useState } from "react";
-import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, Eye } from "lucide-react";
+import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, Eye, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,9 @@ interface HotelSearchResultsProps {
   selectedHotelId?: string | null;
   highlightedHotelId?: string | null;
   onMapMove?: (center: [number, number], zoom: number) => void;
+  mapCenter?: [number, number];
+  onSearchInArea?: (lat: number, lng: number) => void;
+  isSearchingInArea?: boolean;
 }
 
 // Amenity icon mapping
@@ -388,6 +391,9 @@ const HotelSearchResultsInner = memo(({
   onMapMove,
   cardRefs,
   mapHoveredHotelId,
+  mapCenter,
+  onSearchInArea,
+  isSearchingInArea,
 }: HotelSearchResultsProps & {
   cardRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   mapHoveredHotelId: string | null;
@@ -423,7 +429,7 @@ const HotelSearchResultsInner = memo(({
 
   return (
     <div className="flex flex-col h-full animate-enter">
-      {/* Sticky header with back button */}
+      {/* Sticky header with back button and search in area */}
       <div
         ref={headerRef}
         className={cn(
@@ -448,6 +454,24 @@ const HotelSearchResultsInner = memo(({
               {isLoading ? "Recherche en cours..." : `${results.length} résultats · ${nights} nuit${nights > 1 ? "s" : ""}`}
             </p>
           </div>
+          {/* Search in this area button */}
+          {mapCenter && onSearchInArea && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onSearchInArea(mapCenter[1], mapCenter[0])}
+              disabled={isSearchingInArea || isLoading}
+              className="h-7 text-xs gap-1.5 shrink-0"
+            >
+              {isSearchingInArea ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Search className="h-3 w-3" />
+              )}
+              <span className="hidden sm:inline">Rechercher ici</span>
+              <span className="sm:hidden">Ici</span>
+            </Button>
+          )}
         </div>
       </div>
 
