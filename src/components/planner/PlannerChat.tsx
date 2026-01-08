@@ -5,6 +5,8 @@
  * - useChatStream: Handles SSE streaming responses
  * - useChatWidgetFlow: Manages widget interactions
  * - useChatImperativeHandlers: Provides methods exposed via ref
+ * - useChatScroll: Intelligent scroll management
+ * - useChatMapContext: Map/widget context for LLM
  */
 
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
@@ -12,6 +14,8 @@ import { Plane, History, User, Send } from "lucide-react";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
+import { useChatScroll } from "@/hooks/useChatScroll";
+import { useChatMapContext } from "@/hooks/useChatMapContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -33,6 +37,8 @@ import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers } from "./c
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
+import { SmartSuggestions } from "./chat/SmartSuggestions";
+import { ScrollToBottomButton } from "./chat/ScrollToBottomButton";
 
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
@@ -98,12 +104,27 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Refs
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const userMessageCountRef = useRef(0);
 
   // Custom hooks
   const { streamResponse, isStreaming } = useChatStream();
+  const mapContext = useChatMapContext();
+  
+  // Intelligent scroll management
+  const {
+    isUserScrolling,
+    showNewMessageIndicator,
+    newMessageCount,
+    scrollToBottom,
+    handleScroll,
+    markMessagesAsRead,
+  } = useChatScroll({
+    messagesCount: messages.length,
+    containerRef: messagesContainerRef,
+  });
 
   const widgetFlow = useChatWidgetFlow({
     memory,
@@ -177,14 +198,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
     setInput("");
   }, [activeSessionId, widgetFlow]);
 
-  // Auto-scroll
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Auto-scroll only when not manually scrolling
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isUserScrolling) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isUserScrolling]);
 
   // Show ready message when complete
   useEffect(() => {
@@ -334,6 +353,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
       // Build memory context
       const activityMemoryState = getActivityMemory();
       const preferenceMemoryState = getPreferenceMemory();
+      const visualContext = mapContext.buildContextString();
 
       const activityContext =
         typeof activityMemoryState?.totalActivities === 'number' && activityMemoryState.totalActivities > 0
@@ -349,7 +369,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
         messageId,
         {
           flightSummary: getMemorySummary(),
-          activityContext,
+          activityContext: activityContext + (visualContext ? `\n${visualContext}` : ""),
           preferenceContext,
           missingFields,
         },
@@ -474,7 +494,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto"
+      >
         <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
           {messages.filter((m) => !m.isHidden).map((m) => (
             <div key={m.id} className={cn("flex gap-4", m.role === "user" ? "flex-row-reverse" : "")}>
@@ -612,9 +636,40 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
         </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border bg-background p-4">
-        <div className="max-w-3xl mx-auto">
+      {/* Scroll to bottom button */}
+      <ScrollToBottomButton
+        show={isUserScrolling || showNewMessageIndicator}
+        newMessageCount={newMessageCount}
+        onClick={() => {
+          scrollToBottom();
+          markMessagesAsRead();
+        }}
+      />
+
+      {/* Smart Suggestions + Input */}
+      <div className="border-t border-border bg-background">
+        {/* Smart Suggestions */}
+        <SmartSuggestions
+          context={{
+            hasDestination: !!memory.arrival?.city,
+            hasDates: !!memory.departureDate,
+            hasTravelers: memory.passengers.adults > 0,
+            hasFlights: false,
+            hasHotels: mapContext.visibleHotels.length > 0,
+            destinationName: memory.arrival?.city,
+            currentTab: mapContext.activeTab,
+            visibleFlightsCount: mapContext.visiblePrices.filter(p => p.type === "flight").length,
+            visibleHotelsCount: mapContext.visibleHotels.length,
+            visibleActivitiesCount: mapContext.visibleActivities.length,
+          }}
+          onSuggestionClick={(message) => {
+            setInput(message);
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }}
+          isLoading={isLoading}
+        />
+        
+        <div className="max-w-3xl mx-auto p-4 pt-0">
           <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
             <textarea
               ref={inputRef}

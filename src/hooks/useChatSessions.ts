@@ -227,56 +227,95 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     };
   }, []);
 
-  // Save messages whenever they change
-  const saveMessages = useCallback(
-    (newMessages: StoredMessage[]) => {
-      if (!activeSessionId) return;
+  // Refs to prevent infinite loops
+  const isUpdatingRef = useRef(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sessionsRef = useRef<ChatSession[]>([]);
+  const messagesRef = useRef<StoredMessage[]>([]);
+
+  // Keep refs in sync
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  }, [sessions]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  // Save messages to localStorage only (no state updates here)
+  const saveMessagesToStorage = useCallback(
+    (newMessages: StoredMessage[], sessionId: string) => {
+      if (!sessionId) return;
 
       try {
-        // Save messages to session storage
-        localStorage.setItem(SESSION_PREFIX + activeSessionId, JSON.stringify(newMessages));
+        // Save messages
+        localStorage.setItem(SESSION_PREFIX + sessionId, JSON.stringify(newMessages));
 
-        // Update session metadata
-        setSessions((prev) => {
-          const updated = prev.map((s) =>
-            s.id === activeSessionId
-              ? {
-                  ...s,
-                  title: generateTitle(newMessages),
-                  preview: generatePreview(newMessages),
-                  updatedAt: Date.now(),
-                }
-              : s
-          );
-          localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(updated));
-          
-          // Schedule database sync
-          const currentSession = updated.find(s => s.id === activeSessionId);
-          if (user) {
-            scheduleSyncDebounced(activeSessionId, newMessages, currentSession);
-          }
-          
-          return updated;
-        });
+        // Update session metadata in localStorage
+        const currentSessions = sessionsRef.current;
+        const updated = currentSessions.map((s) =>
+          s.id === sessionId
+            ? {
+                ...s,
+                title: generateTitle(newMessages),
+                preview: generatePreview(newMessages),
+                updatedAt: Date.now(),
+              }
+            : s
+        );
+        localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(updated));
+
+        // Update sessions state without causing re-render loops
+        if (!isUpdatingRef.current) {
+          isUpdatingRef.current = true;
+          setSessions(updated);
+          sessionsRef.current = updated;
+          isUpdatingRef.current = false;
+        }
+
+        // Schedule database sync
+        if (user) {
+          const currentSession = updated.find((s) => s.id === sessionId);
+          scheduleSyncDebounced(sessionId, newMessages, currentSession);
+        }
       } catch (e) {
         console.error("Error saving messages:", e);
       }
     },
-    [activeSessionId, user, scheduleSyncDebounced]
+    [user, scheduleSyncDebounced]
   );
 
-  // Update messages and trigger save
+  // Update messages with debounced persistence
   const updateMessages = useCallback(
     (newMessages: StoredMessage[] | ((prev: StoredMessage[]) => StoredMessage[])) => {
       setMessages((prev) => {
         const updated = typeof newMessages === "function" ? newMessages(prev) : newMessages;
-        // Debounce save
-        setTimeout(() => saveMessages(updated), 100);
+        messagesRef.current = updated;
+        
+        // Clear any pending save
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+        
+        // Debounce the save to localStorage
+        saveTimeoutRef.current = setTimeout(() => {
+          saveMessagesToStorage(updated, activeSessionId);
+        }, 150);
+        
         return updated;
       });
     },
-    [saveMessages]
+    [activeSessionId, saveMessagesToStorage]
   );
+
+  // Cleanup save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Switch to a different session
   const selectSession = useCallback((sessionId: string) => {
