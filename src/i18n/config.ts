@@ -34,6 +34,10 @@ const resources = {
       // Languages
       "language.fr": "Français",
       "language.en": "English",
+      "language.es": "Español",
+      
+      // User Menu
+      "userMenu.blog": "Blog",
       
       // User Menu
       "userMenu.newTrip": "Nouveau voyage",
@@ -1124,8 +1128,10 @@ const resources = {
       // Languages
       "language.fr": "Français",
       "language.en": "English",
+      "language.es": "Español",
       
       // User Menu
+      "userMenu.blog": "Blog",
       "userMenu.newTrip": "New trip",
       "userMenu.myTrips": "My trips",
       "userMenu.planner": "Planner",

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 
 export type Currency = 'EUR' | 'USD' | 'GBP';
-export type Language = 'fr' | 'en';
+export type Language = 'fr' | 'en' | 'es';
 export type TemperatureUnit = 'C' | 'F';
 
 export interface UserPreferences {
@@ -49,7 +49,10 @@ const countryToPreferences: Record<string, Partial<UserPreferences>> = {
   GB: { currency: 'GBP', language: 'en', temperatureUnit: 'C' },
   UK: { currency: 'GBP', language: 'en', temperatureUnit: 'C' },
   DE: { currency: 'EUR', language: 'en', temperatureUnit: 'C' },
-  ES: { currency: 'EUR', language: 'en', temperatureUnit: 'C' },
+  ES: { currency: 'EUR', language: 'es', temperatureUnit: 'C' },
+  MX: { currency: 'USD', language: 'es', temperatureUnit: 'C' },
+  AR: { currency: 'USD', language: 'es', temperatureUnit: 'C' },
+  CO: { currency: 'USD', language: 'es', temperatureUnit: 'C' },
   IT: { currency: 'EUR', language: 'en', temperatureUnit: 'C' },
   PT: { currency: 'EUR', language: 'en', temperatureUnit: 'C' },
   NL: { currency: 'EUR', language: 'en', temperatureUnit: 'C' },
@@ -101,6 +104,8 @@ export const UserPreferencesProvider: React.FC<{ children: React.ReactNode }> = 
       const browserLang = navigator.language?.toLowerCase();
       if (browserLang?.startsWith('en')) {
         return { ...defaultPreferences, language: 'en' };
+      } else if (browserLang?.startsWith('es')) {
+        return { ...defaultPreferences, language: 'es' };
       }
     }
     return defaultPreferences;
