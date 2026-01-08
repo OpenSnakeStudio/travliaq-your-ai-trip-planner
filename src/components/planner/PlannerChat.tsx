@@ -651,16 +651,23 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
         {/* Smart Suggestions */}
         <SmartSuggestions
           context={{
+            workflowStep: !memory.arrival?.city ? 'inspiration' 
+              : !memory.departureDate ? 'destination' 
+              : memory.passengers.adults === 0 ? 'dates' 
+              : 'compare',
             hasDestination: !!memory.arrival?.city,
             hasDates: !!memory.departureDate,
             hasTravelers: memory.passengers.adults > 0,
-            hasFlights: false,
+            hasFlights: mapContext.visiblePrices.filter(p => p.type === "flight").length > 0,
             hasHotels: mapContext.visibleHotels.length > 0,
             destinationName: memory.arrival?.city,
+            departureCity: memory.departure?.city,
             currentTab: mapContext.activeTab,
             visibleFlightsCount: mapContext.visiblePrices.filter(p => p.type === "flight").length,
             visibleHotelsCount: mapContext.visibleHotels.length,
             visibleActivitiesCount: mapContext.visibleActivities.length,
+            cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
+            cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
           }}
           onSuggestionClick={(message) => {
             setInput(message);

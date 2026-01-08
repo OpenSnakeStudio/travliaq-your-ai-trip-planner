@@ -128,6 +128,22 @@ export function useChatMapContext() {
     return () => eventBus.off("tab:change", handleTabChange);
   }, []);
 
+  // Get cheapest flight price
+  const getCheapestFlightPrice = useCallback((): number | undefined => {
+    const flightPrices = state.visiblePrices
+      .filter((p) => p.type === "flight")
+      .map((p) => p.price);
+    return flightPrices.length > 0 ? Math.min(...flightPrices) : undefined;
+  }, [state.visiblePrices]);
+
+  // Get cheapest hotel price
+  const getCheapestHotelPrice = useCallback((): number | undefined => {
+    const hotelPrices = state.visibleHotels
+      .map((h) => h.pricePerNight)
+      .filter((p): p is number => typeof p === "number" && p > 0);
+    return hotelPrices.length > 0 ? Math.min(...hotelPrices) : undefined;
+  }, [state.visibleHotels]);
+
   // Get a summary of the current context for the LLM
   const getSummary = useCallback((): MapContextSummary => {
     const flightPrices = state.visiblePrices.filter((p) => p.type === "flight");
@@ -187,5 +203,7 @@ export function useChatMapContext() {
     ...state,
     getSummary,
     buildContextString,
+    getCheapestFlightPrice,
+    getCheapestHotelPrice,
   };
 }
