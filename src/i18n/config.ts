@@ -19,6 +19,33 @@ const resources = {
       "nav.faq": "FAQ",
       "nav.questionnaire": "Questionnaire",
 
+      // User Preferences
+      "preferences.currency": "Devise",
+      "preferences.chooseCurrency": "Choisir une devise",
+      "preferences.language": "Langue",
+      "preferences.chooseLanguage": "Choisir une langue",
+      "preferences.temperature": "Température",
+      
+      // Currencies
+      "currency.EUR": "Euro",
+      "currency.USD": "Dollar américain",
+      "currency.GBP": "Livre sterling",
+      
+      // Languages
+      "language.fr": "Français",
+      "language.en": "English",
+      
+      // User Menu
+      "userMenu.newTrip": "Nouveau voyage",
+      "userMenu.myTrips": "Mes voyages",
+      "userMenu.planner": "Planificateur",
+      "userMenu.settings": "Paramètres",
+      "userMenu.about": "À propos",
+      "userMenu.contact": "Contact",
+      "userMenu.terms": "CGV",
+      "userMenu.login": "Se connecter",
+      "userMenu.logout": "Se déconnecter",
+
       // Hero Section
       "hero.title": "Ton voyage,",
       "hero.title.ai": "optimisé par l'IA",
@@ -1081,6 +1108,33 @@ const resources = {
       "nav.whyUs": "Why us",
       "nav.faq": "FAQ",
       "nav.questionnaire": "Questionnaire",
+
+      // User Preferences
+      "preferences.currency": "Currency",
+      "preferences.chooseCurrency": "Choose a currency",
+      "preferences.language": "Language",
+      "preferences.chooseLanguage": "Choose a language",
+      "preferences.temperature": "Temperature",
+      
+      // Currencies
+      "currency.EUR": "Euro",
+      "currency.USD": "US Dollar",
+      "currency.GBP": "British Pound",
+      
+      // Languages
+      "language.fr": "Français",
+      "language.en": "English",
+      
+      // User Menu
+      "userMenu.newTrip": "New trip",
+      "userMenu.myTrips": "My trips",
+      "userMenu.planner": "Planner",
+      "userMenu.settings": "Settings",
+      "userMenu.about": "About",
+      "userMenu.contact": "Contact",
+      "userMenu.terms": "Terms of Service",
+      "userMenu.login": "Login",
+      "userMenu.logout": "Logout",
 
       // Hero Section
       "hero.title": "Your trip,",

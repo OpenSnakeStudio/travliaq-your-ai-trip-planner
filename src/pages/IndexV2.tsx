@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { ChevronDown, Sparkles } from "lucide-react";
 import heroImage from "@/assets/hero-travliaq.jpg";
 import logo from "@/assets/logo-travliaq.png";
-import Navigation from "@/components/Navigation";
+import { NavBar } from "@/components/navigation";
 import { useTranslation } from "react-i18next";
 import {
   Accordion,
@@ -38,7 +38,7 @@ const IndexV2 = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      <NavBar />
 
       {/* Hero Section - Full screen with chat */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
