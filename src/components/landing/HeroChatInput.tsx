@@ -12,9 +12,10 @@ import AnimatedPlaceholder from "./AnimatedPlaceholder";
 
 interface HeroChatInputProps {
   className?: string;
+  variant?: "dark" | "light";
 }
 
-export function HeroChatInput({ className }: HeroChatInputProps) {
+export function HeroChatInput({ className, variant = "dark" }: HeroChatInputProps) {
   const [value, setValue] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -41,20 +42,33 @@ export function HeroChatInput({ className }: HeroChatInputProps) {
     >
       <div className="relative">
         {/* Glow effect */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30 rounded-2xl blur-lg opacity-70" />
+        <div className={cn(
+          "absolute -inset-1 rounded-2xl blur-lg opacity-70",
+          variant === "light" 
+            ? "bg-gradient-to-r from-white/20 via-white/30 to-white/20"
+            : "bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30"
+        )} />
         
         {/* Input container */}
-        <div className="relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-2xl">
+        <div className={cn(
+          "relative backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl",
+          variant === "light"
+            ? "bg-white border border-white/50"
+            : "bg-white/10 border border-white/20"
+        )}>
           <div className="flex items-center p-2">
             <div className="flex-1 relative">
-              <AnimatedPlaceholder isTyping={value.length > 0} />
+              <AnimatedPlaceholder isTyping={value.length > 0} variant={variant} />
               <input
                 ref={inputRef}
                 type="text"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full bg-transparent text-white text-base md:text-lg px-4 py-3 focus:outline-none placeholder-transparent"
+                className={cn(
+                  "w-full bg-transparent text-base md:text-lg px-4 py-3 focus:outline-none placeholder-transparent",
+                  variant === "light" ? "text-foreground" : "text-white"
+                )}
                 aria-label="Décris ton voyage idéal"
               />
             </div>
