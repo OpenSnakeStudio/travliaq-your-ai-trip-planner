@@ -337,9 +337,6 @@ const PreferencesPanel = () => {
           {/* AI Summary */}
           <PreferenceSummary />
 
-          {/* Smart Tags - based on interactions */}
-          <SmartTagsWidget />
-
           {/* Next step hint */}
           <button
             onClick={() => setCurrentStep("style")}
@@ -372,6 +369,9 @@ const PreferencesPanel = () => {
               maxSelections={5}
             />
           </div>
+
+          {/* Smart Tags - based on chat interactions */}
+          <SmartTagsWidget />
 
           {/* Next step hint */}
           <button

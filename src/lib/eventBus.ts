@@ -123,6 +123,7 @@ export type PlannerEvents = {
   // Chat interactions
   "chat:injectMessage": { role: "assistant" | "system"; text: string };
   "chat:offerFlightSearch": { from: string; to: string };
+  "chat:userMessage": { text: string; messageCount: number };
   
   // User actions
   "user:locationDetected": { lat: number; lng: number; city: string };
