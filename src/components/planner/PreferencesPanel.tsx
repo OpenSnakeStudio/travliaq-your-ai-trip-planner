@@ -39,7 +39,7 @@ const stepVariants = {
 
 const stepTransition = {
   duration: 0.2,
-  ease: "easeInOut",
+  ease: "easeInOut" as const,
 };
 
 // ============================================================================

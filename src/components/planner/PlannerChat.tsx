@@ -336,7 +336,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
       const preferenceMemoryState = getPreferenceMemory();
 
       const activityContext =
-        activityMemoryState?.totalActivities > 0
+        typeof activityMemoryState?.totalActivities === 'number' && activityMemoryState.totalActivities > 0
           ? `\n[ACTIVITÉS] ${activityMemoryState.totalActivities} activité(s) planifiée(s)`
           : "";
 

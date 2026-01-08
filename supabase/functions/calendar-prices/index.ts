@@ -140,7 +140,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[calendar-prices] Error:', error);
     return new Response(
-      JSON.stringify({ prices: null, error: error.message || 'Internal server error' }),
+      JSON.stringify({ prices: null, error: error instanceof Error ? error.message : 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
