@@ -29,6 +29,7 @@ import {
   PreferenceSummary,
   DietaryPicker,
   AIConflictBadge,
+  SmartTagsWidget,
 } from "./preferences";
 import { eventBus } from "@/lib/eventBus";
 
@@ -333,8 +334,11 @@ const PreferencesPanel = () => {
             />
           </div>
 
-          {/* AI Summary - only this, no ProfileCompletionCard */}
+          {/* AI Summary */}
           <PreferenceSummary />
+
+          {/* Smart Tags - based on interactions */}
+          <SmartTagsWidget />
 
           {/* Next step hint */}
           <button
