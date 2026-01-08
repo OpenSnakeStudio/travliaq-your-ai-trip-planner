@@ -544,6 +544,7 @@ export type Database = {
           trip_code: string | null
           updated_at: string | null
           user_email: string
+          user_id: string | null
         }
         Insert: {
           activities_summary?: string[] | null
@@ -583,6 +584,7 @@ export type Database = {
           trip_code?: string | null
           updated_at?: string | null
           user_email: string
+          user_id?: string | null
         }
         Update: {
           activities_summary?: string[] | null
@@ -622,6 +624,7 @@ export type Database = {
           trip_code?: string | null
           updated_at?: string | null
           user_email?: string
+          user_id?: string | null
         }
         Relationships: [
           {
