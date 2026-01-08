@@ -45,11 +45,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ className }) => {
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={() => window.location.assign('/v2#pricing')}
+              onClick={() => navigate('/subscription')}
               className="cursor-pointer"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Tarifs
+              Gérer ma souscription
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/blog')} className="cursor-pointer">
               <BookOpen className="w-4 h-4 mr-2" />
@@ -88,11 +88,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ className }) => {
             <DropdownMenuSeparator />
 
             <DropdownMenuItem
-              onClick={() => window.location.assign('/v2#pricing')}
+              onClick={() => navigate('/subscription')}
               className="cursor-pointer"
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              Tarifs
+              Gérer ma souscription
             </DropdownMenuItem>
 
             <DropdownMenuItem onClick={() => navigate('/blog')} className="cursor-pointer">

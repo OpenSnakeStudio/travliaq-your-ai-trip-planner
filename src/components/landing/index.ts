@@ -13,4 +13,4 @@ export { TestimonialSection } from "./TestimonialSection";
 export { FinalCTA } from "./FinalCTA";
 export { VideoPlaceholder } from "./VideoPlaceholder";
 export { PartnersSection } from "./PartnersSection";
-export { PricingSection } from "./PricingSection";
+

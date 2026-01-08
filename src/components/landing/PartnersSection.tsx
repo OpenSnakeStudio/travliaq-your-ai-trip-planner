@@ -34,10 +34,6 @@ const partners = [
     name: "Fever",
     logo: logoFever,
   },
-  {
-    name: "TripAdvisor",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Tripadvisor_logo.svg/512px-Tripadvisor_logo.svg.png",
-  },
 ];
 
 export function PartnersSection() {
@@ -50,9 +46,6 @@ export function PartnersSection() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Ils nous font confiance
-          </p>
           <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-foreground">
             Nos partenaires
           </h2>

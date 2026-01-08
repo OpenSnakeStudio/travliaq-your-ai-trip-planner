@@ -1,105 +1,100 @@
 /**
- * FeatureCards - Key features grid
+ * FeatureCards - Key features with clean, simple design
  */
 
 import { motion } from "framer-motion";
-import { Sparkles, PiggyBank, Compass, Shield, Clock, Heart } from "lucide-react";
-
-const features = [
-  {
-    icon: Sparkles,
-    title: "100% Sur-mesure",
-    description: "Itinéraire personnalisé selon tes goûts, pas de voyage générique",
-    gradient: "from-primary/20 to-primary/5",
-    iconColor: "text-primary",
-  },
-  {
-    icon: PiggyBank,
-    title: "Économique",
-    description: "Comparaison des prix en temps réel pour optimiser ton budget",
-    gradient: "from-accent/20 to-accent/5",
-    iconColor: "text-accent",
-  },
-  {
-    icon: Compass,
-    title: "Pépites cachées",
-    description: "Spots hors des sentiers battus recommandés par l'IA",
-    gradient: "from-primary/20 to-primary/5",
-    iconColor: "text-primary",
-  },
-  {
-    icon: Shield,
-    title: "Sans surprises",
-    description: "Tout est vérifié et à jour, tu pars l'esprit tranquille",
-    gradient: "from-accent/20 to-accent/5",
-    iconColor: "text-accent",
-  },
-  {
-    icon: Clock,
-    title: "Gain de temps",
-    description: "Plus besoin de passer des heures à tout comparer",
-    gradient: "from-primary/20 to-primary/5",
-    iconColor: "text-primary",
-  },
-  {
-    icon: Heart,
-    title: "Adapté à toi",
-    description: "Je m'adapte à ton rythme, tes contraintes, tes envies",
-    gradient: "from-accent/20 to-accent/5",
-    iconColor: "text-accent",
-  },
-];
+import { Sparkles, Clock, CreditCard, Check } from "lucide-react";
 
 export function FeatureCards() {
   return (
-    <section className="py-16 md:py-24 bg-muted/30">
+    <section className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-12"
+          className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
-            Tout ce qu’il te faut, sans prise de tête
+            Pourquoi Travliaq ?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Des recommandations claires, des choix rapides, et un plan qui te ressemble.
+            Simple, rapide, gratuit.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -4 }}
-                className={`
-                  relative p-6 rounded-2xl
-                  bg-gradient-to-br ${feature.gradient}
-                  border border-border/50
-                  transition-shadow duration-300
-                  hover:shadow-lg
-                `}
-              >
-                <div className={`${feature.iconColor} mb-4`}>
-                  <Icon className="w-10 h-10" />
-                </div>
-                <h3 className="text-xl font-montserrat font-bold text-foreground mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </motion.div>
-            );
-          })}
+        {/* 3 key benefits in clean cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-center p-8 rounded-2xl bg-muted/30 border border-border/50"
+          >
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <CreditCard className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
+              100% Gratuit
+            </h3>
+            <p className="text-muted-foreground">
+              Pas de carte bancaire requise, pas d'inscription obligatoire.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-center p-8 rounded-2xl bg-muted/30 border border-border/50"
+          >
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-accent/20 flex items-center justify-center">
+              <Clock className="w-8 h-8 text-accent-foreground" />
+            </div>
+            <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
+              Résultat en 2 min
+            </h3>
+            <p className="text-muted-foreground">
+              Dis-nous tes envies, on s'occupe du reste.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="text-center p-8 rounded-2xl bg-muted/30 border border-border/50"
+          >
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
+              100% Sur-mesure
+            </h3>
+            <p className="text-muted-foreground">
+              Un itinéraire personnalisé selon tes goûts.
+            </p>
+          </motion.div>
         </div>
+
+        {/* Simple list of additional benefits */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4 }}
+          className="mt-12 flex flex-wrap justify-center gap-6 text-muted-foreground"
+        >
+          {["Comparaison des prix", "Spots cachés", "Adapté à ton rythme", "Sans surprises"].map((item) => (
+            <div key={item} className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-primary" />
+              <span>{item}</span>
+            </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );

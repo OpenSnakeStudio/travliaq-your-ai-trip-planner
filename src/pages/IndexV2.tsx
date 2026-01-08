@@ -20,7 +20,6 @@ import {
   DestinationCards,
   HowItWorks,
   FeatureCards,
-  PricingSection,
   FinalCTA,
   VideoPlaceholder,
   PartnersSection,
@@ -118,8 +117,6 @@ const IndexV2 = () => {
       {/* Feature Cards */}
       <FeatureCards />
 
-      {/* Pricing */}
-      <PricingSection />
 
       {/* Partners Section */}
       <PartnersSection />
