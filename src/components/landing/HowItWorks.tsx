@@ -1,99 +1,124 @@
 /**
- * HowItWorks - Visual step-by-step process
+ * HowItWorks - Visual step-by-step process with modern design
  */
 
 import { motion } from "framer-motion";
-import { MessageCircle, Brain, Map, Plane, ArrowRight } from "lucide-react";
+import { MessageCircle, Search, Sparkles, Send, CheckCircle2 } from "lucide-react";
 
 const steps = [
   {
-    number: 1,
-    title: "Dis-moi tes envies",
-    description: "Destination, dates, budget, style... Je comprends tout en langage naturel",
+    number: "01",
+    title: "Parle-moi de ton voyage",
+    description: "Dis-moi simplement où tu veux aller, quand, avec qui et ton budget. Je comprends le français naturel !",
     icon: MessageCircle,
-    color: "bg-primary",
+    gradient: "from-blue-500 to-cyan-400",
+    example: '"Je veux partir à Rome en avril, 5 jours, max 800€"',
   },
   {
-    number: 2,
-    title: "Je trouve les meilleures options",
-    description: "Vols, hôtels, activités – je compare des milliers d'options en temps réel",
-    icon: Brain,
-    color: "bg-accent",
+    number: "02",
+    title: "Je compare tout pour toi",
+    description: "En quelques secondes, je scanne des milliers de vols, hôtels et activités pour trouver les meilleures options.",
+    icon: Search,
+    gradient: "from-violet-500 to-purple-400",
+    example: "Vols, hôtels, activités... tout comparé en temps réel",
   },
   {
-    number: 3,
-    title: "Personnalise ton itinéraire",
-    description: "Affine chaque détail selon tes goûts, je m'adapte instantanément",
-    icon: Map,
-    color: "bg-primary",
+    number: "03",
+    title: "Tu personnalises",
+    description: "Affine ton itinéraire en discutant avec moi. Change d'hôtel, ajoute une activité, modifie les dates... je m'adapte !",
+    icon: Sparkles,
+    gradient: "from-amber-500 to-orange-400",
+    example: '"Plutôt un hôtel avec piscine" → Je mets à jour',
   },
   {
-    number: 4,
-    title: "Pars l'esprit tranquille",
-    description: "Reçois ton itinéraire complet avec tous les liens de réservation",
-    icon: Plane,
-    color: "bg-accent",
+    number: "04",
+    title: "Tu reçois tout",
+    description: "Ton itinéraire complet avec tous les liens de réservation, directement dans ta boîte mail. Prêt à partir !",
+    icon: Send,
+    gradient: "from-emerald-500 to-green-400",
+    example: "Vols + Hôtels + Activités = Voyage prêt",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section className="py-16 md:py-24 bg-background">
+    <section className="py-20 md:py-32 bg-gradient-to-b from-background to-muted/20 overflow-hidden">
       <div className="container mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-16 md:mb-20"
         >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium mb-6"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Simple comme bonjour</span>
+          </motion.div>
           <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
             Comment ça marche ?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            De l'idée au départ en 4 étapes simples
+            De ton idée à ton départ, en 4 étapes ultra simples
           </p>
         </motion.div>
 
-        <div className="max-w-5xl mx-auto">
-          {/* Desktop: Horizontal flow */}
-          <div className="hidden md:flex items-start justify-between relative">
-            {/* Connection line */}
-            <div className="absolute top-12 left-[10%] right-[10%] h-0.5 bg-border" />
-            
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <motion.div
-                  key={step.number}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.15 }}
-                  className="flex-1 flex flex-col items-center text-center relative z-10"
-                >
-                  {/* Icon */}
-                  <div className={`${step.color} w-24 h-24 rounded-2xl flex items-center justify-center mb-6 shadow-lg`}>
-                    <Icon className="w-10 h-10 text-white" />
-                  </div>
-                  
-                  {/* Number badge */}
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-foreground text-background rounded-full flex items-center justify-center text-sm font-bold">
-                    {step.number}
-                  </div>
-                  
-                  <h3 className="text-xl font-montserrat font-bold text-foreground mb-3 px-4">
-                    {step.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm px-4 leading-relaxed">
-                    {step.description}
-                  </p>
-                </motion.div>
-              );
-            })}
+        {/* Steps - Vertical timeline on mobile, horizontal on desktop */}
+        <div className="max-w-6xl mx-auto">
+          {/* Desktop Layout */}
+          <div className="hidden lg:block">
+            <div className="grid grid-cols-4 gap-6 relative">
+              {/* Connection line */}
+              <div className="absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 opacity-30" />
+              
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <motion.div
+                    key={step.number}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.15 }}
+                    className="relative"
+                  >
+                    {/* Step card */}
+                    <div className="bg-card rounded-2xl p-6 border border-border/50 shadow-sm hover:shadow-lg transition-shadow h-full">
+                      {/* Icon with gradient background */}
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${step.gradient} flex items-center justify-center mb-5 shadow-lg`}>
+                        <Icon className="w-7 h-7 text-white" />
+                      </div>
+                      
+                      {/* Step number */}
+                      <div className="text-4xl font-bold text-muted-foreground/20 font-montserrat mb-2">
+                        {step.number}
+                      </div>
+                      
+                      <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
+                        {step.title}
+                      </h3>
+                      
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+                        {step.description}
+                      </p>
+                      
+                      {/* Example bubble */}
+                      <div className="bg-muted/50 rounded-lg px-3 py-2 text-xs text-muted-foreground italic">
+                        {step.example}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Mobile: Vertical stack */}
-          <div className="md:hidden space-y-8">
+          {/* Mobile Layout - Vertical */}
+          <div className="lg:hidden space-y-6">
             {steps.map((step, index) => {
               const Icon = step.icon;
               return (
@@ -105,21 +130,30 @@ export function HowItWorks() {
                   transition={{ delay: index * 0.1 }}
                   className="flex gap-4"
                 >
-                  <div className={`${step.color} w-16 h-16 rounded-xl flex items-center justify-center shrink-0`}>
-                    <Icon className="w-8 h-8 text-white" />
+                  {/* Left: Icon and line */}
+                  <div className="flex flex-col items-center">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${step.gradient} flex items-center justify-center shrink-0 shadow-lg`}>
+                      <Icon className="w-6 h-6 text-white" />
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div className="w-0.5 flex-1 mt-2 bg-gradient-to-b from-border to-transparent" />
+                    )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-bold text-muted-foreground">
-                        ÉTAPE {step.number}
-                      </span>
+                  
+                  {/* Right: Content */}
+                  <div className="flex-1 pb-6">
+                    <div className="text-xs font-bold text-primary/60 uppercase tracking-wider mb-1">
+                      Étape {step.number}
                     </div>
                     <h3 className="text-lg font-montserrat font-bold text-foreground mb-2">
                       {step.title}
                     </h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-3">
                       {step.description}
                     </p>
+                    <div className="bg-muted/50 rounded-lg px-3 py-2 text-xs text-muted-foreground italic">
+                      {step.example}
+                    </div>
                   </div>
                 </motion.div>
               );

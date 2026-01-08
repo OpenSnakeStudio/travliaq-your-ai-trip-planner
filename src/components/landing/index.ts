@@ -11,3 +11,5 @@ export { HowItWorks } from "./HowItWorks";
 export { FeatureCards } from "./FeatureCards";
 export { TestimonialSection } from "./TestimonialSection";
 export { FinalCTA } from "./FinalCTA";
+export { VideoPlaceholder } from "./VideoPlaceholder";
+export { PartnersSection } from "./PartnersSection";

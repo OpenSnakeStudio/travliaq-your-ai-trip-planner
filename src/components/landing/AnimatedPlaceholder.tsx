@@ -17,9 +17,10 @@ const placeholders = [
 
 interface AnimatedPlaceholderProps {
   isTyping: boolean;
+  variant?: "dark" | "light";
 }
 
-export function AnimatedPlaceholder({ isTyping }: AnimatedPlaceholderProps) {
+export function AnimatedPlaceholder({ isTyping, variant = "dark" }: AnimatedPlaceholderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export function AnimatedPlaceholder({ isTyping }: AnimatedPlaceholderProps) {
           animate={{ opacity: 0.5, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="text-white/50 text-base md:text-lg truncate"
+          className={variant === "light" ? "text-muted-foreground/70 text-base md:text-lg truncate" : "text-white/50 text-base md:text-lg truncate"}
         >
           {placeholders[currentIndex]}
         </motion.span>

@@ -18,19 +18,19 @@ import {
 import {
   HeroChatInput,
   QuickActionChips,
-  StatsCounter,
   DestinationCards,
   HowItWorks,
   FeatureCards,
-  TestimonialSection,
   FinalCTA,
+  VideoPlaceholder,
+  PartnersSection,
 } from "@/components/landing";
 
 const IndexV2 = () => {
   const { t } = useTranslation();
 
   const scrollToContent = () => {
-    const element = document.getElementById("stats");
+    const element = document.getElementById("video-section");
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -119,9 +119,9 @@ const IndexV2 = () => {
         </motion.button>
       </section>
 
-      {/* Stats Section */}
-      <div id="stats">
-        <StatsCounter />
+      {/* Video Section */}
+      <div id="video-section">
+        <VideoPlaceholder />
       </div>
 
       {/* Destination Cards */}
@@ -133,8 +133,8 @@ const IndexV2 = () => {
       {/* Feature Cards */}
       <FeatureCards />
 
-      {/* Testimonials */}
-      <TestimonialSection />
+      {/* Partners Section */}
+      <PartnersSection />
 
       {/* FAQ Section */}
       <section className="py-16 md:py-24 bg-background">
