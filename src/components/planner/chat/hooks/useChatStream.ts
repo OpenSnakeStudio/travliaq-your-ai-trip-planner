@@ -78,17 +78,19 @@ export function useChatStream() {
       try {
         const contextMessage = buildContextMessage(memoryContext);
 
+        // Get session and build URL from centralized config
+        const session = (await supabase.auth.getSession()).data.session;
+        const supabaseUrl = "https://cinbnmlfpffmyjmkwbco.supabase.co";
+        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA";
+
         const response = await fetch(
-          `https://cinbnmlfpffmyjmkwbco.supabase.co/functions/v1/planner-chat`,
+          `${supabaseUrl}/functions/v1/planner-chat`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${
-                (await supabase.auth.getSession()).data.session?.access_token
-              }`,
-              apikey:
-                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA",
+              Authorization: `Bearer ${session?.access_token}`,
+              apikey: supabaseAnonKey,
             },
             body: JSON.stringify({
               messages: apiMessages,
