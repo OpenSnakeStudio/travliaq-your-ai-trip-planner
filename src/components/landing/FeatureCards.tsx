@@ -61,10 +61,10 @@ export function FeatureCards() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
-            Je t'accompagne à chaque étape
+            Tout ce qu’il te faut, sans prise de tête
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Une IA qui comprend vraiment tes besoins de voyageur
+            Des recommandations claires, des choix rapides, et un plan qui te ressemble.
           </p>
         </motion.div>
 
