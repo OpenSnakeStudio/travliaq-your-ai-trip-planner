@@ -78,3 +78,26 @@ export {
   type AlertPriority,
   type ProactiveAlert,
 } from "./proactiveAlerts";
+
+// TripExport - Export trip to various formats (Phase 6)
+export {
+  exportContextToTrip,
+  generatePDFContent,
+  generateEmailContent,
+  generateICalContent,
+  exportTrip,
+  downloadExport,
+  type ExportFormat,
+  type ExportOptions,
+  type ExportedTrip,
+  type TripDayExport,
+  type TripItemExport,
+} from "./tripExport";
+
+// SuggestionEngine - Ultra-contextual quick replies
+export {
+  getSuggestions,
+  getWorkflowStep,
+  type SuggestionContext,
+  type Suggestion,
+} from "./suggestionEngine";

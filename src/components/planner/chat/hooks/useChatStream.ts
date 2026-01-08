@@ -1,8 +1,15 @@
 /**
  * useChatStream - Hook for streaming chat responses via SSE
+ *
+ * Features:
+ * - SSE streaming with content updates
+ * - AbortController for cancellation
+ * - Retry mechanism with exponential backoff
+ * - Error classification and handling
+ * - Mounted check for cleanup
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { FlightFormData } from "@/types/flight";
 import type { MissingField } from "@/contexts/FlightMemoryContext";
@@ -41,6 +48,108 @@ export interface MemoryContext {
 export type OnContentUpdate = (messageId: string, content: string, isComplete: boolean) => void;
 
 /**
+ * Error types for better error handling
+ */
+export type StreamErrorType =
+  | "network"      // Network connectivity issues
+  | "auth"         // Authentication failures
+  | "server"       // Server errors (5xx)
+  | "rate_limit"   // Rate limiting (429)
+  | "timeout"      // Request timeout
+  | "cancelled"    // User cancelled
+  | "unknown";     // Unknown error
+
+/**
+ * Stream error with classification
+ */
+export interface StreamError extends Error {
+  type: StreamErrorType;
+  retryable: boolean;
+  statusCode?: number;
+}
+
+/**
+ * Retry configuration
+ */
+interface RetryConfig {
+  maxRetries: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 10000,
+};
+
+/**
+ * Create a StreamError with classification
+ */
+function createStreamError(
+  message: string,
+  type: StreamErrorType,
+  statusCode?: number
+): StreamError {
+  const error = new Error(message) as StreamError;
+  error.type = type;
+  error.statusCode = statusCode;
+  error.retryable = type === "network" || type === "server" || type === "timeout";
+  return error;
+}
+
+/**
+ * Classify error based on response or exception
+ */
+function classifyError(error: unknown, statusCode?: number): StreamError {
+  if (error instanceof Error) {
+    // Check for abort
+    if (error.name === "AbortError") {
+      return createStreamError("Requête annulée", "cancelled");
+    }
+
+    // Check for network errors
+    if (error.message.includes("fetch") || error.message.includes("network")) {
+      return createStreamError("Erreur de connexion réseau", "network");
+    }
+  }
+
+  // Classify by status code
+  if (statusCode) {
+    if (statusCode === 401 || statusCode === 403) {
+      return createStreamError("Session expirée, veuillez vous reconnecter", "auth", statusCode);
+    }
+    if (statusCode === 429) {
+      return createStreamError("Trop de requêtes, veuillez patienter", "rate_limit", statusCode);
+    }
+    if (statusCode >= 500) {
+      return createStreamError("Erreur serveur, réessai en cours...", "server", statusCode);
+    }
+  }
+
+  return createStreamError(
+    error instanceof Error ? error.message : "Erreur inconnue",
+    "unknown"
+  );
+}
+
+/**
+ * Calculate delay for exponential backoff
+ */
+function calculateBackoffDelay(attempt: number, config: RetryConfig): number {
+  const delay = config.baseDelayMs * Math.pow(2, attempt);
+  const jitter = Math.random() * 0.3 * delay; // Add 0-30% jitter
+  return Math.min(delay + jitter, config.maxDelayMs);
+}
+
+/**
+ * Sleep for a given duration
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
  * Build the context message for the API
  */
 function buildContextMessage(memoryContext: MemoryContext): string {
@@ -57,10 +166,48 @@ function buildContextMessage(memoryContext: MemoryContext): string {
 }
 
 /**
+ * Hook options
+ */
+export interface UseChatStreamOptions {
+  retryConfig?: Partial<RetryConfig>;
+  onError?: (error: StreamError) => void;
+  onRetry?: (attempt: number, maxRetries: number) => void;
+}
+
+/**
  * Hook for streaming chat responses
  */
-export function useChatStream() {
+export function useChatStream(options: UseChatStreamOptions = {}) {
   const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<StreamError | null>(null);
+
+  // Track mounted state for cleanup
+  const isMountedRef = useRef(true);
+
+  // Store current abort controller
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Cancel any in-flight request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  /**
+   * Cancel the current stream
+   */
+  const cancelStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
 
   const streamResponse = useCallback(
     async (
@@ -69,90 +216,168 @@ export function useChatStream() {
       memoryContext: MemoryContext,
       onContentUpdate: OnContentUpdate
     ): Promise<StreamResult> => {
-      setIsStreaming(true);
+      // Cancel any previous request
+      cancelStream();
+
+      // Create new abort controller
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
+      const retryConfig = { ...DEFAULT_RETRY_CONFIG, ...options.retryConfig };
+
+      if (isMountedRef.current) {
+        setIsStreaming(true);
+        setError(null);
+      }
 
       let fullContent = "";
       let flightData: FlightFormData | null = null;
       let accommodationData: any | null = null;
+      let lastError: StreamError | null = null;
 
-      try {
-        const contextMessage = buildContextMessage(memoryContext);
-
-        // Get session and build URL from centralized config
-        const session = (await supabase.auth.getSession()).data.session;
-        const supabaseUrl = "https://cinbnmlfpffmyjmkwbco.supabase.co";
-        const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA";
-
-        const response = await fetch(
-          `${supabaseUrl}/functions/v1/planner-chat`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${session?.access_token}`,
-              apikey: supabaseAnonKey,
-            },
-            body: JSON.stringify({
-              messages: apiMessages,
-              stream: true,
-              memoryContext: contextMessage,
-              missingFields: memoryContext.missingFields,
-            }),
+      for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
+        try {
+          // Check if cancelled
+          if (abortController.signal.aborted) {
+            throw createStreamError("Requête annulée", "cancelled");
           }
-        );
 
-        if (!response.ok) {
-          throw new Error("Stream request failed");
-        }
+          // Notify retry attempt
+          if (attempt > 0 && options.onRetry) {
+            options.onRetry(attempt, retryConfig.maxRetries);
+          }
 
-        const reader = response.body!.getReader();
-        const decoder = new TextDecoder();
+          const contextMessage = buildContextMessage(memoryContext);
 
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+          // Get session
+          const session = (await supabase.auth.getSession()).data.session;
+          const supabaseUrl = "https://cinbnmlfpffmyjmkwbco.supabase.co";
+          const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA";
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+          const response = await fetch(
+            `${supabaseUrl}/functions/v1/planner-chat`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session?.access_token}`,
+                apikey: supabaseAnonKey,
+              },
+              body: JSON.stringify({
+                messages: apiMessages,
+                stream: true,
+                memoryContext: contextMessage,
+                missingFields: memoryContext.missingFields,
+              }),
+              signal: abortController.signal,
+            }
+          );
 
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const jsonStr = line.slice(6);
-              if (jsonStr === "[DONE]") continue;
+          if (!response.ok) {
+            throw classifyError(null, response.status);
+          }
 
-              try {
-                const parsed = JSON.parse(jsonStr);
+          const reader = response.body!.getReader();
+          const decoder = new TextDecoder();
 
-                if (parsed.type === "flightData" && parsed.flightData) {
-                  flightData = parsed.flightData;
-                } else if (parsed.type === "accommodationData" && parsed.accommodationData) {
-                  accommodationData = parsed.accommodationData;
-                } else if (parsed.type === "content" && parsed.content) {
-                  fullContent += parsed.content;
-                  // Notify about content update (streaming)
-                  onContentUpdate(messageId, fullContent, false);
+          // Reset content for this attempt
+          fullContent = "";
+
+          while (true) {
+            // Check if cancelled
+            if (abortController.signal.aborted) {
+              reader.cancel();
+              throw createStreamError("Requête annulée", "cancelled");
+            }
+
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n").filter((line) => line.trim() !== "");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const jsonStr = line.slice(6);
+                if (jsonStr === "[DONE]") continue;
+
+                try {
+                  const parsed = JSON.parse(jsonStr);
+
+                  if (parsed.type === "flightData" && parsed.flightData) {
+                    flightData = parsed.flightData;
+                  } else if (parsed.type === "accommodationData" && parsed.accommodationData) {
+                    accommodationData = parsed.accommodationData;
+                  } else if (parsed.type === "content" && parsed.content) {
+                    fullContent += parsed.content;
+                    // Notify about content update (streaming)
+                    if (isMountedRef.current) {
+                      onContentUpdate(messageId, fullContent, false);
+                    }
+                  }
+                } catch {
+                  // Ignore parse errors for malformed chunks
                 }
-              } catch (e) {
-                // Ignore parse errors for malformed chunks
               }
             }
           }
+
+          // Success - mark streaming as complete
+          if (isMountedRef.current) {
+            onContentUpdate(messageId, fullContent, true);
+          }
+
+          return { content: fullContent, flightData, accommodationData };
+
+        } catch (err) {
+          lastError = err instanceof Error && "type" in err
+            ? (err as StreamError)
+            : classifyError(err);
+
+          // Don't retry non-retryable errors
+          if (!lastError.retryable || lastError.type === "cancelled") {
+            break;
+          }
+
+          // Don't retry if we've exhausted attempts
+          if (attempt >= retryConfig.maxRetries) {
+            break;
+          }
+
+          // Wait before retrying
+          const delay = calculateBackoffDelay(attempt, retryConfig);
+          await sleep(delay);
         }
+      }
 
-        // Mark streaming as complete
-        onContentUpdate(messageId, fullContent, true);
+      // All retries failed
+      if (isMountedRef.current) {
+        setError(lastError);
+        if (options.onError && lastError) {
+          options.onError(lastError);
+        }
+      }
 
-        return { content: fullContent, flightData, accommodationData };
-      } finally {
+      throw lastError || createStreamError("Erreur inconnue", "unknown");
+    },
+    [cancelStream, options]
+  );
+
+  // Cleanup streaming state
+  useEffect(() => {
+    return () => {
+      if (isMountedRef.current) {
         setIsStreaming(false);
       }
-    },
-    []
-  );
+    };
+  }, []);
 
   return {
     streamResponse,
     isStreaming,
+    error,
+    cancelStream,
+    clearError: useCallback(() => setError(null), []),
   };
 }
 

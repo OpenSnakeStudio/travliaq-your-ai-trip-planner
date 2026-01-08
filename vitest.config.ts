@@ -12,9 +12,20 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: './src/test/setup.ts',
+    environment: 'happy-dom',
+    setupFiles: ['./src/test/setup.ts'],
     css: true,
+    environmentMatchGlobs: [
+      // Use node environment for pure utility tests
+      ['**/utils/__tests__/**', 'node'],
+    ],
+    deps: {
+      optimizer: {
+        web: {
+          include: ['@testing-library/dom'],
+        },
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

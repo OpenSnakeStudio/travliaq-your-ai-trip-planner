@@ -9,6 +9,7 @@ import type { QuickReply, QuickReplyAction } from "./types";
 interface QuickRepliesProps {
   replies: QuickReply[];
   onSendMessage: (message: string) => void;
+  onFillInput?: (message: string) => void;
   onTriggerWidget?: (widget: string) => void;
   disabled?: boolean;
   className?: string;
@@ -17,6 +18,7 @@ interface QuickRepliesProps {
 export function QuickReplies({
   replies,
   onSendMessage,
+  onFillInput,
   onTriggerWidget,
   disabled = false,
   className,
@@ -29,6 +31,10 @@ export function QuickReplies({
     switch (action.type) {
       case "sendMessage":
         onSendMessage(action.message);
+        break;
+
+      case "fillInput":
+        onFillInput?.(action.message);
         break;
 
       case "triggerWidget":
@@ -106,7 +112,7 @@ export const QUICK_REPLY_PRESETS = {
       id: "budget",
       label: "Combien ça coûte?",
       icon: "💰",
-      action: { type: "sendMessage", message: `Quel est le budget moyen pour un voyage à ${city}?` },
+      action: { type: "fillInput", message: `Quel est le budget moyen pour un voyage à ${city}?` },
     },
     {
       id: "activities",
@@ -121,14 +127,14 @@ export const QUICK_REPLY_PRESETS = {
       id: "cheapest",
       label: "Vol le moins cher",
       icon: "💵",
-      action: { type: "sendMessage", message: "Montre-moi le vol le moins cher" },
+      action: { type: "fillInput", message: "Montre-moi le vol le moins cher" },
       variant: "primary",
     },
     {
       id: "fastest",
       label: "Vol le plus rapide",
       icon: "⚡",
-      action: { type: "sendMessage", message: "Montre-moi le vol le plus rapide" },
+      action: { type: "fillInput", message: "Montre-moi le vol le plus rapide" },
     },
     {
       id: "hotels",
@@ -149,7 +155,7 @@ export const QUICK_REPLY_PRESETS = {
       id: "flexible",
       label: "Dates flexibles?",
       icon: "🔄",
-      action: { type: "sendMessage", message: "Je suis flexible sur les dates, +/- quelques jours" },
+      action: { type: "fillInput", message: "Je suis flexible sur les dates, +/- quelques jours" },
     },
   ],
 
@@ -165,13 +171,13 @@ export const QUICK_REPLY_PRESETS = {
       id: "other-hotels",
       label: "Autres hôtels",
       icon: "🏨",
-      action: { type: "sendMessage", message: "Montre-moi d'autres options d'hébergement" },
+      action: { type: "fillInput", message: "Montre-moi d'autres options d'hébergement" },
     },
     {
       id: "summary",
       label: "Récapitulatif",
       icon: "📋",
-      action: { type: "sendMessage", message: "Fais-moi un récapitulatif de mon voyage" },
+      action: { type: "fillInput", message: "Fais-moi un récapitulatif de mon voyage" },
     },
   ],
 
@@ -180,13 +186,13 @@ export const QUICK_REPLY_PRESETS = {
       id: "help",
       label: "Aide",
       icon: "❓",
-      action: { type: "sendMessage", message: "Comment puis-je planifier mon voyage?" },
+      action: { type: "fillInput", message: "Comment puis-je planifier mon voyage?" },
     },
     {
       id: "inspire",
       label: "Inspire-moi",
       icon: "✨",
-      action: { type: "sendMessage", message: "Suggère-moi une destination pour mes prochaines vacances" },
+      action: { type: "fillInput", message: "Suggère-moi une destination pour mes prochaines vacances" },
     },
   ],
 } as const;

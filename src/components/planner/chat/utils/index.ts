@@ -9,3 +9,41 @@ export {
   formatMissingFieldsMessage,
   type FlightMemoryUpdate,
 } from "./flightDataToMemory";
+
+// Security utilities - XSS protection, sanitization
+export {
+  escapeHtml,
+  escapeHtmlAttribute,
+  escapeICalText,
+  sanitizeFilename,
+  encodeURIComponentSafe,
+  base64UrlEncode,
+  base64UrlDecode,
+  stripHtmlTags,
+  safeJsonParse,
+  truncateSafe,
+  generateNonce,
+} from "./security";
+
+// Validation utilities - Input validation, type guards
+export {
+  validateDate,
+  safeParseDate,
+  isValidDate,
+  validateNumber,
+  safeParseNumber,
+  validatePositiveInt,
+  validatePrice,
+  validateString,
+  validateEmail,
+  validateArray,
+  validateTravelers,
+  validateDateRange,
+  isDefined,
+  isNonEmptyString,
+  isPositiveNumber,
+  assert,
+  assertDefined,
+  type ValidationResult,
+  type TravelersInput,
+} from "./validators";

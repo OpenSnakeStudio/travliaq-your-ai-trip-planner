@@ -138,6 +138,8 @@ function checkStepAccessible(step: PlanningStep, context: WorkflowContext): bool
 
 /**
  * Get workflow progress
+ *
+ * Returns 0% if no required steps are defined (prevents division by zero).
  */
 export function getWorkflowProgress(context: WorkflowContext): WorkflowProgress {
   const steps = PLANNING_STEPS.map((step) => getStepInfo(step, context));
@@ -149,9 +151,10 @@ export function getWorkflowProgress(context: WorkflowContext): WorkflowProgress 
     context.completedSteps.has(s.id)
   ).length;
 
-  const percentComplete = Math.round(
-    (completedRequired / requiredSteps.length) * 100
-  );
+  // Prevent division by zero
+  const percentComplete = requiredSteps.length > 0
+    ? Math.round((completedRequired / requiredSteps.length) * 100)
+    : 0;
 
   return {
     currentStep: context.currentStep,
@@ -269,7 +272,8 @@ export function calculateTripCost(context: WorkflowContext): TripCost {
 
   const total = flightsCost + hotelsCost + activitiesCost + transfersCost;
 
-  const travelers = selections.travelers?.adults || 1;
+  // Ensure at least 1 traveler to prevent division by zero
+  const travelers = Math.max(1, selections.travelers?.adults || 1);
   const perPerson = Math.round(total / travelers);
 
   return {

@@ -33,6 +33,7 @@ import {
   AirportConfirmationWidget,
   MarkdownMessage,
 } from "./chat/widgets";
+import { QuickReplies } from "./chat/QuickReplies";
 import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers } from "./chat/hooks";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
@@ -628,6 +629,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
                       Rechercher les vols maintenant
                     </button>
                   </div>
+                )}
+
+                {/* Quick Replies */}
+                {m.quickReplies && m.quickReplies.length > 0 && (
+                  <QuickReplies
+                    replies={m.quickReplies}
+                    onSendMessage={send}
+                    onFillInput={(message) => {
+                      setInput(message);
+                      setTimeout(() => inputRef.current?.focus(), 0);
+                    }}
+                    disabled={isLoading}
+                  />
                 )}
               </div>
             </div>

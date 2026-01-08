@@ -44,6 +44,7 @@ interface ChatMessageProps {
   onAirportSelect: (messageId: string, field: "from" | "to", airport: Airport, isDual?: boolean) => void;
   onSearchButtonClick: (messageId: string) => void;
   onQuickReplyMessage: (message: string) => void;
+  onQuickReplyFillInput?: (message: string) => void;
   onQuickReplyWidget?: (widget: string) => void;
 }
 
@@ -90,6 +91,7 @@ export function ChatMessage({
   onAirportSelect,
   onSearchButtonClick,
   onQuickReplyMessage,
+  onQuickReplyFillInput,
   onQuickReplyWidget,
 }: ChatMessageProps) {
   return (
@@ -265,6 +267,7 @@ export function ChatMessage({
           <QuickReplies
             replies={m.quickReplies}
             onSendMessage={onQuickReplyMessage}
+            onFillInput={onQuickReplyFillInput}
             onTriggerWidget={onQuickReplyWidget}
             disabled={isLoading}
           />

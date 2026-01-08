@@ -185,64 +185,92 @@ const initialContext: WorkflowContext = {
 };
 
 /**
- * Get next step in sequence
+ * Step order for navigation
+ */
+const STEP_ORDER: PlanningStep[] = [
+  "welcome",
+  "destination",
+  "dates",
+  "travelers",
+  "flights",
+  "hotels",
+  "activities",
+  "transfers",
+  "recap",
+  "booking",
+  "complete",
+];
+
+/**
+ * Optional steps that can be skipped
+ */
+const OPTIONAL_STEPS: Set<PlanningStep> = new Set(["activities", "transfers"]);
+
+/**
+ * Get next step in sequence (iterative to prevent stack overflow)
  */
 function getNextStep(current: PlanningStep, context: WorkflowContext): PlanningStep {
-  const order: PlanningStep[] = [
-    "welcome",
-    "destination",
-    "dates",
-    "travelers",
-    "flights",
-    "hotels",
-    "activities",
-    "transfers",
-    "recap",
-    "booking",
-    "complete",
-  ];
-
-  const currentIndex = order.indexOf(current);
-  if (currentIndex === -1 || currentIndex >= order.length - 1) {
+  const currentIndex = STEP_ORDER.indexOf(current);
+  if (currentIndex === -1 || currentIndex >= STEP_ORDER.length - 1) {
     return current;
   }
 
-  // Skip optional steps if user hasn't selected flights/hotels yet
-  const nextStep = order[currentIndex + 1];
+  // Iterate through remaining steps to find next non-skipped step
+  for (let i = currentIndex + 1; i < STEP_ORDER.length; i++) {
+    const candidateStep = STEP_ORDER[i];
 
-  // Special logic: skip activities/transfers if user wants to go directly to recap
-  if (nextStep === "activities" && context.skippedSteps.has("activities")) {
-    return getNextStep(nextStep, context);
-  }
-  if (nextStep === "transfers" && context.skippedSteps.has("transfers")) {
-    return getNextStep(nextStep, context);
+    // Only skip optional steps that are in skippedSteps
+    if (OPTIONAL_STEPS.has(candidateStep) && context.skippedSteps.has(candidateStep)) {
+      continue;
+    }
+
+    return candidateStep;
   }
 
-  return nextStep;
+  // If all remaining steps are skipped, stay at current (shouldn't happen)
+  return current;
 }
 
 /**
  * Get previous step in sequence
  */
 function getPreviousStep(current: PlanningStep): PlanningStep {
-  const order: PlanningStep[] = [
-    "welcome",
-    "destination",
-    "dates",
-    "travelers",
-    "flights",
-    "hotels",
-    "activities",
-    "transfers",
-    "recap",
-  ];
-
-  const currentIndex = order.indexOf(current);
+  const currentIndex = STEP_ORDER.indexOf(current);
   if (currentIndex <= 0) {
     return "welcome";
   }
 
-  return order[currentIndex - 1];
+  return STEP_ORDER[currentIndex - 1];
+}
+
+/**
+ * Valid steps for GO_TO_STEP navigation
+ */
+const NAVIGABLE_STEPS: Set<PlanningStep> = new Set([
+  "welcome",
+  "destination",
+  "dates",
+  "travelers",
+  "flights",
+  "hotels",
+  "activities",
+  "transfers",
+  "recap",
+]);
+
+/**
+ * Type guard to check if event has a valid step property
+ */
+function isGoToStepEvent(event: unknown): event is { type: "GO_TO_STEP"; step: PlanningStep } {
+  return (
+    typeof event === "object" &&
+    event !== null &&
+    "type" in event &&
+    (event as { type: string }).type === "GO_TO_STEP" &&
+    "step" in event &&
+    typeof (event as { step: unknown }).step === "string" &&
+    NAVIGABLE_STEPS.has((event as { step: PlanningStep }).step)
+  );
 }
 
 /**
@@ -634,18 +662,53 @@ export const workflowMachine = createMachine({
 
     /**
      * Navigating - Transitional state for direct navigation
+     * Uses type-safe guards to prevent invalid transitions
      */
     navigating: {
       always: [
-        { target: "welcome", guard: ({ event }) => (event as any).step === "welcome" },
-        { target: "destination", guard: ({ event }) => (event as any).step === "destination" },
-        { target: "dates", guard: ({ event }) => (event as any).step === "dates" },
-        { target: "travelers", guard: ({ event }) => (event as any).step === "travelers" },
-        { target: "flights", guard: ({ event }) => (event as any).step === "flights" },
-        { target: "hotels", guard: ({ event }) => (event as any).step === "hotels" },
-        { target: "activities", guard: ({ event }) => (event as any).step === "activities" },
-        { target: "transfers", guard: ({ event }) => (event as any).step === "transfers" },
-        { target: "recap", guard: ({ event }) => (event as any).step === "recap" },
+        {
+          target: "welcome",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "welcome",
+        },
+        {
+          target: "destination",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "destination",
+        },
+        {
+          target: "dates",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "dates",
+        },
+        {
+          target: "travelers",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "travelers",
+        },
+        {
+          target: "flights",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "flights",
+        },
+        {
+          target: "hotels",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "hotels",
+        },
+        {
+          target: "activities",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "activities",
+        },
+        {
+          target: "transfers",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "transfers",
+        },
+        {
+          target: "recap",
+          guard: ({ event }) => isGoToStepEvent(event) && event.step === "recap",
+        },
+        // Fallback: if no valid step, go back to previous step stored in context
+        // This prevents infinite loops and handles invalid navigation gracefully
+        {
+          target: "destination",
+          guard: ({ context }) => context.previousStep === "destination" || context.currentStep === "destination",
+        },
+        // Ultimate fallback: stay at welcome (first valid step)
         { target: "welcome" },
       ],
     },

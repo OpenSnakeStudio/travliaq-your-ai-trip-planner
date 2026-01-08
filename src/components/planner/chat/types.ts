@@ -19,6 +19,7 @@ export type { AirportChoice, DualAirportChoice, WidgetType, CitySelectionData, A
  */
 export type QuickReplyAction =
   | { type: "sendMessage"; message: string }
+  | { type: "fillInput"; message: string }
   | { type: "triggerWidget"; widget: WidgetType }
   | { type: "emitEvent"; event: string; payload: unknown }
   | { type: "navigate"; tab: "flights" | "activities" | "stays" | "preferences" };

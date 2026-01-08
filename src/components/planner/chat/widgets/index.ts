@@ -2,6 +2,9 @@
  * Chat Widgets - Barrel export
  */
 
+// Common utilities (Error handling, Loading states)
+export * from "./common";
+
 // Core widgets
 export { DatePickerWidget } from "./DatePickerWidget";
 export { DateRangePickerWidget } from "./DateRangePickerWidget";
@@ -34,3 +37,6 @@ export * from "./alerts";
 
 // Interactive widgets (Phase 5 - Rich Interactions)
 export * from "./interactive";
+
+// Booking widgets (Phase 6 - Premium Features)
+export * from "./booking";

@@ -3,11 +3,16 @@
  *
  * Generates PDF summaries, email-ready content, and
  * shareable trip links.
+ *
+ * SECURITY: All user-generated content is escaped before rendering
+ * to prevent XSS attacks.
  */
 
 import type { WorkflowContext, StepSelections } from "../machines/workflowMachine";
 import type { TimelineDay } from "../widgets/interactive/TimelineWidget";
 import type { BookingSummary, TravelerInfo, ContactInfo } from "../widgets/booking/BookingFlowWidget";
+import { escapeHtml, escapeICalText, sanitizeFilename, base64UrlEncode } from "../utils/security";
+import { safeParseDate, isValidDate } from "../utils/validators";
 
 /**
  * Export format
@@ -131,32 +136,47 @@ const DEFAULT_OPTIONS: ExportOptions = {
 };
 
 /**
- * Format date for export
+ * Format date for export (with validation)
  */
-function formatDate(date: Date | string, language: string = "fr"): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString(language === "fr" ? "fr-FR" : "en-US", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function formatDate(date: Date | string | null | undefined, language: string = "fr"): string {
+  const parsed = safeParseDate(date);
+  if (!parsed) return "Date non définie";
+
+  try {
+    return parsed.toLocaleDateString(language === "fr" ? "fr-FR" : "en-US", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  } catch {
+    return "Date invalide";
+  }
 }
 
 /**
- * Format short date
+ * Format short date (with validation)
  */
-function formatShortDate(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toISOString().split("T")[0];
+function formatShortDate(date: Date | string | null | undefined): string {
+  const parsed = safeParseDate(date);
+  if (!parsed) return "";
+
+  try {
+    return parsed.toISOString().split("T")[0];
+  } catch {
+    return "";
+  }
 }
 
 /**
- * Calculate nights between dates
+ * Calculate nights between dates (with validation)
  */
-function calculateNights(departure: Date, returnDate: Date): number {
+function calculateNights(departure: Date | null, returnDate: Date | null): number {
+  if (!departure || !returnDate) return 0;
+  if (!isValidDate(departure) || !isValidDate(returnDate)) return 0;
+
   const diff = returnDate.getTime() - departure.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
 /**
@@ -265,20 +285,29 @@ export function exportContextToTrip(
 
 /**
  * Generate PDF-ready HTML content
+ *
+ * SECURITY: All dynamic content is escaped to prevent XSS attacks.
  */
 export function generatePDFContent(
   trip: ExportedTrip,
   options: ExportOptions = {}
 ): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  const currency = trip.totalCost?.currency || opts.currency || "€";
+  const currency = escapeHtml(trip.totalCost?.currency || opts.currency || "€");
+
+  // Escape all user-generated content
+  const title = escapeHtml(trip.title);
+  const destination = escapeHtml(trip.destination);
+  const departureDateStr = escapeHtml(trip.dates.departure);
+  const returnDateStr = trip.dates.return ? escapeHtml(trip.dates.return) : "";
 
   let html = `
 <!DOCTYPE html>
-<html lang="${opts.language}">
+<html lang="${escapeHtml(opts.language || "fr")}">
 <head>
   <meta charset="UTF-8">
-  <title>${trip.title}</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+  <title>${title}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; color: #1a1a1a; }
     h1 { color: #2563eb; margin-bottom: 8px; }
@@ -295,9 +324,9 @@ export function generatePDFContent(
   </style>
 </head>
 <body>
-  <h1>${trip.title}</h1>
+  <h1>${title}</h1>
   <div class="meta">
-    ${trip.dates.departure}${trip.dates.return ? ` → ${trip.dates.return}` : ""} •
+    ${departureDateStr}${returnDateStr ? ` → ${returnDateStr}` : ""} •
     ${trip.travelers.total} voyageur${trip.travelers.total > 1 ? "s" : ""}
   </div>
 `;
@@ -309,19 +338,23 @@ export function generatePDFContent(
   <div class="section">
 `;
     if (trip.flights.outbound) {
+      const outboundDeparture = escapeHtml(trip.flights.outbound.departure);
+      const outboundAirline = escapeHtml(trip.flights.outbound.airline || "");
       html += `
     <div class="card">
-      <div class="card-title">Vol aller</div>
-      <div class="card-detail">${trip.flights.outbound.departure}</div>
+      <div class="card-title">Vol aller${outboundAirline ? ` - ${outboundAirline}` : ""}</div>
+      <div class="card-detail">${outboundDeparture}</div>
       ${trip.flights.outbound.price ? `<div class="price">${trip.flights.outbound.price}${currency}</div>` : ""}
     </div>
 `;
     }
     if (trip.flights.return) {
+      const returnDeparture = escapeHtml(trip.flights.return.departure);
+      const returnAirline = escapeHtml(trip.flights.return.airline || "");
       html += `
     <div class="card">
-      <div class="card-title">Vol retour</div>
-      <div class="card-detail">${trip.flights.return.departure}</div>
+      <div class="card-title">Vol retour${returnAirline ? ` - ${returnAirline}` : ""}</div>
+      <div class="card-detail">${returnDeparture}</div>
       ${trip.flights.return.price ? `<div class="price">${trip.flights.return.price}${currency}</div>` : ""}
     </div>
 `;
@@ -331,14 +364,20 @@ export function generatePDFContent(
 
   // Hotel section
   if (trip.hotel) {
+    const hotelName = escapeHtml(trip.hotel.name);
+    const hotelAddress = trip.hotel.address ? escapeHtml(trip.hotel.address) : "";
+    const checkIn = escapeHtml(trip.hotel.checkIn);
+    const checkOut = escapeHtml(trip.hotel.checkOut);
+
     html += `
   <h2>🏨 Hébergement</h2>
   <div class="section">
     <div class="card">
-      <div class="card-title">${trip.hotel.name}</div>
+      <div class="card-title">${hotelName}</div>
       <div class="card-detail">
-        Check-in: ${trip.hotel.checkIn}<br>
-        Check-out: ${trip.hotel.checkOut}<br>
+        ${hotelAddress ? `${hotelAddress}<br>` : ""}
+        Check-in: ${checkIn}<br>
+        Check-out: ${checkOut}<br>
         ${trip.hotel.nights} nuit${trip.hotel.nights > 1 ? "s" : ""}
       </div>
       ${trip.hotel.price ? `<div class="price">${trip.hotel.price}${currency}</div>` : ""}
@@ -354,10 +393,14 @@ export function generatePDFContent(
   <div class="section">
 `;
     for (const activity of trip.activities) {
+      const activityName = escapeHtml(activity.name);
+      const activityDate = activity.date ? escapeHtml(activity.date) : "";
+      const activityDuration = activity.duration ? escapeHtml(activity.duration) : "";
+
       html += `
     <div class="card">
-      <div class="card-title">${activity.name}</div>
-      ${activity.date ? `<div class="card-detail">${activity.date}</div>` : ""}
+      <div class="card-title">${activityName}</div>
+      ${activityDate ? `<div class="card-detail">${activityDate}${activityDuration ? ` (${activityDuration})` : ""}</div>` : ""}
       ${activity.price ? `<div class="price">${activity.price}${currency}</div>` : ""}
     </div>
 `;
@@ -367,10 +410,11 @@ export function generatePDFContent(
 
   // Total section
   if (trip.totalCost) {
+    const totalCurrency = escapeHtml(trip.totalCost.currency);
     html += `
   <div class="total">
     <div>Total du voyage</div>
-    <div class="total-amount">${trip.totalCost.amount}${trip.totalCost.currency}</div>
+    <div class="total-amount">${trip.totalCost.amount}${totalCurrency}</div>
   </div>
 `;
   }
@@ -458,12 +502,31 @@ export function generateEmailContent(
 
 /**
  * Generate iCal content for calendar export
+ *
+ * SECURITY: All dynamic content is escaped for iCal format.
  */
 export function generateICalContent(trip: ExportedTrip): string {
-  const formatICalDate = (date: Date | string): string => {
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const formatICalDate = (date: Date | string | null | undefined): string => {
+    const parsed = safeParseDate(date);
+    if (!parsed) return "";
+    try {
+      return parsed.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    } catch {
+      return "";
+    }
   };
+
+  // Generate a unique ID using crypto if available
+  const generateUID = (prefix: string): string => {
+    const random = typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    return `${prefix}-${random}@travliaq.com`;
+  };
+
+  // Escape all user content for iCal
+  const title = escapeICalText(trip.title);
+  const destination = escapeICalText(trip.destination);
 
   let ical = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -473,35 +536,40 @@ METHOD:PUBLISH
 `;
 
   // Main trip event
-  const startDate = new Date(trip.dates.departure);
-  const endDate = trip.dates.return ? new Date(trip.dates.return) : startDate;
+  const startDate = safeParseDate(trip.dates.departure);
+  const endDate = safeParseDate(trip.dates.return) || startDate;
 
-  ical += `BEGIN:VEVENT
-UID:trip-${Date.now()}@travliaq.com
+  if (startDate) {
+    ical += `BEGIN:VEVENT
+UID:${generateUID("trip")}
 DTSTAMP:${formatICalDate(new Date())}
 DTSTART:${formatICalDate(startDate)}
 DTEND:${formatICalDate(endDate)}
-SUMMARY:${trip.title}
-DESCRIPTION:Voyage à ${trip.destination}\\n${trip.travelers.total} voyageur(s)
-LOCATION:${trip.destination}
+SUMMARY:${title}
+DESCRIPTION:Voyage à ${destination}\\n${trip.travelers.total} voyageur(s)
+LOCATION:${destination}
 END:VEVENT
 `;
+  }
 
   // Add activities as separate events
   if (trip.activities) {
     for (const activity of trip.activities) {
       if (activity.date) {
-        const activityDate = new Date(activity.date);
-        ical += `BEGIN:VEVENT
-UID:activity-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@travliaq.com
+        const activityDate = safeParseDate(activity.date);
+        if (activityDate) {
+          const activityName = escapeICalText(activity.name);
+          ical += `BEGIN:VEVENT
+UID:${generateUID("activity")}
 DTSTAMP:${formatICalDate(new Date())}
 DTSTART:${formatICalDate(activityDate)}
 DTEND:${formatICalDate(activityDate)}
-SUMMARY:${activity.name}
-DESCRIPTION:Activité à ${trip.destination}
-LOCATION:${trip.destination}
+SUMMARY:${activityName}
+DESCRIPTION:Activité à ${destination}
+LOCATION:${destination}
 END:VEVENT
 `;
+        }
       }
     }
   }
@@ -513,6 +581,8 @@ END:VEVENT
 
 /**
  * Generate shareable link data
+ *
+ * Uses URL-safe base64 encoding for cross-platform compatibility.
  */
 export function generateShareableLink(trip: ExportedTrip): string {
   const data = {
@@ -523,12 +593,19 @@ export function generateShareableLink(trip: ExportedTrip): string {
     p: trip.totalCost?.amount,
   };
 
-  const encoded = btoa(JSON.stringify(data));
-  return `travliaq://trip/${encoded}`;
+  try {
+    const encoded = base64UrlEncode(JSON.stringify(data));
+    return `travliaq://trip/${encoded}`;
+  } catch {
+    // Fallback to basic encoding if base64 fails
+    return `travliaq://trip/error`;
+  }
 }
 
 /**
  * Export trip to format
+ *
+ * SECURITY: Filenames are sanitized to prevent path traversal attacks.
  */
 export async function exportTrip(
   context: WorkflowContext,
@@ -537,12 +614,15 @@ export async function exportTrip(
 ): Promise<{ data: string; filename: string; mimeType: string }> {
   const trip = exportContextToTrip(context, options);
 
+  // Sanitize the destination for use in filenames
+  const safeDestination = sanitizeFilename(trip.destination) || "voyage";
+
   switch (format) {
     case "pdf": {
       const html = generatePDFContent(trip, options);
       return {
         data: html,
-        filename: `voyage-${trip.destination.toLowerCase().replace(/\s+/g, "-")}.html`,
+        filename: `voyage-${safeDestination}.html`,
         mimeType: "text/html",
       };
     }
@@ -559,7 +639,7 @@ export async function exportTrip(
     case "json": {
       return {
         data: JSON.stringify(trip, null, 2),
-        filename: `voyage-${trip.destination.toLowerCase().replace(/\s+/g, "-")}.json`,
+        filename: `voyage-${safeDestination}.json`,
         mimeType: "application/json",
       };
     }
@@ -568,7 +648,7 @@ export async function exportTrip(
       const ical = generateICalContent(trip);
       return {
         data: ical,
-        filename: `voyage-${trip.destination.toLowerCase().replace(/\s+/g, "-")}.ics`,
+        filename: `voyage-${safeDestination}.ics`,
         mimeType: "text/calendar",
       };
     }
@@ -589,19 +669,32 @@ export async function exportTrip(
 
 /**
  * Download exported file
+ *
+ * Note: This function requires a browser environment (document/DOM).
+ * It will silently fail in SSR/Node.js environments.
  */
 export function downloadExport(
   data: string,
   filename: string,
   mimeType: string
 ): void {
-  const blob = new Blob([data], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  // Guard against SSR/Node.js environment
+  if (typeof document === "undefined" || typeof URL === "undefined") {
+    console.warn("downloadExport: Cannot download in non-browser environment");
+    return;
+  }
+
+  try {
+    const blob = new Blob([data], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = sanitizeFilename(filename) || "download";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("downloadExport: Failed to download file", error);
+  }
 }
