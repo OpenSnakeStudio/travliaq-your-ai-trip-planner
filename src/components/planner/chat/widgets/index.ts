@@ -28,3 +28,9 @@ export * from "./navigation";
 
 // Comparison widgets (Phase 3 - Comparison & Advanced Filtering)
 export * from "./comparison";
+
+// Alert widgets (Phase 4 - Intelligence Proactive)
+export * from "./alerts";
+
+// Interactive widgets (Phase 5 - Rich Interactions)
+export * from "./interactive";

@@ -65,3 +65,16 @@ export {
   type ActivityFilters,
   type ParsedFilters,
 } from "./filterParser";
+
+// ProactiveAlerts - Intelligent alert generation (Phase 4)
+export {
+  getProactiveAlerts,
+  filterAlertsByCategory,
+  filterAlertsByStep,
+  getCriticalAlertsCount,
+  getAlertsSummary,
+  simulatePriceTracking,
+  simulateAvailabilityData,
+  type AlertPriority,
+  type ProactiveAlert,
+} from "./proactiveAlerts";
