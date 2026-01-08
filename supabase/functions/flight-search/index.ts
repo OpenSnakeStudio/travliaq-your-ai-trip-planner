@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[flight-search] Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error', flights: [] }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Internal server error', flights: [] }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

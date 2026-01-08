@@ -2,7 +2,8 @@
  * TravelersWidget Tests
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/dom";
 import { describe, it, expect, vi } from "vitest";
 import { TravelersWidget, TravelersConfirmBeforeSearchWidget } from "../TravelersWidget";
 

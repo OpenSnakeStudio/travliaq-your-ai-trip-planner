@@ -2,7 +2,8 @@
  * AirportWidgets Tests
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, fireEvent } from "@testing-library/dom";
 import { describe, it, expect, vi } from "vitest";
 import { AirportButton, DualAirportSelection } from "../AirportWidgets";
 import type { Airport } from "@/hooks/useNearestAirports";
@@ -11,7 +12,6 @@ const mockAirport: Airport = {
   iata: "CDG",
   name: "Paris Charles de Gaulle",
   city_name: "Paris",
-  country: "France",
   country_code: "FR",
   lat: 49.0097,
   lon: 2.5479,
@@ -22,7 +22,6 @@ const mockAirport2: Airport = {
   iata: "ORY",
   name: "Paris Orly",
   city_name: "Paris",
-  country: "France",
   country_code: "FR",
   lat: 48.7262,
   lon: 2.3652,
@@ -33,7 +32,6 @@ const mockAirportBarcelona: Airport = {
   iata: "BCN",
   name: "Barcelona El Prat",
   city_name: "Barcelona",
-  country: "Spain",
   country_code: "ES",
   lat: 41.2974,
   lon: 2.0833,
