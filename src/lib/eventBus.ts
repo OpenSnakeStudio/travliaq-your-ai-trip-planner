@@ -171,6 +171,25 @@ export type PlannerEvents = {
   // Onboarding
   "onboarding:start": void;
   "onboarding:complete": void;
+  
+  // Booking events
+  "booking:start": { context: unknown };
+  "booking:cancel": Record<string, never>;
+  "booking:stepChange": { step: string };
+  "booking:addItem": { item: unknown };
+  "booking:removeItem": { itemId: string };
+  "booking:itemConfirmed": { itemId: string };
+  
+  // Trip events
+  "trip:exported": { format: string; filename: string };
+  
+  // Workflow events
+  "workflow:goToStep": { step: string };
+  
+  // Search triggers
+  "flights:triggerSearch": void;
+  "hotels:triggerSearch": void;
+  "activities:triggerSearch": void;
 };
 
 // ===== Event Bus Instance =====

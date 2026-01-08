@@ -5,7 +5,7 @@
  * preventing unnecessary re-renders.
  */
 
-import React, { memo, type ComponentProps } from "react";
+import React, { memo } from "react";
 import { DatePickerWidget } from "../DatePickerWidget";
 import { DateRangePickerWidget } from "../DateRangePickerWidget";
 import { TravelersWidget } from "../TravelersWidget";
@@ -55,24 +55,26 @@ function shallowEqual(prev: Record<string, unknown>, next: Record<string, unknow
 }
 
 /**
- * Create a comparison function that ignores callback props
+ * Create a comparison function that ignores callback props (functions)
  */
-function createPropsComparison<T extends Record<string, unknown>>(
-  callbackProps: (keyof T)[]
-): (prev: T, next: T) => boolean {
+function createPropsComparisonIgnoringCallbacks<P extends object>(): (prev: P, next: P) => boolean {
   return (prev, next) => {
-    const prevFiltered = { ...prev };
-    const nextFiltered = { ...next };
+    const prevFiltered: Record<string, unknown> = {};
+    const nextFiltered: Record<string, unknown> = {};
 
-    for (const prop of callbackProps) {
-      delete prevFiltered[prop];
-      delete nextFiltered[prop];
+    // Copy all non-function props
+    for (const [key, value] of Object.entries(prev)) {
+      if (typeof value !== "function") {
+        prevFiltered[key] = value;
+      }
+    }
+    for (const [key, value] of Object.entries(next)) {
+      if (typeof value !== "function") {
+        nextFiltered[key] = value;
+      }
     }
 
-    return shallowEqual(
-      prevFiltered as Record<string, unknown>,
-      nextFiltered as Record<string, unknown>
-    );
+    return shallowEqual(prevFiltered, nextFiltered);
   };
 }
 
@@ -83,10 +85,7 @@ function createPropsComparison<T extends Record<string, unknown>>(
  */
 export const MemoizedDatePickerWidget = memo(
   DatePickerWidget,
-  createPropsComparison<ComponentProps<typeof DatePickerWidget>>([
-    "onSelect",
-    "onChange",
-  ])
+  createPropsComparisonIgnoringCallbacks()
 );
 MemoizedDatePickerWidget.displayName = "MemoizedDatePickerWidget";
 
@@ -97,11 +96,7 @@ MemoizedDatePickerWidget.displayName = "MemoizedDatePickerWidget";
  */
 export const MemoizedDateRangePickerWidget = memo(
   DateRangePickerWidget,
-  createPropsComparison<ComponentProps<typeof DateRangePickerWidget>>([
-    "onSelect",
-    "onChange",
-    "onConfirm",
-  ])
+  createPropsComparisonIgnoringCallbacks()
 );
 MemoizedDateRangePickerWidget.displayName = "MemoizedDateRangePickerWidget";
 
@@ -112,10 +107,7 @@ MemoizedDateRangePickerWidget.displayName = "MemoizedDateRangePickerWidget";
  */
 export const MemoizedTravelersWidget = memo(
   TravelersWidget,
-  createPropsComparison<ComponentProps<typeof TravelersWidget>>([
-    "onConfirm",
-    "onChange",
-  ])
+  createPropsComparisonIgnoringCallbacks()
 );
 MemoizedTravelersWidget.displayName = "MemoizedTravelersWidget";
 
@@ -126,10 +118,7 @@ MemoizedTravelersWidget.displayName = "MemoizedTravelersWidget";
  */
 export const MemoizedCitySelectionWidget = memo(
   CitySelectionWidget,
-  createPropsComparison<ComponentProps<typeof CitySelectionWidget>>([
-    "onSelect",
-    "onBack",
-  ])
+  createPropsComparisonIgnoringCallbacks()
 );
 MemoizedCitySelectionWidget.displayName = "MemoizedCitySelectionWidget";
 
@@ -148,14 +137,13 @@ MemoizedMarkdownMessage.displayName = "MemoizedMarkdownMessage";
  *
  * @example
  * ```tsx
- * const MemoizedMyWidget = withMemo(MyWidget, ["onClick", "onSubmit"]);
+ * const MemoizedMyWidget = withMemo(MyWidget);
  * ```
  */
-export function withMemo<P extends Record<string, unknown>>(
-  Component: React.ComponentType<P>,
-  callbackProps: (keyof P)[] = []
+export function withMemo<P extends object>(
+  Component: React.ComponentType<P>
 ): React.MemoExoticComponent<React.ComponentType<P>> {
-  const MemoizedComponent = memo(Component, createPropsComparison(callbackProps));
+  const MemoizedComponent = memo(Component, createPropsComparisonIgnoringCallbacks<P>());
   MemoizedComponent.displayName = `Memo(${Component.displayName || Component.name || "Component"})`;
   return MemoizedComponent;
 }

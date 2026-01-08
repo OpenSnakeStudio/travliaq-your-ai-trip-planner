@@ -433,10 +433,14 @@ export function useChatWorkflow(
 
   const triggerSearch = useCallback(
     (searchType?: "flights" | "hotels" | "activities") => {
-      if (searchType) {
-        eventBus.emit(`${searchType}:triggerSearch` as "flights:triggerSearch", {});
+      if (searchType === "flights") {
+        eventBus.emit("flights:triggerSearch");
+      } else if (searchType === "hotels") {
+        eventBus.emit("hotels:triggerSearch");
+      } else if (searchType === "activities") {
+        eventBus.emit("activities:triggerSearch");
       } else {
-        eventBus.emit("flight:triggerSearch", {});
+        eventBus.emit("flight:triggerSearch");
       }
     },
     []
