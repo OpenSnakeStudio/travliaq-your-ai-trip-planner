@@ -4,8 +4,8 @@
  * Calls LLM with creative prompt for fun, factual summaries.
  */
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { usePreferenceMemory, type TripPreferences } from "@/contexts/PreferenceMemoryContext";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { usePreferenceMemory, type TripPreferences } from "@/contexts/preferences";
 import { Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ function getAuthLabel(touristVsLocal: number): string {
 const PLACEHOLDER = "Affinez vos préférences pour découvrir votre profil voyageur unique...";
 const CHANGES_THRESHOLD = 3; // Regenerate every N changes to optimize LLM costs
 
-export function PreferenceSummary({ className, compact = false }: PreferenceSummaryProps) {
+export const PreferenceSummary = memo(function PreferenceSummary({ className, compact = false }: PreferenceSummaryProps) {
   const { getPreferences, getProfileCompletion } = usePreferenceMemory();
   const [summary, setSummary] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -230,6 +230,6 @@ Réponds uniquement avec la description, sans guillemets.`;
       <div className="absolute -bottom-1 -right-1 w-16 h-16 bg-gradient-to-tl from-primary/10 to-transparent rounded-full blur-xl pointer-events-none" />
     </div>
   );
-}
+});
 
 export default PreferenceSummary;

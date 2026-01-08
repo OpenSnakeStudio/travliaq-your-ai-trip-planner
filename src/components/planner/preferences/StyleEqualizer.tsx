@@ -3,9 +3,10 @@
  * Visual sliders for style axes - uses same brand colors for all
  */
 
+import { memo } from "react";
 import { DualSlider } from "@/components/ui/dual-slider";
 import { cn } from "@/lib/utils";
-import type { StyleAxes } from "@/contexts/PreferenceMemoryContext";
+import type { StyleAxes } from "@/contexts/preferences";
 
 interface StyleEqualizerProps {
   axes: StyleAxes;
@@ -26,7 +27,7 @@ const AXES_CONFIG: Array<{
   { key: "touristVsLocal", leftLabel: "Touristique", rightLabel: "Authentique", leftEmoji: "📸", rightEmoji: "🏠" },
 ];
 
-export function StyleEqualizer({ axes, onAxisChange, compact = false }: StyleEqualizerProps) {
+export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange, compact = false }: StyleEqualizerProps) {
   return (
     <div className={cn("space-y-3", compact && "space-y-2")}>
       {AXES_CONFIG.map(({ key, leftLabel, rightLabel, leftEmoji, rightEmoji }) => (
@@ -71,6 +72,6 @@ export function StyleEqualizer({ axes, onAxisChange, compact = false }: StyleEqu
       ))}
     </div>
   );
-}
+});
 
 export default StyleEqualizer;

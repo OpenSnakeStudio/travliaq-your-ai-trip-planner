@@ -3,8 +3,9 @@
  * Compact chips for travel occasions
  */
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
-import type { TripContext } from "@/contexts/PreferenceMemoryContext";
+import type { TripContext } from "@/contexts/preferences";
 
 interface OccasionOption {
   id: NonNullable<TripContext["occasion"]>;
@@ -26,7 +27,7 @@ interface OccasionSelectorProps {
   onSelect: (occasion: TripContext["occasion"]) => void;
 }
 
-export function OccasionSelector({ selected, onSelect }: OccasionSelectorProps) {
+export const OccasionSelector = memo(function OccasionSelector({ selected, onSelect }: OccasionSelectorProps) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {OCCASIONS.map((occasion) => {
@@ -50,6 +51,6 @@ export function OccasionSelector({ selected, onSelect }: OccasionSelectorProps) 
       })}
     </div>
   );
-}
+});
 
 export default OccasionSelector;

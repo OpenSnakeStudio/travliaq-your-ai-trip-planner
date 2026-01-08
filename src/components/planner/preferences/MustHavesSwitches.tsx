@@ -4,9 +4,10 @@
  * Fixed: clicking the Switch itself now works properly
  */
 
+import { memo } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { MustHaves } from "@/contexts/PreferenceMemoryContext";
+import type { MustHaves } from "@/contexts/preferences";
 
 interface MustHaveConfig {
   key: keyof MustHaves;
@@ -27,7 +28,7 @@ interface MustHavesSwitchesProps {
   compact?: boolean;
 }
 
-export function MustHavesSwitches({ mustHaves, onToggle, compact = false }: MustHavesSwitchesProps) {
+export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, onToggle, compact = false }: MustHavesSwitchesProps) {
   return (
     <div className={cn("grid grid-cols-2 gap-2", compact && "gap-1.5")}>
       {MUST_HAVES_CONFIG.map(({ key, label, emoji }) => (
@@ -58,6 +59,6 @@ export function MustHavesSwitches({ mustHaves, onToggle, compact = false }: Must
       ))}
     </div>
   );
-}
+});
 
 export default MustHavesSwitches;

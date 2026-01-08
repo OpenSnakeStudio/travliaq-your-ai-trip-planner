@@ -3,6 +3,7 @@
  * Shows profile completion progress and summary
  */
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Sparkles } from "lucide-react";
@@ -15,7 +16,7 @@ interface ProfileCompletionCardProps {
   compact?: boolean;
 }
 
-export function ProfileCompletionCard({
+export const ProfileCompletionCard = memo(function ProfileCompletionCard({
   completion,
   summary,
   lastUpdated,
@@ -92,6 +93,6 @@ export function ProfileCompletionCard({
       )}
     </div>
   );
-}
+});
 
 export default ProfileCompletionCard;

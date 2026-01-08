@@ -3,6 +3,7 @@
  * Compact grid of cards - smaller buttons, smaller icons
  */
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { Leaf, Salad, Moon, Star, Wheat, Fish, Milk, Egg, Nut, Check } from "lucide-react";
 
@@ -30,7 +31,7 @@ interface DietaryPickerProps {
   onToggle: (id: string) => void;
 }
 
-export function DietaryPicker({ selected, onToggle }: DietaryPickerProps) {
+export const DietaryPicker = memo(function DietaryPicker({ selected, onToggle }: DietaryPickerProps) {
   return (
     <div className="grid grid-cols-3 gap-1.5">
       {DIETARY_OPTIONS.map((option) => {
@@ -73,6 +74,6 @@ export function DietaryPicker({ selected, onToggle }: DietaryPickerProps) {
       })}
     </div>
   );
-}
+});
 
 export default DietaryPicker;

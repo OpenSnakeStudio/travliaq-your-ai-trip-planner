@@ -3,8 +3,9 @@
  * Clear, readable travel style buttons
  */
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
-import type { TravelStyle } from "@/contexts/PreferenceMemoryContext";
+import type { TravelStyle } from "@/contexts/preferences";
 
 interface TravelStyleOption {
   id: TravelStyle;
@@ -24,7 +25,7 @@ interface TravelStyleSelectorProps {
   onSelect: (style: TravelStyle) => void;
 }
 
-export function TravelStyleSelector({ selected, onSelect }: TravelStyleSelectorProps) {
+export const TravelStyleSelector = memo(function TravelStyleSelector({ selected, onSelect }: TravelStyleSelectorProps) {
   return (
     <div className="grid grid-cols-4 gap-2">
       {TRAVEL_STYLES.map((style) => {
@@ -48,6 +49,6 @@ export function TravelStyleSelector({ selected, onSelect }: TravelStyleSelectorP
       })}
     </div>
   );
-}
+});
 
 export default TravelStyleSelector;

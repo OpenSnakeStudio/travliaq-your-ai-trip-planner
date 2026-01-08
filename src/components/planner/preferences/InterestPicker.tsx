@@ -3,6 +3,7 @@
  * Grid of selectable interests with max limit
  */
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 interface Interest {
@@ -31,11 +32,11 @@ interface InterestPickerProps {
   compact?: boolean;
 }
 
-export function InterestPicker({ 
-  selected, 
-  onToggle, 
+export const InterestPicker = memo(function InterestPicker({
+  selected,
+  onToggle,
   maxSelections = 5,
-  compact = false 
+  compact = false
 }: InterestPickerProps) {
   const isMaxReached = selected.length >= maxSelections;
 
@@ -86,6 +87,6 @@ export function InterestPicker({
       </div>
     </div>
   );
-}
+});
 
 export default InterestPicker;
