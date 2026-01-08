@@ -1440,6 +1440,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
   }));
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Track total user messages for hashtag calculation
+  const userMessageCountRef = useRef(0);
 
   const send = async () => {
     if (!input.trim() || isLoading) return;
@@ -1450,6 +1453,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
       role: "user",
       text: userText,
     };
+
+    // Increment user message count and emit event for SmartTagsWidget
+    userMessageCountRef.current += 1;
+    eventBus.emit("chat:userMessage", { 
+      text: userText, 
+      messageCount: userMessageCountRef.current 
+    });
 
     // Clear any active widgets when user sends a message (user chose to type instead of click)
     setMessages((prev) => [

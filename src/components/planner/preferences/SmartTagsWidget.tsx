@@ -1,39 +1,38 @@
 /**
- * SmartTagsWidget
- * Displays top 3 hashtags based on user chat interactions.
- * Calculates hashtags every X messages and allows user to edit them.
+ * SmartTagsWidget v2
+ * Displays top 3 hashtags calculated from user chat messages via LLM.
+ * Recalculates every X messages to optimize token usage.
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Hash, X, Plus, Sparkles } from "lucide-react";
+import { Hash, X, Plus, Sparkles, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { eventBus } from "@/lib/eventBus";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { usePreferenceMemory } from "@/contexts/PreferenceMemoryContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SmartTagsWidgetProps {
   className?: string;
 }
 
-// Hashtags prédéfinis par catégorie
-const HASHTAG_CATEGORIES = {
-  style: ["#Aventurier", "#Explorateur", "#Détente", "#Luxe", "#Budget", "#Nature", "#Urbain", "#Culture"],
-  mood: ["#Romantique", "#Famille", "#Solo", "#EntreAmis", "#Fête", "#Zen", "#Sport", "#Foodie"],
-  interest: ["#Plage", "#Montagne", "#Histoire", "#Gastronomie", "#Shopping", "#Wellness", "#Photo", "#Nightlife"],
-};
+// Hashtags prédéfinis par catégorie (suggestions)
+const ALL_HASHTAGS = [
+  "#Aventurier", "#Explorateur", "#Détente", "#Luxe", "#Budget", "#Nature", "#Urbain", "#Culture",
+  "#Romantique", "#Famille", "#Solo", "#EntreAmis", "#Fête", "#Zen", "#Sport", "#Foodie",
+  "#Plage", "#Montagne", "#Histoire", "#Gastronomie", "#Shopping", "#Wellness", "#Photo", "#Nightlife",
+];
 
-const ALL_HASHTAGS = [...HASHTAG_CATEGORIES.style, ...HASHTAG_CATEGORIES.mood, ...HASHTAG_CATEGORIES.interest];
-
-const STORAGE_KEY = "travliaq_smart_tags";
-const MESSAGES_THRESHOLD = 5; // Recalculate every N messages
+const STORAGE_KEY = "travliaq_smart_tags_v2";
+const MESSAGES_THRESHOLD = 4; // Recalculate every N user messages
 
 interface StoredTags {
   tags: string[];
   messageCount: number;
   lastCalculated: string;
   isManuallySet: boolean;
+  conversationHistory: string[];
 }
 
 function loadStoredTags(): StoredTags {
@@ -45,7 +44,7 @@ function loadStoredTags(): StoredTags {
   } catch (e) {
     console.warn("[SmartTags] Failed to load:", e);
   }
-  return { tags: [], messageCount: 0, lastCalculated: "", isManuallySet: false };
+  return { tags: [], messageCount: 0, lastCalculated: "", isManuallySet: false, conversationHistory: [] };
 }
 
 function saveStoredTags(data: StoredTags) {
@@ -56,44 +55,15 @@ function saveStoredTags(data: StoredTags) {
   }
 }
 
-// Helper function to calculate tags from preferences object
-function calculateTagsFromPrefs(prefs: unknown): string[] {
-  const calculatedTags: string[] = [];
-  const p = prefs as Record<string, unknown>;
-  const travelStyle = p.travelStyle as string;
-  if (travelStyle === "solo") calculatedTags.push("#Solo");
-  else if (travelStyle === "couple") calculatedTags.push("#Romantique");
-  else if (travelStyle === "family") calculatedTags.push("#Famille");
-  else if (travelStyle === "friends") calculatedTags.push("#EntreAmis");
-  
-  const styleAxes = p.styleAxes as { chillVsIntense?: number; cityVsNature?: number; ecoVsLuxury?: number; touristVsLocal?: number } | undefined;
-  if (styleAxes) {
-    if (styleAxes.chillVsIntense && styleAxes.chillVsIntense > 70) calculatedTags.push("#Aventurier");
-    else if (styleAxes.chillVsIntense && styleAxes.chillVsIntense < 30) calculatedTags.push("#Détente");
-    if (styleAxes.cityVsNature && styleAxes.cityVsNature > 70) calculatedTags.push("#Nature");
-    else if (styleAxes.cityVsNature && styleAxes.cityVsNature < 30) calculatedTags.push("#Urbain");
-    if (styleAxes.ecoVsLuxury && styleAxes.ecoVsLuxury > 75) calculatedTags.push("#Luxe");
-    else if (styleAxes.ecoVsLuxury && styleAxes.ecoVsLuxury < 25) calculatedTags.push("#Budget");
-  }
-  
-  const interests = p.interests as string[] | undefined;
-  if (interests) {
-    const map: Record<string, string> = { food: "#Foodie", culture: "#Culture", beach: "#Plage", nature: "#Nature", wellness: "#Wellness", sport: "#Sport", adventure: "#Aventurier", nightlife: "#Nightlife" };
-    interests.forEach((i) => { if (map[i] && !calculatedTags.includes(map[i])) calculatedTags.push(map[i]); });
-  }
-  
-  return [...new Set(calculatedTags)].slice(0, 3);
-}
-
 export function SmartTagsWidget({ className }: SmartTagsWidgetProps) {
-  const { getPreferences, getProfileCompletion } = usePreferenceMemory();
   const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [newTag, setNewTag] = useState("");
+  
   const messageCountRef = useRef(0);
   const isManuallySetRef = useRef(false);
-  const conversationBufferRef = useRef<string[]>([]);
+  const conversationHistoryRef = useRef<string[]>([]);
   const hasInitializedRef = useRef(false);
 
   // Load stored tags on mount
@@ -103,119 +73,115 @@ export function SmartTagsWidget({ className }: SmartTagsWidgetProps) {
       setTags(stored.tags);
       messageCountRef.current = stored.messageCount;
       isManuallySetRef.current = stored.isManuallySet;
+      conversationHistoryRef.current = stored.conversationHistory || [];
       hasInitializedRef.current = true;
     }
   }, []);
 
-  // Initialize from current preferences if no stored tags and profile has some data
-  useEffect(() => {
-    if (hasInitializedRef.current) return;
-    
-    const completion = getProfileCompletion();
-    if (completion >= 25) {
-      const prefs = getPreferences();
-      // Calculate initial tags from current preferences
-      const calculatedTags = calculateTagsFromPrefs(prefs);
-      if (calculatedTags.length > 0) {
-        setTags(calculatedTags);
-        hasInitializedRef.current = true;
-      }
-    }
-  }, [getPreferences, getProfileCompletion]);
-
   // Save when tags change
   useEffect(() => {
-    if (tags.length > 0) {
+    if (hasInitializedRef.current || tags.length > 0) {
       saveStoredTags({
         tags,
         messageCount: messageCountRef.current,
         lastCalculated: new Date().toISOString(),
         isManuallySet: isManuallySetRef.current,
+        conversationHistory: conversationHistoryRef.current,
       });
     }
   }, [tags]);
 
-  // Calculate hashtags from preferences (local, no LLM call)
-  const calculateHashtagsFromPreferences = useCallback((prefs: Record<string, unknown>) => {
-    if (isManuallySetRef.current) return;
+  // Calculate hashtags from conversation history using LLM
+  const calculateHashtagsFromChat = useCallback(async (history: string[]) => {
+    if (isManuallySetRef.current || history.length < 2) return;
     
-    const calculatedTags: string[] = [];
+    setIsLoading(true);
     
-    // Travel style mapping
-    const travelStyle = prefs.travelStyle as string;
-    if (travelStyle === "solo") calculatedTags.push("#Solo");
-    else if (travelStyle === "couple") calculatedTags.push("#Romantique");
-    else if (travelStyle === "family") calculatedTags.push("#Famille");
-    else if (travelStyle === "friends") calculatedTags.push("#EntreAmis");
-    
-    // Style axes
-    const styleAxes = prefs.styleAxes as { chillVsIntense?: number; cityVsNature?: number; ecoVsLuxury?: number; touristVsLocal?: number } | undefined;
-    if (styleAxes) {
-      if (styleAxes.chillVsIntense && styleAxes.chillVsIntense > 70) calculatedTags.push("#Aventurier");
-      else if (styleAxes.chillVsIntense && styleAxes.chillVsIntense < 30) calculatedTags.push("#Détente");
+    try {
+      // Build a summary of the conversation (last 10 messages max)
+      const recentMessages = history.slice(-10).join("\n");
       
-      if (styleAxes.cityVsNature && styleAxes.cityVsNature > 70) calculatedTags.push("#Nature");
-      else if (styleAxes.cityVsNature && styleAxes.cityVsNature < 30) calculatedTags.push("#Urbain");
-      
-      if (styleAxes.ecoVsLuxury && styleAxes.ecoVsLuxury > 75) calculatedTags.push("#Luxe");
-      else if (styleAxes.ecoVsLuxury && styleAxes.ecoVsLuxury < 25) calculatedTags.push("#Budget");
-      
-      if (styleAxes.touristVsLocal && styleAxes.touristVsLocal > 70) calculatedTags.push("#Explorateur");
-    }
-    
-    // Interests mapping
-    const interests = prefs.interests as string[] | undefined;
-    if (interests && interests.length > 0) {
-      const interestMap: Record<string, string> = {
-        food: "#Foodie",
-        culture: "#Culture",
-        beach: "#Plage",
-        nature: "#Nature",
-        wellness: "#Wellness",
-        sport: "#Sport",
-        adventure: "#Aventurier",
-        nightlife: "#Nightlife",
-        shopping: "#Shopping",
-        workation: "#Zen",
-      };
-      interests.forEach((i) => {
-        if (interestMap[i] && !calculatedTags.includes(interestMap[i])) {
-          calculatedTags.push(interestMap[i]);
-        }
+      const response = await supabase.functions.invoke("planner-chat", {
+        body: {
+          messages: [
+            {
+              role: "system",
+              content: `Tu es un assistant qui analyse les messages d'un utilisateur pour déterminer son profil de voyageur.
+Basé sur les messages ci-dessous, génère EXACTEMENT 3 hashtags qui décrivent le mieux ce voyageur.
+
+Règles:
+- Chaque hashtag commence par #
+- Un seul mot par hashtag (ex: #Aventurier, #Romantique, #Foodie)
+- Réponds UNIQUEMENT avec les 3 hashtags séparés par des virgules
+- Exemples valides: #Aventurier, #Luxe, #Culture
+
+Messages de l'utilisateur:
+${recentMessages}`
+            },
+            {
+              role: "user",
+              content: "Génère les 3 hashtags qui me décrivent le mieux."
+            }
+          ],
+          stream: false,
+        },
       });
-    }
-    
-    // Get unique and take top 3
-    const uniqueTags = [...new Set(calculatedTags)].slice(0, 3);
-    if (uniqueTags.length > 0) {
-      setTags(uniqueTags);
+
+      if (response.data?.content) {
+        const content = response.data.content as string;
+        // Parse hashtags from response
+        const extractedTags = content
+          .split(/[,\n]+/)
+          .map((t: string) => t.trim())
+          .filter((t: string) => t.startsWith("#") && t.length > 1)
+          .slice(0, 3);
+        
+        if (extractedTags.length > 0) {
+          setTags(extractedTags);
+          hasInitializedRef.current = true;
+        }
+      }
+    } catch (error) {
+      console.error("[SmartTags] LLM error:", error);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
-  // Listen for preference updates instead of chat messages
+  // Listen for user chat messages
   useEffect(() => {
-    const handlePreferencesUpdated = (payload: { 
-      preferences: Record<string, unknown>; 
-      source: "chat" | "manual";
-      fields: string[];
-    }) => {
-      // Only count chat-based updates
-      if (payload.source !== "chat") return;
+    const handleUserMessage = (payload: { text: string; messageCount: number }) => {
+      if (!payload.text || payload.text.length < 3) return;
       
-      messageCountRef.current += 1;
-      conversationBufferRef.current.push(JSON.stringify(payload.preferences));
+      // Add message to conversation history
+      conversationHistoryRef.current.push(payload.text);
+      
+      // Keep only last 20 messages
+      if (conversationHistoryRef.current.length > 20) {
+        conversationHistoryRef.current = conversationHistoryRef.current.slice(-20);
+      }
+      
+      messageCountRef.current = payload.messageCount;
 
-      // Recalculate every N updates
-      if (messageCountRef.current % MESSAGES_THRESHOLD === 0 && !isManuallySetRef.current) {
-        calculateHashtagsFromPreferences(payload.preferences);
+      // Recalculate every N messages if not manually set
+      if (payload.messageCount % MESSAGES_THRESHOLD === 0 && !isManuallySetRef.current) {
+        calculateHashtagsFromChat(conversationHistoryRef.current);
       }
     };
 
-    eventBus.on("preferences:updated", handlePreferencesUpdated);
+    eventBus.on("chat:userMessage", handleUserMessage);
     return () => {
-      eventBus.off("preferences:updated", handlePreferencesUpdated);
+      eventBus.off("chat:userMessage", handleUserMessage);
     };
-  }, [calculateHashtagsFromPreferences]);
+  }, [calculateHashtagsFromChat]);
+
+  // Manual refresh
+  const handleRefresh = () => {
+    if (conversationHistoryRef.current.length >= 2) {
+      isManuallySetRef.current = false;
+      calculateHashtagsFromChat(conversationHistoryRef.current);
+    }
+  };
 
   // Remove a tag
   const handleRemoveTag = (tagToRemove: string) => {
@@ -259,7 +225,7 @@ export function SmartTagsWidget({ className }: SmartTagsWidgetProps) {
         className
       )}>
         <Hash className="w-3 h-3" />
-        <span className="italic">Tes hashtags apparaîtront après quelques échanges...</span>
+        <span className="italic">Tes hashtags apparaîtront après quelques messages...</span>
       </div>
     );
   }
@@ -267,47 +233,71 @@ export function SmartTagsWidget({ className }: SmartTagsWidgetProps) {
   return (
     <div className={cn("space-y-2", className)}>
       {/* Header */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
           <Sparkles className="h-3 w-3" />
-          <span>Ton style</span>
+          <span>Ton profil voyageur</span>
         </div>
-        {isLoading && (
-          <span className="text-[10px] text-muted-foreground animate-pulse">
-            Analyse...
-          </span>
-        )}
+        <div className="flex items-center gap-1">
+          {isLoading ? (
+            <span className="text-[10px] text-muted-foreground animate-pulse">
+              Analyse...
+            </span>
+          ) : conversationHistoryRef.current.length >= 2 ? (
+            <button
+              onClick={handleRefresh}
+              className="text-muted-foreground hover:text-primary transition-colors p-1"
+              title="Recalculer"
+            >
+              <RefreshCw className="w-3 h-3" />
+            </button>
+          ) : null}
+        </div>
       </div>
+
+      {/* Loading state */}
+      {isLoading && tags.length === 0 && (
+        <div className="flex gap-1.5">
+          {[1, 2, 3].map((i) => (
+            <div 
+              key={i} 
+              className="h-6 w-16 rounded-full bg-muted animate-pulse"
+            />
+          ))}
+        </div>
+      )}
 
       {/* Tags display */}
-      <div className="flex flex-wrap gap-1.5">
-        {tags.map((tag) => (
-          <Badge
-            key={tag}
-            variant="secondary"
-            className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 group cursor-pointer text-xs py-0.5 px-2"
-          >
-            {tag}
-            <button
-              onClick={() => handleRemoveTag(tag)}
-              className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 group cursor-pointer text-xs py-0.5 px-2"
             >
-              <X className="w-2.5 h-2.5" />
-            </button>
-          </Badge>
-        ))}
+              {tag}
+              <button
+                onClick={() => handleRemoveTag(tag)}
+                className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </Badge>
+          ))}
 
-        {/* Add button */}
-        {tags.length < 3 && !isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-full border border-dashed border-muted-foreground/30 hover:border-primary/50"
-          >
-            <Plus className="w-3 h-3" />
-            <span>Ajouter</span>
-          </button>
-        )}
-      </div>
+          {/* Add button */}
+          {tags.length < 3 && !isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-full border border-dashed border-muted-foreground/30 hover:border-primary/50"
+            >
+              <Plus className="w-3 h-3" />
+              <span>Ajouter</span>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Edit mode */}
       {isEditing && (
