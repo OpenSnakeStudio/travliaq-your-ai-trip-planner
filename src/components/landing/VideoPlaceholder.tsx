@@ -44,7 +44,7 @@ export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="max-w-5xl mx-auto"
+          className="relative max-w-5xl mx-auto"
         >
           <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-secondary group">
             {/* Aspect ratio container for 16:9 video */}
@@ -56,13 +56,15 @@ export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
                     src={PLACEHOLDER_IMAGE}
                     alt="Aperçu du planner Travliaq"
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
-                  
+
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                  
+
                   {/* Play Button */}
                   <motion.button
+                    data-video-play
                     onClick={() => setIsPlaying(true)}
                     className="absolute inset-0 flex items-center justify-center cursor-pointer"
                     whileHover={{ scale: 1.05 }}
@@ -91,8 +93,8 @@ export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
             </div>
           </div>
 
-          {/* Decorative elements */}
-          <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 blur-3xl rounded-full" />
+          {/* Decorative elements (kept inside bounds to avoid horizontal scroll) */}
+          <div className="pointer-events-none absolute inset-0 -z-10 scale-110 bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 blur-3xl rounded-full" />
         </motion.div>
       </div>
     </section>

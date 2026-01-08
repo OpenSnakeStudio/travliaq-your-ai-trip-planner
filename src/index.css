@@ -102,11 +102,19 @@ All colors MUST be HSL.
     font-size: 17px;
     /* Prevent layout shift when Joyride locks body scrolling */
     scrollbar-gutter: stable;
+    /* Never allow horizontal scroll */
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground font-inter;
+    overflow-x: hidden;
   }
+
+  #root {
+    overflow-x: hidden;
+  }
+
 
   h1,
   h2,

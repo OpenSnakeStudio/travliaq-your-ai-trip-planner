@@ -4,6 +4,11 @@
 
 import { motion } from "framer-motion";
 
+import logoViator from "@/assets/partner-viator.png";
+import logoGetYourGuide from "@/assets/partner-getyourguide.png";
+import logoSkyscanner from "@/assets/partner-skyscanner.png";
+import logoFever from "@/assets/partner-fever.png";
+
 const partners = [
   {
     name: "Airbnb",
@@ -15,15 +20,19 @@ const partners = [
   },
   {
     name: "Skyscanner",
-    logo: "https://logos-world.net/wp-content/uploads/2021/02/Skyscanner-Logo.png",
+    logo: logoSkyscanner,
   },
   {
     name: "GetYourGuide",
-    logo: "https://cdn.worldvectorlogo.com/logos/getyourguide.svg",
+    logo: logoGetYourGuide,
   },
   {
     name: "Viator",
-    logo: "https://logos-world.net/wp-content/uploads/2022/01/Viator-Logo.png",
+    logo: logoViator,
+  },
+  {
+    name: "Fever",
+    logo: logoFever,
   },
   {
     name: "TripAdvisor",

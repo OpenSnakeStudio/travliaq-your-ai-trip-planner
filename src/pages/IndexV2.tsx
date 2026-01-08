@@ -20,6 +20,7 @@ import {
   DestinationCards,
   HowItWorks,
   FeatureCards,
+  PricingSection,
   FinalCTA,
   VideoPlaceholder,
   PartnersSection,
@@ -31,16 +32,17 @@ const IndexV2 = () => {
   const videoRef = useRef<HTMLDivElement>(null);
 
   const scrollToVideo = () => {
-    if (videoRef.current) {
-      videoRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      // Trigger video autoplay after scroll
-      setTimeout(() => {
-        const playButton = videoRef.current?.querySelector('button');
-        if (playButton) {
-          playButton.click();
-        }
-      }, 800);
-    }
+    if (!videoRef.current) return;
+
+    videoRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Trigger video autoplay after scroll settles
+    window.setTimeout(() => {
+      const playButton = videoRef.current?.querySelector(
+        "[data-video-play]"
+      ) as HTMLButtonElement | null;
+      playButton?.click();
+    }, 650);
   };
 
   return (
@@ -115,6 +117,9 @@ const IndexV2 = () => {
 
       {/* Feature Cards */}
       <FeatureCards />
+
+      {/* Pricing */}
+      <PricingSection />
 
       {/* Partners Section */}
       <PartnersSection />

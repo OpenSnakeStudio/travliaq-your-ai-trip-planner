@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, Plus, Map, Settings, Info, Mail, FileText, LogOut, LogIn, Shield, BookOpen } from 'lucide-react';
+import { User, Plus, Map, Settings, Info, Mail, FileText, LogOut, LogIn, Shield, BookOpen, CreditCard } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTranslation } from 'react-i18next';
@@ -44,6 +44,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ className }) => {
               {t('userMenu.login')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => window.location.assign('/v2#pricing')}
+              className="cursor-pointer"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Tarifs
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/blog')} className="cursor-pointer">
               <BookOpen className="w-4 h-4 mr-2" />
               {t('userMenu.blog')}
@@ -79,7 +86,15 @@ const UserMenu: React.FC<UserMenuProps> = ({ className }) => {
             )}
             
             <DropdownMenuSeparator />
-            
+
+            <DropdownMenuItem
+              onClick={() => window.location.assign('/v2#pricing')}
+              className="cursor-pointer"
+            >
+              <CreditCard className="w-4 h-4 mr-2" />
+              Tarifs
+            </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => navigate('/blog')} className="cursor-pointer">
               <BookOpen className="w-4 h-4 mr-2" />
               {t('userMenu.blog')}
