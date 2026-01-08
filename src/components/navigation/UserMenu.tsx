@@ -6,7 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, Plus, Map, Settings, Info, Mail, FileText, LogOut, LogIn, Shield } from 'lucide-react';
+import { User, Plus, Map, Settings, Info, Mail, FileText, LogOut, LogIn, Shield, BookOpen } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTranslation } from 'react-i18next';
@@ -38,10 +38,21 @@ const UserMenu: React.FC<UserMenuProps> = ({ className }) => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {!user ? (
-          <DropdownMenuItem onClick={() => navigate('/auth')} className="cursor-pointer">
-            <LogIn className="w-4 h-4 mr-2" />
-            {t('userMenu.login')}
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem onClick={() => navigate('/auth')} className="cursor-pointer">
+              <LogIn className="w-4 h-4 mr-2" />
+              {t('userMenu.login')}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/blog')} className="cursor-pointer">
+              <BookOpen className="w-4 h-4 mr-2" />
+              {t('userMenu.blog')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/cgv')} className="cursor-pointer">
+              <FileText className="w-4 h-4 mr-2" />
+              {t('userMenu.terms')}
+            </DropdownMenuItem>
+          </>
         ) : (
           <>
             <DropdownMenuItem onClick={() => navigate('/questionnaire')} className="cursor-pointer">
@@ -70,6 +81,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ className }) => {
             <DropdownMenuSeparator />
             
             <DropdownMenuItem onClick={() => navigate('/blog')} className="cursor-pointer">
+              <BookOpen className="w-4 h-4 mr-2" />
+              {t('userMenu.blog')}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/about')} className="cursor-pointer">
               <Info className="w-4 h-4 mr-2" />
               {t('userMenu.about')}
             </DropdownMenuItem>

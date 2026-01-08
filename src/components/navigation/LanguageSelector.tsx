@@ -13,6 +13,7 @@ interface LanguageSelectorProps {
 const languages: { code: Language; flag: string; labelKey: string }[] = [
   { code: 'fr', flag: '🇫🇷', labelKey: 'language.fr' },
   { code: 'en', flag: '🇬🇧', labelKey: 'language.en' },
+  { code: 'es', flag: '🇪🇸', labelKey: 'language.es' },
 ];
 
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ open, onOpenChange }) => {
@@ -32,7 +33,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ open, onOpenChange 
             {t('preferences.chooseLanguage')}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 p-4">
+        <div className="grid grid-cols-3 gap-3 p-4">
           {languages.map((language) => (
             <button
               key={language.code}

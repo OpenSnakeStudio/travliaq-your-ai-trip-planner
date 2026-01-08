@@ -37,6 +37,7 @@ const NavBar: React.FC<NavBarProps> = ({ variant = 'default', theme = 'dark' }) 
   const languageFlags: Record<string, string> = {
     fr: '🇫🇷',
     en: '🇬🇧',
+    es: '🇪🇸',
   };
 
   return (
@@ -44,7 +45,7 @@ const NavBar: React.FC<NavBarProps> = ({ variant = 'default', theme = 'dark' }) 
       <header className={cn('absolute top-0 left-0 right-0 z-20 p-3 md:p-4', bgClass)}>
         <div className="container mx-auto flex justify-between items-center">
           {/* Logo */}
-          <a href="/" className="block">
+          <a href="/" className="block flex-shrink-0">
             <img 
               src={logo} 
               alt="Travliaq" 
@@ -54,7 +55,7 @@ const NavBar: React.FC<NavBarProps> = ({ variant = 'default', theme = 'dark' }) 
 
           {/* Preference Bar */}
           {!isMinimal && (
-            <div className={cn('flex items-center rounded-xl overflow-hidden', barBg, textColor)}>
+            <div className={cn('flex items-center rounded-xl overflow-hidden flex-shrink-0', barBg, textColor)}>
               {/* Currency */}
               <button
                 onClick={() => setCurrencyOpen(true)}
