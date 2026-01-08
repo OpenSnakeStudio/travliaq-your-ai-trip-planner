@@ -2,6 +2,7 @@
  * Chat Widgets - Barrel export
  */
 
+// Core widgets
 export { DatePickerWidget } from "./DatePickerWidget";
 export { DateRangePickerWidget } from "./DateRangePickerWidget";
 export { TravelersWidget, TravelersConfirmBeforeSearchWidget } from "./TravelersWidget";
@@ -9,3 +10,21 @@ export { TripTypeConfirmWidget } from "./TripTypeWidget";
 export { CitySelectionWidget } from "./CitySelectionWidget";
 export { AirportButton, DualAirportSelection, AirportConfirmationWidget } from "./AirportWidgets";
 export { MarkdownMessage } from "./MarkdownMessage";
+
+// Selection widgets (Sprint 1A - Quick filters)
+export * from "./selection";
+
+// Advice widgets (Sprint 1B - Tips & Suggestions)
+export * from "./advice";
+
+// Progress widgets (Sprint 1C - Workflow tracking)
+export * from "./progress";
+
+// Results widgets (Sprint 2A - Compact result cards)
+export * from "./results";
+
+// Navigation widgets (Sprint 2B - Navigation & Actions)
+export * from "./navigation";
+
+// Comparison widgets (Phase 3 - Comparison & Advanced Filtering)
+export * from "./comparison";

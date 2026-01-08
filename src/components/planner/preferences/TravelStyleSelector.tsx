@@ -3,7 +3,7 @@
  * Clear, readable travel style buttons
  */
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import type { TravelStyle } from "@/contexts/preferences";
 
@@ -26,15 +26,20 @@ interface TravelStyleSelectorProps {
 }
 
 export const TravelStyleSelector = memo(function TravelStyleSelector({ selected, onSelect }: TravelStyleSelectorProps) {
+  // Stable handler to prevent re-renders from breaking memo
+  const handleSelect = useCallback((id: TravelStyle) => {
+    onSelect(id);
+  }, [onSelect]);
+
   return (
     <div className="grid grid-cols-4 gap-2">
       {TRAVEL_STYLES.map((style) => {
         const isSelected = selected === style.id;
-        
+
         return (
           <button
             key={style.id}
-            onClick={() => onSelect(style.id)}
+            onClick={() => handleSelect(style.id)}
             className={cn(
               "flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl transition-all",
               isSelected

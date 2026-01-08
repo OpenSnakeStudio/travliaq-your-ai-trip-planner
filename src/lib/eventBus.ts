@@ -19,6 +19,7 @@ import type {
 import type { AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
 import type { ViatorActivity } from "@/types/activity";
 import type { HotelResult } from "@/components/planner/HotelSearchResults";
+import type { NormalizedDestination, DestinationSource } from "@/types/destination";
 
 // ===== Event Types =====
 
@@ -64,6 +65,27 @@ export type PlannerEvents = {
   // Accommodation-related
   "accommodation:update": { city: string; updates: Partial<AccommodationEntry> };
   "accommodation:syncWithFlights": void;
+
+  // Destination Sync (Cross-widget city propagation)
+  "destination:flightFinalized": {
+    legId: string;
+    destination: NormalizedDestination;
+    isMultiCity: boolean;
+  };
+  "destination:accommodationUpdated": {
+    accommodationId: string;
+    destination: NormalizedDestination;
+  };
+  "sync:cityPropagated": {
+    from: DestinationSource;
+    to: "accommodation" | "activity";
+    destination: NormalizedDestination;
+  };
+  "sync:blocked": {
+    widget: string;
+    reason: "user_override" | "manual_edit";
+    destinationId: string;
+  };
   
   // Hotel search results
   "hotels:results": { hotels: HotelResult[] };

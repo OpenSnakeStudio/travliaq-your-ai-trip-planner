@@ -33,6 +33,7 @@ import { fr } from "date-fns/locale";
 import type { ViatorActivity } from "@/types/activity";
 import RangeCalendar from "@/components/RangeCalendar";
 import type { DateRange } from "react-day-picker";
+import { SyncBadgeInline } from "@/components/ui/SyncBadge";
 
 // ============================================================================
 // TYPES
@@ -635,6 +636,9 @@ const ActivitiesPanel = () => {
             >
               {city.city}
             </span>
+            {city.isInherited && (
+              <SyncBadgeInline source="accommodation" className="ml-0.5" />
+            )}
             {/* Delete button - visible on hover */}
             {cities.length > 1 && (
               <button

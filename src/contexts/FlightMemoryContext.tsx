@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useMemo, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode, useEffect, useRef } from "react";
+import { DestinationSyncService } from "@/services/destinationSyncService";
 
 // localStorage key
 const STORAGE_KEY = "travliaq_flight_memory";
@@ -271,13 +272,52 @@ export function FlightMemoryProvider({ children }: { children: ReactNode }) {
   // Persist to localStorage whenever memory changes (after hydration)
   useEffect(() => {
     if (!isHydrated) return;
-    
+
     try {
       localStorage.setItem(STORAGE_KEY, serializeMemory(memory));
     } catch (error) {
       console.warn("[FlightMemory] Failed to save to localStorage:", error);
     }
   }, [memory, isHydrated]);
+
+  // Track previous arrivals for destination sync
+  const prevArrivalRef = useRef<AirportInfo | null>(null);
+  const prevLegsRef = useRef<FlightLegMemory[]>([]);
+
+  // Emit destination:flightFinalized when arrival changes
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const isMultiCity = memory.tripType === "multi";
+
+    if (isMultiCity) {
+      // For multi-destination, check each leg's arrival
+      memory.legs.forEach((leg, idx) => {
+        const prevLeg = prevLegsRef.current.find((l) => l.id === leg.id);
+        const prevArrival = prevLeg?.arrival;
+        const currArrival = leg.arrival;
+
+        // Emit if arrival changed and has a city
+        if (currArrival?.city && currArrival.city !== prevArrival?.city) {
+          console.log(`[FlightMemory] Destination finalized for leg ${idx + 1}:`, currArrival.city);
+          DestinationSyncService.emitFlightFinalized(currArrival, leg.id, true);
+        }
+      });
+      prevLegsRef.current = memory.legs.map((l) => ({ ...l }));
+    } else {
+      // For roundtrip/oneway, check single arrival
+      const currArrival = memory.arrival;
+      const prevArrival = prevArrivalRef.current;
+
+      if (currArrival?.city && currArrival.city !== prevArrival?.city) {
+        // Generate a consistent legId for single-leg trips
+        const legId = `single_${memory.tripType}`;
+        console.log("[FlightMemory] Destination finalized:", currArrival.city);
+        DestinationSyncService.emitFlightFinalized(currArrival, legId, false);
+      }
+      prevArrivalRef.current = currArrival ? { ...currArrival } : null;
+    }
+  }, [memory.arrival, memory.legs, memory.tripType, isHydrated]);
 
   const updateMemory = useCallback((partial: Partial<FlightMemory>) => {
     setMemory((prev) => {

@@ -3,7 +3,7 @@
  * Grid of selectable interests with max limit
  */
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface Interest {
@@ -40,6 +40,13 @@ export const InterestPicker = memo(function InterestPicker({
 }: InterestPickerProps) {
   const isMaxReached = selected.length >= maxSelections;
 
+  // Stable handler to prevent re-renders from breaking memo
+  const handleToggle = useCallback((id: string, isDisabled: boolean) => {
+    if (!isDisabled) {
+      onToggle(id);
+    }
+  }, [onToggle]);
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -67,7 +74,7 @@ export const InterestPicker = memo(function InterestPicker({
           return (
             <button
               key={interest.id}
-              onClick={() => !isDisabled && onToggle(interest.id)}
+              onClick={() => handleToggle(interest.id, isDisabled)}
               disabled={isDisabled}
               className={cn(
                 "flex flex-col items-center gap-0.5 p-2 rounded-lg text-center transition-all",

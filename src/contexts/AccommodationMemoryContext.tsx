@@ -1,11 +1,13 @@
-import { createContext, useContext, useState, useCallback, useMemo, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode, useEffect, useRef } from "react";
 import { useTravelMemory } from "./TravelMemoryContext";
 import { useFlightMemory } from "./FlightMemoryContext";
 import { usePreferenceMemory } from "./PreferenceMemoryContext";
 import { migrateAccommodationMemory } from "@/lib/memoryMigration";
 import { toastSuccess } from "@/lib/toast";
-import { eventBus } from "@/lib/eventBus";
+import { eventBus, usePlannerEvent } from "@/lib/eventBus";
 import type { HotelDetails } from "@/services/hotels/hotelService";
+import { DestinationSyncService } from "@/services/destinationSyncService";
+import type { NormalizedDestination } from "@/types/destination";
 
 const STORAGE_KEY = "travliaq_accommodation_memory";
 
@@ -51,6 +53,10 @@ export interface AccommodationEntry {
   checkOut: Date | null;
   // Flag to indicate if dates are synced from flights (auto-sync)
   syncedFromFlight?: boolean;
+  // Flight leg ID that synced this destination (for cascade tracking)
+  flightLegId?: string;
+  // Flag to indicate if user manually modified the destination (blocks sync from flights)
+  userOverriddenDestination?: boolean;
   // Flag to indicate if user manually modified dates (takes priority over sync)
   userModifiedDates?: boolean;
   // Flag to indicate if user manually modified budget (prevents auto-propagation)
@@ -373,6 +379,215 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
       defaultPriceMax: max,
     }));
   }, [preferences.comfortLevel, isHydrated]);
+
+  // Listen for destination:flightFinalized events to auto-sync cities from flights
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const handleFlightDestination = (event: {
+      legId: string;
+      destination: NormalizedDestination;
+      isMultiCity: boolean;
+    }) => {
+      const { legId, destination, isMultiCity } = event;
+
+      console.log("[AccommodationMemory] Received flight destination:", destination.city);
+
+      setMemory(prev => {
+        // Check if accommodation for this city already exists
+        const existingIndex = prev.accommodations.findIndex(
+          acc =>
+            acc.city.toLowerCase() === destination.city.toLowerCase() &&
+            acc.countryCode?.toUpperCase() === destination.countryCode.toUpperCase()
+        );
+
+        if (existingIndex !== -1) {
+          const existing = prev.accommodations[existingIndex];
+
+          // If user manually overrode the destination, don't sync
+          if (existing.userOverriddenDestination) {
+            console.log("[AccommodationMemory] Sync blocked: user overrode destination for", destination.city);
+            eventBus.emit("sync:blocked", {
+              widget: "accommodation",
+              reason: "user_override",
+              destinationId: destination.id,
+            });
+            return prev;
+          }
+
+          // Update existing entry with flight data
+          console.log("[AccommodationMemory] Updating existing accommodation for", destination.city);
+          const updatedAccommodations = [...prev.accommodations];
+          updatedAccommodations[existingIndex] = {
+            ...existing,
+            lat: destination.lat,
+            lng: destination.lng,
+            syncedFromFlight: true,
+            flightLegId: legId,
+          };
+
+          // Emit sync event
+          eventBus.emit("sync:cityPropagated", {
+            from: "flight",
+            to: "accommodation",
+            destination,
+          });
+
+          return {
+            ...prev,
+            accommodations: updatedAccommodations,
+          };
+        }
+
+        // Check if we have an empty accommodation to fill
+        const emptyIndex = prev.accommodations.findIndex(acc => !acc.city);
+
+        if (emptyIndex !== -1) {
+          // Fill the empty accommodation
+          console.log("[AccommodationMemory] Filling empty accommodation with", destination.city);
+          const updatedAccommodations = [...prev.accommodations];
+          updatedAccommodations[emptyIndex] = {
+            ...updatedAccommodations[emptyIndex],
+            city: destination.city,
+            country: destination.country,
+            countryCode: destination.countryCode,
+            lat: destination.lat,
+            lng: destination.lng,
+            syncedFromFlight: true,
+            flightLegId: legId,
+          };
+
+          // Emit sync event
+          eventBus.emit("sync:cityPropagated", {
+            from: "flight",
+            to: "accommodation",
+            destination,
+          });
+
+          // Flash the tab
+          eventBus.emit("tab:flash", { tab: "stays" });
+
+          return {
+            ...prev,
+            accommodations: updatedAccommodations,
+            activeAccommodationIndex: emptyIndex,
+          };
+        }
+
+        // For multi-city trips, create a new accommodation
+        if (isMultiCity) {
+          console.log("[AccommodationMemory] Creating new accommodation for multi-city:", destination.city);
+          const newAccommodation: AccommodationEntry = {
+            ...createDefaultAccommodation(),
+            city: destination.city,
+            country: destination.country,
+            countryCode: destination.countryCode,
+            lat: destination.lat,
+            lng: destination.lng,
+            budgetPreset: prev.defaultBudgetPreset,
+            priceMin: prev.defaultPriceMin,
+            priceMax: prev.defaultPriceMax,
+            syncedFromFlight: true,
+            flightLegId: legId,
+          };
+
+          // Emit sync event
+          eventBus.emit("sync:cityPropagated", {
+            from: "flight",
+            to: "accommodation",
+            destination,
+          });
+
+          // Flash the tab
+          eventBus.emit("tab:flash", { tab: "stays" });
+
+          return {
+            ...prev,
+            accommodations: [...prev.accommodations, newAccommodation],
+            activeAccommodationIndex: prev.accommodations.length,
+          };
+        }
+
+        // For single-destination, update the first accommodation
+        console.log("[AccommodationMemory] Updating first accommodation for single-destination:", destination.city);
+        const updatedAccommodations = [...prev.accommodations];
+        const firstAcc = updatedAccommodations[0];
+
+        // Check if first accommodation has user override
+        if (firstAcc.userOverriddenDestination) {
+          console.log("[AccommodationMemory] Sync blocked: user overrode first accommodation");
+          return prev;
+        }
+
+        updatedAccommodations[0] = {
+          ...firstAcc,
+          city: destination.city,
+          country: destination.country,
+          countryCode: destination.countryCode,
+          lat: destination.lat,
+          lng: destination.lng,
+          syncedFromFlight: true,
+          flightLegId: legId,
+        };
+
+        // Emit sync event
+        eventBus.emit("sync:cityPropagated", {
+          from: "flight",
+          to: "accommodation",
+          destination,
+        });
+
+        // Flash the tab
+        eventBus.emit("tab:flash", { tab: "stays" });
+
+        return {
+          ...prev,
+          accommodations: updatedAccommodations,
+        };
+      });
+    };
+
+    eventBus.on("destination:flightFinalized", handleFlightDestination);
+
+    return () => {
+      eventBus.off("destination:flightFinalized", handleFlightDestination);
+    };
+  }, [isHydrated]);
+
+  // Emit destination:accommodationUpdated when accommodations change (for cascade to activities)
+  const prevAccommodationsRef = useRef<AccommodationEntry[]>([]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    // Compare with previous to find new or updated accommodations with cities
+    const prevAccommodations = prevAccommodationsRef.current;
+
+    memory.accommodations.forEach(acc => {
+      if (!acc.city) return;
+
+      const prevAcc = prevAccommodations.find(p => p.id === acc.id);
+
+      // Emit if this is a new accommodation with a city, or city changed
+      if (!prevAcc || prevAcc.city !== acc.city) {
+        console.log("[AccommodationMemory] Emitting accommodation updated:", acc.city);
+        DestinationSyncService.emitAccommodationUpdated({
+          id: acc.id,
+          city: acc.city,
+          country: acc.country,
+          countryCode: acc.countryCode,
+          lat: acc.lat,
+          lng: acc.lng,
+          syncedFromFlight: acc.syncedFromFlight,
+          flightLegId: acc.flightLegId,
+          userOverridden: acc.userOverriddenDestination,
+        });
+      }
+    });
+
+    // Update ref for next comparison
+    prevAccommodationsRef.current = memory.accommodations.map(acc => ({ ...acc }));
+  }, [memory.accommodations, isHydrated]);
 
   // Get active accommodation
   const getActiveAccommodation = useCallback((): AccommodationEntry | null => {

@@ -174,15 +174,24 @@ export interface UserLocation {
 /**
  * Types of inline widgets that can be shown in the chat.
  */
-export type WidgetType = 
-  | "datePicker" 
-  | "returnDatePicker" 
-  | "dateRangePicker" 
-  | "travelersSelector" 
-  | "tripTypeConfirm" 
-  | "citySelector" 
-  | "travelersConfirmBeforeSearch" 
-  | "airportConfirmation";
+export type WidgetType =
+  // Core selection widgets
+  | "datePicker"
+  | "returnDatePicker"
+  | "dateRangePicker"
+  | "travelersSelector"
+  | "tripTypeConfirm"
+  | "citySelector"
+  | "travelersConfirmBeforeSearch"
+  | "airportConfirmation"
+  // Quick filter widgets (Sprint 1)
+  | "quickFilterChips"
+  | "starRatingSelector"
+  | "durationChips"
+  | "timeOfDayChips"
+  | "cabinClassSelector"
+  | "directFlightToggle"
+  | "budgetRangeSlider";
 
 // ===== Chat Actions =====
 

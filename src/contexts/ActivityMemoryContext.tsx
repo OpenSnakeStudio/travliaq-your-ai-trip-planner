@@ -58,6 +58,10 @@ export interface ActivityDestination {
   lat?: number;
   lng?: number;
   isInherited?: boolean; // true if inherited from accommodation, false if added locally
+  // Sync metadata
+  syncedFromAccommodation?: boolean; // true if synced from accommodation
+  accommodationId?: string; // ID of source accommodation
+  userOverridden?: boolean; // true if user manually modified (blocks sync)
 }
 
 // ActivityFilters is now imported from @/types/activity
@@ -283,6 +287,34 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
     }));
   }, [preferences.comfortLevel, isHydrated]);
 
+  // Listen for destination:accommodationUpdated events to flash activities tab
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    const handleAccommodationUpdated = (event: {
+      accommodationId: string;
+      destination: { city: string; country: string };
+    }) => {
+      console.log("[ActivityMemory] Received accommodation destination:", event.destination.city);
+
+      // Flash the activities tab to indicate new destinations are available
+      eventBus.emit("tab:flash", { tab: "activities" });
+
+      // Emit sync propagation event
+      eventBus.emit("sync:cityPropagated", {
+        from: "accommodation",
+        to: "activity",
+        destination: event.destination as any, // Type cast since we don't have full NormalizedDestination
+      });
+    };
+
+    eventBus.on("destination:accommodationUpdated", handleAccommodationUpdated);
+
+    return () => {
+      eventBus.off("destination:accommodationUpdated", handleAccommodationUpdated);
+    };
+  }, [isHydrated]);
+
   // ============================================================================
   // COMPUTED: All destinations = inherited from accommodations + local
   // This is the INHERITANCE logic: Activities inherit from Accommodations
@@ -301,6 +333,10 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
         lat: acc.lat,
         lng: acc.lng,
         isInherited: true,
+        // Sync metadata from accommodation
+        syncedFromAccommodation: acc.syncedFromFlight || false,
+        accommodationId: acc.id,
+        userOverridden: false, // Inherited destinations cannot be overridden at activity level
       }));
 
     // 2. Get local destinations (added only in Activities panel)

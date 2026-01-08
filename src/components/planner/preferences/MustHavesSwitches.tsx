@@ -4,7 +4,7 @@
  * Fixed: clicking the Switch itself now works properly
  */
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import type { MustHaves } from "@/contexts/preferences";
@@ -29,6 +29,11 @@ interface MustHavesSwitchesProps {
 }
 
 export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, onToggle, compact = false }: MustHavesSwitchesProps) {
+  // Stable handler to prevent re-renders from breaking memo
+  const handleToggle = useCallback((key: keyof MustHaves) => {
+    onToggle(key);
+  }, [onToggle]);
+
   return (
     <div className={cn("grid grid-cols-2 gap-2", compact && "gap-1.5")}>
       {MUST_HAVES_CONFIG.map(({ key, label, emoji }) => (
@@ -36,12 +41,12 @@ export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, on
           key={key}
           className={cn(
             "flex items-center justify-between p-2 rounded-xl transition-colors cursor-pointer",
-            mustHaves[key] 
-              ? "bg-primary/15 border-2 border-primary" 
+            mustHaves[key]
+              ? "bg-primary/15 border-2 border-primary"
               : "bg-muted/30 border border-border/30 hover:bg-muted/50",
             compact && "p-1.5"
           )}
-          onClick={() => onToggle(key)}
+          onClick={() => handleToggle(key)}
         >
           <div className="flex items-center gap-1.5">
             <span className="text-sm">{emoji}</span>
@@ -51,7 +56,7 @@ export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, on
           <div onClick={(e) => e.stopPropagation()}>
             <Switch
               checked={mustHaves[key]}
-              onCheckedChange={() => onToggle(key)}
+              onCheckedChange={() => handleToggle(key)}
               className="scale-[0.65]"
             />
           </div>

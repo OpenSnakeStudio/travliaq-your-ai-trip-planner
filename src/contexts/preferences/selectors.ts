@@ -44,7 +44,7 @@ export function selectProfileCompletion(prefs: TripPreferences): number {
 
   // Must-haves (any set)
   const mustHavesSet = Object.values(prefs.mustHaves).filter(Boolean).length;
-  score += Math.min(1, mustHavesSet / 1) * weights.mustHaves;
+  score += (mustHavesSet > 0 ? 1 : 0) * weights.mustHaves;
 
   // Occasion set
   if (prefs.tripContext.occasion) score += weights.occasion;

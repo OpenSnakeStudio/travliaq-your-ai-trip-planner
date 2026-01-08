@@ -156,6 +156,7 @@ export function preferenceReducer(
         },
         lastUpdated: now,
         detectedFromChat: false,
+        manualOverrides: [...new Set([...state.manualOverrides, 'workPreferences'])],
       };
     }
 

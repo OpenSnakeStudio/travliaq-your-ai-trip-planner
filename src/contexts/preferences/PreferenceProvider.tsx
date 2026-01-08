@@ -3,7 +3,7 @@
  * Combined provider that wraps State, Actions, and Computed contexts
  */
 
-import { useReducer, useEffect, useMemo, useCallback, useState, type ReactNode } from 'react';
+import { useReducer, useEffect, useMemo, useCallback, useState, useRef, type ReactNode } from 'react';
 import { preferenceReducer } from './reducer';
 import { loadFromStorage, saveToStorage } from './storage';
 import { createDefaultPreferences } from './defaults';
@@ -12,7 +12,29 @@ import { PreferenceActionsContext, type PreferenceActionsContextValue } from './
 import { PreferenceComputedContext, type PreferenceComputedContextValue } from './PreferenceComputedContext';
 import * as selectors from './selectors';
 import { eventBus } from '@/lib/eventBus';
-import type { TripPreferences, StyleAxes, MustHaves, TravelStyle, TripContext, WorkPreferences } from './types';
+import type { TripPreferences, StyleAxes, MustHaves, TravelStyle, TripContext, WorkPreferences, PreferenceMemory } from './types';
+
+// ============================================================================
+// DEBOUNCE UTILITY
+// ============================================================================
+
+function debounce<T extends (...args: Parameters<T>) => void>(
+  fn: T,
+  delay: number
+): T & { cancel: () => void } {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  const debounced = ((...args: Parameters<T>) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  }) as T & { cancel: () => void };
+
+  debounced.cancel = () => {
+    if (timeoutId) clearTimeout(timeoutId);
+  };
+
+  return debounced;
+}
 
 // ============================================================================
 // PROVIDER COMPONENT
@@ -31,17 +53,40 @@ export function PreferenceProvider({ children }: PreferenceProviderProps) {
   );
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const preferencesRef = useRef(preferences);
+
+  // Keep ref in sync for unmount cleanup
+  useEffect(() => {
+    preferencesRef.current = preferences;
+  }, [preferences]);
 
   // Hydration effect
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Persistence effect - save to localStorage when preferences change
+  // Debounced save function (stable reference)
+  const debouncedSave = useMemo(
+    () => debounce((prefs: TripPreferences) => {
+      saveToStorage({ preferences: prefs });
+    }, 500),
+    []
+  );
+
+  // Persistence effect - save to localStorage when preferences change (debounced)
   useEffect(() => {
     if (!isHydrated) return;
-    saveToStorage({ preferences });
-  }, [preferences, isHydrated]);
+    debouncedSave(preferences);
+  }, [preferences, isHydrated, debouncedSave]);
+
+  // Cleanup - force save on unmount to prevent data loss
+  useEffect(() => {
+    return () => {
+      debouncedSave.cancel();
+      // Force immediate save on unmount
+      saveToStorage({ preferences: preferencesRef.current });
+    };
+  }, [debouncedSave]);
 
   // ============================================================================
   // STATE CONTEXT VALUE

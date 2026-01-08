@@ -8,7 +8,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePreferenceMemory } from "@/contexts/preferences";
 import { AIConflictBadge } from "./preferences";
-import { StepIndicator, type Step } from "./preferences/widgets";
+import { StepIndicator, StepErrorBoundary, type Step } from "./preferences/widgets";
 
 // Lazy-loaded steps for code splitting
 const BaseStep = lazy(() => import("./preferences/steps/BaseStep"));
@@ -90,28 +90,30 @@ const PreferencesPanel = memo(function PreferencesPanel() {
       />
 
       {/* Animated Step Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          variants={stepVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={stepTransition}
-        >
-          <Suspense fallback={<StepLoader />}>
-            {currentStep === "base" && (
-              <BaseStep onNextStep={() => setCurrentStep("style")} />
-            )}
-            {currentStep === "style" && (
-              <StyleStep onNextStep={() => setCurrentStep("musts")} />
-            )}
-            {currentStep === "musts" && (
-              <CriteriaStep onGoBack={() => setCurrentStep("base")} />
-            )}
-          </Suspense>
-        </motion.div>
-      </AnimatePresence>
+      <StepErrorBoundary onRetry={() => setCurrentStep(currentStep)}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep}
+            variants={stepVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={stepTransition}
+          >
+            <Suspense fallback={<StepLoader />}>
+              {currentStep === "base" && (
+                <BaseStep onNextStep={() => setCurrentStep("style")} />
+              )}
+              {currentStep === "style" && (
+                <StyleStep onNextStep={() => setCurrentStep("musts")} />
+              )}
+              {currentStep === "musts" && (
+                <CriteriaStep onGoBack={() => setCurrentStep("base")} />
+              )}
+            </Suspense>
+          </motion.div>
+        </AnimatePresence>
+      </StepErrorBoundary>
     </div>
   );
 });

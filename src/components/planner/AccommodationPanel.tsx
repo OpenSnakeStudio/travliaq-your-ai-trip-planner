@@ -30,6 +30,7 @@ import { getHotelDetails } from "@/services/hotels/hotelService";
 import { searchHotelsWithRetry } from "@/services/hotels/searchHotelsWithRetry";
 import { buildHotelFilters } from "./hotels/buildHotelFilters";
 import { supabase } from "@/integrations/supabase/client";
+import { SyncBadgeInline } from "@/components/ui/SyncBadge";
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
   mapCenter?: [number, number];
@@ -1580,6 +1581,9 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
             >
               {acc.city || `Hébgt ${index + 1}`}
             </span>
+            {acc.syncedFromFlight && (
+              <SyncBadgeInline source="flight" className="ml-0.5" />
+            )}
             {memory.accommodations.length > 1 && (
               <button
                 onClick={(e) => {

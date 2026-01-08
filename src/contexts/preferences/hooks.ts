@@ -3,6 +3,7 @@
  * Custom hooks for accessing preference state, actions, and computed values
  */
 
+import { useMemo } from 'react';
 import { usePreferenceState } from './PreferenceStateContext';
 import { usePreferenceActions } from './PreferenceActionsContext';
 import { usePreferenceComputed } from './PreferenceComputedContext';
@@ -31,10 +32,18 @@ export function usePreferenceMemory() {
   const actions = usePreferenceActions();
   const computed = usePreferenceComputed();
 
-  // Return same structure as original hook
-  return {
+  // Memoize memory object to prevent re-creations
+  const memory = useMemo<PreferenceMemory>(
+    () => ({ preferences }),
+    [preferences]
+  );
+
+  // Memoize entire return object for stable reference
+  // Actions are already stable from context (wrapped in useMemo in PreferenceProvider)
+  // Computed functions are already stable from context
+  return useMemo(() => ({
     // STRUCTURE IDENTIQUE À L'ACTUEL - pour PlannerChat, ActivityFilters, etc.
-    memory: { preferences } as PreferenceMemory,
+    memory,
     isHydrated,
 
     // ACTIONS (utilisées par Chat et Widget)
@@ -61,7 +70,7 @@ export function usePreferenceMemory() {
     getActivityFilters: computed.getActivityFilters,
     getFlightPreferences: computed.getFlightPreferences,
     getSerializedState: computed.getSerializedState,
-  };
+  }), [memory, isHydrated, actions, computed]);
 }
 
 // ============================================================================

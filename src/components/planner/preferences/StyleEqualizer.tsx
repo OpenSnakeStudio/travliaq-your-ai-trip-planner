@@ -3,7 +3,7 @@
  * Visual sliders for style axes - uses same brand colors for all
  */
 
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { DualSlider } from "@/components/ui/dual-slider";
 import { cn } from "@/lib/utils";
 import type { StyleAxes } from "@/contexts/preferences";
@@ -28,6 +28,11 @@ const AXES_CONFIG: Array<{
 ];
 
 export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange, compact = false }: StyleEqualizerProps) {
+  // Stable handler to prevent re-renders from breaking memo
+  const handleAxisChange = useCallback((key: keyof StyleAxes, value: number) => {
+    onAxisChange(key, value);
+  }, [onAxisChange]);
+
   return (
     <div className={cn("space-y-3", compact && "space-y-2")}>
       {AXES_CONFIG.map(({ key, leftLabel, rightLabel, leftEmoji, rightEmoji }) => (
@@ -45,11 +50,11 @@ export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange,
                 {leftLabel}
               </span>
             </div>
-            
+
             <div className="flex-1 relative">
               <DualSlider
                 value={[axes[key]]}
-                onValueChange={([v]) => onAxisChange(key, v)}
+                onValueChange={([v]) => handleAxisChange(key, v)}
                 max={100}
                 step={1}
               />
