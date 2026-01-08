@@ -10,3 +10,4 @@ export { OccasionSelector } from "./OccasionSelector";
 export { PreferenceSummary } from "./PreferenceSummary";
 export { DietaryPicker } from "./DietaryPicker";
 export { AIConflictBadge } from "./AIConflictBadge";
+export { SmartTagsWidget } from "./SmartTagsWidget";

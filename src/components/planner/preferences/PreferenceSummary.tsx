@@ -95,31 +95,41 @@ export function PreferenceSummary({ className, compact = false }: PreferenceSumm
     setIsLoading(true);
 
     try {
-      const prompt = `Tu es un rédacteur voyage ultra-créatif. Génère un profil voyageur UNIQUE et ENGAGEANT en 2-3 phrases maximum.
+      // Build human-readable profile description
+      const styleLabel = prefs.travelStyle === "solo" ? "solo" : prefs.travelStyle === "couple" ? "en duo" : prefs.travelStyle === "family" ? "en famille" : "entre amis";
+      const interestsList = prefs.interests.length > 0 ? prefs.interests.slice(0, 4).join(", ") : "polyvalent";
+      const occasionLabel = prefs.tripContext.occasion ? {
+        honeymoon: "lune de miel",
+        anniversary: "anniversaire de couple",
+        birthday: "célébration d'anniversaire",
+        vacation: "vacances",
+        workation: "télétravail + voyage"
+      }[prefs.tripContext.occasion] || "" : "";
 
-RÈGLES IMPÉRATIVES :
-- Commence par une métaphore originale ou une comparaison inattendue
-- Utilise des expressions vivantes, des verbes d'action puissants
-- Évoque une émotion ou une ambiance
-- Sois drôle, surprenant, mémorable
-- Maximum 50 mots
-- Tutoie le voyageur
+      const prompt = `Tu es un assistant voyage bienveillant. Décris ce voyageur de manière chaleureuse et personnalisée en 2-3 phrases courtes.
 
-PROFIL À DÉCRIRE :
-- Voyageur ${prefs.travelStyle === "solo" ? "solo" : prefs.travelStyle === "couple" ? "en duo" : prefs.travelStyle === "family" ? "en tribu familiale" : "en bande d'amis"}
-- Énergie ${getEnergyLabel(prefs.styleAxes.chillVsIntense)}
-- Terrain de jeu : ${getTerrainLabel(prefs.styleAxes.cityVsNature)}
-- Budget ${getBudgetLabel(prefs.styleAxes.ecoVsLuxury)}
-- Approche : ${getAuthLabel(prefs.styleAxes.touristVsLocal)}
-- Passions : ${prefs.interests.length > 0 ? prefs.interests.join(", ") : "à découvrir"}
-${prefs.tripContext.occasion ? `- Occasion : ${prefs.tripContext.occasion}` : ""}
+TON STYLE :
+- Parle comme un ami qui le connaît bien
+- Utilise "tu" et sois chaleureux
+- Mets en avant ce qui le rend unique
+- Maximum 40 mots, phrases courtes
+- Pas de métaphores compliquées, reste simple et authentique
+- Un emoji maximum en fin de phrase
 
-EXEMPLES DE STYLE SOUHAITÉ :
-- "Tel un chef d'orchestre, tu composes des escapades où chaque note compte. Les musées sont tes salles de concert, les restaurants tes backstages."
-- "Mi-explorateur urbain, mi-chasseur de couchers de soleil, tu jongle entre terrasses branchées et sentiers secrets."
-- "Ta valise ? Un passeport vers la dolce vita. Spas, gastronomie et siestes sont tes armes secrètes."
+PROFIL :
+- Type : voyage ${styleLabel}
+- Énergie : ${getEnergyLabel(prefs.styleAxes.chillVsIntense)}
+- Environnement préféré : ${getTerrainLabel(prefs.styleAxes.cityVsNature)}
+- Budget : ${getBudgetLabel(prefs.styleAxes.ecoVsLuxury)}
+- Style : ${getAuthLabel(prefs.styleAxes.touristVsLocal)}
+- Ce qui t'attire : ${interestsList}${occasionLabel ? `\n- Occasion : ${occasionLabel}` : ""}
 
-Réponds UNIQUEMENT avec le résumé, sans guillemets ni préfixe.`;
+EXEMPLES :
+- "Tu aimes voyager en duo, entre découvertes culturelles et bons restos. Un rythme tranquille avec une touche de confort. 🌿"
+- "Aventurier solo, tu préfères sortir des sentiers battus. Nature et authenticité sont tes mots-clés. ⛰️"
+- "En famille, tu cherches des expériences accessibles à tous. Plage et activités fun sont au programme ! 🏖️"
+
+Réponds uniquement avec la description, sans guillemets.`;
 
       const { data, error } = await supabase.functions.invoke("planner-chat", {
         body: {

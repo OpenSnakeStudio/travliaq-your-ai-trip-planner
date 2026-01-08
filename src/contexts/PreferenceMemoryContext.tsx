@@ -527,27 +527,31 @@ export function PreferenceMemoryProvider({ children }: { children: ReactNode }) 
   const getProfileCompletion = useCallback((): number => {
     const p = memory.preferences;
     let score = 0;
-    const weights = { travelStyle: 15, interests: 25, styleAxes: 30, mustHaves: 15, occasion: 15 };
+    // Weights rebalanced: all travel styles count equally
+    const weights = { travelStyle: 15, interests: 25, styleAxes: 25, mustHaves: 15, occasion: 10, dietary: 10 };
     
-    // Travel style selected (not default)
-    if (p.travelStyle !== "couple") score += weights.travelStyle;
-    else score += weights.travelStyle * 0.5; // Default still counts partially
+    // Travel style selected - all valid choices count equally (solo, couple, family, friends all = 100%)
+    // Only "undefined" or empty would count less
+    if (p.travelStyle) score += weights.travelStyle;
     
-    // Interests (at least 2)
+    // Interests (at least 2 for full score)
     score += Math.min(1, p.interests.length / 2) * weights.interests;
     
-    // Style axes modified (any deviation from 50)
-    const axesModified = Object.values(p.styleAxes).filter(v => Math.abs(v - 50) > 10).length;
+    // Style axes modified (any deviation from 50 counts)
+    const axesModified = Object.values(p.styleAxes).filter(v => Math.abs(v - 50) > 5).length;
     score += (axesModified / 4) * weights.styleAxes;
     
     // Must-haves (any set)
     const mustHavesSet = Object.values(p.mustHaves).filter(Boolean).length;
-    score += Math.min(1, mustHavesSet / 1) * weights.mustHaves;
+    if (mustHavesSet > 0) score += weights.mustHaves;
     
     // Occasion set
     if (p.tripContext.occasion) score += weights.occasion;
     
-    return Math.round(score);
+    // Dietary restrictions bonus
+    if (p.dietaryRestrictions.length > 0) score += weights.dietary;
+    
+    return Math.round(Math.min(100, score));
   }, [memory.preferences]);
 
   const getPreferenceSummary = useCallback((): string => {
