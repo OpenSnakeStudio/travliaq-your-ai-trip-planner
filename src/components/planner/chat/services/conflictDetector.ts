@@ -55,6 +55,7 @@ export interface Conflict {
 export interface ConflictDetectionResult {
   hasErrors: boolean;
   hasWarnings: boolean;
+  hasBlockingConflicts: boolean;
   conflicts: Conflict[];
   summary: string;
 }
@@ -333,6 +334,7 @@ export function detectConflicts(context: WorkflowContext): ConflictDetectionResu
   return {
     hasErrors: errors.length > 0,
     hasWarnings: warnings.length > 0,
+    hasBlockingConflicts: errors.length > 0,
     conflicts: allConflicts,
     summary,
   };
@@ -352,8 +354,7 @@ export function getConflictsForStep(
 /**
  * Check if trip is bookable (no errors)
  */
-export function isTripBookable(context: WorkflowContext): boolean {
-  const result = detectConflicts(context);
+export function isTripBookable(result: ConflictDetectionResult): boolean {
   return !result.hasErrors;
 }
 

@@ -122,6 +122,28 @@ export interface ExportedTrip {
 }
 
 /**
+ * Trip day export structure (for timeline exports)
+ */
+export interface TripDayExport {
+  dayNumber: number;
+  date: string;
+  items: TripItemExport[];
+}
+
+/**
+ * Trip item export structure
+ */
+export interface TripItemExport {
+  id: string;
+  type: "flight" | "hotel" | "activity" | "transfer";
+  name: string;
+  time?: string;
+  duration?: string;
+  price?: number;
+  location?: string;
+}
+
+/**
  * Default export options
  */
 const DEFAULT_OPTIONS: ExportOptions = {

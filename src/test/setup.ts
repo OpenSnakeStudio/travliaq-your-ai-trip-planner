@@ -1,10 +1,8 @@
 import { afterEach, vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 
 // Only run DOM-related setup if we're in a browser-like environment
 if (typeof window !== 'undefined') {
-  // Import jest-dom matchers for DOM testing (dynamic to avoid issues in node env)
-  await import('@testing-library/jest-dom');
-
   // Import cleanup for React testing
   const { cleanup } = await import('@testing-library/react');
 
