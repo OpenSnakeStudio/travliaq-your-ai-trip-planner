@@ -35,8 +35,8 @@ const AppContent = () => {
   return (
     <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
       <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/v2" element={<IndexV2 />} />
+        <Route path="/" element={<IndexV2 />} />
+        <Route path="/v2" element={<Index />} />
         <Route path="/cgv" element={<CGV />} />
         <Route path="/questionnaire" element={<Questionnaire />} />
         <Route path="/questionnaire-v2" element={<QuestionnaireV2 />} />
