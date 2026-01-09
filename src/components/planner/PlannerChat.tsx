@@ -10,7 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
-import { Plane, History, User, Send, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Plane, History, User, Send, PanelLeftClose } from "lucide-react";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
@@ -472,8 +472,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   return (
     <aside
       className={cn(
-        "h-full w-full flex flex-col relative overflow-hidden",
-        isCollapsed ? "bg-transparent" : "bg-background"
+        "h-full w-full flex flex-col relative overflow-hidden transition-all duration-300 ease-out",
+        isCollapsed ? "bg-transparent opacity-0" : "bg-background opacity-100"
       )}
     >
       {/* Chat History Sidebar */}
@@ -490,24 +490,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         onDeleteSession={deleteSession}
       />
 
-      {/* Header */}
-      {isCollapsed ? (
-        <div className="h-12 shrink-0 flex items-center px-2">
-          <div className="flex items-center gap-1.5 rounded-xl bg-background/80 backdrop-blur border border-border px-2 py-1.5 shadow-sm">
-            <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />
-            {onToggleCollapse && (
-              <button
-                onClick={onToggleCollapse}
-                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                title="Ouvrir le chat"
-              >
-                <PanelLeft className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background">
+      {/* Header - only show when not collapsed */}
+      {!isCollapsed && (
+        <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background animate-fade-in">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
             <span className="font-medium text-foreground text-sm truncate max-w-[240px]">
@@ -544,7 +529,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       <div
         className={cn(
           "flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-out",
-          isCollapsed ? "opacity-0 pointer-events-none max-h-0" : "opacity-100 max-h-[9999px]"
+          isCollapsed ? "opacity-0 pointer-events-none scale-95" : "opacity-100 scale-100"
         )}
       >
           {/* Messages */}

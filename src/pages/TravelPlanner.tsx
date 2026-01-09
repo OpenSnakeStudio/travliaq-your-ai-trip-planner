@@ -166,7 +166,7 @@ const TravelPlanner = () => {
 
               <div className="h-[100svh] w-full overflow-hidden bg-background">
                 <ResizablePanelGroup direction="horizontal" className="h-full" autoSaveId="planner-layout">
-                  {/* Left: Chat - resizable */}
+                  {/* Left: Chat - resizable with smooth animation */}
                   <ResizablePanel
                     ref={chatPanelRef}
                     order={1}
@@ -177,6 +177,13 @@ const TravelPlanner = () => {
                     collapsedSize={0}
                     onCollapse={() => setIsChatCollapsed(true)}
                     onExpand={() => setIsChatCollapsed(false)}
+                    onResize={(size) => {
+                      // Auto-collapse when user drags below 12%
+                      if (size > 0 && size < 12 && !chatPanelRef.current?.isCollapsed()) {
+                        chatPanelRef.current?.collapse();
+                      }
+                    }}
+                    className="transition-all duration-300 ease-out"
                   >
                     <div data-tour="chat-panel" className="h-full relative">
                       <PlannerChat
