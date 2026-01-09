@@ -14,6 +14,10 @@ export { CitySelectionWidget } from "./CitySelectionWidget";
 export { AirportButton, DualAirportSelection, AirportConfirmationWidget } from "./AirportWidgets";
 export { MarkdownMessage } from "./MarkdownMessage";
 
+// Preference widgets (synced with PreferenceMemory)
+export { PreferenceStyleWidget } from "./PreferenceStyleWidget";
+export { PreferenceInterestsWidget } from "./PreferenceInterestsWidget";
+
 // Selection widgets (Sprint 1A - Quick filters)
 export * from "./selection";
 

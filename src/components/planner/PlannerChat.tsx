@@ -33,6 +33,8 @@ import {
   DualAirportSelection,
   AirportConfirmationWidget,
   MarkdownMessage,
+  PreferenceStyleWidget,
+  PreferenceInterestsWidget,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
 import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers } from "./chat/hooks";
@@ -174,6 +176,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [dynamicSuggestions, setDynamicSuggestions] = useState<Array<{id: string; label: string; emoji: string; message: string}>>([]);
+  
+  // Track completed message IDs to prevent late streaming updates from resetting isStreaming
+  const completedMessageIdsRef = useRef<Set<string>>(new Set());
+  // Track "inspire" intent to trigger preference widgets flow
+  const lastIntentRef = useRef<string | null>(null);
 
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -481,6 +488,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     if (!text.trim() || isLoading) return;
 
     const userText = text.trim();
+    
+    // CRITICAL: Clear input immediately after capturing text
+    setInput("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
+    
+    // Detect "inspire" intent for preference widgets flow
+    const isInspireIntent = /inspire|inspiration|idée|voyage|destination.*propos/i.test(userText);
+    if (isInspireIntent) {
+      lastIntentRef.current = "inspire";
+    }
+    
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -534,6 +554,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           missingFields,
         },
         (id, text, isComplete) => {
+          // CRITICAL: Prevent late updates from resetting isStreaming after message is complete
+          if (completedMessageIdsRef.current.has(id) && !isComplete) {
+            return; // Ignore stale updates for already-completed messages
+          }
+          if (isComplete) {
+            completedMessageIdsRef.current.add(id);
+          }
+          
           setMessages((prev) =>
             prev.map((m) =>
               m.id === id
@@ -619,6 +647,48 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             : m
         )
       );
+      
+      // Trigger "Inspire-moi" preference widgets flow after AI response
+      if (lastIntentRef.current === "inspire") {
+        lastIntentRef.current = null; // Reset to avoid triggering again
+        
+        // Add preference style widget message
+        const styleMessageId = `pref-style-${Date.now()}`;
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: styleMessageId,
+            role: "assistant",
+            text: "Pour mieux vous inspirer, ajustez votre style de voyage :",
+            widget: "preferenceStyle" as import("@/types/flight").WidgetType,
+          },
+        ]);
+        
+        // Add follow-up question with quick replies after a short delay
+        setTimeout(() => {
+          const followupId = `pref-followup-${Date.now()}`;
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: followupId,
+              role: "assistant",
+              text: "Voulez-vous que je vous propose des destinations maintenant, ou préférez-vous d'abord sélectionner vos centres d'intérêt ?",
+              quickReplies: [
+                {
+                  id: "propose-destinations",
+                  label: "✈️ Proposer des destinations",
+                  action: { type: "sendMessage" as const, message: "Propose-moi des destinations adaptées à mon style de voyage" },
+                },
+                {
+                  id: "select-interests",
+                  label: "❤️ Mes centres d'intérêt",
+                  action: { type: "triggerWidget" as const, widget: "preferenceInterests" },
+                },
+              ],
+            },
+          ]);
+        }, 500);
+      }
     } catch (err) {
       console.error("Failed to get chat response:", err);
       widgetFlow.resetFlowState();
@@ -819,6 +889,36 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         onConfirm={(confirmed) => eventBus.emit("flight:confirmedAirports", confirmed)}
                       />
                     )}
+                    
+                    {/* Preference Style Widget */}
+                    {m.widget === "preferenceStyle" && (
+                      <PreferenceStyleWidget />
+                    )}
+                    
+                    {/* Preference Interests Widget */}
+                    {m.widget === "preferenceInterests" && (
+                      <PreferenceInterestsWidget
+                        onComplete={() => {
+                          // After selecting interests, offer to propose destinations
+                          const followupId = `interests-followup-${Date.now()}`;
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: followupId,
+                              role: "assistant",
+                              text: "Parfait ! Avec votre style et vos centres d'intérêt, je peux maintenant vous proposer des destinations vraiment adaptées.",
+                              quickReplies: [
+                                {
+                                  id: "propose-destinations-now",
+                                  label: "✈️ Proposer des destinations",
+                                  action: { type: "sendMessage" as const, message: "Propose-moi des destinations adaptées à mon style et mes centres d'intérêt" },
+                                },
+                              ],
+                            },
+                          ]);
+                        }}
+                      />
+                    )}
 
                     {/* Search button */}
                     {m.hasSearchButton && (
@@ -841,6 +941,32 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         onFillInput={(message) => {
                           setInput(message);
                           setTimeout(() => inputRef.current?.focus(), 0);
+                        }}
+                        onTriggerWidget={(widget) => {
+                          // Trigger preference widgets on demand
+                          if (widget === "preferenceInterests") {
+                            const widgetId = `interests-widget-${Date.now()}`;
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                id: widgetId,
+                                role: "assistant",
+                                text: "Sélectionnez vos centres d'intérêt :",
+                                widget: "preferenceInterests" as import("@/types/flight").WidgetType,
+                              },
+                            ]);
+                          } else if (widget === "preferenceStyle") {
+                            const widgetId = `style-widget-${Date.now()}`;
+                            setMessages((prev) => [
+                              ...prev,
+                              {
+                                id: widgetId,
+                                role: "assistant",
+                                text: "Ajustez votre style de voyage :",
+                                widget: "preferenceStyle" as import("@/types/flight").WidgetType,
+                              },
+                            ]);
+                          }
                         }}
                         disabled={isLoading}
                       />
