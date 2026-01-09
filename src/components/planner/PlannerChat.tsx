@@ -10,7 +10,8 @@
  */
 
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
-import { Plane, History, User, Send, PanelLeftClose } from "lucide-react";
+import { Plane, History, Send, PanelLeftClose, Copy, ThumbsUp, ThumbsDown, Check } from "lucide-react";
+import { toast } from "sonner";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
@@ -80,6 +81,72 @@ export interface PlannerChatRef {
   handleActivityUpdate: (city: string, updates: Partial<import("@/contexts/ActivityMemoryContext").ActivityEntry>) => boolean;
   handleAddActivityForCity: (city: string, activity: Partial<import("@/contexts/ActivityMemoryContext").ActivityEntry>) => string | null;
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/contexts/PreferenceMemoryContext").TripPreferences>) => void;
+}
+
+/**
+ * MessageActions - Copy, Like, Dislike buttons for assistant messages
+ */
+function MessageActions({ messageId, text }: { messageId: string; text: string }) {
+  const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      toast.success("Copié !");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Impossible de copier");
+    }
+  };
+
+  const handleLike = () => {
+    setFeedback(feedback === "like" ? null : "like");
+  };
+
+  const handleDislike = () => {
+    setFeedback(feedback === "dislike" ? null : "dislike");
+  };
+
+  return (
+    <div className="flex items-center gap-1 mt-1 max-w-[85%]">
+      <button
+        onClick={handleCopy}
+        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        title="Copier"
+        aria-label="Copier le message"
+      >
+        {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+      </button>
+      <button
+        onClick={handleLike}
+        className={cn(
+          "p-1.5 rounded-md transition-colors",
+          feedback === "like" 
+            ? "text-green-500 bg-green-500/10" 
+            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+        )}
+        title="J'aime"
+        aria-label="J'aime cette réponse"
+      >
+        <ThumbsUp className="h-3.5 w-3.5" />
+      </button>
+      <button
+        onClick={handleDislike}
+        className={cn(
+          "p-1.5 rounded-md transition-colors",
+          feedback === "dislike" 
+            ? "text-red-500 bg-red-500/10" 
+            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+        )}
+        title="Je n'aime pas"
+        aria-label="Je n'aime pas cette réponse"
+      >
+        <ThumbsDown className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
 }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
@@ -252,12 +319,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     }
   }, [messages]);
 
-  // Auto-scroll only when not manually scrolling
+  // Auto-scroll only when a new message is added (not on content updates)
+  const prevMessageCountRef = useRef(messages.length);
   useEffect(() => {
-    if (!isUserScrolling) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMessageCountRef.current && !isUserScrolling) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
     }
-  }, [messages, isUserScrolling]);
+    prevMessageCountRef.current = messages.length;
+  }, [messages.length, isUserScrolling]);
 
   // Show ready message when complete
   useEffect(() => {
@@ -590,16 +659,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           >
             <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
               {messages.filter((m) => !m.isHidden).map((m) => (
-                <div key={m.id} className={cn("flex gap-4", m.role === "user" ? "flex-row-reverse" : "")}>
-                  {/* Avatar */}
-                  <div className={cn(
-                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
-                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white"
-                  )}>
-                    {m.role === "user" ? <User className="h-4 w-4" /> : <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />}
-                  </div>
-
-                  {/* Content */}
+                <div key={m.id} className={cn("flex gap-2", m.role === "user" ? "flex-row-reverse" : "")}>
+                  {/* Content - no avatars */}
                   <div className={cn("flex-1 min-w-0", m.role === "user" ? "text-right" : "")}>
                     <div className={cn(
                       "inline-block text-sm leading-relaxed px-4 py-3 rounded-2xl max-w-[85%]",
@@ -618,6 +679,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         </>
                       )}
                     </div>
+
+                    {/* Copy / Like / Dislike actions for assistant messages */}
+                    {m.role === "assistant" && !m.isTyping && !m.isStreaming && m.text && (
+                      <MessageActions messageId={m.id} text={m.text} />
+                    )}
 
                     {/* Airport choices */}
                     {m.airportChoices && (
@@ -797,10 +863,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     e.target.style.height = "auto";
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
-                  placeholder="Envoyer un message..."
+                  placeholder={isLoading ? "Réponse en cours..." : "Envoyer un message..."}
                   rows={1}
-                  disabled={isLoading}
-                  className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+                  disabled={false}
+                  className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                   style={{ minHeight: "40px", maxHeight: "120px" }}
                   onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {

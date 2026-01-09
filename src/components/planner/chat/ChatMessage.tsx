@@ -2,10 +2,9 @@
  * ChatMessage - Single message with avatar, content, widgets, and quick replies
  */
 
-import { User, Plane } from "lucide-react";
+import { Plane } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/logo-travliaq.png";
 import type { ChatMessage as ChatMessageType } from "./types";
 import { QuickReplies } from "./QuickReplies";
 import {
@@ -97,27 +96,11 @@ export function ChatMessage({
   return (
     <div
       className={cn(
-        "flex gap-4",
+        "flex gap-2",
         m.role === "user" ? "flex-row-reverse" : ""
       )}
     >
-      {/* Avatar */}
-      <div
-        className={cn(
-          "h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
-          m.role === "user"
-            ? "bg-primary text-primary-foreground"
-            : "bg-white"
-        )}
-      >
-        {m.role === "user" ? (
-          <User className="h-4 w-4" />
-        ) : (
-          <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />
-        )}
-      </div>
-
-      {/* Message content */}
+      {/* Message content - no avatars */}
       <div
         className={cn(
           "flex-1 min-w-0",
