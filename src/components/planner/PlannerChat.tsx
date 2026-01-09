@@ -889,6 +889,25 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     e.target.style.height = "auto";
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
+                  onPointerDown={(e) => {
+                    const { clientX, clientY } = e;
+                    requestAnimationFrame(() => {
+                      // If a layer is capturing clicks, the textarea won't become the active element.
+                      if (document.activeElement !== inputRef.current) {
+                        const el = document.elementFromPoint(clientX, clientY);
+                        const cs = el ? window.getComputedStyle(el) : null;
+                        // eslint-disable-next-line no-console
+                        console.warn("[ChatInputBlock] click not reaching textarea", {
+                          x: clientX,
+                          y: clientY,
+                          topElement: el ? `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}${el.className ? `.${String(el.className).split(" ").slice(0, 3).join(".")}` : ""}` : null,
+                          pointerEvents: cs?.pointerEvents,
+                          zIndex: cs?.zIndex,
+                          position: cs?.position,
+                        });
+                      }
+                    });
+                  }}
                   onFocus={() => {
                     // Safety net: if driver.js ever leaves pointer-events blocked, restore interactivity.
                     document.body.classList.remove("driver-active");
