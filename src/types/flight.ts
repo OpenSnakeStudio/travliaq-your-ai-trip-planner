@@ -184,6 +184,9 @@ export type WidgetType =
   | "citySelector"
   | "travelersConfirmBeforeSearch"
   | "airportConfirmation"
+  // Preference widgets (synced with PreferenceMemory)
+  | "preferenceStyle"
+  | "preferenceInterests"
   // Quick filter widgets (Sprint 1)
   | "quickFilterChips"
   | "starRatingSelector"
