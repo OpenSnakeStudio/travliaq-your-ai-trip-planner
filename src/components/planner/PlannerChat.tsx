@@ -65,7 +65,10 @@ export type {
 } from "@/types/flight";
 
 // Props and ref interface
-interface PlannerChatProps {}
+interface PlannerChatProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
 
 export interface PlannerChatRef {
   injectSystemMessage: (event: CountrySelectionEvent) => void;
@@ -79,7 +82,7 @@ export interface PlannerChatRef {
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/contexts/PreferenceMemoryContext").TripPreferences>) => void;
 }
 
-const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_props, ref) => {
+const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
   // Memory contexts
   const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation } = useAccommodationMemory();
@@ -102,7 +105,6 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isChatContentCollapsed, setIsChatContentCollapsed] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Refs
@@ -319,10 +321,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
   }));
 
   // Send message
-  const send = async () => {
-    if (!input.trim() || isLoading) return;
+  const sendText = async (text: string) => {
+    if (!text.trim() || isLoading) return;
+    // keep textarea UX in sync
+    if (text !== input) setInput("");
 
-    const userText = input.trim();
+    const userText = text.trim();
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -336,8 +340,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
       ...prev.map((m) => (m.widget ? { ...m, widget: undefined } : m)),
       userMessage,
     ]);
-    setInput("");
     setIsLoading(true);
+
     widgetFlow.citySelectionShownRef.current = null;
 
     const messageId = `bot-${Date.now()}`;
@@ -483,11 +487,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
 
       {/* Header - Clean minimal bar */}
       <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background">
-        {/* Left: Logo + Session title */}
+        {/* Left: Logo + Session title (no emoji) */}
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
-          <span className="font-medium text-foreground text-sm truncate max-w-[200px]">
-            {sessions.find((s) => s.id === activeSessionId)?.title || "✈️ Nouvelle conversation"}
+          <span className="font-medium text-foreground text-sm truncate max-w-[240px]">
+            {(() => {
+              const title = sessions.find((s) => s.id === activeSessionId)?.title || "Nouvelle conversation";
+              return title.replace(/^\p{Extended_Pictographic}\s*/u, "");
+            })()}
           </span>
         </div>
 
@@ -502,21 +509,27 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
             <History className="h-4 w-4" />
           </button>
 
-          {/* Collapse chat content toggle */}
-          <button
-            onClick={() => setIsChatContentCollapsed(!isChatContentCollapsed)}
-            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title={isChatContentCollapsed ? "Afficher le chat" : "Masquer le chat"}
-          >
-            {isChatContentCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </button>
+          {/* Collapse chat panel */}
+          {onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title={isCollapsed ? "Ouvrir le chat" : "Fermer le chat"}
+            >
+              {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </button>
+          )}
         </div>
       </div>
 
 
       {/* Collapsible content */}
-      {!isChatContentCollapsed && (
-        <>
+      <div
+        className={cn(
+          "flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-out",
+          isCollapsed ? "opacity-0 pointer-events-none max-h-0" : "opacity-100 max-h-[9999px]"
+        )}
+      >
           {/* Messages */}
           <div 
             ref={messagesContainerRef}
@@ -658,7 +671,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
                     {m.quickReplies && m.quickReplies.length > 0 && (
                       <QuickReplies
                         replies={m.quickReplies}
-                        onSendMessage={send}
+                        onSendMessage={() => sendText(input)}
                         onFillInput={(message) => {
                           setInput(message);
                           setTimeout(() => inputRef.current?.focus(), 0);
@@ -684,34 +697,39 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
           />
 
           {/* Smart Suggestions + Input */}
-          <div className="border-t border-border bg-background">
+          <div className="border-t border-border bg-background" aria-hidden={isCollapsed}>
             {/* Smart Suggestions */}
-            <SmartSuggestions
-              context={{
-                workflowStep: !memory.arrival?.city ? 'inspiration' 
-                  : !memory.departureDate ? 'destination' 
-                  : memory.passengers.adults === 0 ? 'dates' 
-                  : 'compare',
-                hasDestination: !!memory.arrival?.city,
-                hasDates: !!memory.departureDate,
-                hasTravelers: memory.passengers.adults > 0,
-                hasFlights: mapContext.visiblePrices.filter(p => p.type === "flight").length > 0,
-                hasHotels: mapContext.visibleHotels.length > 0,
-                destinationName: memory.arrival?.city,
-                departureCity: memory.departure?.city,
-                currentTab: mapContext.activeTab,
-                visibleFlightsCount: mapContext.visiblePrices.filter(p => p.type === "flight").length,
-                visibleHotelsCount: mapContext.visibleHotels.length,
-                visibleActivitiesCount: mapContext.visibleActivities.length,
-                cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
-                cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
-              }}
-              onSuggestionClick={(message) => {
-                setInput(message);
-                setTimeout(() => inputRef.current?.focus(), 0);
-              }}
-              isLoading={isLoading}
-            />
+          <SmartSuggestions
+            context={{
+              workflowStep: !memory.arrival?.city ? "inspiration"
+                : !memory.departureDate ? "destination"
+                : memory.passengers.adults === 0 ? "dates"
+                : "compare",
+              hasDestination: !!memory.arrival?.city,
+              hasDates: !!memory.departureDate,
+              hasTravelers: memory.passengers.adults > 0,
+              hasFlights: mapContext.visiblePrices.filter((p) => p.type === "flight").length > 0,
+              hasHotels: mapContext.visibleHotels.length > 0,
+              destinationName: memory.arrival?.city,
+              departureCity: memory.departure?.city,
+              currentTab: mapContext.activeTab,
+              visibleFlightsCount: mapContext.visiblePrices.filter((p) => p.type === "flight").length,
+              visibleHotelsCount: mapContext.visibleHotels.length,
+              visibleActivitiesCount: mapContext.visibleActivities.length,
+              cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
+              cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
+            }}
+            onSuggestionClick={(message) => {
+              // Send immediately (expected behavior)
+              setInput(message);
+              setTimeout(() => inputRef.current?.focus(), 0);
+              queueMicrotask(() => {
+                // use the local helper below
+                sendText(message);
+              });
+            }}
+            isLoading={isLoading}
+          />
             
             <div className="max-w-3xl mx-auto p-4 pt-0">
               <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
@@ -729,16 +747,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
                   className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
                   style={{ minHeight: "40px", maxHeight: "120px" }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                      setTimeout(() => inputRef.current?.focus(), 0);
-                    }
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendText(input);
+                    setTimeout(() => inputRef.current?.focus(), 0);
+                  }
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={send}
+              <button
+                type="button"
+                onClick={() => sendText(input)}
                   disabled={!input.trim() || isLoading}
                   className={cn(
                     "h-9 w-9 shrink-0 rounded-lg flex items-center justify-center transition-all",
@@ -756,8 +774,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
               </p>
             </div>
           </div>
-        </>
-      )}
+      </div>
     </aside>
   );
 });

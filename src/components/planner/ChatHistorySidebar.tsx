@@ -177,7 +177,9 @@ export const ChatHistorySidebar = ({
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
+      <AlertDialog open={!!deleteConfirmId} onOpenChange={(open) => {
+        if (!open) setDeleteConfirmId(null);
+      }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer cette conversation ?</AlertDialogTitle>
