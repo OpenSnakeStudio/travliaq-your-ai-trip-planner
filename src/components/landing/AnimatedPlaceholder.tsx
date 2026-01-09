@@ -36,13 +36,13 @@ export function AnimatedPlaceholder({ isTyping, variant = "dark" }: AnimatedPlac
   if (isTyping) return null;
 
   return (
-    <div className="absolute inset-0 flex items-center pointer-events-none px-4">
+    <div className="absolute inset-0 flex items-center pointer-events-none px-4 overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.span
           key={currentIndex}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 0.5, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.5 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           className={variant === "light" ? "text-muted-foreground/70 text-base md:text-lg truncate" : "text-white/50 text-base md:text-lg truncate"}
         >
