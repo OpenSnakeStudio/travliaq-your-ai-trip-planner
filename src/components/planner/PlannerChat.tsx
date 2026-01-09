@@ -170,10 +170,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   } = useChatSessions({ getFlightMemory, getAccommodationMemory, getTravelMemory });
 
   // Local state
-  const [input, setInput] = useState("");
+  const [input, _setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  // Input debugging: track who last changed the input (helps diagnose "appears then clears")
+  const lastInputReasonRef = useRef<string>("init");
+  const lastInputValueRef = useRef<string>("");
+  const setInput = useCallback((next: string, reason: string) => {
+    lastInputReasonRef.current = reason;
+    lastInputValueRef.current = next;
+    _setInput(next);
+  }, []);
 
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -183,6 +192,23 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
   // Debug mode (enable with ?debugChat=1)
   const isDebugEnabled = useChatDebugEnabled();
+
+  // Detect "type then instantly cleared" (logs automatically; no need for you to send logs)
+  const prevInputRef = useRef<string>(input);
+  useEffect(() => {
+    const prev = prevInputRef.current;
+    prevInputRef.current = input;
+
+    if (prev && !input) {
+      // eslint-disable-next-line no-console
+      console.warn("[ChatInputReset] input cleared", {
+        previous: prev,
+        reason: lastInputReasonRef.current,
+        activeSessionId,
+        activeElement: document.activeElement?.tagName,
+      });
+    }
+  }, [input, activeSessionId]);
 
   // CRITICAL: Hard guard against any global CSS that blocks pointer events (e.g., driver.js leaving `driver-active` behind)
   useEffect(() => {
@@ -333,14 +359,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     }
   }, [messages, persistMessages]);
 
-  // Reset state on session change
+  // Reset transient UI state on session change
+  // IMPORTANT: Do NOT wipe the input here; it causes "type then instantly cleared" if session ID churns.
   useEffect(() => {
-    // Mark as switching so persistMessages doesn't write to the old session
     isSwitchingSessionRef.current = true;
     widgetFlow.resetFlowState();
     setIsLoading(false);
-    setInput("");
-    // Allow persistence again after a short delay
+
     const timer = setTimeout(() => {
       isSwitchingSessionRef.current = false;
     }, 100);
@@ -480,8 +505,6 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // Send message
   const sendText = async (text: string) => {
     if (!text.trim() || isLoading) return;
-    // keep textarea UX in sync
-    if (text !== input) setInput("");
 
     const userText = text.trim();
     const userMessage: ChatMessage = {
@@ -830,7 +853,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         replies={m.quickReplies}
                         onSendMessage={(message) => sendText(message)}
                         onFillInput={(message) => {
-                          setInput(message);
+                          setInput(message, "quickReplyFill");
                           setTimeout(() => inputRef.current?.focus(), 0);
                         }}
                         disabled={isLoading}
@@ -878,7 +901,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               }}
               onSuggestionClick={(message) => {
                 // Only prefill input, don't send automatically
-                setInput(message);
+                setInput(message, "suggestionFill");
                 // Focus the input so user can review and send
                 setTimeout(() => {
                   inputRef.current?.focus();
@@ -898,7 +921,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                   ref={inputRef}
                   value={input}
                   onChange={(e) => {
-                    setInput(e.target.value);
+                    setInput(e.target.value, "userType");
                     e.target.style.height = "auto";
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
