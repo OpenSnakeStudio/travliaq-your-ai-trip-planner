@@ -663,31 +663,6 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             widget: "preferenceStyle" as import("@/types/flight").WidgetType,
           },
         ]);
-        
-        // Add follow-up question with quick replies after a short delay
-        setTimeout(() => {
-          const followupId = `pref-followup-${Date.now()}`;
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: followupId,
-              role: "assistant",
-              text: "Voulez-vous que je vous propose des destinations maintenant, ou préférez-vous d'abord sélectionner vos centres d'intérêt ?",
-              quickReplies: [
-                {
-                  id: "propose-destinations",
-                  label: "✈️ Proposer des destinations",
-                  action: { type: "sendMessage" as const, message: "Propose-moi des destinations adaptées à mon style de voyage" },
-                },
-                {
-                  id: "select-interests",
-                  label: "❤️ Mes centres d'intérêt",
-                  action: { type: "triggerWidget" as const, widget: "preferenceInterests" },
-                },
-              ],
-            },
-          ]);
-        }, 500);
       }
     } catch (err) {
       console.error("Failed to get chat response:", err);
@@ -892,28 +867,58 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     
                     {/* Preference Style Widget */}
                     {m.widget === "preferenceStyle" && (
-                      <PreferenceStyleWidget />
+                      <PreferenceStyleWidget
+                        onConfirm={() => {
+                          // After style confirmed, show question and set dynamic suggestions
+                          const questionId = `style-question-${Date.now()}`;
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: questionId,
+                              role: "assistant",
+                              text: "Parfait ! Voulez-vous que je vous propose des destinations maintenant, ou préférez-vous d'abord sélectionner vos centres d'intérêt ?",
+                            },
+                          ]);
+                          // Set dynamic suggestions (shown above input)
+                          setDynamicSuggestions([
+                            {
+                              id: "propose-destinations",
+                              label: "Proposer des destinations",
+                              emoji: "✈️",
+                              message: "Propose-moi des destinations adaptées à mon style de voyage",
+                            },
+                            {
+                              id: "my-interests",
+                              label: "Mes centres d'intérêt",
+                              emoji: "❤️",
+                              message: "__WIDGET__preferenceInterests", // Special prefix to trigger widget
+                            },
+                          ]);
+                        }}
+                      />
                     )}
                     
                     {/* Preference Interests Widget */}
                     {m.widget === "preferenceInterests" && (
                       <PreferenceInterestsWidget
-                        onComplete={() => {
-                          // After selecting interests, offer to propose destinations
+                        onConfirm={() => {
+                          // After interests confirmed, propose destinations
                           const followupId = `interests-followup-${Date.now()}`;
                           setMessages((prev) => [
                             ...prev,
                             {
                               id: followupId,
                               role: "assistant",
-                              text: "Parfait ! Avec votre style et vos centres d'intérêt, je peux maintenant vous proposer des destinations vraiment adaptées.",
-                              quickReplies: [
-                                {
-                                  id: "propose-destinations-now",
-                                  label: "✈️ Proposer des destinations",
-                                  action: { type: "sendMessage" as const, message: "Propose-moi des destinations adaptées à mon style et mes centres d'intérêt" },
-                                },
-                              ],
+                              text: "Parfait ! Avec votre style et vos centres d'intérêt, je vais vous proposer des destinations vraiment adaptées.",
+                            },
+                          ]);
+                          // Set dynamic suggestion to propose destinations
+                          setDynamicSuggestions([
+                            {
+                              id: "propose-now",
+                              label: "Proposer des destinations",
+                              emoji: "✈️",
+                              message: "Propose-moi des destinations adaptées à mon style et mes centres d'intérêt",
                             },
                           ]);
                         }}
@@ -1013,6 +1018,38 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               }}
               dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
+                // Handle special widget trigger prefix
+                if (message.startsWith("__WIDGET__")) {
+                  const widgetType = message.replace("__WIDGET__", "");
+                  setDynamicSuggestions([]); // Clear suggestions
+                  
+                  if (widgetType === "preferenceInterests") {
+                    const widgetId = `interests-widget-${Date.now()}`;
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: widgetId,
+                        role: "assistant",
+                        text: "Sélectionnez vos centres d'intérêt :",
+                        widget: "preferenceInterests" as import("@/types/flight").WidgetType,
+                      },
+                    ]);
+                  } else if (widgetType === "preferenceStyle") {
+                    const widgetId = `style-widget-${Date.now()}`;
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: widgetId,
+                        role: "assistant",
+                        text: "Ajustez votre style de voyage :",
+                        widget: "preferenceStyle" as import("@/types/flight").WidgetType,
+                      },
+                    ]);
+                  }
+                  return;
+                }
+                
+                // Regular message - just fill input
                 setInput(message);
                 setDynamicSuggestions([]); // Clear after selection
                 setTimeout(() => {
