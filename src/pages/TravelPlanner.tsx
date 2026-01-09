@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { ImperativePanelHandle } from "react-resizable-panels";
@@ -55,9 +56,16 @@ export interface UserLocation {
 }
 
 const TravelPlanner = () => {
+  const location = useLocation();
   const chatPanelRef = useRef<ImperativePanelHandle>(null);
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
   const [shouldConfirmLeave, setShouldConfirmLeave] = useState(false);
+
+  // Debug/ops: allow disabling onboarding via a dedicated route (/planner-notour)
+  // or a query param (?noTour=1) in normal browsing.
+  const disableTour =
+    location.pathname === "/planner-notour" || new URLSearchParams(location.search).has("noTour");
+
   // Track if onboarding is complete to allow animations
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
     return localStorage.getItem("travliaq_onboarding_completed") === "true";
@@ -337,11 +345,13 @@ const TravelPlanner = () => {
                 </ResizablePanelGroup>
 
                 {/* Onboarding Tour */}
-                <OnboardingTour 
-                  onPanelVisibilityChange={setIsPanelVisible}
-                  onComplete={handleOnboardingComplete}
-                  onRequestAnimation={handleRequestAnimation}
-                />
+                {!disableTour && (
+                  <OnboardingTour
+                    onPanelVisibilityChange={setIsPanelVisible}
+                    onComplete={handleOnboardingComplete}
+                    onRequestAnimation={handleRequestAnimation}
+                  />
+                )}
               </div>
             </ActivityMemoryProvider>
           </AccommodationMemoryProvider>

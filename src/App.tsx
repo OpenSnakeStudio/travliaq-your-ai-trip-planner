@@ -54,6 +54,7 @@ const AppContent = () => {
         <Route path="/trip-details" element={<TripDetails />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/planner" element={<TravelPlanner />} />
+        <Route path="/planner-notour" element={<TravelPlanner />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
