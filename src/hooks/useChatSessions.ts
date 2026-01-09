@@ -30,13 +30,47 @@ const getDefaultWelcomeMessage = (): StoredMessage => ({
   text: "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage.",
 });
 
+// Emojis for trip titles based on destination keywords
+const TRIP_EMOJIS: Record<string, string> = {
+  plage: "🏖️", beach: "🏖️", mer: "🌊", ocean: "🌊",
+  montagne: "⛰️", mountain: "⛰️", ski: "⛷️", neige: "❄️",
+  ville: "🏙️", city: "🏙️", urban: "🌆",
+  nature: "🌿", foret: "🌲", forest: "🌲",
+  desert: "🏜️", safari: "🦁",
+  asie: "🏯", asia: "🏯", japon: "🗼", japan: "🗼", tokyo: "🗼", chine: "🐉", china: "🐉",
+  europe: "🏰", paris: "🗼", france: "🇫🇷", italie: "🇮🇹", italy: "🍝", rome: "🏛️", espagne: "🇪🇸", spain: "💃",
+  amerique: "🗽", america: "🗽", usa: "🇺🇸", newyork: "🗽", miami: "🌴", losangeles: "🎬",
+  afrique: "🌍", africa: "🌍", maroc: "🕌", morocco: "🕌", egypte: "🏺", egypt: "🏺",
+  ile: "🏝️", island: "🏝️", maldives: "🏝️", bali: "🌺", hawaii: "🌺",
+  romantique: "💕", romantic: "💕", honeymoon: "💒",
+  aventure: "🧗", adventure: "🧗", randonnee: "🥾", hiking: "🥾",
+  famille: "👨‍👩‍👧‍👦", family: "👨‍👩‍👧‍👦", enfants: "👶", kids: "👶",
+  solo: "🎒", backpack: "🎒",
+  luxe: "✨", luxury: "✨", spa: "💆",
+  gastronomie: "🍽️", food: "🍜", cuisine: "👨‍🍳",
+  weekend: "🌟", vacances: "🌴", holidays: "🌴", voyage: "✈️", trip: "✈️",
+};
+
+const getEmojiForText = (text: string): string => {
+  const lowerText = text.toLowerCase();
+  for (const [keyword, emoji] of Object.entries(TRIP_EMOJIS)) {
+    if (lowerText.includes(keyword)) {
+      return emoji;
+    }
+  }
+  // Default travel emoji
+  return "✈️";
+};
+
 const generateTitle = (messages: StoredMessage[]): string => {
   const firstUserMessage = messages.find((m) => m.role === "user");
   if (firstUserMessage) {
-    const text = firstUserMessage.text.slice(0, 40);
-    return text.length < firstUserMessage.text.length ? text + "..." : text;
+    const text = firstUserMessage.text.slice(0, 35);
+    const emoji = getEmojiForText(firstUserMessage.text);
+    const truncatedText = text.length < firstUserMessage.text.length ? text + "..." : text;
+    return `${emoji} ${truncatedText}`;
   }
-  return "Nouvelle conversation";
+  return "✈️ Nouvelle conversation";
 };
 
 const generatePreview = (messages: StoredMessage[]): string => {
