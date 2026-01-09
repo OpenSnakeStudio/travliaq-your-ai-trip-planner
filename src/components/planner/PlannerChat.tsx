@@ -10,7 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
-import { Plane, History, User, Send, PanelLeftClose, PanelLeft, ChevronDown } from "lucide-react";
+import { Plane, History, User, Send, PanelLeftClose, PanelLeft } from "lucide-react";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
@@ -65,10 +65,7 @@ export type {
 } from "@/types/flight";
 
 // Props and ref interface
-interface PlannerChatProps {
-  isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
-}
+interface PlannerChatProps {}
 
 export interface PlannerChatRef {
   injectSystemMessage: (event: CountrySelectionEvent) => void;
@@ -82,7 +79,7 @@ export interface PlannerChatRef {
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/contexts/PreferenceMemoryContext").TripPreferences>) => void;
 }
 
-const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
+const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_props, ref) => {
   // Memory contexts
   const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation } = useAccommodationMemory();
@@ -105,6 +102,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isChatContentCollapsed, setIsChatContentCollapsed] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Refs
@@ -483,17 +481,18 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         onDeleteSession={deleteSession}
       />
 
-      {/* Header - Clean minimal bar like Lovable */}
+      {/* Header - Clean minimal bar */}
       <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background">
-        {/* Left: Logo + Title */}
-        <div className="flex items-center gap-2 min-w-0">
+        {/* Left: Logo + Session title */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
-          <span className="font-semibold text-foreground text-sm hidden sm:inline">travliaq</span>
-          <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:inline" />
+          <span className="font-medium text-foreground text-sm truncate max-w-[200px]">
+            {sessions.find((s) => s.id === activeSessionId)?.title || "✈️ Nouvelle conversation"}
+          </span>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {/* History icon */}
           <button
             onClick={() => setIsHistoryOpen(true)}
@@ -503,259 +502,262 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             <History className="h-4 w-4" />
           </button>
 
-          {/* Collapse chat toggle */}
-          {onToggleCollapse && (
-            <button
-              onClick={onToggleCollapse}
-              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title={isCollapsed ? "Ouvrir le chat" : "Réduire le chat"}
-            >
-              {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </button>
-          )}
+          {/* Collapse chat content toggle */}
+          <button
+            onClick={() => setIsChatContentCollapsed(!isChatContentCollapsed)}
+            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title={isChatContentCollapsed ? "Afficher le chat" : "Masquer le chat"}
+          >
+            {isChatContentCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+          </button>
         </div>
       </div>
 
 
-      {/* Messages */}
-      <div 
-        ref={messagesContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto"
-      >
-        <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
-          {messages.filter((m) => !m.isHidden).map((m) => (
-            <div key={m.id} className={cn("flex gap-4", m.role === "user" ? "flex-row-reverse" : "")}>
-              {/* Avatar */}
-              <div className={cn(
-                "h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
-                m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white"
-              )}>
-                {m.role === "user" ? <User className="h-4 w-4" /> : <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />}
-              </div>
+      {/* Collapsible content */}
+      {!isChatContentCollapsed && (
+        <>
+          {/* Messages */}
+          <div 
+            ref={messagesContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto"
+          >
+            <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
+              {messages.filter((m) => !m.isHidden).map((m) => (
+                <div key={m.id} className={cn("flex gap-4", m.role === "user" ? "flex-row-reverse" : "")}>
+                  {/* Avatar */}
+                  <div className={cn(
+                    "h-8 w-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden",
+                    m.role === "user" ? "bg-primary text-primary-foreground" : "bg-white"
+                  )}>
+                    {m.role === "user" ? <User className="h-4 w-4" /> : <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />}
+                  </div>
 
-              {/* Content */}
-              <div className={cn("flex-1 min-w-0", m.role === "user" ? "text-right" : "")}>
-                <div className={cn(
-                  "inline-block text-sm leading-relaxed px-4 py-3 rounded-2xl max-w-[85%]",
-                  m.role === "user" ? "bg-primary text-primary-foreground text-left" : "bg-muted text-foreground text-left"
-                )}>
-                  {m.isTyping ? (
-                    <div className="flex gap-1 py-1">
-                      <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  {/* Content */}
+                  <div className={cn("flex-1 min-w-0", m.role === "user" ? "text-right" : "")}>
+                    <div className={cn(
+                      "inline-block text-sm leading-relaxed px-4 py-3 rounded-2xl max-w-[85%]",
+                      m.role === "user" ? "bg-primary text-primary-foreground text-left" : "bg-muted text-foreground text-left"
+                    )}>
+                      {m.isTyping ? (
+                        <div className="flex gap-1 py-1">
+                          <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                          <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                          <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                        </div>
+                      ) : (
+                        <>
+                          <MarkdownMessage content={m.text} />
+                          {m.isStreaming && <span className="inline-block w-1.5 h-4 bg-current ml-0.5 animate-pulse" />}
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <>
-                      <MarkdownMessage content={m.text} />
-                      {m.isStreaming && <span className="inline-block w-1.5 h-4 bg-current ml-0.5 animate-pulse" />}
-                    </>
-                  )}
-                </div>
 
-                {/* Airport choices */}
-                {m.airportChoices && (
-                  <div className="mt-2 flex flex-wrap gap-2 max-w-[85%]">
-                    {m.airportChoices.airports.map((airport) => (
-                      <AirportButton
-                        key={airport.iata}
-                        airport={airport}
-                        onClick={() => widgetFlow.handleAirportSelect(m.id, m.airportChoices!.field, airport, false)}
+                    {/* Airport choices */}
+                    {m.airportChoices && (
+                      <div className="mt-2 flex flex-wrap gap-2 max-w-[85%]">
+                        {m.airportChoices.airports.map((airport) => (
+                          <AirportButton
+                            key={airport.iata}
+                            airport={airport}
+                            onClick={() => widgetFlow.handleAirportSelect(m.id, m.airportChoices!.field, airport, false)}
+                            disabled={isLoading}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Dual airport selection */}
+                    {m.dualAirportChoices && (
+                      <DualAirportSelection
+                        choices={m.dualAirportChoices}
+                        onSelect={(field, airport) => widgetFlow.handleAirportSelect(m.id, field, airport, true)}
                         disabled={isLoading}
                       />
-                    ))}
+                    )}
+
+                    {/* Widgets */}
+                    {m.widget === "datePicker" && (
+                      <DatePickerWidget
+                        label="Choisir la date de départ"
+                        value={memory.departureDate}
+                        onChange={(date) => widgetFlow.handleDateSelect(m.id, "departure", date)}
+                        preferredMonth={m.widgetData?.preferredMonth}
+                      />
+                    )}
+                    {m.widget === "returnDatePicker" && (
+                      <DatePickerWidget
+                        label="Choisir la date de retour"
+                        value={memory.returnDate}
+                        onChange={(date) => widgetFlow.handleDateSelect(m.id, "return", date)}
+                        minDate={memory.departureDate || undefined}
+                        preferredMonth={m.widgetData?.preferredMonth}
+                      />
+                    )}
+                    {m.widget === "dateRangePicker" && (
+                      <DateRangePickerWidget
+                        tripDuration={m.widgetData?.tripDuration}
+                        preferredMonth={m.widgetData?.preferredMonth}
+                        onConfirm={(dep, ret) => widgetFlow.handleDateRangeSelect(m.id, dep, ret)}
+                      />
+                    )}
+                    {m.widget === "travelersSelector" && (
+                      <TravelersWidget
+                        initialValues={memory.passengers}
+                        onConfirm={(travelers) => widgetFlow.handleTravelersSelect(m.id, travelers)}
+                      />
+                    )}
+                    {m.widget === "tripTypeConfirm" && (
+                      <TripTypeConfirmWidget
+                        currentType={memory.tripType}
+                        onConfirm={(tripType) => widgetFlow.handleTripTypeConfirm(m.id, tripType)}
+                      />
+                    )}
+                    {m.widget === "citySelector" && m.widgetData?.citySelection && (
+                      <CitySelectionWidget
+                        citySelection={m.widgetData.citySelection}
+                        onSelect={(cityName) => {
+                          const { countryCode, countryName } = m.widgetData!.citySelection!;
+                          if (m.widgetData?.isDeparture) {
+                            widgetFlow.handleDepartureCitySelect(m.id, cityName, countryName, countryCode);
+                          } else {
+                            widgetFlow.handleCitySelect(m.id, cityName, countryName, countryCode);
+                          }
+                        }}
+                      />
+                    )}
+                    {m.widget === "travelersConfirmBeforeSearch" && (
+                      <TravelersConfirmBeforeSearchWidget
+                        currentTravelers={memory.passengers}
+                        onConfirm={() => widgetFlow.handleTravelersConfirmSolo(m.id)}
+                        onEditConfirm={(travelers) => widgetFlow.handleTravelersEditBeforeSearch(m.id, travelers)}
+                      />
+                    )}
+                    {m.widget === "airportConfirmation" && m.widgetData?.airportConfirmation && (
+                      <AirportConfirmationWidget
+                        data={m.widgetData.airportConfirmation}
+                        onConfirm={(confirmed) => eventBus.emit("flight:confirmedAirports", confirmed)}
+                      />
+                    )}
+
+                    {/* Search button */}
+                    {m.hasSearchButton && (
+                      <div className="mt-3">
+                        <button
+                          onClick={() => widgetFlow.handleSearchButtonClick(m.id)}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
+                        >
+                          <Plane className="h-4 w-4" />
+                          Rechercher les vols maintenant
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Quick Replies */}
+                    {m.quickReplies && m.quickReplies.length > 0 && (
+                      <QuickReplies
+                        replies={m.quickReplies}
+                        onSendMessage={send}
+                        onFillInput={(message) => {
+                          setInput(message);
+                          setTimeout(() => inputRef.current?.focus(), 0);
+                        }}
+                        disabled={isLoading}
+                      />
+                    )}
                   </div>
-                )}
-
-                {/* Dual airport selection */}
-                {m.dualAirportChoices && (
-                  <DualAirportSelection
-                    choices={m.dualAirportChoices}
-                    onSelect={(field, airport) => widgetFlow.handleAirportSelect(m.id, field, airport, true)}
-                    disabled={isLoading}
-                  />
-                )}
-
-                {/* Widgets */}
-                {m.widget === "datePicker" && (
-                  <DatePickerWidget
-                    label="Choisir la date de départ"
-                    value={memory.departureDate}
-                    onChange={(date) => widgetFlow.handleDateSelect(m.id, "departure", date)}
-                    preferredMonth={m.widgetData?.preferredMonth}
-                  />
-                )}
-                {m.widget === "returnDatePicker" && (
-                  <DatePickerWidget
-                    label="Choisir la date de retour"
-                    value={memory.returnDate}
-                    onChange={(date) => widgetFlow.handleDateSelect(m.id, "return", date)}
-                    minDate={memory.departureDate || undefined}
-                    preferredMonth={m.widgetData?.preferredMonth}
-                  />
-                )}
-                {m.widget === "dateRangePicker" && (
-                  <DateRangePickerWidget
-                    tripDuration={m.widgetData?.tripDuration}
-                    preferredMonth={m.widgetData?.preferredMonth}
-                    onConfirm={(dep, ret) => widgetFlow.handleDateRangeSelect(m.id, dep, ret)}
-                  />
-                )}
-                {m.widget === "travelersSelector" && (
-                  <TravelersWidget
-                    initialValues={memory.passengers}
-                    onConfirm={(travelers) => widgetFlow.handleTravelersSelect(m.id, travelers)}
-                  />
-                )}
-                {m.widget === "tripTypeConfirm" && (
-                  <TripTypeConfirmWidget
-                    currentType={memory.tripType}
-                    onConfirm={(tripType) => widgetFlow.handleTripTypeConfirm(m.id, tripType)}
-                  />
-                )}
-                {m.widget === "citySelector" && m.widgetData?.citySelection && (
-                  <CitySelectionWidget
-                    citySelection={m.widgetData.citySelection}
-                    onSelect={(cityName) => {
-                      const { countryCode, countryName } = m.widgetData!.citySelection!;
-                      if (m.widgetData?.isDeparture) {
-                        widgetFlow.handleDepartureCitySelect(m.id, cityName, countryName, countryCode);
-                      } else {
-                        widgetFlow.handleCitySelect(m.id, cityName, countryName, countryCode);
-                      }
-                    }}
-                  />
-                )}
-                {m.widget === "travelersConfirmBeforeSearch" && (
-                  <TravelersConfirmBeforeSearchWidget
-                    currentTravelers={memory.passengers}
-                    onConfirm={() => widgetFlow.handleTravelersConfirmSolo(m.id)}
-                    onEditConfirm={(travelers) => widgetFlow.handleTravelersEditBeforeSearch(m.id, travelers)}
-                  />
-                )}
-                {m.widget === "airportConfirmation" && m.widgetData?.airportConfirmation && (
-                  <AirportConfirmationWidget
-                    data={m.widgetData.airportConfirmation}
-                    onConfirm={(confirmed) => eventBus.emit("flight:confirmedAirports", confirmed)}
-                  />
-                )}
-
-                {/* Search button */}
-                {m.hasSearchButton && (
-                  <div className="mt-3">
-                    <button
-                      onClick={() => widgetFlow.handleSearchButtonClick(m.id)}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
-                    >
-                      <Plane className="h-4 w-4" />
-                      Rechercher les vols maintenant
-                    </button>
-                  </div>
-                )}
-
-                {/* Quick Replies */}
-                {m.quickReplies && m.quickReplies.length > 0 && (
-                  <QuickReplies
-                    replies={m.quickReplies}
-                    onSendMessage={send}
-                    onFillInput={(message) => {
-                      setInput(message);
-                      setTimeout(() => inputRef.current?.focus(), 0);
-                    }}
-                    disabled={isLoading}
-                  />
-                )}
-              </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Scroll to bottom button */}
-      <ScrollToBottomButton
-        show={isUserScrolling || showNewMessageIndicator}
-        newMessageCount={newMessageCount}
-        onClick={() => {
-          scrollToBottom();
-          markMessagesAsRead();
-        }}
-      />
-
-      {/* Smart Suggestions + Input */}
-      <div className="border-t border-border bg-background">
-        {/* Smart Suggestions */}
-        <SmartSuggestions
-          context={{
-            workflowStep: !memory.arrival?.city ? 'inspiration' 
-              : !memory.departureDate ? 'destination' 
-              : memory.passengers.adults === 0 ? 'dates' 
-              : 'compare',
-            hasDestination: !!memory.arrival?.city,
-            hasDates: !!memory.departureDate,
-            hasTravelers: memory.passengers.adults > 0,
-            hasFlights: mapContext.visiblePrices.filter(p => p.type === "flight").length > 0,
-            hasHotels: mapContext.visibleHotels.length > 0,
-            destinationName: memory.arrival?.city,
-            departureCity: memory.departure?.city,
-            currentTab: mapContext.activeTab,
-            visibleFlightsCount: mapContext.visiblePrices.filter(p => p.type === "flight").length,
-            visibleHotelsCount: mapContext.visibleHotels.length,
-            visibleActivitiesCount: mapContext.visibleActivities.length,
-            cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
-            cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
-          }}
-          onSuggestionClick={(message) => {
-            setInput(message);
-            setTimeout(() => inputRef.current?.focus(), 0);
-          }}
-          isLoading={isLoading}
-        />
-        
-        <div className="max-w-3xl mx-auto p-4 pt-0">
-          <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                e.target.style.height = "auto";
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-              }}
-              placeholder="Envoyer un message..."
-              rows={1}
-              disabled={isLoading}
-              className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
-              style={{ minHeight: "40px", maxHeight: "120px" }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                  setTimeout(() => inputRef.current?.focus(), 0);
-                }
-              }}
-            />
-            <button
-              type="button"
-              onClick={send}
-              disabled={!input.trim() || isLoading}
-              className={cn(
-                "h-9 w-9 shrink-0 rounded-lg flex items-center justify-center transition-all",
-                input.trim() && !isLoading
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "bg-muted text-muted-foreground cursor-not-allowed"
-              )}
-              aria-label="Envoyer"
-            >
-              <Send className="h-4 w-4" />
-            </button>
           </div>
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            Tapez une destination ou demandez des vols, activités, hébergements
-          </p>
-        </div>
-      </div>
+
+          {/* Scroll to bottom button */}
+          <ScrollToBottomButton
+            show={isUserScrolling || showNewMessageIndicator}
+            newMessageCount={newMessageCount}
+            onClick={() => {
+              scrollToBottom();
+              markMessagesAsRead();
+            }}
+          />
+
+          {/* Smart Suggestions + Input */}
+          <div className="border-t border-border bg-background">
+            {/* Smart Suggestions */}
+            <SmartSuggestions
+              context={{
+                workflowStep: !memory.arrival?.city ? 'inspiration' 
+                  : !memory.departureDate ? 'destination' 
+                  : memory.passengers.adults === 0 ? 'dates' 
+                  : 'compare',
+                hasDestination: !!memory.arrival?.city,
+                hasDates: !!memory.departureDate,
+                hasTravelers: memory.passengers.adults > 0,
+                hasFlights: mapContext.visiblePrices.filter(p => p.type === "flight").length > 0,
+                hasHotels: mapContext.visibleHotels.length > 0,
+                destinationName: memory.arrival?.city,
+                departureCity: memory.departure?.city,
+                currentTab: mapContext.activeTab,
+                visibleFlightsCount: mapContext.visiblePrices.filter(p => p.type === "flight").length,
+                visibleHotelsCount: mapContext.visibleHotels.length,
+                visibleActivitiesCount: mapContext.visibleActivities.length,
+                cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
+                cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
+              }}
+              onSuggestionClick={(message) => {
+                setInput(message);
+                setTimeout(() => inputRef.current?.focus(), 0);
+              }}
+              isLoading={isLoading}
+            />
+            
+            <div className="max-w-3xl mx-auto p-4 pt-0">
+              <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    e.target.style.height = "auto";
+                    e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+                  }}
+                  placeholder="Envoyer un message..."
+                  rows={1}
+                  disabled={isLoading}
+                  className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+                  style={{ minHeight: "40px", maxHeight: "120px" }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      send();
+                      setTimeout(() => inputRef.current?.focus(), 0);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={send}
+                  disabled={!input.trim() || isLoading}
+                  className={cn(
+                    "h-9 w-9 shrink-0 rounded-lg flex items-center justify-center transition-all",
+                    input.trim() && !isLoading
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  )}
+                  aria-label="Envoyer"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Tapez une destination ou demandez des vols, activités, hébergements
+              </p>
+            </div>
+          </div>
+        </>
+      )}
     </aside>
   );
 });

@@ -408,34 +408,67 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   const deleteSession = useCallback(
     (sessionId: string) => {
       try {
-        // Remove session messages
+        // Get current sessions from ref to avoid stale state
+        const currentSessions = sessionsRef.current;
+        
+        // Filter out the session to delete
+        const updated = currentSessions.filter((s) => s.id !== sessionId);
+        
+        // Remove session messages from localStorage
         localStorage.removeItem(SESSION_PREFIX + sessionId);
+        
+        // Update localStorage index
+        localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(updated));
 
         // Delete from database
         if (user) {
           deleteFromDatabase(sessionId);
         }
 
-        setSessions((prev) => {
-          const updated = prev.filter((s) => s.id !== sessionId);
-          localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(updated));
+        // Update ref first to prevent stale reads
+        sessionsRef.current = updated;
 
-          // If we deleted the active session, switch to another
-          if (sessionId === activeSessionId && updated.length > 0) {
-            const mostRecent = updated.sort((a, b) => b.updatedAt - a.updatedAt)[0];
-            selectSession(mostRecent.id);
-          } else if (updated.length === 0) {
+        // If we deleted the active session, switch to another first
+        if (sessionId === activeSessionId) {
+          if (updated.length > 0) {
+            const mostRecent = [...updated].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+            // Load new session messages before updating state
+            const messagesRaw = localStorage.getItem(SESSION_PREFIX + mostRecent.id);
+            const newMessages = messagesRaw 
+              ? JSON.parse(messagesRaw) 
+              : [getDefaultWelcomeMessage()];
+            
+            setMessages(Array.isArray(newMessages) ? newMessages : [getDefaultWelcomeMessage()]);
+            setActiveSessionId(mostRecent.id);
+            setSessions(updated);
+          } else {
             // Create a new session if all are deleted
-            createNewSession();
+            const newSession: ChatSession = {
+              id: generateId(),
+              title: "✈️ Nouvelle conversation",
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              preview: "Démarrez la conversation...",
+            };
+            const defaultMessages = [getDefaultWelcomeMessage()];
+            
+            localStorage.setItem(SESSION_PREFIX + newSession.id, JSON.stringify(defaultMessages));
+            localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify([newSession]));
+            
+            sessionsRef.current = [newSession];
+            setMessages(defaultMessages);
+            setActiveSessionId(newSession.id);
+            setSessions([newSession]);
           }
-
-          return updated;
-        });
+        } else {
+          // Just update sessions list
+          setSessions(updated);
+        }
       } catch (e) {
         console.error("Error deleting session:", e);
       }
     },
-    [activeSessionId, selectSession, createNewSession, user, deleteFromDatabase]
+    [activeSessionId, user, deleteFromDatabase]
   );
 
   // Force sync current session to database (for critical actions)

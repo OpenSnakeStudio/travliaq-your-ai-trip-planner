@@ -1,8 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Plane, Compass, Bed, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType } from "@/pages/TravelPlanner";
-import { usePlannerEvent } from "@/lib/eventBus";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import CurrencySelector from "@/components/navigation/CurrencySelector";
 import LanguageSelector from "@/components/navigation/LanguageSelector";
@@ -22,22 +21,9 @@ const tabs: { id: TabType; icon: React.ElementType; label: string; emoji: string
 ];
 
 export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarProps) {
-  const [flashingTab, setFlashingTab] = useState<TabType | null>(null);
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const { preferences, updateTemperatureUnit } = useUserPreferences();
-
-  // Listen to flash events
-  const handleFlash = useCallback((data: { tab: TabType }) => {
-    // Don't flash if it's already the active tab
-    if (data.tab === activeTab) return;
-
-    setFlashingTab(data.tab);
-    // Remove flash after animation completes
-    setTimeout(() => setFlashingTab(null), 2000);
-  }, [activeTab]);
-
-  usePlannerEvent("tab:flash", handleFlash);
   
   return (
     <>
@@ -53,7 +39,6 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
           {tabs.map((t) => {
             const Icon = t.icon;
             const isActive = activeTab === t.id;
-            const isFlashing = flashingTab === t.id;
 
             return (
               <button
@@ -64,17 +49,13 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
                   "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  isFlashing && "animate-pulse ring-2 ring-primary ring-offset-2"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
                 aria-label={t.label}
                 aria-current={isActive ? "page" : undefined}
               >
                 <span className="text-base">{t.emoji}</span>
                 <span className="hidden sm:inline">{t.label}</span>
-                {isFlashing && (
-                  <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-primary animate-ping" />
-                )}
               </button>
             );
           })}
