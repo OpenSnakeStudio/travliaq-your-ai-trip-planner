@@ -41,7 +41,6 @@ import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
 import { SmartSuggestions } from "./chat/SmartSuggestions";
 import { ScrollToBottomButton } from "./chat/ScrollToBottomButton";
-import { ChatDebugHUD, useChatDebugEnabled } from "./chat/ChatDebugHUD";
 
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
@@ -170,45 +169,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   } = useChatSessions({ getFlightMemory, getAccommodationMemory, getTravelMemory });
 
   // Local state
-  const [input, _setInput] = useState("");
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-
-  // Input debugging: track who last changed the input (helps diagnose "appears then clears")
-  const lastInputReasonRef = useRef<string>("init");
-  const lastInputValueRef = useRef<string>("");
-  const setInput = useCallback((next: string, reason: string) => {
-    lastInputReasonRef.current = reason;
-    lastInputValueRef.current = next;
-    _setInput(next);
-  }, []);
 
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const userMessageCountRef = useRef(0);
-
-  // Debug mode (enable with ?debugChat=1)
-  const isDebugEnabled = useChatDebugEnabled();
-
-  // Detect "type then instantly cleared" (logs automatically; no need for you to send logs)
-  const prevInputRef = useRef<string>(input);
-  useEffect(() => {
-    const prev = prevInputRef.current;
-    prevInputRef.current = input;
-
-    if (prev && !input) {
-      // eslint-disable-next-line no-console
-      console.warn("[ChatInputReset] input cleared", {
-        previous: prev,
-        reason: lastInputReasonRef.current,
-        activeSessionId,
-        activeElement: document.activeElement?.tagName,
-      });
-    }
-  }, [input, activeSessionId]);
 
   // CRITICAL: Hard guard against any global CSS that blocks pointer events (e.g., driver.js leaving `driver-active` behind)
   useEffect(() => {
@@ -853,7 +823,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         replies={m.quickReplies}
                         onSendMessage={(message) => sendText(message)}
                         onFillInput={(message) => {
-                          setInput(message, "quickReplyFill");
+                          setInput(message);
                           setTimeout(() => inputRef.current?.focus(), 0);
                         }}
                         disabled={isLoading}
@@ -901,7 +871,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               }}
               onSuggestionClick={(message) => {
                 // Only prefill input, don't send automatically
-                setInput(message, "suggestionFill");
+                setInput(message);
                 // Focus the input so user can review and send
                 setTimeout(() => {
                   inputRef.current?.focus();
@@ -921,7 +891,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                   ref={inputRef}
                   value={input}
                   onChange={(e) => {
-                    setInput(e.target.value, "userType");
+                    setInput(e.target.value);
                     e.target.style.height = "auto";
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
@@ -983,9 +953,6 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             </div>
           </div>
       </div>
-
-      {/* Debug HUD - enable with ?debugChat=1 */}
-      {isDebugEnabled && <ChatDebugHUD inputRef={inputRef} />}
     </aside>
   );
 });
