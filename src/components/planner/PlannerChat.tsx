@@ -672,7 +672,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       {/* Collapsible content */}
       <div
         className={cn(
-          "flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-out",
+          // `relative` + z-index: ensure chat content (especially input) stays above any stray overlays within the panel group
+          "relative z-10 flex flex-col flex-1 overflow-hidden transition-all duration-300 ease-out",
           isCollapsed ? "opacity-0 pointer-events-none scale-95" : "opacity-100 scale-100"
         )}
       >
@@ -840,46 +841,46 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           />
 
           {/* Smart Suggestions + Input */}
-          <div className="border-t border-border bg-background" aria-hidden={isCollapsed}>
+          <div className="relative z-20 border-t border-border bg-background" aria-hidden={isCollapsed}>
             {/* Smart Suggestions */}
-          <SmartSuggestions
-            context={{
-              workflowStep: !memory.arrival?.city ? "inspiration"
-                : !memory.departureDate ? "destination"
-                : memory.passengers.adults === 0 ? "dates"
-                : "compare",
-              hasDestination: !!memory.arrival?.city,
-              hasDates: !!memory.departureDate,
-              hasTravelers: memory.passengers.adults > 0,
-              hasFlights: mapContext.visiblePrices.filter((p) => p.type === "flight").length > 0,
-              hasHotels: mapContext.visibleHotels.length > 0,
-              destinationName: memory.arrival?.city,
-              departureCity: memory.departure?.city,
-              currentTab: mapContext.activeTab,
-              visibleFlightsCount: mapContext.visiblePrices.filter((p) => p.type === "flight").length,
-              visibleHotelsCount: mapContext.visibleHotels.length,
-              visibleActivitiesCount: mapContext.visibleActivities.length,
-              cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
-              cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
-            }}
-            onSuggestionClick={(message) => {
-              // Only prefill input, don't send automatically
-              setInput(message);
-              // Focus the input so user can review and send
-              setTimeout(() => {
-                inputRef.current?.focus();
-                // Adjust textarea height for the new content
-                if (inputRef.current) {
-                  inputRef.current.style.height = "auto";
-                  inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + "px";
-                }
-              }, 0);
-            }}
-            isLoading={isLoading}
-          />
-            
-            <div className="max-w-3xl mx-auto p-4 pt-0">
-              <div className="relative flex items-end gap-2 rounded-2xl border border-border bg-muted/30 p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+            <SmartSuggestions
+              context={{
+                workflowStep: !memory.arrival?.city ? "inspiration"
+                  : !memory.departureDate ? "destination"
+                  : memory.passengers.adults === 0 ? "dates"
+                  : "compare",
+                hasDestination: !!memory.arrival?.city,
+                hasDates: !!memory.departureDate,
+                hasTravelers: memory.passengers.adults > 0,
+                hasFlights: mapContext.visiblePrices.filter((p) => p.type === "flight").length > 0,
+                hasHotels: mapContext.visibleHotels.length > 0,
+                destinationName: memory.arrival?.city,
+                departureCity: memory.departure?.city,
+                currentTab: mapContext.activeTab,
+                visibleFlightsCount: mapContext.visiblePrices.filter((p) => p.type === "flight").length,
+                visibleHotelsCount: mapContext.visibleHotels.length,
+                visibleActivitiesCount: mapContext.visibleActivities.length,
+                cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
+                cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
+              }}
+              onSuggestionClick={(message) => {
+                // Only prefill input, don't send automatically
+                setInput(message);
+                // Focus the input so user can review and send
+                setTimeout(() => {
+                  inputRef.current?.focus();
+                  // Adjust textarea height for the new content
+                  if (inputRef.current) {
+                    inputRef.current.style.height = "auto";
+                    inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + "px";
+                  }
+                }, 0);
+              }}
+              isLoading={isLoading}
+            />
+
+            <div className="relative z-20 max-w-3xl mx-auto p-4 pt-0">
+              <div className="relative z-20 flex items-end gap-2 rounded-2xl border border-border bg-muted/30 p-2 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -896,19 +897,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                   placeholder={isLoading ? "Réponse en cours..." : "Envoyer un message..."}
                   rows={1}
                   disabled={false}
-                  className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  className="pointer-events-auto flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                   style={{ minHeight: "40px", maxHeight: "120px" }}
                   onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendText(input);
-                    setTimeout(() => inputRef.current?.focus(), 0);
-                  }
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      sendText(input);
+                      setTimeout(() => inputRef.current?.focus(), 0);
+                    }
                   }}
                 />
-              <button
-                type="button"
-                onClick={() => sendText(input)}
+                <button
+                  type="button"
+                  onClick={() => sendText(input)}
                   disabled={!input.trim() || isLoading}
                   className={cn(
                     "h-9 w-9 shrink-0 rounded-lg flex items-center justify-center transition-all",
