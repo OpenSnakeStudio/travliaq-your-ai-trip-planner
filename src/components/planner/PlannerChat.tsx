@@ -298,6 +298,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       text: m.text,
       isHidden: m.isHidden,
       hasSearchButton: m.hasSearchButton,
+      // CRITICAL: Always reset streaming/typing states when loading from storage
+      isStreaming: false,
+      isTyping: false,
     }));
 
     const currentStored = toStoredMessages(messages);
