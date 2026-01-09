@@ -69,9 +69,21 @@ export function SmartSuggestions({
     return null;
   }
 
+  // Handle horizontal scroll with mouse wheel
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.deltaY !== 0) {
+      e.currentTarget.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="px-4 py-2">
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+      <div 
+        onWheel={handleWheel}
+        className="flex gap-2 overflow-x-auto pb-1 themed-scroll"
+        style={{ scrollbarWidth: 'thin' }}
+      >
         <AnimatePresence mode="popLayout">
           {suggestions.map((suggestion, index) => (
             <motion.button
@@ -82,7 +94,7 @@ export function SmartSuggestions({
               transition={{ delay: index * 0.04, duration: 0.15 }}
               onClick={() => onSuggestionClick(suggestion.message)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0",
                 "text-xs font-medium whitespace-nowrap",
                 "bg-primary/10 text-primary hover:bg-primary/20",
                 "border border-primary/20 hover:border-primary/40",

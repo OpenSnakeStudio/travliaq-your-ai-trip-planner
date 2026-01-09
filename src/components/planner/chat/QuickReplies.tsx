@@ -54,13 +54,23 @@ export function QuickReplies({
 
   if (!replies || replies.length === 0) return null;
 
+  // Handle horizontal scroll with mouse wheel
+  const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (e.deltaY !== 0) {
+      e.currentTarget.scrollLeft += e.deltaY;
+      e.preventDefault();
+    }
+  };
+
   return (
     <div
+      onWheel={handleWheel}
       className={cn(
-        "flex flex-wrap gap-2 mt-3",
+        "flex gap-2 mt-3 overflow-x-auto pb-1 themed-scroll",
         "animate-in fade-in slide-in-from-bottom-2 duration-300",
         className
       )}
+      style={{ scrollbarWidth: 'thin' }}
     >
       {replies.map((reply) => (
         <button
@@ -68,7 +78,7 @@ export function QuickReplies({
           onClick={() => handleQuickReply(reply)}
           disabled={disabled}
           className={cn(
-            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all shrink-0",
             "hover:scale-[1.02] active:scale-[0.98]",
             "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-1",
             // Variants
