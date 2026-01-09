@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Plane, Compass, Bed, SlidersHorizontal, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,7 +48,9 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
                 transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                 className="flex items-center gap-2"
               >
-                <img src={logo} alt="Travliaq" className="h-7 w-7 object-contain" />
+                <Link to="/" title="Retour à l'accueil">
+                  <img src={logo} alt="Travliaq" className="h-7 w-7 object-contain hover:scale-110 transition-transform" />
+                </Link>
                 <button
                   onClick={onOpenChat}
                   className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"

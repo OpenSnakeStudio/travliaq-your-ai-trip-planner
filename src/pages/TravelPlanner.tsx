@@ -178,8 +178,9 @@ const TravelPlanner = () => {
                     onExpand={() => setIsChatCollapsed(false)}
                     onResize={(size) => {
                       // Auto-collapse when user drags below 12%
-                      if (size > 0 && size < 12 && !chatPanelRef.current?.isCollapsed()) {
+                      if (size > 0 && size < 12) {
                         chatPanelRef.current?.collapse();
+                        setIsChatCollapsed(true);
                       }
                     }}
                     className="transition-all duration-300 ease-out"
