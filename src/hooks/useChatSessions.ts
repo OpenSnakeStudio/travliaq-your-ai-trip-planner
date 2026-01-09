@@ -8,6 +8,8 @@ export interface StoredMessage {
   text: string;
   hasSearchButton?: boolean;
   isHidden?: boolean;
+  isStreaming?: boolean;
+  isTyping?: boolean;
 }
 
 export interface ChatSession {
@@ -320,6 +322,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   );
 
   // Update messages with debounced persistence
+  // IMPORTANT: Only save messages that are NOT currently streaming to avoid saving partial content
   const updateMessages = useCallback(
     (newMessages: StoredMessage[] | ((prev: StoredMessage[]) => StoredMessage[])) => {
       setMessages((prev) => {
@@ -331,10 +334,17 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
           clearTimeout(saveTimeoutRef.current);
         }
         
-        // Debounce the save to localStorage
-        saveTimeoutRef.current = setTimeout(() => {
-          saveMessagesToStorage(updated, activeSessionId);
-        }, 150);
+        // Check if any message is currently streaming - if so, don't save yet
+        const hasStreamingMessage = updated.some((m) => m.isStreaming || m.isTyping);
+        
+        if (!hasStreamingMessage) {
+          // Debounce the save to localStorage only when no message is streaming
+          saveTimeoutRef.current = setTimeout(() => {
+            // Filter out messages with incomplete content before saving
+            const messagesToSave = updated.filter((m) => !m.isStreaming && !m.isTyping);
+            saveMessagesToStorage(messagesToSave, activeSessionId);
+          }, 300);
+        }
         
         return updated;
       });
