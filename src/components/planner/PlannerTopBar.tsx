@@ -36,7 +36,7 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
         data-tour="tabs-nav"
       >
         {/* Left: Logo + Chat toggle (only when chat is collapsed) + Tab buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <AnimatePresence mode="wait">
             {isChatCollapsed && onOpenChat && (
               <motion.div
@@ -45,17 +45,18 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -20, scale: 0.9 }}
                 transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                className="flex items-center gap-1.5 rounded-xl bg-background/80 backdrop-blur border border-border px-2 py-1.5 shadow-sm"
+                className="flex items-center gap-2"
               >
-                <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />
+                <img src={logo} alt="Travliaq" className="h-7 w-7 object-contain" />
                 <button
                   onClick={onOpenChat}
-                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                  className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                   title="Ouvrir le chat"
                   aria-label="Ouvrir le chat"
                 >
                   <PanelLeft className="h-4 w-4" />
                 </button>
+                <div className="w-px h-5 bg-border/50" />
               </motion.div>
             )}
           </AnimatePresence>

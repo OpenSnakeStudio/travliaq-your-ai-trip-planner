@@ -165,11 +165,10 @@ const TravelPlanner = () => {
               </Helmet>
 
               <div className="h-[100svh] w-full overflow-hidden bg-background">
-                <ResizablePanelGroup direction="horizontal" className="h-full" autoSaveId="planner-layout">
+                <ResizablePanelGroup direction="horizontal" className="h-full">
                   {/* Left: Chat - resizable with smooth animation */}
                   <ResizablePanel
                     ref={chatPanelRef}
-                    order={1}
                     defaultSize={35}
                     minSize={0}
                     maxSize={50}
