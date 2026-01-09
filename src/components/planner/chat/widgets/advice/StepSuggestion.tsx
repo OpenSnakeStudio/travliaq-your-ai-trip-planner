@@ -163,13 +163,6 @@ export function StepSuggestion({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* AI badge */}
-          {aiSuggestion && (
-            <div className="flex items-center gap-1 mb-1">
-              <Sparkles size={12} className="text-primary" />
-              <span className="text-xs text-primary font-medium">Suggestion IA</span>
-            </div>
-          )}
 
           {/* Message */}
           <p
