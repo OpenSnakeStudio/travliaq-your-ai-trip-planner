@@ -66,13 +66,13 @@ function injectDriverStyles() {
       animation: travliaq-pulse-glow 2s ease-in-out infinite !important;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
-      z-index: 10001 !important;
-      border-radius: 16px !important;
-      box-shadow:
-        0 0 0 4px hsl(var(--primary)),
-        0 0 30px 10px hsl(var(--primary) / 0.4) !important;
-      animation: travliaq-pulse-glow 2s ease-in-out infinite !important;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+    /* CRITICAL: Always allow chat interaction even during tour */
+    .driver-active [data-tour="chat-panel"],
+    .driver-active [data-tour="chat-panel"] *,
+    .driver-active textarea,
+    .driver-active [role="textbox"] {
+      pointer-events: auto !important;
     }
 
     @keyframes travliaq-pulse-glow {

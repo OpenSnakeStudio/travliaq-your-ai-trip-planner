@@ -863,6 +863,15 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     e.target.style.height = "auto";
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
+                  onFocus={() => {
+                    // Auto-destroy driver.js tour if active to unblock typing
+                    if (document.body.classList.contains("driver-active")) {
+                      document.body.classList.remove("driver-active");
+                      // Try to destroy all driver instances by removing their DOM elements
+                      document.querySelectorAll(".driver-overlay, .driver-popover, .driver-stage").forEach((el) => el.remove());
+                      toast.info("Guide interrompu pour vous permettre d'écrire.");
+                    }
+                  }}
                   placeholder={isLoading ? "Réponse en cours..." : "Envoyer un message..."}
                   rows={1}
                   disabled={false}
