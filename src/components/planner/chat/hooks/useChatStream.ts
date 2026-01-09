@@ -282,6 +282,31 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
 
           // Reset content for this attempt
           fullContent = "";
+          
+          // Throttle UI updates to reduce re-renders (max every 50ms)
+          let lastUpdateTime = 0;
+          const THROTTLE_MS = 50;
+          let pendingUpdate = false;
+          
+          const throttledUpdate = () => {
+            const now = Date.now();
+            if (now - lastUpdateTime >= THROTTLE_MS) {
+              lastUpdateTime = now;
+              if (isMountedRef.current) {
+                onContentUpdate(messageId, fullContent, false);
+              }
+              pendingUpdate = false;
+            } else if (!pendingUpdate) {
+              pendingUpdate = true;
+              setTimeout(() => {
+                if (isMountedRef.current && pendingUpdate) {
+                  lastUpdateTime = Date.now();
+                  onContentUpdate(messageId, fullContent, false);
+                  pendingUpdate = false;
+                }
+              }, THROTTLE_MS - (now - lastUpdateTime));
+            }
+          };
 
           while (true) {
             // Check if cancelled
@@ -310,10 +335,8 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                     accommodationData = parsed.accommodationData;
                   } else if (parsed.type === "content" && parsed.content) {
                     fullContent += parsed.content;
-                    // Notify about content update (streaming)
-                    if (isMountedRef.current) {
-                      onContentUpdate(messageId, fullContent, false);
-                    }
+                    // Throttled content update to reduce flickering
+                    throttledUpdate();
                   }
                 } catch {
                   // Ignore parse errors for malformed chunks

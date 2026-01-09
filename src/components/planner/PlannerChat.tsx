@@ -206,15 +206,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSessionId, storedMessages]);
 
-  // Persist messages (only if changed)
+  // Persist messages (only if changed) with guard against deleted sessions
+  const isSwitchingSessionRef = useRef(false);
   const persistMessages = useCallback(
     (msgs: ChatMessage[]) => {
+      // Guard: don't persist during session switching or if no active session
+      if (isSwitchingSessionRef.current || !activeSessionId) return;
+      
       const toStore = toStoredMessages(msgs);
       if (!areStoredMessagesEqual(toStore, storedMessages)) {
         updateStoredMessages(toStore);
       }
     },
-    [updateStoredMessages, storedMessages, areStoredMessagesEqual, toStoredMessages]
+    [updateStoredMessages, storedMessages, areStoredMessagesEqual, toStoredMessages, activeSessionId]
   );
 
   useEffect(() => {
@@ -226,9 +230,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
   // Reset state on session change
   useEffect(() => {
+    // Mark as switching so persistMessages doesn't write to the old session
+    isSwitchingSessionRef.current = true;
     widgetFlow.resetFlowState();
     setIsLoading(false);
     setInput("");
+    // Allow persistence again after a short delay
+    const timer = setTimeout(() => {
+      isSwitchingSessionRef.current = false;
+    }, 100);
+    return () => clearTimeout(timer);
   }, [activeSessionId, widgetFlow]);
 
   // Notify outside world whether the chat has user content (for leave confirmations)
@@ -712,7 +723,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.quickReplies && m.quickReplies.length > 0 && (
                       <QuickReplies
                         replies={m.quickReplies}
-                        onSendMessage={() => sendText(input)}
+                        onSendMessage={(message) => sendText(message)}
                         onFillInput={(message) => {
                           setInput(message);
                           setTimeout(() => inputRef.current?.focus(), 0);
@@ -761,13 +772,17 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
             }}
             onSuggestionClick={(message) => {
-              // Send immediately (expected behavior)
+              // Only prefill input, don't send automatically
               setInput(message);
-              setTimeout(() => inputRef.current?.focus(), 0);
-              queueMicrotask(() => {
-                // use the local helper below
-                sendText(message);
-              });
+              // Focus the input so user can review and send
+              setTimeout(() => {
+                inputRef.current?.focus();
+                // Adjust textarea height for the new content
+                if (inputRef.current) {
+                  inputRef.current.style.height = "auto";
+                  inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + "px";
+                }
+              }, 0);
             }}
             isLoading={isLoading}
           />
