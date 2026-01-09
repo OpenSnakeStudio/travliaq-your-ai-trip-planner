@@ -187,12 +187,21 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // CRITICAL: Hard guard against any global CSS that blocks pointer events (e.g., driver.js leaving `driver-active` behind)
   useEffect(() => {
     const restoreInteractivity = () => {
+      // Driver.js (and some tour libraries) can leave global locks behind.
       document.body.classList.remove("driver-active");
       document.documentElement.classList.remove("driver-active");
-      // If driver left any layers behind, remove them.
-      document
-        .querySelectorAll(".driver-overlay, .driver-stage")
-        .forEach((el) => el.remove());
+
+      // Remove any lingering driver layers.
+      document.querySelectorAll(".driver-overlay, .driver-stage, .driver-popover").forEach((el) => el.remove());
+
+      // Remove inert attributes that fully disable interaction + focus.
+      document.querySelectorAll("[inert]").forEach((el) => {
+        el.removeAttribute("inert");
+      });
+
+      // If pointer-events were disabled globally, restore them.
+      if (document.body.style.pointerEvents === "none") document.body.style.pointerEvents = "";
+      if (document.documentElement.style.pointerEvents === "none") document.documentElement.style.pointerEvents = "";
     };
 
     restoreInteractivity();
