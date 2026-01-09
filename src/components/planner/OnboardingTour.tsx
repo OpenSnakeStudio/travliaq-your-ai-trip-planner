@@ -41,10 +41,31 @@ function injectDriverStyles() {
     .driver-overlay {
       background: rgba(0, 0, 0, 0.75) !important;
       transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      pointer-events: none !important; /* IMPORTANT: don't block chat typing */
+    }
+
+    /* driver.js also injects a "stage" layer that can block interactions */
+    .driver-stage,
+    .driver-stage * {
+      pointer-events: none !important;
+    }
+
+    /* keep the onboarding modal clickable */
+    .driver-popover,
+    .driver-popover * {
+      pointer-events: auto !important;
     }
 
     /* Highlighted element with smooth glow animation */
     .driver-active-element {
+      z-index: 10001 !important;
+      border-radius: 16px !important;
+      box-shadow:
+        0 0 0 4px hsl(var(--primary)),
+        0 0 30px 10px hsl(var(--primary) / 0.4) !important;
+      animation: travliaq-pulse-glow 2s ease-in-out infinite !important;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
       z-index: 10001 !important;
       border-radius: 16px !important;
       box-shadow:
