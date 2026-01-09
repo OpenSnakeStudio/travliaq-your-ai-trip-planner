@@ -10,11 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
-import { Plane, History, User, Send, Globe, Thermometer } from "lucide-react";
-import { useUserPreferences } from "@/contexts/UserPreferencesContext";
-import CurrencySelector from "@/components/navigation/CurrencySelector";
-import LanguageSelector from "@/components/navigation/LanguageSelector";
-import UserMenu from "@/components/navigation/UserMenu";
+import { Plane, History, User, Send, PanelLeftClose, PanelLeft, ChevronDown } from "lucide-react";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
@@ -69,7 +65,10 @@ export type {
 } from "@/types/flight";
 
 // Props and ref interface
-interface PlannerChatProps {}
+interface PlannerChatProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
 
 export interface PlannerChatRef {
   injectSystemMessage: (event: CountrySelectionEvent) => void;
@@ -83,7 +82,7 @@ export interface PlannerChatRef {
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/contexts/PreferenceMemoryContext").TripPreferences>) => void;
 }
 
-const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_props, ref) => {
+const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
   // Memory contexts
   const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation } = useAccommodationMemory();
@@ -107,11 +106,6 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [currencyOpen, setCurrencyOpen] = useState(false);
-  const [languageOpen, setLanguageOpen] = useState(false);
-  
-  // User preferences
-  const { preferences, updateTemperatureUnit } = useUserPreferences();
 
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -489,59 +483,39 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>((_prop
         onDeleteSession={deleteSession}
       />
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border shrink-0">
-        {/* Left: History button */}
-        <button
-          onClick={() => setIsHistoryOpen(true)}
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <History className="h-4 w-4" />
-          <span className="text-sm font-medium hidden sm:inline">Historique</span>
-        </button>
-
-        {/* Center: Session title */}
-        <div className="text-xs text-muted-foreground truncate max-w-[120px] sm:max-w-[200px]">
-          {sessions.find((s) => s.id === activeSessionId)?.title || "✈️ Nouvelle conversation"}
+      {/* Header - Clean minimal bar like Lovable */}
+      <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background">
+        {/* Left: Logo + Title */}
+        <div className="flex items-center gap-2 min-w-0">
+          <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
+          <span className="font-semibold text-foreground text-sm hidden sm:inline">travliaq</span>
+          <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:inline" />
         </div>
 
-        {/* Right: Preferences bar */}
-        <div className="flex items-center rounded-lg overflow-hidden bg-muted/50 border border-border/50">
-          {/* Currency */}
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1">
+          {/* History icon */}
           <button
-            onClick={() => setCurrencyOpen(true)}
-            className="flex items-center justify-center px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted border-r border-border/50"
-            title="Devise"
+            onClick={() => setIsHistoryOpen(true)}
+            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            title="Historique"
           >
-            {{ EUR: '€', USD: '$', GBP: '£' }[preferences.currency] || '€'}
+            <History className="h-4 w-4" />
           </button>
 
-          {/* Language */}
-          <button
-            onClick={() => setLanguageOpen(true)}
-            className="flex items-center justify-center px-2.5 py-1.5 text-xs transition-colors hover:bg-muted border-r border-border/50"
-            title="Langue"
-          >
-            {{ fr: '🇫🇷', en: '🇬🇧', es: '🇪🇸' }[preferences.language] || '🇫🇷'}
-          </button>
-
-          {/* Temperature Toggle */}
-          <button
-            onClick={() => updateTemperatureUnit(preferences.temperatureUnit === 'C' ? 'F' : 'C')}
-            className="flex items-center justify-center px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted border-r border-border/50"
-            title="Changer l'unité de température"
-          >
-            {preferences.temperatureUnit === 'C' ? '°C' : '°F'}
-          </button>
-
-          {/* User Menu */}
-          <UserMenu className="text-foreground" />
+          {/* Collapse chat toggle */}
+          {onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title={isCollapsed ? "Ouvrir le chat" : "Réduire le chat"}
+            >
+              {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Preference Modals */}
-      <CurrencySelector open={currencyOpen} onOpenChange={setCurrencyOpen} />
-      <LanguageSelector open={languageOpen} onOpenChange={setLanguageOpen} />
 
       {/* Messages */}
       <div 
