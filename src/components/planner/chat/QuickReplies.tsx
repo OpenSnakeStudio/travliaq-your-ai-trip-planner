@@ -67,7 +67,6 @@ export function QuickReplies({
       onWheel={handleWheel}
       className={cn(
         "flex gap-2 mt-3 overflow-x-auto pb-1 themed-scroll",
-        "animate-in fade-in slide-in-from-bottom-2 duration-300",
         className
       )}
       style={{ scrollbarWidth: 'thin' }}

@@ -404,7 +404,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     return newSession.id;
   }, [user, syncToDatabase]);
 
-  // Delete a session
+  // Delete a session - atomic operation with safe state transitions
   const deleteSession = useCallback(
     (sessionId: string) => {
       try {
@@ -412,41 +412,45 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
         const currentSessions = sessionsRef.current;
         
         // Filter out the session to delete
-        const updated = currentSessions.filter((s) => s.id !== sessionId);
+        const remaining = currentSessions.filter((s) => s.id !== sessionId);
         
-        // Remove session messages from localStorage
-        localStorage.removeItem(SESSION_PREFIX + sessionId);
-        
-        // Update localStorage index
-        localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(updated));
-
-        // Delete from database
-        if (user) {
-          deleteFromDatabase(sessionId);
-        }
-
-        // Update ref first to prevent stale reads
-        sessionsRef.current = updated;
-
-        // If we deleted the active session, switch to another first
+        // If we're deleting the active session, switch FIRST before any state changes
         if (sessionId === activeSessionId) {
-          if (updated.length > 0) {
-            const mostRecent = [...updated].sort((a, b) => b.updatedAt - a.updatedAt)[0];
-
-            // Load new session messages before updating state (safe parse)
-            let nextMessages: unknown = null;
+          if (remaining.length > 0) {
+            // Find the most recent session to switch to
+            const mostRecent = [...remaining].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+            
+            // Load new session messages BEFORE any React state updates
+            let nextMessages: StoredMessage[] = [getDefaultWelcomeMessage()];
             const messagesRaw = localStorage.getItem(SESSION_PREFIX + mostRecent.id);
             if (messagesRaw) {
               try {
-                nextMessages = JSON.parse(messagesRaw);
+                const parsed = JSON.parse(messagesRaw);
+                if (Array.isArray(parsed)) {
+                  nextMessages = parsed;
+                }
               } catch {
-                nextMessages = null;
+                // Keep default messages
               }
             }
-
-            setMessages(Array.isArray(nextMessages) ? (nextMessages as StoredMessage[]) : [getDefaultWelcomeMessage()]);
+            
+            // Update refs first to prevent stale reads during React updates
+            sessionsRef.current = remaining;
+            messagesRef.current = nextMessages;
+            
+            // Remove deleted session from localStorage
+            localStorage.removeItem(SESSION_PREFIX + sessionId);
+            localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(remaining));
+            
+            // Delete from database (async, don't wait)
+            if (user) {
+              deleteFromDatabase(sessionId);
+            }
+            
+            // Batch all React state updates together
+            setMessages(nextMessages);
             setActiveSessionId(mostRecent.id);
-            setSessions(updated);
+            setSessions(remaining);
           } else {
             // Create a new session if all are deleted
             const newSession: ChatSession = {
@@ -458,17 +462,37 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
             };
             const defaultMessages = [getDefaultWelcomeMessage()];
 
+            // Update refs first
+            sessionsRef.current = [newSession];
+            messagesRef.current = defaultMessages;
+            
+            // Remove deleted session and save new session to localStorage
+            localStorage.removeItem(SESSION_PREFIX + sessionId);
             localStorage.setItem(SESSION_PREFIX + newSession.id, JSON.stringify(defaultMessages));
             localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify([newSession]));
+            
+            // Delete from database
+            if (user) {
+              deleteFromDatabase(sessionId);
+            }
 
-            sessionsRef.current = [newSession];
+            // Batch React state updates
             setMessages(defaultMessages);
             setActiveSessionId(newSession.id);
             setSessions([newSession]);
           }
         } else {
-          // Just update sessions list
-          setSessions(updated);
+          // Not deleting active session - simpler case
+          sessionsRef.current = remaining;
+          
+          localStorage.removeItem(SESSION_PREFIX + sessionId);
+          localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(remaining));
+          
+          if (user) {
+            deleteFromDatabase(sessionId);
+          }
+          
+          setSessions(remaining);
         }
       } catch (e) {
         console.error("Error deleting session:", e);
