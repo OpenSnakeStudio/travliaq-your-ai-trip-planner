@@ -11,7 +11,6 @@ import { PreferenceStateContext } from './PreferenceStateContext';
 import { PreferenceActionsContext, type PreferenceActionsContextValue } from './PreferenceActionsContext';
 import { PreferenceComputedContext, type PreferenceComputedContextValue } from './PreferenceComputedContext';
 import * as selectors from './selectors';
-import { eventBus } from '@/lib/eventBus';
 import type { TripPreferences, StyleAxes, MustHaves, TravelStyle, TripContext, WorkPreferences, PreferenceMemory } from './types';
 
 // ============================================================================
@@ -106,7 +105,7 @@ export function PreferenceProvider({ children }: PreferenceProviderProps) {
 
     updatePreferences: (updates: Partial<TripPreferences>, fromChat?: boolean) => {
       dispatch({ type: 'UPDATE_PREFERENCES', payload: updates, fromChat });
-      eventBus.emit('tab:flash', { tab: 'preferences' });
+      // NOTE: removed tab flashing (requested)
     },
 
     setStyleAxis: (axis: keyof StyleAxes, value: number) => {
