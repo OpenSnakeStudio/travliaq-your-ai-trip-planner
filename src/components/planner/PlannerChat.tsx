@@ -287,7 +287,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
   const toStoredMessages = useCallback((msgs: ChatMessage[]): StoredMessage[] => {
     return msgs
-      .filter((m) => !m.isTyping)
+      // Never persist transient UI messages
+      .filter((m) => !m.isTyping && !m.isStreaming)
       .map((m) => ({
         id: m.id,
         role: m.role,
@@ -324,7 +325,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     (msgs: ChatMessage[]) => {
       // Guard: don't persist during session switching or if no active session
       if (isSwitchingSessionRef.current || !activeSessionId) return;
-      
+
+      // CRITICAL: never write while streaming/typing to avoid saving partial content like "P"/"B"
+      if (msgs.some((m) => m.isStreaming || m.isTyping)) return;
+
       const toStore = toStoredMessages(msgs);
       if (!areStoredMessagesEqual(toStore, storedMessages)) {
         updateStoredMessages(toStore);
