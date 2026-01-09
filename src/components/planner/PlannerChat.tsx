@@ -41,6 +41,7 @@ import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
 import { SmartSuggestions } from "./chat/SmartSuggestions";
 import { ScrollToBottomButton } from "./chat/ScrollToBottomButton";
+import { ChatDebugHUD, useChatDebugEnabled } from "./chat/ChatDebugHUD";
 
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
@@ -179,6 +180,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const userMessageCountRef = useRef(0);
+
+  // Debug mode (enable with ?debugChat=1)
+  const isDebugEnabled = useChatDebugEnabled();
 
   // CRITICAL: Hard guard against any global CSS that blocks pointer events (e.g., driver.js leaving `driver-active` behind)
   useEffect(() => {
@@ -947,6 +951,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             </div>
           </div>
       </div>
+
+      {/* Debug HUD - enable with ?debugChat=1 */}
+      {isDebugEnabled && <ChatDebugHUD inputRef={inputRef} />}
     </aside>
   );
 });
