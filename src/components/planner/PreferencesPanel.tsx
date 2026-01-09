@@ -3,7 +3,7 @@
  * Features: Lazy-loaded steps, framer-motion animations, memoized components
  */
 
-import { useState, lazy, Suspense, memo } from "react";
+import { useState, lazy, Suspense, memo, useEffect, useMemo } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePreferenceMemory } from "@/contexts/preferences";
@@ -14,6 +14,13 @@ import { StepIndicator, StepErrorBoundary, type Step } from "./preferences/widge
 const BaseStep = lazy(() => import("./preferences/steps/BaseStep"));
 const StyleStep = lazy(() => import("./preferences/steps/StyleStep"));
 const CriteriaStep = lazy(() => import("./preferences/steps/CriteriaStep"));
+
+// Preload chunks to avoid "long first load" when opening Preferences
+const preloadPreferenceSteps = () => {
+  void import("./preferences/steps/BaseStep");
+  void import("./preferences/steps/StyleStep");
+  void import("./preferences/steps/CriteriaStep");
+};
 
 // ============================================================================
 // STEP LOADER
@@ -54,7 +61,15 @@ const PreferencesPanel = memo(function PreferencesPanel() {
   } = usePreferenceMemory();
 
   const [currentStep, setCurrentStep] = useState<Step>("base");
-  const completion = getProfileCompletion();
+
+  // Preload steps in the background to reduce perceived latency
+  useEffect(() => {
+    const id = window.setTimeout(preloadPreferenceSteps, 0);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  // Avoid recomputing completion more than needed
+  const completion = useMemo(() => getProfileCompletion(), [getProfileCompletion]);
 
   return (
     <div className="space-y-4" data-tour="preferences-panel">

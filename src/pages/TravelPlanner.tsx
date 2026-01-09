@@ -171,10 +171,10 @@ const TravelPlanner = () => {
                     ref={chatPanelRef}
                     order={1}
                     defaultSize={35}
-                    minSize={6}
+                    minSize={3}
                     maxSize={50}
                     collapsible
-                    collapsedSize={6}
+                    collapsedSize={3}
                     onCollapse={() => setIsChatCollapsed(true)}
                     onExpand={() => setIsChatCollapsed(false)}
                   >

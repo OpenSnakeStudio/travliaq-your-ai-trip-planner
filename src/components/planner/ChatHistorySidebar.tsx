@@ -51,17 +51,17 @@ export const ChatHistorySidebar = ({
   };
 
   const confirmDelete = async () => {
-    if (deleteConfirmId) {
-      // Close dialog first to prevent UI issues
-      const sessionToDelete = deleteConfirmId;
-      setDeleteConfirmId(null);
-      
-      // Small delay to let dialog close animation complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Then delete
-      onDeleteSession(sessionToDelete);
-    }
+    if (!deleteConfirmId) return;
+
+    // Close dialog + sidebar first (prevents UI race conditions)
+    const sessionToDelete = deleteConfirmId;
+    setDeleteConfirmId(null);
+    onClose();
+
+    // Let close animations commit
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    onDeleteSession(sessionToDelete);
   };
 
   return (

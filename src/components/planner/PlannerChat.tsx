@@ -470,7 +470,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   };
 
   return (
-    <aside className="h-full w-full bg-background flex flex-col relative overflow-hidden">
+    <aside
+      className={cn(
+        "h-full w-full flex flex-col relative overflow-hidden",
+        isCollapsed ? "bg-transparent" : "bg-background"
+      )}
+    >
       {/* Chat History Sidebar */}
       <ChatHistorySidebar
         sessions={sessions}
@@ -485,43 +490,55 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         onDeleteSession={deleteSession}
       />
 
-      {/* Header - Clean minimal bar */}
-      <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background">
-        {/* Left: Logo + Session title (no emoji) */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
-          <span className="font-medium text-foreground text-sm truncate max-w-[240px]">
-            {(() => {
-              const title = sessions.find((s) => s.id === activeSessionId)?.title || "Nouvelle conversation";
-              return title.replace(/^\p{Extended_Pictographic}\s*/u, "");
-            })()}
-          </span>
+      {/* Header */}
+      {isCollapsed ? (
+        <div className="h-12 shrink-0 flex items-center px-2">
+          <div className="flex items-center gap-1.5 rounded-xl bg-background/80 backdrop-blur border border-border px-2 py-1.5 shadow-sm">
+            <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain" />
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Ouvrir le chat"
+              >
+                <PanelLeft className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
+      ) : (
+        <div className="flex items-center justify-between h-12 px-3 border-b border-border shrink-0 bg-background">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
+            <span className="font-medium text-foreground text-sm truncate max-w-[240px]">
+              {(() => {
+                const title = sessions.find((s) => s.id === activeSessionId)?.title || "Nouvelle conversation";
+                return title.replace(/^\p{Extended_Pictographic}\s*/u, "");
+              })()}
+            </span>
+          </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1 shrink-0">
-          {/* History icon */}
-          <button
-            onClick={() => setIsHistoryOpen(true)}
-            className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-            title="Historique"
-          >
-            <History className="h-4 w-4" />
-          </button>
-
-          {/* Collapse chat panel */}
-          {onToggleCollapse && (
+          <div className="flex items-center gap-1 shrink-0">
             <button
-              onClick={onToggleCollapse}
+              onClick={() => setIsHistoryOpen(true)}
               className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title={isCollapsed ? "Ouvrir le chat" : "Fermer le chat"}
+              title="Historique"
             >
-              {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+              <History className="h-4 w-4" />
             </button>
-          )}
-        </div>
-      </div>
 
+            {onToggleCollapse && (
+              <button
+                onClick={onToggleCollapse}
+                className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                title="Fermer le chat"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Collapsible content */}
       <div

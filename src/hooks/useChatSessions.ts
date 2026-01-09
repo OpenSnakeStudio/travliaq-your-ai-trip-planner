@@ -432,13 +432,19 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
         if (sessionId === activeSessionId) {
           if (updated.length > 0) {
             const mostRecent = [...updated].sort((a, b) => b.updatedAt - a.updatedAt)[0];
-            // Load new session messages before updating state
+
+            // Load new session messages before updating state (safe parse)
+            let nextMessages: unknown = null;
             const messagesRaw = localStorage.getItem(SESSION_PREFIX + mostRecent.id);
-            const newMessages = messagesRaw 
-              ? JSON.parse(messagesRaw) 
-              : [getDefaultWelcomeMessage()];
-            
-            setMessages(Array.isArray(newMessages) ? newMessages : [getDefaultWelcomeMessage()]);
+            if (messagesRaw) {
+              try {
+                nextMessages = JSON.parse(messagesRaw);
+              } catch {
+                nextMessages = null;
+              }
+            }
+
+            setMessages(Array.isArray(nextMessages) ? (nextMessages as StoredMessage[]) : [getDefaultWelcomeMessage()]);
             setActiveSessionId(mostRecent.id);
             setSessions(updated);
           } else {
@@ -451,10 +457,10 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
               preview: "Démarrez la conversation...",
             };
             const defaultMessages = [getDefaultWelcomeMessage()];
-            
+
             localStorage.setItem(SESSION_PREFIX + newSession.id, JSON.stringify(defaultMessages));
             localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify([newSession]));
-            
+
             sessionsRef.current = [newSession];
             setMessages(defaultMessages);
             setActiveSessionId(newSession.id);
