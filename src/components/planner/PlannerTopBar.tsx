@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plane, Compass, Bed, SlidersHorizontal } from "lucide-react";
+import { Plane, Compass, Bed, SlidersHorizontal, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType } from "@/pages/TravelPlanner";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
@@ -10,6 +10,8 @@ import UserMenu from "@/components/navigation/UserMenu";
 interface PlannerTopBarProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  isChatCollapsed?: boolean;
+  onOpenChat?: () => void;
 }
 
 // Order: Flights → Stays → Activities → Preferences
@@ -20,46 +22,56 @@ const tabs: { id: TabType; icon: React.ElementType; label: string; emoji: string
   { id: "preferences", icon: SlidersHorizontal, label: "Préférences", emoji: "⚙️" },
 ];
 
-export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarProps) {
+export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed, onOpenChat }: PlannerTopBarProps) {
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const { preferences, updateTemperatureUnit } = useUserPreferences();
-  
+
   return (
     <>
       <div
         className="absolute top-0 left-0 right-0 z-20 h-12 bg-background/80 backdrop-blur-md border-b border-border/50 flex items-center justify-between px-4"
         data-tour="tabs-nav"
       >
-        {/* Tab buttons - left side */}
-        <nav
-          className="flex items-center gap-1"
-          aria-label="Navigation des onglets"
-        >
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const isActive = activeTab === t.id;
+        {/* Left: Chat toggle (only when chat is collapsed) + Tab buttons */}
+        <div className="flex items-center gap-2">
+          {isChatCollapsed && onOpenChat && (
+            <button
+              onClick={onOpenChat}
+              className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="Ouvrir le chat"
+              aria-label="Ouvrir le chat"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </button>
+          )}
 
-            return (
-              <button
-                key={t.id}
-                onClick={() => onTabChange(t.id)}
-                data-tour={`${t.id}-tab`}
-                className={cn(
-                  "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-                aria-label={t.label}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <span className="text-base">{t.emoji}</span>
-                <span className="hidden sm:inline">{t.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+          <nav className="flex items-center gap-1" aria-label="Navigation des onglets">
+            {tabs.map((t) => {
+              const Icon = t.icon;
+              const isActive = activeTab === t.id;
+
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => onTabChange(t.id)}
+                  data-tour={`${t.id}-tab`}
+                  className={cn(
+                    "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                  aria-label={t.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span className="text-base">{t.emoji}</span>
+                  <span className="hidden sm:inline">{t.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
         {/* Right: User preferences bar */}
         <div className="flex items-center gap-0.5 rounded-lg overflow-hidden bg-muted/50 border border-border/50">
@@ -69,7 +81,7 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
             className="flex items-center justify-center px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
             title="Devise"
           >
-            {{ EUR: '€', USD: '$', GBP: '£' }[preferences.currency] || '€'}
+            {{ EUR: "€", USD: "$", GBP: "£" }[preferences.currency] || "€"}
           </button>
 
           <div className="w-px h-4 bg-border/50" />
@@ -80,18 +92,18 @@ export default function PlannerTopBar({ activeTab, onTabChange }: PlannerTopBarP
             className="flex items-center justify-center px-2.5 py-1.5 text-xs transition-colors hover:bg-muted"
             title="Langue"
           >
-            {{ fr: '🇫🇷', en: '🇬🇧', es: '🇪🇸' }[preferences.language] || '🇫🇷'}
+            {{ fr: "🇫🇷", en: "🇬🇧", es: "🇪🇸" }[preferences.language] || "🇫🇷"}
           </button>
 
           <div className="w-px h-4 bg-border/50" />
 
           {/* Temperature Toggle */}
           <button
-            onClick={() => updateTemperatureUnit(preferences.temperatureUnit === 'C' ? 'F' : 'C')}
+            onClick={() => updateTemperatureUnit(preferences.temperatureUnit === "C" ? "F" : "C")}
             className="flex items-center justify-center px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
             title="Changer l'unité de température"
           >
-            {preferences.temperatureUnit === 'C' ? '°C' : '°F'}
+            {preferences.temperatureUnit === "C" ? "°C" : "°F"}
           </button>
 
           <div className="w-px h-4 bg-border/50" />

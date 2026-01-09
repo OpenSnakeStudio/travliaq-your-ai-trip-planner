@@ -171,10 +171,10 @@ const TravelPlanner = () => {
                     ref={chatPanelRef}
                     order={1}
                     defaultSize={35}
-                    minSize={3}
+                    minSize={0}
                     maxSize={50}
                     collapsible
-                    collapsedSize={3}
+                    collapsedSize={0}
                     onCollapse={() => setIsChatCollapsed(true)}
                     onExpand={() => setIsChatCollapsed(false)}
                   >
@@ -225,10 +225,13 @@ const TravelPlanner = () => {
                         />
                       </PlannerErrorBoundary>
 
-                      {/* Overlay tabs */}
-                      <PlannerTopBar activeTab={activeTab} onTabChange={handleTabChange} />
-
-                      {/* YouTube Shorts Panel (takes over the regular panel) */}
+                       {/* Overlay tabs */}
+                       <PlannerTopBar
+                         activeTab={activeTab}
+                         onTabChange={handleTabChange}
+                         isChatCollapsed={isChatCollapsed}
+                         onOpenChat={() => chatPanelRef.current?.expand()}
+                       />
                       {youtubePanel ? (
                         <aside className="pointer-events-none absolute top-16 left-4 bottom-4 w-[320px] sm:w-[360px] md:w-[400px] lg:w-[420px] xl:w-[480px] 2xl:w-[540px] z-10">
                           <div className="pointer-events-auto h-full overflow-hidden rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg">
