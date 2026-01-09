@@ -153,11 +153,11 @@ function MessageActions({ messageId, text }: { messageId: string; text: string }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
   // Memory contexts
-  const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
-  const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation } = useAccommodationMemory();
-  const { getSerializedState: getTravelMemory, updateTravelers } = useTravelMemory();
-  const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory } = useActivityMemory();
-  const { updatePreferences, getSerializedState: getPreferenceMemory } = usePreferenceMemory();
+  const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory: resetFlightMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
+  const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation, resetMemory: resetAccommodationMemory } = useAccommodationMemory();
+  const { getSerializedState: getTravelMemory, updateTravelers, resetMemory: resetTravelMemory } = useTravelMemory();
+  const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory, resetMemory: resetActivityMemory } = useActivityMemory();
+  const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory } = usePreferenceMemory();
 
   // Chat sessions
   const {
@@ -699,8 +699,23 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         onClose={() => setIsHistoryOpen(false)}
         onSelectSession={selectSession}
         onNewSession={() => {
+          // Full reset: behave like a new user (but without onboarding)
+          setIsLoading(false);
+          setDynamicSuggestions([]);
+          setInput("");
+          lastIntentRef.current = null;
+          completedMessageIdsRef.current.clear();
+          userMessageCountRef.current = 0;
+          widgetFlow.resetFlowState();
+
+          // Reset all persisted memories (localStorage-backed)
+          resetFlightMemory();
+          resetTravelMemory();
+          resetAccommodationMemory();
+          resetActivityMemory();
+          resetPreferenceMemory();
+
           createNewSession();
-          resetMemory();
         }}
         onDeleteSession={deleteSession}
       />

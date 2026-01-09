@@ -93,6 +93,9 @@ interface ActivityMemoryContextValue {
   // Computed destinations: accommodations + local (inherited logic)
   allDestinations: ActivityDestination[];
 
+  // Reset (full "nouvel utilisateur" state, without onboarding)
+  resetMemory: () => void;
+
   // Search operations
   searchActivities: (params: ActivitySearchParams) => Promise<void>;
   searchActivitiesByBounds: (params: {
@@ -502,6 +505,15 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const resetMemory = useCallback(() => {
+    setState(defaultMemory);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   /**
    * Search activities by map bounds (viewport search)
    */
@@ -904,6 +916,7 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
     () => ({
       state,
       allDestinations, // Computed: accommodations + local
+      resetMemory,
       searchActivities,
       searchActivitiesByBounds,
       loadMoreResults,
@@ -928,6 +941,7 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
     [
       state,
       allDestinations,
+      resetMemory,
       searchActivities,
       searchActivitiesByBounds,
       loadMoreResults,
