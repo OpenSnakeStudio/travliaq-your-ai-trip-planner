@@ -180,6 +180,31 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const userMessageCountRef = useRef(0);
 
+  // CRITICAL: Hard guard against any global CSS that blocks pointer events (e.g., driver.js leaving `driver-active` behind)
+  useEffect(() => {
+    const restoreInteractivity = () => {
+      document.body.classList.remove("driver-active");
+      document.documentElement.classList.remove("driver-active");
+      // If driver left any layers behind, remove them.
+      document
+        .querySelectorAll(".driver-overlay, .driver-stage")
+        .forEach((el) => el.remove());
+    };
+
+    restoreInteractivity();
+
+    const obs = new MutationObserver(() => {
+      if (document.body.classList.contains("driver-active") || document.documentElement.classList.contains("driver-active")) {
+        restoreInteractivity();
+      }
+    });
+
+    obs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
+    return () => obs.disconnect();
+  }, []);
+
   // Custom hooks
   const { streamResponse, isStreaming } = useChatStream();
   const mapContext = useChatMapContext();
@@ -864,13 +889,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
                   }}
                   onFocus={() => {
-                    // Auto-destroy driver.js tour if active to unblock typing
-                    if (document.body.classList.contains("driver-active")) {
-                      document.body.classList.remove("driver-active");
-                      // Try to destroy all driver instances by removing their DOM elements
-                      document.querySelectorAll(".driver-overlay, .driver-popover, .driver-stage").forEach((el) => el.remove());
-                      toast.info("Guide interrompu pour vous permettre d'écrire.");
-                    }
+                    // Safety net: if driver.js ever leaves pointer-events blocked, restore interactivity.
+                    document.body.classList.remove("driver-active");
+                    document.documentElement.classList.remove("driver-active");
                   }}
                   placeholder={isLoading ? "Réponse en cours..." : "Envoyer un message..."}
                   rows={1}

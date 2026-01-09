@@ -739,6 +739,13 @@ export default function OnboardingTour({
     setIsRunning(false);
     localStorage.setItem(STORAGE_KEY, "true");
 
+    // CRITICAL: Ensure driver.js never leaves the app in a non-interactive state
+    document.body.classList.remove("driver-active");
+    document.documentElement.classList.remove("driver-active");
+    document
+      .querySelectorAll(".driver-overlay, .driver-popover, .driver-stage")
+      .forEach((el) => el.remove());
+
     // Clean up highlights
     document.querySelectorAll(".travliaq-tab-highlight").forEach((el) => {
       el.classList.remove("travliaq-tab-highlight");
