@@ -146,6 +146,43 @@ const accommodationExtractionTool = {
   }
 };
 
+// Tool definition for generating quick replies based on response
+const quickRepliesExtractionTool = {
+  type: "function",
+  function: {
+    name: "generate_quick_replies",
+    description: "Generate 2-4 quick reply buttons based on the options you just presented to the user. Call this AFTER every response where you present choices (destinations, dates, travelers, confirmation). Each button should represent a logical next action the user might take.",
+    parameters: {
+      type: "object",
+      properties: {
+        replies: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              label: { 
+                type: "string", 
+                description: "Short label for the button (max 20 chars): city name, action, etc. For destinations, just use the city/country name."
+              },
+              emoji: { 
+                type: "string", 
+                description: "Emoji for the button. For countries/cities, use the flag emoji (🇪🇸 for Spain, 🇵🇹 for Portugal, 🇮🇹 for Italy, 🇬🇷 for Greece, 🇫🇷 for France, 🇯🇵 for Japan, etc.). For actions: ✅ for confirm, 🔄 for alternatives, 📅 for dates, 👥 for travelers, ✈️ for flights."
+              },
+              message: { 
+                type: "string", 
+                description: "Full message to send when the button is clicked. For destination choices, use 'Je choisis [destination]'. For confirmations, use 'Oui, ça me convient' or similar."
+              }
+            },
+            required: ["label", "emoji", "message"]
+          },
+          description: "2-4 quick reply options based on what you just proposed"
+        }
+      },
+      required: ["replies"]
+    }
+  }
+};
+
 // Tool definition for extracting travel preferences from user message
 const preferenceExtractionTool = {
   type: "function",
@@ -379,6 +416,27 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
 - Phrases courtes (1-2 max)
 - Toujours encourageant
 
+## BOUTONS DE SUGGESTION DYNAMIQUES (TRÈS IMPORTANT)
+Après CHAQUE réponse où tu proposes des choix à l'utilisateur, tu DOIS utiliser l'outil generate_quick_replies pour créer 2-4 boutons cliquables.
+
+Exemples de quand utiliser generate_quick_replies:
+- Tu proposes des destinations : [{emoji: "🇪🇸", label: "Barcelone", message: "Je choisis Barcelone"}, {emoji: "🇵🇹", label: "Lisbonne", message: "Je choisis Lisbonne"}]
+- Tu proposes des dates : [{emoji: "📅", label: "Ce weekend", message: "Je préfère ce weekend"}, {emoji: "📅", label: "Semaine prochaine", message: "Je pars la semaine prochaine"}]
+- Tu demandes une confirmation : [{emoji: "✅", label: "Oui, parfait", message: "Oui, ça me convient"}, {emoji: "🔄", label: "Autres options", message: "Propose-moi d'autres options"}]
+- Tu demandes le nombre de voyageurs : [{emoji: "👤", label: "Solo", message: "Je voyage seul"}, {emoji: "👥", label: "En couple", message: "Nous sommes 2 adultes"}, {emoji: "👨‍👩‍👧", label: "En famille", message: "Nous voyageons en famille"}]
+
+Drapeaux à utiliser pour les destinations:
+- Espagne/Barcelone/Madrid: 🇪🇸
+- Portugal/Lisbonne/Porto: 🇵🇹
+- Italie/Rome/Milan/Venise: 🇮🇹
+- Grèce/Athènes/Santorin: 🇬🇷
+- France/Paris/Nice: 🇫🇷
+- Japon/Tokyo/Kyoto: 🇯🇵
+- Thaïlande/Bangkok/Phuket: 🇹🇭
+- Croatie/Dubrovnik: 🇭🇷
+- Maroc/Marrakech: 🇲🇦
+- USA/New York/Miami: 🇺🇸
+
 ## INFOS TECHNIQUES
 - Date actuelle : ${currentDate}
 - Année par défaut : 2025
@@ -398,7 +456,7 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
         ],
         temperature: 0.7,
         max_tokens: 500,
-        tools: [flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool],
+        tools: [flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, quickRepliesExtractionTool],
         tool_choice: "auto",
         stream: false, // First call is never streamed to handle tools
       }),
@@ -421,6 +479,7 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
     let flightData = null;
     let accommodationData = null;
     let preferencesData = null;
+    let quickRepliesData = null;
 
     // Check if the model called any extraction tools
     if (choice?.message?.tool_calls) {
@@ -479,6 +538,26 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
             }
           } catch (e) {
             console.error("Failed to parse preferences data:", e);
+          }
+        }
+        
+        if (toolCall.function?.name === "generate_quick_replies") {
+          try {
+            quickRepliesData = JSON.parse(toolCall.function.arguments);
+            console.log("Quick replies extracted:", quickRepliesData);
+            
+            // Validate and clean up replies
+            if (quickRepliesData.replies && Array.isArray(quickRepliesData.replies)) {
+              quickRepliesData.replies = quickRepliesData.replies
+                .filter((r: any) => r.label && r.message)
+                .slice(0, 4); // Max 4 replies
+            }
+            
+            if (!quickRepliesData.replies || quickRepliesData.replies.length === 0) {
+              quickRepliesData = null;
+            }
+          } catch (e) {
+            console.error("Failed to parse quick replies:", e);
           }
         }
       }
@@ -544,6 +623,10 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
             // Send preferencesData as a special event
             if (preferencesData) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "preferencesData", preferencesData })}\n\n`));
+            }
+            // Send quickRepliesData as a special event
+            if (quickRepliesData) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "quickReplies", quickReplies: quickRepliesData })}\n\n`));
             }
 
             const reader = followUpResponse.body!.getReader();
@@ -627,6 +710,9 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
           if (accommodationData) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "accommodationData", accommodationData })}\n\n`));
           }
+          if (quickRepliesData) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "quickReplies", quickReplies: quickRepliesData })}\n\n`));
+          }
           
           // Send content character by character with small delay
           for (const char of content) {
@@ -651,9 +737,9 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
       content = "Désolé, je n'ai pas pu générer de réponse.";
     }
 
-    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData, "preferencesData:", preferencesData);
+    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData, "preferencesData:", preferencesData, "quickReplies:", quickRepliesData);
 
-    return new Response(JSON.stringify({ content, flightData, accommodationData, preferencesData }), {
+    return new Response(JSON.stringify({ content, flightData, accommodationData, preferencesData, quickReplies: quickRepliesData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

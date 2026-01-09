@@ -2,6 +2,7 @@
  * SmartSuggestions - Ultra-contextual message recommendations
  * 
  * Displays smart suggestion chips above the chat input based on:
+ * - Dynamic suggestions from AI responses (prioritized when present)
  * - Current workflow step (inspiration, destination, dates, travelers, search)
  * - Active tab and visible content on the map
  * - User preferences and trip data
@@ -31,7 +32,15 @@ import {
 import { cn } from "@/lib/utils";
 import { getSuggestions, type SuggestionContext, type Suggestion } from "./services/suggestionEngine";
 
-// Icon mapping
+// Dynamic suggestion interface (from AI response)
+export interface DynamicSuggestion {
+  id: string;
+  label: string;
+  emoji: string;
+  message: string;
+}
+
+// Icon mapping for static suggestions
 const iconMap: Record<Suggestion['iconName'], React.ReactNode> = {
   sparkles: <Sparkles className="h-3.5 w-3.5" />,
   sun: <Sun className="h-3.5 w-3.5" />,
@@ -54,18 +63,42 @@ const iconMap: Record<Suggestion['iconName'], React.ReactNode> = {
 
 interface SmartSuggestionsProps {
   context: SuggestionContext;
+  dynamicSuggestions?: DynamicSuggestion[];
   onSuggestionClick: (message: string) => void;
   isLoading?: boolean;
 }
 
 export function SmartSuggestions({ 
   context, 
+  dynamicSuggestions = [],
   onSuggestionClick,
   isLoading = false 
 }: SmartSuggestionsProps) {
-  const suggestions = useMemo(() => getSuggestions(context), [context]);
+  // Prioritize dynamic suggestions from AI, fallback to static ones
+  const displayItems = useMemo(() => {
+    if (dynamicSuggestions.length > 0) {
+      return dynamicSuggestions.map((s, i) => ({
+        id: s.id || `dynamic-${i}`,
+        label: s.label,
+        emoji: s.emoji || "✈️",
+        message: s.message,
+        isDynamic: true,
+      }));
+    }
+    
+    // Fallback to static context-based suggestions
+    const staticSuggestions = getSuggestions(context);
+    return staticSuggestions.map(s => ({
+      id: s.id,
+      label: s.label,
+      emoji: null,
+      iconName: s.iconName,
+      message: s.message,
+      isDynamic: false,
+    }));
+  }, [context, dynamicSuggestions]);
 
-  if (suggestions.length === 0 || isLoading) {
+  if (displayItems.length === 0 || isLoading) {
     return null;
   }
 
@@ -85,14 +118,14 @@ export function SmartSuggestions({
         style={{ scrollbarWidth: 'thin' }}
       >
         <AnimatePresence mode="popLayout">
-          {suggestions.map((suggestion, index) => (
+          {displayItems.map((item, index) => (
             <motion.button
-              key={suggestion.id}
+              key={item.id}
               initial={{ opacity: 0, scale: 0.9, y: 8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: index * 0.04, duration: 0.15 }}
-              onClick={() => onSuggestionClick(suggestion.message)}
+              onClick={() => onSuggestionClick(item.message)}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full shrink-0",
                 "text-xs font-medium whitespace-nowrap",
@@ -102,8 +135,13 @@ export function SmartSuggestions({
                 "focus:outline-none focus:ring-2 focus:ring-primary/30"
               )}
             >
-              {iconMap[suggestion.iconName]}
-              <span>{suggestion.label}</span>
+              {/* Emoji for dynamic suggestions, icon for static */}
+              {item.isDynamic ? (
+                <span className="text-sm">{item.emoji}</span>
+              ) : (
+                item.iconName && iconMap[item.iconName as keyof typeof iconMap]
+              )}
+              <span>{item.label}</span>
             </motion.button>
           ))}
         </AnimatePresence>
