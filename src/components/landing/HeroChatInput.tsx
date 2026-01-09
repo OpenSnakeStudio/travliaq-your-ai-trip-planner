@@ -41,20 +41,12 @@ export function HeroChatInput({ className, variant = "dark" }: HeroChatInputProp
       className={cn("w-full max-w-2xl mx-auto", className)}
     >
       <div className="relative">
-        {/* Glow effect */}
-        <div className={cn(
-          "absolute -inset-1 rounded-2xl blur-lg opacity-70",
-          variant === "light" 
-            ? "bg-gradient-to-r from-white/20 via-white/30 to-white/20"
-            : "bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30"
-        )} />
-        
-        {/* Input container */}
+        {/* Input container - no glow effect (causes visual artifacts with blur) */}
         <div className={cn(
           "relative backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl",
           variant === "light"
             ? "bg-white border border-white/50"
-            : "bg-white/10 border border-white/20"
+            : "bg-white/15 border border-white/25"
         )}>
           <div className="flex items-center p-2">
             <div className="flex-1 relative">
