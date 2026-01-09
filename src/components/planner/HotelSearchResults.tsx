@@ -466,24 +466,6 @@ const HotelSearchResultsInner = memo(({
               {isLoading ? "Recherche en cours..." : `${results.length} résultats · ${nights} nuit${nights > 1 ? "s" : ""}`}
             </p>
           </div>
-          {/* Search in this area button */}
-          {mapCenter && onSearchInArea && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onSearchInArea(mapCenter[1], mapCenter[0])}
-              disabled={isSearchingInArea || isLoading}
-              className="h-7 text-xs gap-1.5 shrink-0"
-            >
-              {isSearchingInArea ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Search className="h-3 w-3" />
-              )}
-              <span className="hidden sm:inline">Rechercher ici</span>
-              <span className="sm:hidden">Ici</span>
-            </Button>
-          )}
         </div>
       </div>
 

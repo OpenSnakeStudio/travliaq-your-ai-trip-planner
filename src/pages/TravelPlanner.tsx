@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import PlannerMap, { DestinationClickEvent } from "@/components/planner/PlannerMap";
 import PlannerPanel, { FlightRoutePoint, CountrySelectionEvent } from "@/components/planner/PlannerPanel";
 import PlannerCard from "@/components/planner/PlannerCard";
@@ -54,6 +55,8 @@ export interface UserLocation {
 }
 
 const TravelPlanner = () => {
+  const chatPanelRef = useRef<ImperativePanelHandle>(null);
+  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
   // Track if onboarding is complete to allow animations
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
     return localStorage.getItem("travliaq_onboarding_completed") === "true";
@@ -162,16 +165,43 @@ const TravelPlanner = () => {
               </Helmet>
 
               <div className="h-[100svh] w-full overflow-hidden bg-background">
-                <ResizablePanelGroup direction="horizontal" className="h-full">
+                <ResizablePanelGroup direction="horizontal" className="h-full" autoSaveId="planner-layout">
                   {/* Left: Chat - resizable */}
-                  <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+                  <ResizablePanel
+                    ref={chatPanelRef}
+                    order={1}
+                    defaultSize={35}
+                    minSize={6}
+                    maxSize={50}
+                    collapsible
+                    collapsedSize={6}
+                    onCollapse={() => setIsChatCollapsed(true)}
+                    onExpand={() => setIsChatCollapsed(false)}
+                  >
                     <div data-tour="chat-panel" className="h-full relative">
-                      <PlannerChat ref={chatRef} />
+                      <PlannerChat
+                        ref={chatRef}
+                        isCollapsed={isChatCollapsed}
+                        onToggleCollapse={() => {
+                          if (chatPanelRef.current?.isCollapsed()) {
+                            chatPanelRef.current.expand();
+                          } else {
+                            chatPanelRef.current?.collapse();
+                          }
+                        }}
+                      />
                     </div>
                   </ResizablePanel>
 
                   {/* Resize handle */}
-                  <ResizableHandle withHandle className="bg-border/50 hover:bg-primary/30 transition-colors" />
+                  <ResizableHandle
+                    withHandle
+                    className={
+                      isChatCollapsed
+                        ? "hidden"
+                        : "bg-border/50 hover:bg-primary/30 transition-colors"
+                    }
+                  />
 
                   {/* Right: Map workspace - resizable */}
                   <ResizablePanel defaultSize={65} minSize={40}>

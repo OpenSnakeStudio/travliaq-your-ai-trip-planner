@@ -1928,20 +1928,6 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
             </>
           )}
         </Button>
-        <Button
-          variant="outline"
-          onClick={() => mapCenter && handleSearchInArea(mapCenter[1], mapCenter[0])}
-          disabled={!mapCenter || !activeAccommodation?.checkIn || !activeAccommodation?.checkOut || isSearchingInArea}
-          className="h-9 text-xs font-medium gap-1.5 px-3"
-          title="Rechercher des hébergements au centre de la carte"
-        >
-          {isSearchingInArea ? (
-            <div className="h-3.5 w-3.5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-          ) : (
-            <MapPin className="h-3.5 w-3.5" />
-          )}
-          <span className="hidden sm:inline">Ici</span>
-        </Button>
       </div>
     </div>
   );
