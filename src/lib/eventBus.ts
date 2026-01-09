@@ -146,6 +146,7 @@ export type PlannerEvents = {
   "chat:injectMessage": { role: "assistant" | "system"; text: string };
   "chat:offerFlightSearch": { from: string; to: string };
   "chat:userMessage": { text: string; messageCount: number };
+  "chat:dirty": { dirty: boolean };
   
   // User actions
   "user:locationDetected": { lat: number; lng: number; city: string };

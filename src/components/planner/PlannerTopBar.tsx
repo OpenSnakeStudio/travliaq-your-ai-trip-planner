@@ -15,6 +15,8 @@ interface PlannerTopBarProps {
   onTabChange: (tab: TabType) => void;
   isChatCollapsed?: boolean;
   onOpenChat?: () => void;
+  confirmLeave?: boolean;
+  confirmLeaveMessage?: string;
 }
 
 // Order: Flights → Stays → Activities → Preferences
@@ -25,7 +27,7 @@ const tabs: { id: TabType; icon: React.ElementType; label: string; emoji: string
   { id: "preferences", icon: SlidersHorizontal, label: "Préférences", emoji: "⚙️" },
 ];
 
-export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed, onOpenChat }: PlannerTopBarProps) {
+export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed, onOpenChat, confirmLeave, confirmLeaveMessage }: PlannerTopBarProps) {
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const { preferences, updateTemperatureUnit } = useUserPreferences();
@@ -48,8 +50,20 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
                 transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                 className="flex items-center gap-2"
               >
-                <Link to="/" title="Retour à l'accueil">
-                  <img src={logo} alt="Travliaq" className="h-7 w-7 object-contain hover:scale-110 transition-transform" />
+                <Link
+                  to="/"
+                  title="Retour à l'accueil"
+                  onClick={(e) => {
+                    if (!confirmLeave) return;
+                    const ok = window.confirm(confirmLeaveMessage || "Quitter le planner ?");
+                    if (!ok) e.preventDefault();
+                  }}
+                >
+                  <img
+                    src={logo}
+                    alt="Travliaq"
+                    className="h-7 w-7 object-contain hover:scale-110 transition-transform"
+                  />
                 </Link>
                 <button
                   onClick={onOpenChat}

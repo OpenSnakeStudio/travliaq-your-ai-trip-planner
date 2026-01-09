@@ -157,35 +157,64 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     citySelectionShownRef: widgetFlow.citySelectionShownRef,
   });
 
-  // Sync from storedMessages when switching sessions
-  useEffect(() => {
-    setMessages(
-      storedMessages.map((m) => ({
+  // Utilities to avoid infinite sync loops between local state ↔ persisted state
+  const areStoredMessagesEqual = useCallback((a: StoredMessage[], b: StoredMessage[]) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+      const am = a[i];
+      const bm = b[i];
+      if (
+        am.id !== bm.id ||
+        am.role !== bm.role ||
+        am.text !== bm.text ||
+        am.hasSearchButton !== bm.hasSearchButton ||
+        am.isHidden !== bm.isHidden
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }, []);
+
+  const toStoredMessages = useCallback((msgs: ChatMessage[]): StoredMessage[] => {
+    return msgs
+      .filter((m) => !m.isTyping)
+      .map((m) => ({
         id: m.id,
         role: m.role,
         text: m.text,
-        isHidden: m.isHidden,
         hasSearchButton: m.hasSearchButton,
+        isHidden: m.isHidden,
       }))
-    );
+      .slice(-200);
+  }, []);
+
+  // Sync from storedMessages when switching sessions (only if different)
+  useEffect(() => {
+    const next = storedMessages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      text: m.text,
+      isHidden: m.isHidden,
+      hasSearchButton: m.hasSearchButton,
+    }));
+
+    const currentStored = toStoredMessages(messages);
+    if (!areStoredMessagesEqual(currentStored, storedMessages)) {
+      setMessages(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSessionId, storedMessages]);
 
-  // Persist messages
+  // Persist messages (only if changed)
   const persistMessages = useCallback(
     (msgs: ChatMessage[]) => {
-      const toStore: StoredMessage[] = msgs
-        .filter((m) => !m.isTyping)
-        .map((m) => ({
-          id: m.id,
-          role: m.role,
-          text: m.text,
-          hasSearchButton: m.hasSearchButton,
-          isHidden: m.isHidden,
-        }))
-        .slice(-200);
-      updateStoredMessages(toStore);
+      const toStore = toStoredMessages(msgs);
+      if (!areStoredMessagesEqual(toStore, storedMessages)) {
+        updateStoredMessages(toStore);
+      }
     },
-    [updateStoredMessages]
+    [updateStoredMessages, storedMessages, areStoredMessagesEqual, toStoredMessages]
   );
 
   useEffect(() => {
@@ -201,6 +230,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     setIsLoading(false);
     setInput("");
   }, [activeSessionId, widgetFlow]);
+
+  // Notify outside world whether the chat has user content (for leave confirmations)
+  const lastDirtyRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    const dirty = messages.some((m) => m.role === "user" && !m.isHidden);
+    if (lastDirtyRef.current !== dirty) {
+      lastDirtyRef.current = dirty;
+      eventBus.emit("chat:dirty", { dirty });
+    }
+  }, [messages]);
 
   // Auto-scroll only when not manually scrolling
   useEffect(() => {
