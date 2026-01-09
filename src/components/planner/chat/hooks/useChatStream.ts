@@ -30,6 +30,18 @@ export interface StreamResult {
   content: string;
   flightData: FlightFormData | null;
   accommodationData: any | null;
+  quickReplies: QuickReplyData | null;
+}
+
+/**
+ * Quick replies data from AI
+ */
+export interface QuickReplyData {
+  replies: Array<{
+    label: string;
+    emoji: string;
+    message: string;
+  }>;
 }
 
 /**
@@ -280,10 +292,11 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
           const reader = response.body!.getReader();
           const decoder = new TextDecoder();
 
-          // Reset content for this attempt
-          fullContent = "";
-          
-          // Throttle UI updates to reduce re-renders (max every 50ms)
+      // Reset content for this attempt
+      fullContent = "";
+      let quickReplies: QuickReplyData | null = null;
+      
+      // Throttle UI updates to reduce re-renders (max every 50ms)
           let lastUpdateTime = 0;
           const THROTTLE_MS = 50;
           let pendingUpdate = false;
@@ -333,6 +346,8 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                     flightData = parsed.flightData;
                   } else if (parsed.type === "accommodationData" && parsed.accommodationData) {
                     accommodationData = parsed.accommodationData;
+                  } else if (parsed.type === "quickReplies" && parsed.quickReplies) {
+                    quickReplies = parsed.quickReplies;
                   } else if (parsed.type === "content" && parsed.content) {
                     fullContent += parsed.content;
                     // Throttled content update to reduce flickering
@@ -350,7 +365,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
             onContentUpdate(messageId, fullContent, true);
           }
 
-          return { content: fullContent, flightData, accommodationData };
+          return { content: fullContent, flightData, accommodationData, quickReplies };
 
         } catch (err) {
           lastError = err instanceof Error && "type" in err

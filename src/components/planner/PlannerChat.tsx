@@ -173,6 +173,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [dynamicSuggestions, setDynamicSuggestions] = useState<Array<{id: string; label: string; emoji: string; message: string}>>([]);
 
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -523,7 +524,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         ? `\n[PRÉFÉRENCES] Rythme: ${preferenceMemoryState.pace}, Style: ${preferenceMemoryState.travelStyle}, Confort: ${preferenceMemoryState.comfortLabel}, Intérêts: ${(preferenceMemoryState.interests as string[])?.join(", ") || ""}`
         : "";
 
-      const { content, flightData } = await streamResponse(
+      const { content, flightData, quickReplies } = await streamResponse(
         apiMessages,
         messageId,
         {
@@ -542,6 +543,18 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           );
         }
       );
+
+      // Update dynamic suggestions from AI response
+      if (quickReplies?.replies && quickReplies.replies.length > 0) {
+        setDynamicSuggestions(quickReplies.replies.map((r, i) => ({
+          id: `dyn-${Date.now()}-${i}`,
+          label: r.label,
+          emoji: r.emoji || "✈️",
+          message: r.message,
+        })));
+      } else {
+        setDynamicSuggestions([]);
+      }
 
       const { cleanContent, action } = parseAction(content || "Désolé, je n'ai pas pu répondre.");
 
@@ -872,13 +885,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                 cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
                 cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
               }}
+              dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
-                // Only prefill input, don't send automatically
                 setInput(message);
-                // Focus the input so user can review and send
+                setDynamicSuggestions([]); // Clear after selection
                 setTimeout(() => {
                   inputRef.current?.focus();
-                  // Adjust textarea height for the new content
                   if (inputRef.current) {
                     inputRef.current.style.height = "auto";
                     inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 120) + "px";
