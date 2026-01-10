@@ -35,6 +35,7 @@ const cityNameMappings: Record<string, string> = {
   "kuala lumpur": "Kuala Lumpur",
   
   // European cities
+  "bruxelles": "Brussels",
   "londres": "London",
   "édimbourg": "Edinburgh",
   "edimbourg": "Edinburgh",
