@@ -22,11 +22,61 @@ export interface NearestAirportsResponse {
   airports: Airport[];
 }
 
+// List of known country names (French and English) to reject as city names
+const COUNTRY_NAMES_LOWER = new Set([
+  // French country names
+  "emirats arabes unis", "émirats arabes unis", "etats-unis", "états-unis", "royaume-uni",
+  "arabie saoudite", "nouvelle-zélande", "nouvelle zelande", "afrique du sud",
+  "pays-bas", "republique tcheque", "république tchèque", "coree du sud", "corée du sud",
+  "coree du nord", "corée du nord", "sri lanka", "costa rica", "porto rico",
+  "france", "allemagne", "italie", "espagne", "portugal", "grece", "grèce",
+  "belgique", "suisse", "autriche", "pays bas", "pologne", "russie", "ukraine",
+  "royaume uni", "irlande", "ecosse", "écosse", "angleterre", "norvege", "norvège",
+  "suede", "suède", "finlande", "danemark", "islande", "turquie", "egypte", "égypte",
+  "maroc", "tunisie", "algerie", "algérie", "senegal", "sénégal", "cote d'ivoire", "côte d'ivoire",
+  "afrique", "kenya", "tanzanie", "ethiopie", "éthiopie", "nigeria", "ghana",
+  "inde", "chine", "japon", "thailande", "thaïlande", "vietnam", "indonesie", "indonésie",
+  "malaisie", "philippines", "singapour", "taiwan", "taïwan", "hong kong",
+  "australie", "canada", "mexique", "bresil", "brésil", "argentine", "chili",
+  "colombie", "perou", "pérou", "venezuela", "cuba", "jamaique", "jamaïque",
+  "qatar", "koweit", "koweït", "bahrein", "bahreïn", "oman", "jordanie", "liban",
+  "israel", "israël", "iran", "irak", "syrie", "afghanistan", "pakistan",
+  // English country names
+  "united arab emirates", "uae", "united states", "usa", "united kingdom", "uk",
+  "saudi arabia", "new zealand", "south africa", "netherlands", "czech republic",
+  "south korea", "north korea", "costa rica", "puerto rico",
+  "france", "germany", "italy", "spain", "portugal", "greece", "belgium",
+  "switzerland", "austria", "poland", "russia", "ukraine", "ireland", "scotland",
+  "england", "norway", "sweden", "finland", "denmark", "iceland", "turkey",
+  "egypt", "morocco", "tunisia", "algeria", "senegal", "ivory coast", "kenya",
+  "tanzania", "ethiopia", "nigeria", "ghana", "india", "china", "japan",
+  "thailand", "vietnam", "indonesia", "malaysia", "philippines", "singapore",
+  "taiwan", "australia", "canada", "mexico", "brazil", "argentina", "chile",
+  "colombia", "peru", "venezuela", "cuba", "jamaica", "qatar", "kuwait",
+  "bahrain", "oman", "jordan", "lebanon", "israel", "iran", "iraq", "syria",
+  "afghanistan", "pakistan",
+]);
+
+/**
+ * Check if a string looks like a country name rather than a city
+ */
+function isCountryName(name: string): boolean {
+  if (!name || name.length < 2) return false;
+  const normalized = name.toLowerCase().trim();
+  return COUNTRY_NAMES_LOWER.has(normalized);
+}
+
 export async function findNearestAirports(
   city: string,
   limit: number = 3,
   countryCode?: string
 ): Promise<NearestAirportsResponse | null> {
+  // Guard: don't call API with country names
+  if (isCountryName(city)) {
+    console.warn(`[useNearestAirports] Rejected country name as city: "${city}"`);
+    return null;
+  }
+
   try {
     const body: { city: string; limit: number; country_code?: string } = { city, limit };
     
