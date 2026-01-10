@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Plus, MessageSquare, Trash2, X, History } from "lucide-react";
+import { Plus, MessageSquare, Trash2, X, History, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,6 +47,13 @@ export const ChatHistorySidebar = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showNewSessionConfirm, setShowNewSessionConfirm] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  
+  // Loading states for buttons
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  
+  // Debounce guard
+  const actionLockRef = useRef(false);
 
   const sortedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
 
@@ -68,11 +76,63 @@ export const ChatHistorySidebar = ({
     onDeleteSession(sessionToDelete);
   };
 
-  const confirmDeleteAll = async () => {
-    setShowDeleteAllConfirm(false);
+  const handleNewSession = async () => {
+    // Prevent double-clicks
+    if (actionLockRef.current || isCreatingSession) return;
+    actionLockRef.current = true;
+    
+    setShowNewSessionConfirm(false);
+    setIsCreatingSession(true);
+    
+    // Show toast
+    toast.loading("Création de la conversation...", { id: "new-session" });
+    
     onClose();
+    
+    // Small delay to let sidebar close
     await new Promise((resolve) => setTimeout(resolve, 150));
+    
+    onNewSession();
+    
+    // Wait for reset to settle
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    
+    setIsCreatingSession(false);
+    toast.success("Nouvelle conversation créée", { id: "new-session" });
+    
+    // Release lock after additional delay
+    setTimeout(() => {
+      actionLockRef.current = false;
+    }, 200);
+  };
+
+  const confirmDeleteAll = async () => {
+    // Prevent double-clicks
+    if (actionLockRef.current || isDeletingAll) return;
+    actionLockRef.current = true;
+    
+    setShowDeleteAllConfirm(false);
+    setIsDeletingAll(true);
+    
+    // Show toast
+    toast.loading("Suppression de l'historique...", { id: "delete-all" });
+    
+    onClose();
+    
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    
     onDeleteAllSessions?.();
+    
+    // Wait for reset to settle
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    
+    setIsDeletingAll(false);
+    toast.success("Historique supprimé", { id: "delete-all" });
+    
+    // Release lock after additional delay
+    setTimeout(() => {
+      actionLockRef.current = false;
+    }, 200);
   };
 
   return (
@@ -111,15 +171,21 @@ export const ChatHistorySidebar = ({
         <div className="p-3">
           <button
             onClick={() => setShowNewSessionConfirm(true)}
+            disabled={isCreatingSession || isDeletingAll}
             className={cn(
-              "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl",
+              "w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl",
               "bg-primary text-primary-foreground",
               "hover:bg-primary/90 transition-colors",
-              "font-medium text-sm"
+              "font-medium text-sm",
+              "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
-            <Plus className="h-4 w-4" />
-            Nouvelle conversation
+            {isCreatingSession ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            {isCreatingSession ? "Création..." : "Nouvelle conversation"}
           </button>
         </div>
 
@@ -134,15 +200,18 @@ export const ChatHistorySidebar = ({
               <div
                 key={session.id}
                 onClick={() => {
-                  onSelectSession(session.id);
-                  onClose();
+                  if (!isCreatingSession && !isDeletingAll) {
+                    onSelectSession(session.id);
+                    onClose();
+                  }
                 }}
                 className={cn(
                   "group relative flex items-start gap-3 p-3 rounded-xl cursor-pointer",
                   "transition-all duration-200",
                   session.id === activeSessionId
                     ? "bg-primary/10 border border-primary/30"
-                    : "hover:bg-muted border border-transparent"
+                    : "hover:bg-muted border border-transparent",
+                  (isCreatingSession || isDeletingAll) && "opacity-50 pointer-events-none"
                 )}
               >
                 <MessageSquare
@@ -169,10 +238,12 @@ export const ChatHistorySidebar = ({
                 {sessions.length > 1 && (
                   <button
                     onClick={(e) => handleDelete(session.id, e)}
+                    disabled={isCreatingSession || isDeletingAll}
                     className={cn(
                       "p-1.5 rounded-lg opacity-0 group-hover:opacity-100",
                       "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-                      "transition-all duration-200"
+                      "transition-all duration-200",
+                      "disabled:opacity-0"
                     )}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -188,15 +259,21 @@ export const ChatHistorySidebar = ({
           <div className="p-3 border-t border-border">
             <button
               onClick={() => setShowDeleteAllConfirm(true)}
+              disabled={isCreatingSession || isDeletingAll}
               className={cn(
                 "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl",
                 "text-destructive border border-destructive/30",
                 "hover:bg-destructive/10 transition-colors",
-                "text-sm"
+                "text-sm",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
-              <Trash2 className="h-4 w-4" />
-              Tout supprimer
+              {isDeletingAll ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              {isDeletingAll ? "Suppression..." : "Tout supprimer"}
             </button>
           </div>
         )}
@@ -235,15 +312,19 @@ export const ChatHistorySidebar = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isCreatingSession}>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                setShowNewSessionConfirm(false);
-                onNewSession();
-                onClose();
-              }}
+              onClick={handleNewSession}
+              disabled={isCreatingSession}
             >
-              Confirmer
+              {isCreatingSession ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Création...
+                </>
+              ) : (
+                "Confirmer"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -259,12 +340,20 @@ export const ChatHistorySidebar = ({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingAll}>Annuler</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteAll}
+              disabled={isDeletingAll}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Tout supprimer
+              {isDeletingAll ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Suppression...
+                </>
+              ) : (
+                "Tout supprimer"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
