@@ -1153,9 +1153,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         suggestions={m.widgetData.suggestions as DestinationSuggestion[]}
                         basedOnProfile={m.widgetData.basedOnProfile as { completionScore: number; keyFactors: string[] } | undefined}
                         onSelect={async (destination) => {
-                          // Store only country info - NOT in city field to avoid airport search issues
+                          // Store only country info - explicitly clear city to avoid airport search with country name
                           updateMemory({
                             arrival: {
+                              city: undefined, // CRITICAL: Clear city to prevent old country name from being used
+                              iata: undefined, // Also clear any old airport selection
+                              airport: undefined,
                               countryCode: destination.countryCode,
                               country: destination.countryName,
                             },

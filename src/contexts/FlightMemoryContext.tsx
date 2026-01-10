@@ -328,6 +328,24 @@ export function FlightMemoryProvider({ children }: { children: ReactNode }) {
         updated.passengers = { ...prev.passengers, ...partial.passengers };
       }
 
+      // Handle nested departure update - merge with previous values unless explicitly clearing
+      if (partial.departure !== undefined) {
+        if (partial.departure === null) {
+          updated.departure = null;
+        } else {
+          updated.departure = { ...prev.departure, ...partial.departure };
+        }
+      }
+
+      // Handle nested arrival update - merge with previous values unless explicitly clearing
+      if (partial.arrival !== undefined) {
+        if (partial.arrival === null) {
+          updated.arrival = null;
+        } else {
+          updated.arrival = { ...prev.arrival, ...partial.arrival };
+        }
+      }
+
       // Handle nested legs update
       if (partial.legs) {
         updated.legs = partial.legs;
