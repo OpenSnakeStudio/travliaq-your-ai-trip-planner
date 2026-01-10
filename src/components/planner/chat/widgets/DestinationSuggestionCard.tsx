@@ -26,6 +26,77 @@ function getFlagEmoji(code: string): string {
 }
 
 /**
+ * Map emoji names to actual emoji characters
+ */
+const EMOJI_MAP: Record<string, string> = {
+  pyramid: "🏛️",
+  beach: "🏖️",
+  taco: "🌮",
+  city_sunset: "🌆",
+  train: "🚂",
+  shinto_shrine: "⛩️",
+  elephant: "🐘",
+  temple: "🛕",
+  ramen: "🍜",
+  spa: "💆",
+  mountain: "⛰️",
+  sushi: "🍣",
+  wine_glass: "🍷",
+  european_castle: "🏰",
+  church: "⛪",
+  dancer: "💃",
+  mosque: "🕌",
+  coral: "🪸",
+  performing_arts: "🎭",
+  desert: "🏜️",
+  kangaroo: "🦘",
+  surfing_man: "🏄",
+  hot_springs: "♨️",
+  classical_building: "🏛️",
+  balloon: "🎈",
+  palm_tree: "🌴",
+  fish: "🐟",
+  hut: "🛖",
+  hotel: "🏨",
+  canoe: "🛶",
+  house: "🏠",
+  water: "💧",
+  cookie: "🍪",
+  tram: "🚋",
+  statue_of_liberty: "🗽",
+  deciduous_tree: "🌳",
+  art: "🎨",
+  tokyo_tower: "🗼",
+  hotsprings: "♨️",
+  rice: "🌾",
+  yoga: "🧘",
+  plate_with_cutlery: "🍽️",
+  tea: "🍵",
+  night_with_stars: "🌃",
+  star: "⭐",
+  camera: "📷",
+  hiking_boot: "🥾",
+  diving_mask: "🤿",
+  tent: "⛺",
+  sailboat: "⛵",
+  sunrise_over_mountains: "🌄",
+  national_park: "🏞️",
+  camping: "🏕️",
+  compass: "🧭",
+  world_map: "🗺️",
+};
+
+/**
+ * Convert emoji name to actual emoji character
+ */
+function getActivityEmoji(emojiName: string): string {
+  if (!emojiName) return "✨";
+  // If it's already an emoji (starts with a Unicode character), return as-is
+  if (emojiName.charCodeAt(0) > 255) return emojiName;
+  return EMOJI_MAP[emojiName] || emojiName || "✨";
+}
+
+/**
  * Get match score color based on value
  */
 function getScoreColor(score: number): string {
@@ -89,7 +160,9 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           <Coins className="h-3.5 w-3.5" />
           <span>
             {estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€
-            <span className="text-muted-foreground/60">/pers (7j)</span>
+            <span className="text-muted-foreground/60">
+              {estimatedBudgetPerPerson.duration === "per_day" ? "/jour" : "/pers (7j)"}
+            </span>
           </span>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
@@ -105,7 +178,7 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             key={i}
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50 text-xs text-muted-foreground"
           >
-            <span>{activity.emoji || "✨"}</span>
+            <span>{getActivityEmoji(activity.emoji)}</span>
             <span>{activity.name}</span>
           </span>
         ))}

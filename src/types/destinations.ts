@@ -80,7 +80,7 @@ export interface BudgetEstimate {
   min: number;
   max: number;
   currency: "EUR";
-  duration: "7_days";
+  duration: "per_day" | "7_days";
 }
 
 export interface DestinationSuggestion {
