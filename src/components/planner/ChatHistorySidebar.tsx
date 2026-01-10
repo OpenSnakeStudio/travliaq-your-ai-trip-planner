@@ -42,6 +42,7 @@ export const ChatHistorySidebar = ({
   onDeleteSession,
 }: ChatHistorySidebarProps) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [showNewSessionConfirm, setShowNewSessionConfirm] = useState(false);
 
   const sortedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
 
@@ -99,10 +100,7 @@ export const ChatHistorySidebar = ({
         {/* New Chat Button */}
         <div className="p-3">
           <button
-            onClick={() => {
-              onNewSession();
-              onClose();
-            }}
+            onClick={() => setShowNewSessionConfirm(true)}
             className={cn(
               "w-full flex items-center gap-2 px-3 py-2.5 rounded-xl",
               "bg-primary text-primary-foreground",
@@ -194,6 +192,30 @@ export const ChatHistorySidebar = ({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* New Session Confirmation Dialog */}
+      <AlertDialog open={showNewSessionConfirm} onOpenChange={setShowNewSessionConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nouvelle conversation ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Réinitialiser vols, hébergements, activités et préférences ?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowNewSessionConfirm(false);
+                onNewSession();
+                onClose();
+              }}
+            >
+              Confirmer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

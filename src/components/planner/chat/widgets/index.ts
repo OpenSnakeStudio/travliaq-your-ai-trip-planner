@@ -17,6 +17,12 @@ export { MarkdownMessage } from "./MarkdownMessage";
 // Preference widgets (synced with PreferenceMemory)
 export { PreferenceStyleWidget } from "./PreferenceStyleWidget";
 export { PreferenceInterestsWidget } from "./PreferenceInterestsWidget";
+export { MustHavesWidget } from "./MustHavesWidget";
+export { DietaryWidget } from "./DietaryWidget";
+
+// Destination suggestion widgets
+export { DestinationSuggestionCard } from "./DestinationSuggestionCard";
+export { DestinationSuggestionsGrid } from "./DestinationSuggestionsGrid";
 
 // Selection widgets (Sprint 1A - Quick filters)
 export * from "./selection";

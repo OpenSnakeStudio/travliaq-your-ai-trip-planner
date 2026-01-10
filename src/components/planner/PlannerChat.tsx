@@ -887,7 +887,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {/* Preference Style Widget */}
                     {m.widget === "preferenceStyle" && (
                       <PreferenceStyleWidget
-                        onConfirm={() => {
+                        onContinue={() => {
                           // After style confirmed, show question and set dynamic suggestions
                           const questionId = `style-question-${Date.now()}`;
                           setMessages((prev) => [
@@ -920,7 +920,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {/* Preference Interests Widget */}
                     {m.widget === "preferenceInterests" && (
                       <PreferenceInterestsWidget
-                        onConfirm={() => {
+                        onContinue={() => {
                           // After interests confirmed, propose destinations
                           const followupId = `interests-followup-${Date.now()}`;
                           setMessages((prev) => [
