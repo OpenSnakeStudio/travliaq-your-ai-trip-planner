@@ -333,7 +333,8 @@ export function FlightMemoryProvider({ children }: { children: ReactNode }) {
         if (partial.departure === null) {
           updated.departure = null;
         } else {
-          updated.departure = { ...prev.departure, ...partial.departure };
+          const prevDeparture = prev.departure ?? {};
+          updated.departure = { ...prevDeparture, ...partial.departure };
         }
       }
 
@@ -342,7 +343,8 @@ export function FlightMemoryProvider({ children }: { children: ReactNode }) {
         if (partial.arrival === null) {
           updated.arrival = null;
         } else {
-          updated.arrival = { ...prev.arrival, ...partial.arrival };
+          const prevArrival = prev.arrival ?? {};
+          updated.arrival = { ...prevArrival, ...partial.arrival };
         }
       }
 
