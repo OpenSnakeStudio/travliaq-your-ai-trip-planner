@@ -194,6 +194,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const [destinationProfileScore, setDestinationProfileScore] = useState<number>(0);
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
 
+  // Prevent repeated airport fetch loops (same inputs => only fetch once)
+  const airportFetchKeyRef = useRef<string | null>(null);
+
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -475,6 +478,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     isSwitchingSessionRef.current = true;
     widgetFlow.resetFlowState();
     setIsLoading(false);
+    airportFetchKeyRef.current = null;
 
     const timer = setTimeout(() => {
       isSwitchingSessionRef.current = false;
@@ -526,6 +530,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     const travelers = passengersTotal;
 
     if (needsDepartureAirport || needsArrivalAirport) {
+      // Guard: avoid re-triggering the same airport fetch in a loop
+      const fetchKey = `${departureCity || ""}|${arrivalCity || ""}|${needsDepartureAirport ? 1 : 0}|${needsArrivalAirport ? 1 : 0}`;
+      if (airportFetchKeyRef.current === fetchKey) return;
+      airportFetchKeyRef.current = fetchKey;
+
       widgetFlow.markSearchButtonShown();
       const messageId = `airport-selection-${Date.now()}`;
 
