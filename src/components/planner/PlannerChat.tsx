@@ -1125,31 +1125,102 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                       <DestinationSuggestionsGrid
                         suggestions={m.widgetData.suggestions as DestinationSuggestion[]}
                         basedOnProfile={m.widgetData.basedOnProfile as { completionScore: number; keyFactors: string[] } | undefined}
-                        onSelect={(destination) => {
-                          // Update flight memory with selected destination
+                        onSelect={async (destination) => {
+                          // Store only country info - NOT in city field to avoid airport search issues
                           updateMemory({
                             arrival: {
-                              city: destination.countryName, // Use country name as city for now (country-level destination)
                               countryCode: destination.countryCode,
                               country: destination.countryName,
                             },
                           });
                           
-                          // Add confirmation message
-                          const confirmId = `destination-selected-${Date.now()}`;
-                          setMessages((prev) => [
-                            ...prev,
-                            {
-                              id: confirmId,
-                              role: "assistant",
-                              text: `Excellent choix ! **${destination.countryName}** ${destination.flagEmoji} est une destination parfaite pour vous.\n\n${destination.description}\n\nQuand souhaitez-vous partir ?`,
-                              widget: "dateRangePicker" as import("@/types/flight").WidgetType,
-                            },
-                          ]);
-                          
                           // Reset inspire flow
                           setInspireFlowStep("idle");
                           setDestinationSuggestions([]);
+                          
+                          // Add loading message
+                          const loadingId = `city-loading-${Date.now()}`;
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: loadingId,
+                              role: "assistant",
+                              text: `Excellent choix ! **${destination.countryName}** est une destination parfaite pour vous.\n\nJe recherche les villes principales...`,
+                              isTyping: true,
+                            },
+                          ]);
+                          
+                          // Fetch cities for the selected country
+                          try {
+                            const response = await fetch(
+                              `https://cinbnmlfpffmyjmkwbco.supabase.co/functions/v1/top-cities-by-country?country_code=${destination.countryCode}&limit=5`,
+                              {
+                                method: "GET",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  apikey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpbmJubWxmcGZmbXlqbWt3YmNvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NDQ2MTQsImV4cCI6MjA3MzUyMDYxNH0.yrju-Pv4OlfU9Et-mRWg0GRHTusL7ZpJevqKemJFbuA",
+                                },
+                              }
+                            );
+                            
+                            const data = await response.json();
+                            
+                            if (data.cities && data.cities.length > 0) {
+                              const cities = data.cities.map((c: { name: string; description?: string; population?: number }) => ({
+                                name: c.name,
+                                description: c.description || "Ville importante",
+                                population: c.population,
+                              }));
+                              
+                              // Update message with city selection widget
+                              setMessages((prev) =>
+                                prev.map((m) =>
+                                  m.id === loadingId
+                                    ? {
+                                        ...m,
+                                        text: `Excellent choix ! **${destination.countryName}** est une destination parfaite pour vous.\n\n${destination.description}\n\nQuelle ville souhaitez-vous visiter ?`,
+                                        isTyping: false,
+                                        widget: "citySelector" as import("@/types/flight").WidgetType,
+                                        widgetData: {
+                                          citySelection: {
+                                            countryCode: destination.countryCode,
+                                            countryName: destination.countryName,
+                                            cities,
+                                          },
+                                          isDeparture: false,
+                                        },
+                                      }
+                                    : m
+                                )
+                              );
+                            } else {
+                              // No cities found - ask user to type city name
+                              setMessages((prev) =>
+                                prev.map((m) =>
+                                  m.id === loadingId
+                                    ? {
+                                        ...m,
+                                        text: `Excellent choix ! **${destination.countryName}** est une destination parfaite pour vous.\n\n${destination.description}\n\nQuelle ville souhaitez-vous visiter ? Tapez le nom dans le chat.`,
+                                        isTyping: false,
+                                      }
+                                    : m
+                                )
+                              );
+                            }
+                          } catch (error) {
+                            console.error("Error fetching cities:", error);
+                            setMessages((prev) =>
+                              prev.map((m) =>
+                                m.id === loadingId
+                                  ? {
+                                      ...m,
+                                      text: `Excellent choix ! **${destination.countryName}** est une destination parfaite pour vous.\n\nQuelle ville souhaitez-vous visiter ? Tapez le nom dans le chat.`,
+                                      isTyping: false,
+                                    }
+                                  : m
+                              )
+                            );
+                          }
                         }}
                         isLoading={isLoadingDestinations}
                       />
