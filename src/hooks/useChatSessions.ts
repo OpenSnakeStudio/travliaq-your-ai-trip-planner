@@ -523,6 +523,57 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     [activeSessionId, user, deleteFromDatabase]
   );
 
+  // Delete ALL sessions (clear history completely)
+  const deleteAllSessions = useCallback(() => {
+    try {
+      // Get all session IDs to delete from database
+      const sessionIds = sessionsRef.current.map(s => s.id);
+      
+      // Clear localStorage
+      sessionIds.forEach(id => {
+        localStorage.removeItem(SESSION_PREFIX + id);
+      });
+      
+      // Also clear any flight/accommodation/travel memory keys
+      localStorage.removeItem("travliaq_flight_memory");
+      localStorage.removeItem("travliaq_accommodation_memory");
+      localStorage.removeItem("travliaq_travel_memory");
+      localStorage.removeItem("travliaq_preferences");
+      
+      // Create fresh session
+      const newSession: ChatSession = {
+        id: generateId(),
+        title: "✈️ Nouvelle conversation",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        preview: "Démarrez la conversation...",
+      };
+      const defaultMessages = [getDefaultWelcomeMessage()];
+      
+      // Save new session
+      localStorage.setItem(SESSION_PREFIX + newSession.id, JSON.stringify(defaultMessages));
+      localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify([newSession]));
+      
+      // Update refs
+      sessionsRef.current = [newSession];
+      messagesRef.current = defaultMessages;
+      
+      // Update state
+      setSessions([newSession]);
+      setActiveSessionId(newSession.id);
+      setMessages(defaultMessages);
+      
+      // Delete from database (async)
+      if (user) {
+        sessionIds.forEach(id => deleteFromDatabase(id));
+      }
+      
+      console.log("[ChatSessions] Deleted all sessions");
+    } catch (e) {
+      console.error("Error deleting all sessions:", e);
+    }
+  }, [user, deleteFromDatabase]);
+
   // Force sync current session to database (for critical actions)
   const forceSyncToDatabase = useCallback(() => {
     if (!user || !activeSessionId) return;
@@ -552,6 +603,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     selectSession,
     createNewSession,
     deleteSession,
+    deleteAllSessions,
     forceSyncToDatabase,
     getSessionMetadata,
   };
