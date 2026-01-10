@@ -878,6 +878,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         }}
         onDeleteSession={deleteSession}
         onDeleteAllSessions={() => {
+          // Hard guard: stop persistence while we wipe everything
+          isSwitchingSessionRef.current = true;
+
           // Full reset: clear all state
           setIsLoading(false);
           setDynamicSuggestions([]);
@@ -897,6 +900,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
           // Delete all sessions (this also clears localStorage)
           deleteAllSessions();
+
+          // Re-enable persistence after the wipe has settled
+          setTimeout(() => {
+            isSwitchingSessionRef.current = false;
+          }, 400);
         }}
       />
 

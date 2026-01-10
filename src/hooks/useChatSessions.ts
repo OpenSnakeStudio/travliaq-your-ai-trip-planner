@@ -526,20 +526,35 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   // Delete ALL sessions (clear history completely)
   const deleteAllSessions = useCallback(() => {
     try {
+      // Cancel any pending saves/syncs that could re-create data right after clearing
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+        syncTimeoutRef.current = null;
+      }
+      isSyncingRef.current = false;
+
+      // Prevent state/storage churn while we are nuking everything
+      isUpdatingRef.current = true;
+
       // Get all session IDs to delete from database
-      const sessionIds = sessionsRef.current.map(s => s.id);
-      
-      // Clear localStorage
-      sessionIds.forEach(id => {
+      const sessionIds = sessionsRef.current.map((s) => s.id);
+
+      // Clear localStorage for chat sessions
+      sessionIds.forEach((id) => {
         localStorage.removeItem(SESSION_PREFIX + id);
       });
-      
+      localStorage.removeItem(SESSIONS_INDEX_KEY);
+
       // Also clear any flight/accommodation/travel memory keys
       localStorage.removeItem("travliaq_flight_memory");
       localStorage.removeItem("travliaq_accommodation_memory");
       localStorage.removeItem("travliaq_travel_memory");
       localStorage.removeItem("travliaq_preferences");
-      
+
       // Create fresh session
       const newSession: ChatSession = {
         id: generateId(),
@@ -549,28 +564,30 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
         preview: "Démarrez la conversation...",
       };
       const defaultMessages = [getDefaultWelcomeMessage()];
-      
+
       // Save new session
       localStorage.setItem(SESSION_PREFIX + newSession.id, JSON.stringify(defaultMessages));
       localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify([newSession]));
-      
+
       // Update refs
       sessionsRef.current = [newSession];
       messagesRef.current = defaultMessages;
-      
-      // Update state
+
+      // Update state (batched by React)
       setSessions([newSession]);
       setActiveSessionId(newSession.id);
       setMessages(defaultMessages);
-      
+
       // Delete from database (async)
       if (user) {
-        sessionIds.forEach(id => deleteFromDatabase(id));
+        sessionIds.forEach((id) => deleteFromDatabase(id));
       }
-      
+
       console.log("[ChatSessions] Deleted all sessions");
     } catch (e) {
       console.error("Error deleting all sessions:", e);
+    } finally {
+      isUpdatingRef.current = false;
     }
   }, [user, deleteFromDatabase]);
 
