@@ -5,14 +5,15 @@
  */
 
 import { memo, useCallback } from "react";
-import { Sliders, Check } from "lucide-react";
+import { Sliders, ArrowRight } from "lucide-react";
 import { DualSlider } from "@/components/ui/dual-slider";
 import { usePreferenceMemory } from "@/contexts/preferences";
 import { cn } from "@/lib/utils";
 import type { StyleAxes } from "@/contexts/preferences";
 
 interface PreferenceStyleWidgetProps {
-  onConfirm?: () => void;
+  /** Called when user clicks "Continue" to advance the flow */
+  onContinue?: () => void;
 }
 
 // Axes configuration matching the screenshot exactly
@@ -30,7 +31,7 @@ const AXES_CONFIG: Array<{
 ];
 
 export const PreferenceStyleWidget = memo(function PreferenceStyleWidget({
-  onConfirm,
+  onContinue,
 }: PreferenceStyleWidgetProps) {
   const { memory, setStyleAxis } = usePreferenceMemory();
   const axes = memory.preferences.styleAxes;
@@ -86,14 +87,14 @@ export const PreferenceStyleWidget = memo(function PreferenceStyleWidget({
         ))}
       </div>
 
-      {/* OK Button */}
-      {onConfirm && (
+      {/* Continue Button - advances flow but widget stays visible */}
+      {onContinue && (
         <button
-          onClick={onConfirm}
+          onClick={onContinue}
           className="mt-5 w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm"
         >
-          <Check className="h-4 w-4" />
-          OK
+          Continuer
+          <ArrowRight className="h-4 w-4" />
         </button>
       )}
     </div>

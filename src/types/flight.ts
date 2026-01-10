@@ -187,6 +187,10 @@ export type WidgetType =
   // Preference widgets (synced with PreferenceMemory)
   | "preferenceStyle"
   | "preferenceInterests"
+  | "mustHaves"
+  | "dietary"
+  // Destination suggestion widgets
+  | "destinationSuggestions"
   // Quick filter widgets (Sprint 1)
   | "quickFilterChips"
   | "starRatingSelector"

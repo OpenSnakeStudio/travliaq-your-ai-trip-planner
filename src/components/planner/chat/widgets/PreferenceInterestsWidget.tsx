@@ -5,12 +5,13 @@
  */
 
 import { memo, useCallback } from "react";
-import { Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { usePreferenceMemory } from "@/contexts/preferences";
 import { cn } from "@/lib/utils";
 
 interface PreferenceInterestsWidgetProps {
-  onConfirm?: () => void;
+  /** Called when user clicks "Continue" to advance the flow */
+  onContinue?: () => void;
 }
 
 // Interests matching the screenshot exactly
@@ -30,7 +31,7 @@ const INTERESTS = [
 const MAX_SELECTIONS = 5;
 
 export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget({
-  onConfirm,
+  onContinue,
 }: PreferenceInterestsWidgetProps) {
   const { memory, toggleInterest } = usePreferenceMemory();
   const selected = memory.preferences.interests;
@@ -87,14 +88,14 @@ export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget
         })}
       </div>
 
-      {/* OK Button */}
-      {onConfirm && (
+      {/* Continue Button - advances flow but widget stays visible */}
+      {onContinue && (
         <button
-          onClick={onConfirm}
+          onClick={onContinue}
           className="mt-5 w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm"
         >
-          <Check className="h-4 w-4" />
-          OK
+          Continuer
+          <ArrowRight className="h-4 w-4" />
         </button>
       )}
     </div>
