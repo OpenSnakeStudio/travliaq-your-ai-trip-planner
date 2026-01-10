@@ -240,11 +240,23 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
   }, []);
 
   // Sync on visibility change (when user leaves tab)
+  // Use refs to avoid re-creating this effect on every message change
+  const messagesForSyncRef = useRef<StoredMessage[]>([]);
+  const sessionsForSyncRef = useRef<ChatSession[]>([]);
+  
+  useEffect(() => {
+    messagesForSyncRef.current = messages;
+  }, [messages]);
+  
+  useEffect(() => {
+    sessionsForSyncRef.current = sessions;
+  }, [sessions]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden" && user && activeSessionId) {
-        const currentSession = sessions.find(s => s.id === activeSessionId);
-        syncToDatabase(activeSessionId, messages, currentSession);
+        const currentSession = sessionsForSyncRef.current.find(s => s.id === activeSessionId);
+        syncToDatabase(activeSessionId, messagesForSyncRef.current, currentSession);
       }
     };
 
@@ -252,7 +264,7 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [syncToDatabase, user, activeSessionId, messages, sessions]);
+  }, [syncToDatabase, user, activeSessionId]);
 
   // Cleanup on unmount
   useEffect(() => {
