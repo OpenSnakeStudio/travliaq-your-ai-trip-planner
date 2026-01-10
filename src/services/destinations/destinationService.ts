@@ -9,7 +9,8 @@ import type {
   SuggestionErrorResponse,
 } from "@/types/destinations";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+// API endpoint for destination suggestions
+const API_BASE = import.meta.env.VITE_DESTINATIONS_API_URL || "https://travliaq-api-production.up.railway.app";
 
 export interface GetDestinationSuggestionsOptions {
   limit?: number;
