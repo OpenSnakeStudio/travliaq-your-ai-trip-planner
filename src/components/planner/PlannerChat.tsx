@@ -187,6 +187,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const completedMessageIdsRef = useRef<Set<string>>(new Set());
   // Track "inspire" intent to trigger preference widgets flow
   const lastIntentRef = useRef<string | null>(null);
+  // Hard reset guard (new conversation / delete all): suppress auto-effects that can spam messages
+  const isHardResetRef = useRef(false);
   
   // Inspire flow state: idle → style → interests → extra → loading → results
   type InspireFlowStep = "idle" | "style" | "interests" | "extra" | "must_haves" | "dietary" | "loading" | "results";
@@ -520,6 +522,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const needsArrivalAirport = needsAirportSelection.arrival;
   
   useEffect(() => {
+    // During hard resets/session switching, suppress auto-messages (prevents "typing" spam + crashes)
+    if (isSwitchingSessionRef.current || isHardResetRef.current) return;
     if (!hasCompleteInfo || widgetFlow.isSearchButtonShown()) return;
 
     const departure = departureCity || "départ";
@@ -858,6 +862,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         onClose={() => setIsHistoryOpen(false)}
         onSelectSession={selectSession}
         onNewSession={() => {
+          // Hard guard: stop persistence/auto-effects while we reset everything
+          isHardResetRef.current = true;
+          isSwitchingSessionRef.current = true;
+
           // Full reset: behave like a new user (but without onboarding)
           setIsLoading(false);
           setDynamicSuggestions([]);
@@ -865,6 +873,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           lastIntentRef.current = null;
           completedMessageIdsRef.current.clear();
           userMessageCountRef.current = 0;
+          airportFetchKeyRef.current = null;
           widgetFlow.resetFlowState();
 
           // Reset all persisted memories (localStorage-backed)
@@ -875,10 +884,17 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           resetPreferenceMemory();
 
           createNewSession();
+
+          // Re-enable effects after the reset has settled
+          setTimeout(() => {
+            isSwitchingSessionRef.current = false;
+            isHardResetRef.current = false;
+          }, 400);
         }}
         onDeleteSession={deleteSession}
         onDeleteAllSessions={() => {
-          // Hard guard: stop persistence while we wipe everything
+          // Hard guard: stop persistence/auto-effects while we wipe everything
+          isHardResetRef.current = true;
           isSwitchingSessionRef.current = true;
 
           // Full reset: clear all state
@@ -901,10 +917,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           // Delete all sessions (this also clears localStorage)
           deleteAllSessions();
 
-          // Re-enable persistence after the wipe has settled
+          // Re-enable effects after the wipe has settled
           setTimeout(() => {
             isSwitchingSessionRef.current = false;
-          }, 400);
+            isHardResetRef.current = false;
+          }, 500);
         }}
       />
 
