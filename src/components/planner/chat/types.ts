@@ -10,6 +10,7 @@ import type {
   CitySelectionData,
   AirportConfirmationData,
 } from "@/types/flight";
+import type { DestinationSuggestion, ProfileCompleteness } from "@/types/destinations";
 
 // Re-export for convenience
 export type { AirportChoice, DualAirportChoice, WidgetType, CitySelectionData, AirportConfirmationData };
@@ -101,6 +102,9 @@ export interface WidgetData {
   citySelection?: CitySelectionData;
   isDeparture?: boolean; // true if selecting departure city
   airportConfirmation?: AirportConfirmationData; // Multi-destination airport confirmation
+  // Destination suggestions widget data
+  suggestions?: DestinationSuggestion[];
+  basedOnProfile?: ProfileCompleteness;
 }
 
 /**

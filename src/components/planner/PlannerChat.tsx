@@ -35,6 +35,9 @@ import {
   MarkdownMessage,
   PreferenceStyleWidget,
   PreferenceInterestsWidget,
+  MustHavesWidget,
+  DietaryWidget,
+  DestinationSuggestionsGrid,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
 import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers } from "./chat/hooks";
@@ -42,6 +45,8 @@ import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
 import { SmartSuggestions } from "./chat/SmartSuggestions";
+import { getDestinationSuggestions } from "@/services/destinations";
+import type { DestinationSuggestRequest, DestinationSuggestion } from "@/types/destinations";
 import { ScrollToBottomButton } from "./chat/ScrollToBottomButton";
 
 // Context imports
@@ -157,7 +162,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation, resetMemory: resetAccommodationMemory } = useAccommodationMemory();
   const { getSerializedState: getTravelMemory, updateTravelers, resetMemory: resetTravelMemory } = useTravelMemory();
   const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory, resetMemory: resetActivityMemory } = useActivityMemory();
-  const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory } = usePreferenceMemory();
+  const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory, getPreferences, memory: prefMemory } = usePreferenceMemory();
 
   // Chat sessions
   const {
@@ -181,6 +186,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const completedMessageIdsRef = useRef<Set<string>>(new Set());
   // Track "inspire" intent to trigger preference widgets flow
   const lastIntentRef = useRef<string | null>(null);
+  
+  // Inspire flow state: idle → style → interests → extra → loading → results
+  type InspireFlowStep = "idle" | "style" | "interests" | "extra" | "must_haves" | "dietary" | "loading" | "results";
+  const [inspireFlowStep, setInspireFlowStep] = useState<InspireFlowStep>("idle");
+  const [destinationSuggestions, setDestinationSuggestions] = useState<DestinationSuggestion[]>([]);
+  const [destinationProfileScore, setDestinationProfileScore] = useState<number>(0);
+  const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
 
   // Refs
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -265,6 +277,115 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     accomMemory,
     citySelectionShownRef: widgetFlow.citySelectionShownRef,
   });
+
+  // Handler to fetch destination suggestions from API
+  const handleFetchDestinations = useCallback(async (loadingMessageId: string) => {
+    setIsLoadingDestinations(true);
+    setInspireFlowStep("loading");
+    
+    try {
+      // Build preferences payload from memory - use getPreferences() for typed access
+      const prefs = getPreferences();
+      const departureCity = memory.departure?.city;
+      
+      const payload: DestinationSuggestRequest = {
+        // User location from departure if available
+        userLocation: departureCity ? { city: departureCity, country: memory.departure?.country } : undefined,
+        
+        // Style axes
+        styleAxes: {
+          chillVsIntense: prefs.styleAxes.chillVsIntense ?? 50,
+          cityVsNature: prefs.styleAxes.cityVsNature ?? 50,
+          ecoVsLuxury: prefs.styleAxes.ecoVsLuxury ?? 50,
+          touristVsLocal: prefs.styleAxes.touristVsLocal ?? 50,
+        },
+        
+        // Interests (max 5)
+        interests: prefs.interests.slice(0, 5) as DestinationSuggestRequest["interests"],
+        
+        // Must-haves
+        mustHaves: {
+          accessibilityRequired: prefs.mustHaves.accessibilityRequired || false,
+          petFriendly: prefs.mustHaves.petFriendly || false,
+          familyFriendly: prefs.mustHaves.familyFriendly || false,
+          highSpeedWifi: prefs.mustHaves.highSpeedWifi || false,
+        },
+        
+        // Dietary restrictions
+        dietaryRestrictions: prefs.dietaryRestrictions.length > 0 ? prefs.dietaryRestrictions : undefined,
+        
+        // Travel style mapping
+        travelStyle: prefs.travelStyle as DestinationSuggestRequest["travelStyle"],
+        
+        // Occasion
+        occasion: prefs.tripContext.occasion as DestinationSuggestRequest["occasion"],
+        
+        // Budget level from comfort (ecoVsLuxury 0-100 to budget levels)
+        budgetLevel: prefs.styleAxes.ecoVsLuxury < 25 ? "budget" 
+          : prefs.styleAxes.ecoVsLuxury < 50 ? "comfort" 
+          : prefs.styleAxes.ecoVsLuxury < 75 ? "premium" 
+          : "luxury",
+        
+        // Travel month from departure date if set
+        travelMonth: memory.departureDate ? memory.departureDate.getMonth() + 1 : new Date().getMonth() + 1,
+      };
+      
+      const response = await getDestinationSuggestions(payload, { limit: 3 });
+      
+      if (response.success && response.suggestions.length > 0) {
+        setDestinationSuggestions(response.suggestions);
+        setDestinationProfileScore(response.basedOnProfile?.completionScore || 0);
+        
+        // Update loading message with results widget
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === loadingMessageId
+              ? {
+                  ...m,
+                  text: `Voici ${response.suggestions.length} destinations parfaites pour vous, basées sur votre profil (${response.basedOnProfile?.completionScore || 0}% de complétion) :`,
+                  isTyping: false,
+                  widget: "destinationSuggestions" as import("@/types/flight").WidgetType,
+                  widgetData: {
+                    suggestions: response.suggestions,
+                    basedOnProfile: response.basedOnProfile,
+                  },
+                }
+              : m
+          )
+        );
+        setInspireFlowStep("results");
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === loadingMessageId
+              ? {
+                  ...m,
+                  text: "Désolé, je n'ai pas pu trouver de destinations correspondant à vos critères. Essayez d'ajuster vos préférences.",
+                  isTyping: false,
+                }
+              : m
+          )
+        );
+        setInspireFlowStep("idle");
+      }
+    } catch (error) {
+      console.error("Error fetching destination suggestions:", error);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === loadingMessageId
+            ? {
+                ...m,
+                text: "Une erreur est survenue lors de la recherche de destinations. Veuillez réessayer.",
+                isTyping: false,
+              }
+            : m
+        )
+      );
+      setInspireFlowStep("idle");
+    } finally {
+      setIsLoadingDestinations(false);
+    }
+  }, [memory.departure, memory.departureDate, getPreferences]);
 
   // Utilities to avoid infinite sync loops between local state ↔ persisted state
   const areStoredMessagesEqual = useCallback((a: StoredMessage[], b: StoredMessage[]) => {
@@ -655,6 +776,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       // Trigger "Inspire-moi" preference widgets flow after AI response
       if (lastIntentRef.current === "inspire") {
         lastIntentRef.current = null; // Reset to avoid triggering again
+        setInspireFlowStep("style");
         
         // Add preference style widget message
         const styleMessageId = `pref-style-${Date.now()}`;
@@ -888,29 +1010,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.widget === "preferenceStyle" && (
                       <PreferenceStyleWidget
                         onContinue={() => {
-                          // After style confirmed, show question and set dynamic suggestions
-                          const questionId = `style-question-${Date.now()}`;
+                          // After style, show interests widget
+                          setInspireFlowStep("interests");
+                          const interestsId = `pref-interests-${Date.now()}`;
                           setMessages((prev) => [
                             ...prev,
                             {
-                              id: questionId,
+                              id: interestsId,
                               role: "assistant",
-                              text: "Parfait ! Voulez-vous que je vous propose des destinations maintenant, ou préférez-vous d'abord sélectionner vos centres d'intérêt ?",
-                            },
-                          ]);
-                          // Set dynamic suggestions (shown above input)
-                          setDynamicSuggestions([
-                            {
-                              id: "propose-destinations",
-                              label: "Proposer des destinations",
-                              emoji: "✈️",
-                              message: "Propose-moi des destinations adaptées à mon style de voyage",
-                            },
-                            {
-                              id: "my-interests",
-                              label: "Mes centres d'intérêt",
-                              emoji: "❤️",
-                              message: "__WIDGET__preferenceInterests", // Special prefix to trigger widget
+                              text: "Maintenant, sélectionnez vos centres d'intérêt :",
+                              widget: "preferenceInterests" as import("@/types/flight").WidgetType,
                             },
                           ]);
                         }}
@@ -921,26 +1030,128 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.widget === "preferenceInterests" && (
                       <PreferenceInterestsWidget
                         onContinue={() => {
-                          // After interests confirmed, propose destinations
-                          const followupId = `interests-followup-${Date.now()}`;
+                          // After interests, show "Autre chose?" question with suggestions
+                          setInspireFlowStep("extra");
+                          const questionId = `extra-question-${Date.now()}`;
                           setMessages((prev) => [
                             ...prev,
                             {
-                              id: followupId,
+                              id: questionId,
                               role: "assistant",
-                              text: "Parfait ! Avec votre style et vos centres d'intérêt, je vais vous proposer des destinations vraiment adaptées.",
+                              text: "Avez-vous autre chose à signaler ? (critères obligatoires, restrictions alimentaires...)",
                             },
                           ]);
-                          // Set dynamic suggestion to propose destinations
+                          // Dynamic suggestions for extra options
                           setDynamicSuggestions([
                             {
-                              id: "propose-now",
-                              label: "Proposer des destinations",
+                              id: "must-haves",
+                              label: "Critères obligatoires",
+                              emoji: "⚠️",
+                              message: "__WIDGET__mustHaves",
+                            },
+                            {
+                              id: "dietary",
+                              label: "Restrictions alimentaires",
+                              emoji: "🍽️",
+                              message: "__WIDGET__dietary",
+                            },
+                            {
+                              id: "nothing-else",
+                              label: "Rien d'autre, suggérer !",
                               emoji: "✈️",
-                              message: "Propose-moi des destinations adaptées à mon style et mes centres d'intérêt",
+                              message: "__FETCH_DESTINATIONS__",
                             },
                           ]);
                         }}
+                      />
+                    )}
+                    
+                    {/* Must-Haves Widget */}
+                    {m.widget === "mustHaves" && (
+                      <MustHavesWidget
+                        onContinue={() => {
+                          // After must-haves, offer dietary or fetch destinations
+                          const questionId = `after-musthaves-${Date.now()}`;
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: questionId,
+                              role: "assistant",
+                              text: "Parfait ! Autre chose à signaler ?",
+                            },
+                          ]);
+                          setDynamicSuggestions([
+                            {
+                              id: "dietary",
+                              label: "Restrictions alimentaires",
+                              emoji: "🍽️",
+                              message: "__WIDGET__dietary",
+                            },
+                            {
+                              id: "nothing-else",
+                              label: "Rien d'autre, suggérer !",
+                              emoji: "✈️",
+                              message: "__FETCH_DESTINATIONS__",
+                            },
+                          ]);
+                        }}
+                      />
+                    )}
+                    
+                    {/* Dietary Widget */}
+                    {m.widget === "dietary" && (
+                      <DietaryWidget
+                        onContinue={() => {
+                          // After dietary, fetch destinations directly
+                          const loadingId = `fetching-destinations-${Date.now()}`;
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: loadingId,
+                              role: "assistant",
+                              text: "Je recherche les meilleures destinations pour vous...",
+                              isTyping: true,
+                            },
+                          ]);
+                          setDynamicSuggestions([]);
+                          // Trigger destination fetch
+                          handleFetchDestinations(loadingId);
+                        }}
+                      />
+                    )}
+                    
+                    {/* Destination Suggestions Grid */}
+                    {m.widget === "destinationSuggestions" && m.widgetData?.suggestions && (
+                      <DestinationSuggestionsGrid
+                        suggestions={m.widgetData.suggestions as DestinationSuggestion[]}
+                        basedOnProfile={m.widgetData.basedOnProfile as { completionScore: number; keyFactors: string[] } | undefined}
+                        onSelect={(destination) => {
+                          // Update flight memory with selected destination
+                          updateMemory({
+                            arrival: {
+                              city: destination.countryName, // Use country name as city for now (country-level destination)
+                              countryCode: destination.countryCode,
+                              country: destination.countryName,
+                            },
+                          });
+                          
+                          // Add confirmation message
+                          const confirmId = `destination-selected-${Date.now()}`;
+                          setMessages((prev) => [
+                            ...prev,
+                            {
+                              id: confirmId,
+                              role: "assistant",
+                              text: `Excellent choix ! **${destination.countryName}** ${destination.flagEmoji} est une destination parfaite pour vous.\n\n${destination.description}\n\nQuand souhaitez-vous partir ?`,
+                              widget: "dateRangePicker" as import("@/types/flight").WidgetType,
+                            },
+                          ]);
+                          
+                          // Reset inspire flow
+                          setInspireFlowStep("idle");
+                          setDestinationSuggestions([]);
+                        }}
+                        isLoading={isLoadingDestinations}
                       />
                     )}
 
@@ -1037,12 +1248,30 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               }}
               dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
+                // Handle fetch destinations trigger
+                if (message === "__FETCH_DESTINATIONS__") {
+                  setDynamicSuggestions([]);
+                  const loadingId = `fetching-destinations-${Date.now()}`;
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: loadingId,
+                      role: "assistant",
+                      text: "Je recherche les meilleures destinations pour vous...",
+                      isTyping: true,
+                    },
+                  ]);
+                  handleFetchDestinations(loadingId);
+                  return;
+                }
+                
                 // Handle special widget trigger prefix
                 if (message.startsWith("__WIDGET__")) {
                   const widgetType = message.replace("__WIDGET__", "");
                   setDynamicSuggestions([]); // Clear suggestions
                   
                   if (widgetType === "preferenceInterests") {
+                    setInspireFlowStep("interests");
                     const widgetId = `interests-widget-${Date.now()}`;
                     setMessages((prev) => [
                       ...prev,
@@ -1054,6 +1283,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                       },
                     ]);
                   } else if (widgetType === "preferenceStyle") {
+                    setInspireFlowStep("style");
                     const widgetId = `style-widget-${Date.now()}`;
                     setMessages((prev) => [
                       ...prev,
@@ -1062,6 +1292,30 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         role: "assistant",
                         text: "Ajustez votre style de voyage :",
                         widget: "preferenceStyle" as import("@/types/flight").WidgetType,
+                      },
+                    ]);
+                  } else if (widgetType === "mustHaves") {
+                    setInspireFlowStep("must_haves");
+                    const widgetId = `musthaves-widget-${Date.now()}`;
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: widgetId,
+                        role: "assistant",
+                        text: "Indiquez vos critères obligatoires :",
+                        widget: "mustHaves" as import("@/types/flight").WidgetType,
+                      },
+                    ]);
+                  } else if (widgetType === "dietary") {
+                    setInspireFlowStep("dietary");
+                    const widgetId = `dietary-widget-${Date.now()}`;
+                    setMessages((prev) => [
+                      ...prev,
+                      {
+                        id: widgetId,
+                        role: "assistant",
+                        text: "Avez-vous des restrictions alimentaires ?",
+                        widget: "dietary" as import("@/types/flight").WidgetType,
                       },
                     ]);
                   }
