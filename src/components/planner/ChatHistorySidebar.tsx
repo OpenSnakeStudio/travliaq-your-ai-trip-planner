@@ -30,6 +30,7 @@ interface ChatHistorySidebarProps {
   onSelectSession: (sessionId: string) => void;
   onNewSession: () => void;
   onDeleteSession: (sessionId: string) => void;
+  onDeleteAllSessions?: () => void;
 }
 
 export const ChatHistorySidebar = ({
@@ -40,9 +41,11 @@ export const ChatHistorySidebar = ({
   onSelectSession,
   onNewSession,
   onDeleteSession,
+  onDeleteAllSessions,
 }: ChatHistorySidebarProps) => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showNewSessionConfirm, setShowNewSessionConfirm] = useState(false);
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
 
   const sortedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
 
@@ -63,6 +66,13 @@ export const ChatHistorySidebar = ({
     await new Promise((resolve) => setTimeout(resolve, 150));
 
     onDeleteSession(sessionToDelete);
+  };
+
+  const confirmDeleteAll = async () => {
+    setShowDeleteAllConfirm(false);
+    onClose();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    onDeleteAllSessions?.();
   };
 
   return (
@@ -172,6 +182,24 @@ export const ChatHistorySidebar = ({
             ))
           )}
         </div>
+
+        {/* Delete All Button */}
+        {sessions.length > 0 && onDeleteAllSessions && (
+          <div className="p-3 border-t border-border">
+            <button
+              onClick={() => setShowDeleteAllConfirm(true)}
+              className={cn(
+                "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl",
+                "text-destructive border border-destructive/30",
+                "hover:bg-destructive/10 transition-colors",
+                "text-sm"
+              )}
+            >
+              <Trash2 className="h-4 w-4" />
+              Tout supprimer
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -216,6 +244,27 @@ export const ChatHistorySidebar = ({
               }}
             >
               Confirmer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <AlertDialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer tout l'historique ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Toutes les conversations, vols, hébergements et préférences seront définitivement supprimés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Tout supprimer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -173,6 +173,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     selectSession,
     createNewSession,
     deleteSession,
+    deleteAllSessions,
   } = useChatSessions({ getFlightMemory, getAccommodationMemory, getTravelMemory });
 
   // Local state
@@ -876,6 +877,27 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           createNewSession();
         }}
         onDeleteSession={deleteSession}
+        onDeleteAllSessions={() => {
+          // Full reset: clear all state
+          setIsLoading(false);
+          setDynamicSuggestions([]);
+          setInput("");
+          lastIntentRef.current = null;
+          completedMessageIdsRef.current.clear();
+          userMessageCountRef.current = 0;
+          airportFetchKeyRef.current = null;
+          widgetFlow.resetFlowState();
+
+          // Reset all persisted memories (localStorage-backed)
+          resetFlightMemory();
+          resetTravelMemory();
+          resetAccommodationMemory();
+          resetActivityMemory();
+          resetPreferenceMemory();
+
+          // Delete all sessions (this also clears localStorage)
+          deleteAllSessions();
+        }}
       />
 
       {/* Header - only show when not collapsed */}
