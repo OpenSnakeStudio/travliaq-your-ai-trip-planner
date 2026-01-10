@@ -279,6 +279,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   });
 
   // Handler to fetch destination suggestions from API
+  // Use primitive dependencies to avoid infinite loops
+  const departureCity = memory.departure?.city;
+  const departureCountry = memory.departure?.country;
+  const departureDateValue = memory.departureDate?.getTime();
+  
   const handleFetchDestinations = useCallback(async (loadingMessageId: string) => {
     setIsLoadingDestinations(true);
     setInspireFlowStep("loading");
@@ -286,11 +291,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     try {
       // Build preferences payload from memory - use getPreferences() for typed access
       const prefs = getPreferences();
-      const departureCity = memory.departure?.city;
       
       const payload: DestinationSuggestRequest = {
         // User location from departure if available
-        userLocation: departureCity ? { city: departureCity, country: memory.departure?.country } : undefined,
+        userLocation: departureCity ? { city: departureCity, country: departureCountry } : undefined,
         
         // Style axes
         styleAxes: {
@@ -327,7 +331,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           : "luxury",
         
         // Travel month from departure date if set
-        travelMonth: memory.departureDate ? memory.departureDate.getMonth() + 1 : new Date().getMonth() + 1,
+        travelMonth: departureDateValue ? new Date(departureDateValue).getMonth() + 1 : new Date().getMonth() + 1,
       };
       
       const response = await getDestinationSuggestions(payload, { limit: 3 });
@@ -385,7 +389,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     } finally {
       setIsLoadingDestinations(false);
     }
-  }, [memory.departure, memory.departureDate, getPreferences]);
+  }, [departureCity, departureCountry, departureDateValue, getPreferences]);
 
   // Utilities to avoid infinite sync loops between local state ↔ persisted state
   const areStoredMessagesEqual = useCallback((a: StoredMessage[], b: StoredMessage[]) => {
@@ -497,20 +501,29 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     prevMessageCountRef.current = messages.length;
   }, [messages.length, isUserScrolling]);
 
-  // Show ready message when complete
+  // Show ready message when complete - use primitive deps to avoid loops
+  const arrivalCity = memory.arrival?.city;
+  const arrivalIata = memory.arrival?.iata;
+  const arrivalCountryCode = memory.arrival?.countryCode;
+  const departureIata = memory.departure?.iata;
+  const departureCountryCodeForReady = memory.departure?.countryCode;
+  const departureDateForReady = memory.departureDate;
+  const returnDateForReady = memory.returnDate;
+  const passengersTotal = memory.passengers.adults + memory.passengers.children;
+  const tripTypeForReady = memory.tripType;
+  const needsDepartureAirport = needsAirportSelection.departure;
+  const needsArrivalAirport = needsAirportSelection.arrival;
+  
   useEffect(() => {
     if (!hasCompleteInfo || widgetFlow.isSearchButtonShown()) return;
 
-    const departure = memory.departure?.city || "départ";
-    const arrival = memory.arrival?.city || "destination";
-    const depCode = memory.departure?.iata ? ` (${memory.departure.iata})` : "";
-    const arrCode = memory.arrival?.iata ? ` (${memory.arrival.iata})` : "";
-    const depDate = memory.departureDate ? format(memory.departureDate, "d MMMM yyyy", { locale: fr }) : "-";
-    const retDate = memory.returnDate ? format(memory.returnDate, "d MMMM yyyy", { locale: fr }) : null;
-    const travelers = memory.passengers.adults + memory.passengers.children;
-
-    const needsDepartureAirport = needsAirportSelection.departure;
-    const needsArrivalAirport = needsAirportSelection.arrival;
+    const departure = departureCity || "départ";
+    const arrival = arrivalCity || "destination";
+    const depCode = departureIata ? ` (${departureIata})` : "";
+    const arrCode = arrivalIata ? ` (${arrivalIata})` : "";
+    const depDate = departureDateForReady ? format(departureDateForReady, "d MMMM yyyy", { locale: fr }) : "-";
+    const retDate = returnDateForReady ? format(returnDateForReady, "d MMMM yyyy", { locale: fr }) : null;
+    const travelers = passengersTotal;
 
     if (needsDepartureAirport || needsArrivalAirport) {
       widgetFlow.markSearchButtonShown();
@@ -525,11 +538,11 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       const fetchAirports = async () => {
         try {
           const [fromAirports, toAirports] = await Promise.all([
-            needsDepartureAirport && memory.departure?.city
-              ? findNearestAirports(memory.departure.city, 3, memory.departure.countryCode)
+            needsDepartureAirport && departureCity
+              ? findNearestAirports(departureCity, 3, departureCountryCodeForReady)
               : null,
-            needsArrivalAirport && memory.arrival?.city
-              ? findNearestAirports(memory.arrival.city, 3, memory.arrival.countryCode)
+            needsArrivalAirport && arrivalCity
+              ? findNearestAirports(arrivalCity, 3, arrivalCountryCode)
               : null,
           ]);
 
@@ -539,14 +552,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             if (fromAirports?.airports?.length) {
               dualChoices.from = {
                 field: "from",
-                cityName: memory.departure?.city || departure,
+                cityName: departureCity || departure,
                 airports: fromAirports.airports,
               };
             }
             if (toAirports?.airports?.length) {
               dualChoices.to = {
                 field: "to",
-                cityName: memory.arrival?.city || arrival,
+                cityName: arrivalCity || arrival,
                 airports: toAirports.airports,
               };
             }
@@ -593,7 +606,21 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         },
       ]);
     }
-  }, [hasCompleteInfo, memory, needsAirportSelection, widgetFlow]);
+  }, [
+    hasCompleteInfo,
+    departureCity,
+    arrivalCity,
+    departureIata,
+    arrivalIata,
+    arrivalCountryCode,
+    departureCountryCodeForReady,
+    departureDateForReady,
+    returnDateForReady,
+    passengersTotal,
+    needsDepartureAirport,
+    needsArrivalAirport,
+    widgetFlow,
+  ]);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
