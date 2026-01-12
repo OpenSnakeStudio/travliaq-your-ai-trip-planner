@@ -798,7 +798,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const focus = (lng: number, lat: number) => {
       map.current?.flyTo({
         center: [lng, lat],
-        zoom: 8.2,
+        zoom: 6.5, // Wider zoom for better context
         duration: 1200,
         essential: true,
         curve: 1.2,
@@ -839,16 +839,18 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
   // Absolute default: when we don't have an explicit map target for the current widget,
   // re-focus the map on the user's position.
+  // Also applies when the panel is closed (no explicit widget target).
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
     if (!userLocation?.lat || !userLocation?.lng) return;
 
-    // Only for widgets that rely on the map viewport.
+    // Apply for map widgets OR when panel is closed (user closed all widgets)
     const isMapWidget = activeTab === "flights" || activeTab === "activities" || activeTab === "stays";
-    if (!isMapWidget) return;
+    const shouldFocusOnUser = isMapWidget || !isPanelOpen;
+    if (!shouldFocusOnUser) return;
 
     // For stays: if we already have accommodations with coordinates, that becomes the explicit target.
-    if (activeTab === "stays") {
+    if (activeTab === "stays" && isPanelOpen) {
       const hasAccomCoords = accommodationMemory.accommodations.some((a) => !!a.lat && !!a.lng);
       if (hasAccomCoords) return;
     }
@@ -858,7 +860,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     map.current.easeTo({
       center: [userLocation.lng, userLocation.lat],
-      zoom: 8.2,
+      zoom: 6.5, // Wider zoom for better context
       duration: 700,
       essential: true,
     });

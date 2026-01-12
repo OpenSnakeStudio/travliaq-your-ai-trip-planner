@@ -124,15 +124,15 @@ const TravelPlanner = () => {
 
   const { chatRef, userLocation, searchMessageSentRef, setUserLocation } = useChatIntegration();
 
-  // When switching between widgets, default the map to the user's position.
-  // This is the "absolute fallback" when no explicit target is provided.
+  // When switching between widgets OR closing the panel, default the map to the user's position.
   const [userDefaultFocusNonce, setUserDefaultFocusNonce] = useState(0);
   useEffect(() => {
     if (!userLocation) return;
-    if (activeTab === "flights" || activeTab === "stays" || activeTab === "activities") {
+    // Trigger refocus on tab change or panel close
+    if (activeTab === "flights" || activeTab === "stays" || activeTab === "activities" || !isPanelVisible) {
       setUserDefaultFocusNonce((n) => n + 1);
     }
-  }, [activeTab, userLocation?.lat, userLocation?.lng]);
+  }, [activeTab, isPanelVisible, userLocation?.lat, userLocation?.lng]);
   
   // Callback when onboarding ends
   const handleOnboardingComplete = useCallback(() => {
