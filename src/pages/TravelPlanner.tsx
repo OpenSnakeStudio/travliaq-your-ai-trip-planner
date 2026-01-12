@@ -67,9 +67,14 @@ const TravelPlanner = () => {
     location.pathname === "/planner-notour" || new URLSearchParams(location.search).has("noTour");
 
   // Track if onboarding is complete to allow animations
+  // If already done before (localStorage), start with true so animation triggers immediately
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
     return localStorage.getItem("travliaq_onboarding_completed") === "true";
   });
+
+  // If onboarding was already completed before this session, ensure we trigger the fly-to animation
+  // by resetting initialAnimationDone once (this acts like "returning user" behavior)
+  const hasTriggeredReturningUserAnimRef = useRef(false);
 
   // Custom hooks for state management
   const {
@@ -117,6 +122,15 @@ const TravelPlanner = () => {
   } = useDestinationPopup(setIsPanelVisible);
 
   const { chatRef, userLocation, searchMessageSentRef, setUserLocation } = useChatIntegration();
+  
+  // For returning users (onboarding already done), trigger the fly-to animation on first mount
+  useEffect(() => {
+    if (onboardingComplete && !hasTriggeredReturningUserAnimRef.current && !initialAnimationDone) {
+      // Already completed onboarding in a previous session - animation should trigger automatically
+      // because onboardingComplete=true and initialAnimationDone starts false in useMapState
+      hasTriggeredReturningUserAnimRef.current = true;
+    }
+  }, [onboardingComplete, initialAnimationDone]);
   
   // Callback when onboarding ends - trigger animation
   const handleOnboardingComplete = useCallback(() => {
