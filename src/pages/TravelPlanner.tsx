@@ -123,15 +123,24 @@ const TravelPlanner = () => {
   } = useDestinationPopup(setIsPanelVisible);
 
   const { chatRef, userLocation, searchMessageSentRef, setUserLocation } = useChatIntegration();
+
+  // When switching between widgets, default the map to the user's position.
+  // This is the "absolute fallback" when no explicit target is provided.
+  const [userDefaultFocusNonce, setUserDefaultFocusNonce] = useState(0);
+  useEffect(() => {
+    if (!userLocation) return;
+    if (activeTab === "flights" || activeTab === "stays" || activeTab === "activities") {
+      setUserDefaultFocusNonce((n) => n + 1);
+    }
+  }, [activeTab, userLocation?.lat, userLocation?.lng]);
   
-  // Callback when onboarding ends - trigger animation
+  // Callback when onboarding ends
   const handleOnboardingComplete = useCallback(() => {
     setOnboardingComplete(true);
   }, []);
 
-  // Callback to start animation after onboarding
+  // Callback to start animation after onboarding (kept for manual re-run)
   const handleRequestAnimation = useCallback(() => {
-    // Reset animation state to trigger the fly-to-user animation
     setInitialAnimationDone(false);
   }, [setInitialAnimationDone]);
 
@@ -261,7 +270,8 @@ const TravelPlanner = () => {
                             setIsPanelVisible(true);
                           }}
                           isPanelOpen={isPanelVisible}
-                          userLocation={initialAnimationDone ? userLocation : null}
+                          userLocation={userLocation}
+                          userDefaultFocusNonce={userDefaultFocusNonce}
                           onDestinationClick={handleDestinationClick}
                         />
                       </PlannerErrorBoundary>
