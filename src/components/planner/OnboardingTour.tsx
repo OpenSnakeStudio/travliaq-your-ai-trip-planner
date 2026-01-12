@@ -1036,6 +1036,7 @@ export default function OnboardingTour({
     const hasSeenTour = localStorage.getItem(STORAGE_KEY) === "true";
     
     if (forceShow || !hasSeenTour) {
+      // Start immediately for better UX (reduced from 800ms to 100ms)
       const timer = setTimeout(() => {
         injectDriverStyles();
         setIsRunning(true);
@@ -1123,7 +1124,7 @@ export default function OnboardingTour({
         setTimeout(() => {
           driverRef.current?.drive();
         }, 200);
-      }, forceShow ? 0 : 800);
+      }, forceShow ? 0 : 100); // Reduced delay from 800ms to 100ms
 
       return () => clearTimeout(timer);
     }

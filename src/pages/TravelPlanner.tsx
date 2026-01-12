@@ -66,15 +66,18 @@ const TravelPlanner = () => {
   const disableTour =
     location.pathname === "/planner-notour" || new URLSearchParams(location.search).has("noTour");
 
-  // Track if onboarding is complete to allow animations
-  // If already done before (localStorage), start with true so animation triggers immediately
+  // Check if user has already completed onboarding in a previous session
+  const hasSeenOnboarding = localStorage.getItem("travliaq_onboarding_completed") === "true";
+  
+  // For returning users (onboarding already done), we skip the tour and animate immediately
+  // For new users, we wait for onboarding to complete before animating
   const [onboardingComplete, setOnboardingComplete] = useState(() => {
-    return localStorage.getItem("travliaq_onboarding_completed") === "true";
+    // If tour is disabled OR user has seen it before, mark as complete immediately
+    return disableTour || hasSeenOnboarding;
   });
 
-  // If onboarding was already completed before this session, ensure we trigger the fly-to animation
-  // by resetting initialAnimationDone once (this acts like "returning user" behavior)
-  const hasTriggeredReturningUserAnimRef = useRef(false);
+  // Track if we should show onboarding (new user + tour not disabled)
+  const shouldShowOnboarding = !disableTour && !hasSeenOnboarding;
 
   // Custom hooks for state management
   const {
@@ -122,15 +125,6 @@ const TravelPlanner = () => {
   } = useDestinationPopup(setIsPanelVisible);
 
   const { chatRef, userLocation, searchMessageSentRef, setUserLocation } = useChatIntegration();
-  
-  // For returning users (onboarding already done), trigger the fly-to animation on first mount
-  useEffect(() => {
-    if (onboardingComplete && !hasTriggeredReturningUserAnimRef.current && !initialAnimationDone) {
-      // Already completed onboarding in a previous session - animation should trigger automatically
-      // because onboardingComplete=true and initialAnimationDone starts false in useMapState
-      hasTriggeredReturningUserAnimRef.current = true;
-    }
-  }, [onboardingComplete, initialAnimationDone]);
   
   // Callback when onboarding ends - trigger animation
   const handleOnboardingComplete = useCallback(() => {
@@ -358,8 +352,8 @@ const TravelPlanner = () => {
                   </ResizablePanel>
                 </ResizablePanelGroup>
 
-                {/* Onboarding Tour */}
-                {!disableTour && (
+                {/* Onboarding Tour - only for new users who haven't seen it */}
+                {shouldShowOnboarding && (
                   <OnboardingTour
                     onPanelVisibilityChange={setIsPanelVisible}
                     onComplete={handleOnboardingComplete}
