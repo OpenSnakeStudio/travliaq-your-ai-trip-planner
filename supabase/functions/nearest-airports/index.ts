@@ -1,217 +1,299 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Prefer env var so we can switch upstream without redeploying code
-const RAILWAY_API_URL = Deno.env.get("TRAVLIAQ_API_URL") ?? "https://travliaq-api-production.up.railway.app";
-
-// Map of French city names to English/international names for better API matching
-const cityNameMappings: Record<string, string> = {
-  // Asian cities
-  "pékin": "Beijing",
-  "pekin": "Beijing",
-  "tokyo": "Tokyo",
-  "séoul": "Seoul",
-  "seoul": "Seoul",
-  "hong kong": "Hong Kong",
-  "singapour": "Singapore",
-  "bangkok": "Bangkok",
-  "hanoï": "Hanoi",
-  "hanoi": "Hanoi",
-  "ho chi minh ville": "Ho Chi Minh City",
-  "saigon": "Ho Chi Minh City",
-  "bombay": "Mumbai",
-  "calcutta": "Kolkata",
-  "new delhi": "New Delhi",
-  "delhi": "Delhi",
-  "taipei": "Taipei",
-  "shanghai": "Shanghai",
-  "manille": "Manila",
-  "djakarta": "Jakarta",
-  "jakarta": "Jakarta",
-  "kuala lumpur": "Kuala Lumpur",
-  
-  // European cities
-  "bruxelles": "Brussels",
-  "londres": "London",
-  "édimbourg": "Edinburgh",
-  "edimbourg": "Edinburgh",
-  "munich": "Munich",
-  "vienne": "Vienna",
-  "rome": "Rome",
-  "venise": "Venice",
-  "milan": "Milan",
-  "naples": "Naples",
-  "florence": "Florence",
-  "athènes": "Athens",
-  "athenes": "Athens",
-  "lisbonne": "Lisbon",
-  "barcelone": "Barcelona",
-  "séville": "Seville",
-  "seville": "Seville",
-  "copenhague": "Copenhagen",
-  "stockholm": "Stockholm",
-  "oslo": "Oslo",
-  "helsinki": "Helsinki",
-  "varsovie": "Warsaw",
-  "prague": "Prague",
-  "budapest": "Budapest",
-  "bucarest": "Bucharest",
-  "moscou": "Moscow",
-  "saint-pétersbourg": "Saint Petersburg",
-  "saint petersbourg": "Saint Petersburg",
-  "kiev": "Kyiv",
-  "istanbul": "Istanbul",
-  "anvers": "Antwerp",
-  "bruges": "Bruges",
-  "gand": "Ghent",
-  "la haye": "The Hague",
-  "genève": "Geneva",
-  "geneve": "Geneva",
-  "zurich": "Zurich",
-  "bâle": "Basel",
-  "bale": "Basel",
-  "cologne": "Cologne",
-  "francfort": "Frankfurt",
-  "hambourg": "Hamburg",
-  "nuremberg": "Nuremberg",
-  "cracovie": "Krakow",
-  
-  // Middle East & Africa
-  "le caire": "Cairo",
-  "jérusalem": "Jerusalem",
-  "jerusalem": "Jerusalem",
-  "téhéran": "Tehran",
-  "teheran": "Tehran",
-  "bagdad": "Baghdad",
-  "beyrouth": "Beirut",
-  "damas": "Damascus",
-  "alger": "Algiers",
-  "tunis": "Tunis",
-  "casablanca": "Casablanca",
-  "marrakech": "Marrakech",
-  "johannesburg": "Johannesburg",
-  "le cap": "Cape Town",
-  "nairobi": "Nairobi",
-  "addis-abeba": "Addis Ababa",
-  "kinshasa": "Kinshasa",
-  "lagos": "Lagos",
-  "dakar": "Dakar",
-  "abidjan": "Abidjan",
-  "doubaï": "Dubai",
-  "dubai": "Dubai",
-  "doha": "Doha",
-  "riyad": "Riyadh",
-  "abou dabi": "Abu Dhabi",
-  "abu dhabi": "Abu Dhabi",
-  
-  // Americas
-  "new york": "New York",
-  "los angeles": "Los Angeles",
-  "san francisco": "San Francisco",
-  "la nouvelle-orléans": "New Orleans",
-  "nouvelle orléans": "New Orleans",
-  "new orleans": "New Orleans",
-  "philadelphie": "Philadelphia",
-  "montréal": "Montreal",
-  "montreal": "Montreal",
-  "québec": "Quebec City",
-  "quebec": "Quebec City",
-  "mexico": "Mexico City",
-  "la havane": "Havana",
-  "rio de janeiro": "Rio de Janeiro",
-  "são paulo": "Sao Paulo",
-  "sao paulo": "Sao Paulo",
-  "buenos aires": "Buenos Aires",
-  "santiago": "Santiago",
-  "bogota": "Bogota",
-  "lima": "Lima",
-  "caracas": "Caracas",
-  
-  // Oceania
-  "sydney": "Sydney",
-  "melbourne": "Melbourne",
-  "auckland": "Auckland",
-};
-
-// Normalize and lookup city name
-function normalizeCityName(city: string): string {
-  const normalized = city.toLowerCase().trim();
-  return cityNameMappings[normalized] || city;
+interface NearestAirportsRequest {
+  city: string;
+  limit?: number;
+  country_code?: string;
 }
 
-serve(async (req: Request) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+type CityRow = {
+  id: string;
+  name: string;
+  slug: string;
+  country_code: string;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+type AirportRow = {
+  iata: string;
+  name: string;
+  city_name: string | null;
+  country_code: string | null;
+  latitude: number;
+  longitude: number;
+};
+
+function json(status: number, body: unknown) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function normalizeText(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/\s+/g, " ");
+}
+
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+
+  const v0 = new Array(b.length + 1).fill(0);
+  const v1 = new Array(b.length + 1).fill(0);
+
+  for (let i = 0; i <= b.length; i++) v0[i] = i;
+
+  for (let i = 0; i < a.length; i++) {
+    v1[0] = i + 1;
+    for (let j = 0; j < b.length; j++) {
+      const cost = a[i] === b[j] ? 0 : 1;
+      v1[j + 1] = Math.min(v1[j] + 1, v0[j + 1] + 1, v0[j] + cost);
+    }
+    for (let j = 0; j <= b.length; j++) v0[j] = v1[j];
   }
 
+  return v1[b.length];
+}
+
+function toMatchScore(queryNorm: string, candidateNorm: string): number {
+  if (!queryNorm || !candidateNorm) return 0;
+  if (queryNorm === candidateNorm) return 100;
+
+  const dist = levenshtein(queryNorm, candidateNorm);
+  const maxLen = Math.max(queryNorm.length, candidateNorm.length);
+  const score = Math.round((1 - dist / maxLen) * 100);
+  return Math.max(0, Math.min(99, score));
+}
+
+// Haversine distance in km
+function distanceKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(bLat - aLat);
+  const dLng = toRad(bLng - aLng);
+  const lat1 = toRad(aLat);
+  const lat2 = toRad(bLat);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function computeSearchBox(lat: number, lon: number) {
+  // Rough, stable bounds: ~220km latitude and ~330km longitude around the city.
+  // (Works well in Europe/US; close enough near equator too.)
+  const latDelta = 2.0;
+  const lonDelta = 3.0;
+
+  return {
+    south: lat - latDelta,
+    north: lat + latDelta,
+    west: lon - lonDelta,
+    east: lon + lonDelta,
+  };
+}
+
+Deno.serve(async (req) => {
+  // CORS preflight
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
   try {
-    const { city, country_code, limit = 3 } = await req.json();
+    const payload = (await req.json().catch(() => null)) as NearestAirportsRequest | null;
 
-    if (!city || typeof city !== "string" || city.length < 2) {
-      return new Response(
-        JSON.stringify({ error: "City name required (min 2 chars)" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const rawCity = payload?.city;
+    const rawLimit = payload?.limit;
+    const rawCountryCode = payload?.country_code;
+
+    if (!rawCity || typeof rawCity !== "string") {
+      return json(400, { error: "City name required" });
     }
 
-    // Normalize city name (convert French names to English/international)
-    const normalizedCity = normalizeCityName(city);
-    const wasNormalized = normalizedCity !== city;
-
-    // Build request body with optional country_code
-    const requestBody: { city: string; limit: number; country_code?: string } = {
-      city: normalizedCity,
-      limit: Math.min(limit, 10),
-    };
-    
-    if (country_code && typeof country_code === "string" && country_code.length === 2) {
-      requestBody.country_code = country_code.toUpperCase();
+    const cityQuery = rawCity.trim();
+    if (cityQuery.length < 2 || cityQuery.length > 80) {
+      return json(400, { error: "City name must be between 2 and 80 characters" });
     }
 
-    console.log(`[nearest-airports] Searching airports near: "${city}"${wasNormalized ? ` (normalized to "${normalizedCity}")` : ""}${country_code ? ` (${country_code})` : ""}, limit: ${limit}`);
+    const limit = clamp(typeof rawLimit === "number" ? rawLimit : 3, 1, 10);
 
-    const response = await fetch(`${RAILWAY_API_URL}/nearest-airports`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(requestBody),
-    });
+    const countryCode =
+      typeof rawCountryCode === "string" && /^[A-Za-z]{2}$/.test(rawCountryCode)
+        ? rawCountryCode.toUpperCase()
+        : undefined;
 
-    if (!response.ok) {
-      const status = response.status;
-      const errorText = await response.text();
-      console.error(`[nearest-airports] Upstream error: ${status} - ${errorText}`);
+    const qNorm = normalizeText(cityQuery);
 
-      if (status === 404) {
-        return new Response(
-          JSON.stringify({ error: "City not found", detail: errorText }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+    console.log(
+      `[nearest-airports] query="${cityQuery}", country=${countryCode ?? "any"}, limit=${limit}`
+    );
+
+    // Supabase (service role for reliable reads)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 1) Find best-matching city in `cities` (robust + multilingual)
+    const cityOrParts = cityQuery.split(",")[0]?.trim() || cityQuery;
+    const cityOrPartsNorm = normalizeText(cityOrParts);
+
+    let citiesQuery = supabase
+      .from("cities")
+      .select("id,name,slug,country_code,latitude,longitude")
+      .or(`name.ilike.%${cityOrParts}%,slug.ilike.%${cityOrPartsNorm.replace(/\s/g, "-")}%`)
+      .limit(200);
+
+    if (countryCode) citiesQuery = citiesQuery.eq("country_code", countryCode);
+
+    const { data: citiesData, error: citiesError } = await citiesQuery;
+
+    if (citiesError) {
+      console.warn("[nearest-airports] cities lookup failed:", citiesError.message);
+    }
+
+    const candidates = (citiesData ?? []) as CityRow[];
+
+    const ranked = candidates
+      .map((c) => {
+        const nameNorm = normalizeText(c.name);
+        const slugNorm = normalizeText((c.slug ?? "").replace(/-/g, " "));
+
+        const scoreName = toMatchScore(cityOrPartsNorm, nameNorm);
+        const scoreSlug = toMatchScore(cityOrPartsNorm, slugNorm);
+
+        // Prefer rows with coordinates.
+        const hasCoords = c.latitude != null && c.longitude != null;
+        const coordsBoost = hasCoords ? 3 : 0;
+
+        // Prefer same country if provided.
+        const countryBoost = countryCode && c.country_code === countryCode ? 5 : 0;
+
+        // Best score across name/slug.
+        const score = Math.max(scoreName, scoreSlug) + coordsBoost + countryBoost;
+
+        return {
+          city: c,
+          score,
+          scoreRaw: Math.max(scoreName, scoreSlug),
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+
+    const bestCity = ranked[0]?.city;
+
+    // 2) Determine city center (prefer `cities` coords; else infer from airports table)
+    let centerLat: number | null = bestCity?.latitude ?? null;
+    let centerLon: number | null = bestCity?.longitude ?? null;
+    let matchedCity = bestCity?.name ?? cityOrParts;
+    let matchedCityId = bestCity?.id ?? "";
+    let matchScore = ranked[0]?.scoreRaw ?? 0;
+
+    if (centerLat == null || centerLon == null) {
+      // Infer center from airports matching city name (handles rows like Bruxelles without coords)
+      let airportsForCityQ = supabase
+        .from("airports")
+        .select("iata,name,city_name,country_code,latitude,longitude")
+        .eq("scheduled_service", "yes")
+        .ilike("city_name", `%${cityOrParts}%`)
+        .limit(250);
+
+      if (countryCode) airportsForCityQ = airportsForCityQ.eq("country_code", countryCode);
+
+      const { data: airportsForCity, error: airportsForCityErr } = await airportsForCityQ;
+      if (airportsForCityErr) {
+        console.warn("[nearest-airports] airports city lookup failed:", airportsForCityErr.message);
       }
 
-      return new Response(
-        JSON.stringify({ error: "Upstream API error", status }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const cityAirports = (airportsForCity ?? []) as AirportRow[];
+      if (cityAirports.length > 0) {
+        const avgLat = cityAirports.reduce((s, a) => s + a.latitude, 0) / cityAirports.length;
+        const avgLon = cityAirports.reduce((s, a) => s + a.longitude, 0) / cityAirports.length;
+        centerLat = avgLat;
+        centerLon = avgLon;
+
+        if (!bestCity) {
+          matchedCity = cityAirports[0]?.city_name ?? cityOrParts;
+          matchScore = 100;
+        }
+      }
     }
 
-    const data = await response.json();
-    console.log(`[nearest-airports] Found ${data.airports?.length || 0} airports for "${city}"`);
+    if (centerLat == null || centerLon == null) {
+      return json(404, {
+        error: "City not found",
+        detail: {
+          message: `No city match found for '${cityQuery}'. Please check spelling or try a different city name.`,
+        },
+      });
+    }
 
-    // Return the data as-is from the API
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // 3) Fetch airports in a bounding box around the center, then compute precise distance
+    const box = computeSearchBox(centerLat, centerLon);
+
+    let airportsQ = supabase
+      .from("airports")
+      .select("iata,name,city_name,country_code,latitude,longitude")
+      .eq("scheduled_service", "yes")
+      .gte("latitude", box.south)
+      .lte("latitude", box.north);
+
+    // Handle date line crossing
+    if (box.east >= box.west) {
+      airportsQ = airportsQ.gte("longitude", box.west).lte("longitude", box.east);
+    }
+
+    // When a country is provided, restrict to that country to avoid weird cross-continent matches.
+    if (countryCode) airportsQ = airportsQ.eq("country_code", countryCode);
+
+    // Get enough candidates, sort in code.
+    const { data: airportsData, error: airportsError } = await airportsQ.limit(700);
+
+    if (airportsError) {
+      console.error("[nearest-airports] airports query failed:", airportsError.message);
+      return json(500, { error: "Internal error while searching airports" });
+    }
+
+    const airports = (airportsData ?? []) as AirportRow[];
+
+    const enriched = airports
+      .map((a) => {
+        const d = distanceKm(centerLat!, centerLon!, a.latitude, a.longitude);
+        return {
+          iata: a.iata,
+          name: a.name,
+          city_name: a.city_name ?? "",
+          country_code: a.country_code ?? "",
+          lat: a.latitude,
+          lon: a.longitude,
+          distance_km: Math.round(d * 10) / 10,
+        };
+      })
+      .sort((a, b) => a.distance_km - b.distance_km)
+      .slice(0, limit);
+
+    return json(200, {
+      city_query: cityQuery,
+      matched_city: matchedCity,
+      matched_city_id: matchedCityId,
+      match_score: matchScore,
+      city_location: { lat: centerLat, lon: centerLon },
+      airports: enriched,
     });
   } catch (error) {
     console.error("[nearest-airports] Error:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return json(500, { error: "Internal server error" });
   }
 });
