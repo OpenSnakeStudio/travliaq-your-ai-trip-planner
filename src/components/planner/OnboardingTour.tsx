@@ -41,6 +41,7 @@ function injectDriverStyles() {
     .driver-overlay {
       background: rgba(0, 0, 0, 0.75) !important;
       transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      z-index: 9998 !important;
       pointer-events: none !important; /* IMPORTANT: don't block chat typing */
     }
 
@@ -123,6 +124,8 @@ function injectDriverStyles() {
 
     /* Popover with smooth entrance animation */
     .driver-popover {
+      z-index: 10005 !important;
+      opacity: 1 !important;
       background: hsl(var(--card)) !important;
       border: 1px solid hsl(var(--border)) !important;
       border-radius: 16px !important;
@@ -1036,92 +1039,116 @@ export default function OnboardingTour({
     // Component is only rendered when shouldShowOnboarding is true in TravelPlanner
     // So we can safely start the tour immediately
     const timer = setTimeout(() => {
-      injectDriverStyles();
-      setIsRunning(true);
-      
-      // Configure first step before starting
-      configureStep(0);
-      
-      const driverConfig: Config = {
-        showButtons: ['next', 'previous', 'close'],
-        showProgress: false,
-        allowClose: true,
-        overlayOpacity: 0.75,
-        stagePadding: 12,
-        stageRadius: 16,
-        animate: true,
-        smoothScroll: false,
-        disableActiveInteraction: false,
-        popoverClass: "travliaq-popover",
-        nextBtnText: "Suivant →",
-        prevBtnText: "← Précédent",
-        doneBtnText: "C'est parti ! ✨",
-         onPopoverRender: (popover, opts) => {
-           const idx = opts.state.activeIndex ?? 0;
-           const total = opts.config.steps?.length ?? steps.length;
-           renderProgressHeader(popover.wrapper, idx, total, opts.driver);
+      try {
+        // Defensive: if a previous instance is still around, kill it first
+        driverRef.current?.destroy();
+        driverRef.current = null;
 
-           // Add an explicit "Arrêter" button inside the tooltip (in the footer)
-           const footer = popover.wrapper.querySelector(".driver-popover-footer");
-           if (footer && !footer.querySelector(".travliaq-skip-btn")) {
-             const skipBtn = document.createElement("button");
-             skipBtn.className = "travliaq-skip-btn";
-             skipBtn.type = "button";
-             skipBtn.textContent = "Arrêter le guide";
-             skipBtn.onclick = () => {
-               opts.driver.destroy();
-             };
-             footer.prepend(skipBtn);
-           }
-         },
-        onHighlightStarted: (_el, step, opts) => {
-          const idx = opts.state.activeIndex ?? 0;
-          const tab = STEP_CONFIG[idx]?.tab;
-          // Steps 4-7 (Vols, Hébergements, Activités, Préférences widgets): also highlight the tab button
-          const shouldHighlightButton = idx >= 4 && idx <= 7;
-          highlightTab(tab, shouldHighlightButton);
-        },
-        onNextClick: (_el, _step, opts) => {
-          const idx = opts.state.activeIndex ?? 0;
+        injectDriverStyles();
+        setIsRunning(true);
 
-          // Last step: "C'est parti !" should end the tour
-          if (idx >= steps.length - 1) {
+        // Configure first step before starting
+        configureStep(0);
+
+        const driverConfig: Config = {
+          showButtons: ["next", "previous", "close"],
+          showProgress: false,
+          allowClose: true,
+          overlayOpacity: 0.75,
+          stagePadding: 12,
+          stageRadius: 16,
+          animate: true,
+          smoothScroll: false,
+          disableActiveInteraction: false,
+          popoverClass: "travliaq-popover",
+          nextBtnText: "Suivant →",
+          prevBtnText: "← Précédent",
+          doneBtnText: "C'est parti ! ✨",
+          onPopoverRender: (popover, opts) => {
+            // Debug: helps diagnose "overlay but no popover"
+            // eslint-disable-next-line no-console
+            console.log("[OnboardingTour] popover render", {
+              activeIndex: opts.state.activeIndex,
+              step: opts.config.steps?.[opts.state.activeIndex ?? 0],
+            });
+
+            const idx = opts.state.activeIndex ?? 0;
+            const total = opts.config.steps?.length ?? steps.length;
+            renderProgressHeader(popover.wrapper, idx, total, opts.driver);
+
+            // Add an explicit "Arrêter" button inside the tooltip (in the footer)
+            const footer = popover.wrapper.querySelector(".driver-popover-footer");
+            if (footer && !footer.querySelector(".travliaq-skip-btn")) {
+              const skipBtn = document.createElement("button");
+              skipBtn.className = "travliaq-skip-btn";
+              skipBtn.type = "button";
+              skipBtn.textContent = "Arrêter le guide";
+              skipBtn.onclick = () => {
+                opts.driver.destroy();
+              };
+              footer.prepend(skipBtn);
+            }
+          },
+          onHighlightStarted: (_el, _step, opts) => {
+            const idx = opts.state.activeIndex ?? 0;
+            const tab = STEP_CONFIG[idx]?.tab;
+            // Steps 4-7 (Vols, Hébergements, Activités, Préférences widgets): also highlight the tab button
+            const shouldHighlightButton = idx >= 4 && idx <= 7;
+            highlightTab(tab, shouldHighlightButton);
+          },
+          onNextClick: (_el, _step, opts) => {
+            const idx = opts.state.activeIndex ?? 0;
+
+            // Last step: "C'est parti !" should end the tour
+            if (idx >= steps.length - 1) {
+              opts.driver.destroy();
+              return;
+            }
+
+            const nextIndex = idx + 1;
+            configureStep(nextIndex);
+
+            // Small delay to let UI update before driver moves
+            setTimeout(() => {
+              opts.driver.moveNext();
+            }, 150);
+          },
+          onPrevClick: (_el, _step, opts) => {
+            const idx = opts.state.activeIndex ?? 0;
+            const prevIndex = Math.max(0, idx - 1);
+            configureStep(prevIndex);
+            setTimeout(() => {
+              opts.driver.movePrevious();
+            }, 150);
+          },
+          onCloseClick: (_el, _step, opts) => {
             opts.driver.destroy();
-            return;
+          },
+          steps,
+          onDestroyed: () => {
+            handleComplete();
+          },
+        };
+
+        driverRef.current = driver(driverConfig);
+
+        // Start after a short delay to ensure elements are ready
+        setTimeout(() => {
+          try {
+            // eslint-disable-next-line no-console
+            console.log("[OnboardingTour] drive() start");
+            driverRef.current?.drive();
+          } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error("[OnboardingTour] driver.drive() failed", e);
+            handleComplete();
           }
-
-          const nextIndex = idx + 1;
-          configureStep(nextIndex);
-
-          // Small delay to let UI update before driver moves
-          setTimeout(() => {
-            opts.driver.moveNext();
-          }, 150);
-        },
-        onPrevClick: (_el, _step, opts) => {
-          const idx = opts.state.activeIndex ?? 0;
-          const prevIndex = Math.max(0, idx - 1);
-          configureStep(prevIndex);
-          setTimeout(() => {
-            opts.driver.movePrevious();
-          }, 150);
-        },
-        onCloseClick: (_el, _step, opts) => {
-          // When user clicks "C'est parti !" (done button) on last step
-          opts.driver.destroy();
-        },
-        steps: steps,
-        onDestroyed: () => {
-          handleComplete();
-        },
-      };
-
-      driverRef.current = driver(driverConfig);
-      
-      // Start after a short delay to ensure elements are ready
-      setTimeout(() => {
-        driverRef.current?.drive();
-      }, 200);
+        }, 200);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[OnboardingTour] init failed", e);
+        handleComplete();
+      }
     }, forceShow ? 0 : 100);
 
     return () => clearTimeout(timer);
