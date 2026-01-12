@@ -294,9 +294,14 @@ interface PlannerMapProps {
   isPanelOpen?: boolean;
   userLocation?: UserLocation | null;
   onDestinationClick?: (event: DestinationClickEvent) => void;
+  /**
+   * Forces the map to re-focus on user location for a given tab switch.
+   * Incrementing nonce triggers a new focus.
+   */
+  userDefaultFocusNonce?: number;
 }
 
-const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete, isPanelOpen = false, userLocation, onDestinationClick }: PlannerMapProps) => {
+const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete, isPanelOpen = false, userLocation, onDestinationClick, userDefaultFocusNonce }: PlannerMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -779,57 +784,93 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, []);
 
   // Animate to user location on initial load - single smooth animation
-  // Offset is applied so that the center is visually to the right (compensating for chat panel on left)
+  // Use padding (not degrees) so the user point appears more to the right behind the left panel.
   useEffect(() => {
     if (!map.current || !mapLoaded || hasAnimatedRef.current) return;
-    // Skip animation if disabled
     if (!animateToUserLocation) return;
 
     hasAnimatedRef.current = true;
 
-    // Set padding once at start (left padding for chat panel)
-    map.current.setPadding({ left: 350, top: 0, right: 0, bottom: 0 });
+    const leftPadding = isPanelOpen ? 450 : 350;
+    map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
 
-    // Request geolocation immediately (no delay needed)
+    // Prefer already-detected userLocation (from AutoDetectDeparture) to avoid a second geolocation request.
+    const focus = (lng: number, lat: number) => {
+      map.current?.flyTo({
+        center: [lng, lat],
+        zoom: 8.2,
+        duration: 1200,
+        essential: true,
+        curve: 1.2,
+      });
+      setTimeout(() => onAnimationComplete?.(), 1200);
+    };
+
+    if (userLocation?.lat && userLocation?.lng) {
+      focus(userLocation.lng, userLocation.lat);
+      return;
+    }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          // Offset the center slightly to the west so the user's position appears to the right of center
-          // This creates better UX with the chat panel on the left
-          const offsetLng = position.coords.longitude - 2.5; // Shift ~2.5° west
-          map.current?.flyTo({
-            center: [offsetLng, position.coords.latitude],
-            zoom: 5.5,
-            duration: 1800, // Smooth animation
-            essential: true,
-            curve: 1.2, // Gentle curve
-          });
-          setTimeout(() => onAnimationComplete?.(), 1800);
+          focus(position.coords.longitude, position.coords.latitude);
         },
         () => {
-          // Geolocation failed - stay at current view, just complete
           onAnimationComplete?.();
         },
         { timeout: 5000, enableHighAccuracy: false }
       );
     } else {
-      // No geolocation API - just complete
       onAnimationComplete?.();
     }
-  }, [mapLoaded, animateToUserLocation, onAnimationComplete]);
+  }, [animateToUserLocation, isPanelOpen, mapLoaded, onAnimationComplete, userLocation?.lat, userLocation?.lng]);
 
   // Adjust map padding based on panel visibility
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    // Animate padding change when panel opens/closes.
-    // When closing, apply instantly to avoid a "zoom/pan" animation fighting with fitBounds.
     const leftPadding = isPanelOpen ? 450 : 350;
     map.current.easeTo({
       padding: { left: leftPadding, top: 0, right: 0, bottom: 0 },
-      duration: isPanelOpen ? 300 : 0,
+      duration: isPanelOpen ? 250 : 0,
     });
   }, [isPanelOpen, mapLoaded]);
+
+  // Absolute default: when we don't have an explicit map target for the current widget,
+  // re-focus the map on the user's position.
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    if (!userLocation?.lat || !userLocation?.lng) return;
+
+    // Only for widgets that rely on the map viewport.
+    const isMapWidget = activeTab === "flights" || activeTab === "activities" || activeTab === "stays";
+    if (!isMapWidget) return;
+
+    // For stays: if we already have accommodations with coordinates, that becomes the explicit target.
+    if (activeTab === "stays") {
+      const hasAccomCoords = accommodationMemory.accommodations.some((a) => !!a.lat && !!a.lng);
+      if (hasAccomCoords) return;
+    }
+
+    const leftPadding = isPanelOpen ? 450 : 350;
+    map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
+
+    map.current.easeTo({
+      center: [userLocation.lng, userLocation.lat],
+      zoom: 8.2,
+      duration: 700,
+      essential: true,
+    });
+  }, [
+    userDefaultFocusNonce,
+    activeTab,
+    isPanelOpen,
+    mapLoaded,
+    userLocation?.lat,
+    userLocation?.lng,
+    accommodationMemory.accommodations,
+  ]);
 
   // Resize map when container size changes (panel resize)
   useEffect(() => {
