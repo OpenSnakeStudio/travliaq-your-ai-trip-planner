@@ -69,15 +69,13 @@ const TravelPlanner = () => {
   // Check if user has already completed onboarding in a previous session
   const hasSeenOnboarding = localStorage.getItem("travliaq_onboarding_completed") === "true";
   
-  // For returning users (onboarding already done), we skip the tour and animate immediately
-  // For new users, we wait for onboarding to complete before animating
-  const [onboardingComplete, setOnboardingComplete] = useState(() => {
-    // If tour is disabled OR user has seen it before, mark as complete immediately
-    return disableTour || hasSeenOnboarding;
-  });
-
   // Track if we should show onboarding (new user + tour not disabled)
   const shouldShowOnboarding = !disableTour && !hasSeenOnboarding;
+
+  // onboardingComplete tracks whether to allow map animation
+  // ALWAYS animate the map immediately to center on user - don't wait for onboarding
+  // The onboarding can run in parallel with the map animation
+  const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   // Custom hooks for state management
   const {

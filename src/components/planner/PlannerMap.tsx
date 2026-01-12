@@ -781,43 +781,41 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Animate to user location on initial load - single smooth animation
   // Offset is applied so that the center is visually to the right (compensating for chat panel on left)
   useEffect(() => {
-    if (!map.current || !mapLoaded || hasAnimatedRef.current || !animateToUserLocation) return;
+    if (!map.current || !mapLoaded || hasAnimatedRef.current) return;
+    // Skip animation if disabled
+    if (!animateToUserLocation) return;
 
     hasAnimatedRef.current = true;
 
     // Set padding once at start (left padding for chat panel)
     map.current.setPadding({ left: 350, top: 0, right: 0, bottom: 0 });
 
-    // Small delay to let the map settle, then do ONE smooth animation
-    const animateTimeout = setTimeout(() => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            // Offset the center slightly to the west so the user's position appears to the right of center
-            // This creates better UX with the chat panel on the left
-            const offsetLng = position.coords.longitude - 2.5; // Shift ~2.5° west
-            map.current?.flyTo({
-              center: [offsetLng, position.coords.latitude],
-              zoom: 5.5,
-              duration: 1500, // Smooth single animation
-              essential: true,
-              curve: 1.2, // Gentle curve
-            });
-            setTimeout(() => onAnimationComplete?.(), 1500);
-          },
-          () => {
-            // Geolocation failed - stay at Europe, just complete
-            onAnimationComplete?.();
-          },
-          { timeout: 3000, enableHighAccuracy: false }
-        );
-      } else {
-        // Already at Europe, just complete
-        onAnimationComplete?.();
-      }
-    }, 300); // Brief settle time
-
-    return () => clearTimeout(animateTimeout);
+    // Request geolocation immediately (no delay needed)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Offset the center slightly to the west so the user's position appears to the right of center
+          // This creates better UX with the chat panel on the left
+          const offsetLng = position.coords.longitude - 2.5; // Shift ~2.5° west
+          map.current?.flyTo({
+            center: [offsetLng, position.coords.latitude],
+            zoom: 5.5,
+            duration: 1800, // Smooth animation
+            essential: true,
+            curve: 1.2, // Gentle curve
+          });
+          setTimeout(() => onAnimationComplete?.(), 1800);
+        },
+        () => {
+          // Geolocation failed - stay at current view, just complete
+          onAnimationComplete?.();
+        },
+        { timeout: 5000, enableHighAccuracy: false }
+      );
+    } else {
+      // No geolocation API - just complete
+      onAnimationComplete?.();
+    }
   }, [mapLoaded, animateToUserLocation, onAnimationComplete]);
 
   // Adjust map padding based on panel visibility
