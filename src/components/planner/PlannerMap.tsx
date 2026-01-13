@@ -797,6 +797,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     // Animate to user location
     const focus = (lng: number, lat: number) => {
+      // Keep React-controlled state in sync with internal map animations.
+      // Otherwise, the "center/zoom sync" effect will pull the camera back to the previous props (world view).
+      eventBus.emit("map:zoom", { center: [lng, lat], zoom: 5 });
+
       map.current?.flyTo({
         center: [lng, lat],
         zoom: 5, // Good zoom level to see region
@@ -877,6 +881,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     const leftPadding = isPanelOpen ? 450 : 350;
     map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
+
+    // Sync external state so we don't "snap back" to the previous controlled camera
+    eventBus.emit("map:zoom", { center: [userLocation.lng, userLocation.lat], zoom: 6.5 });
 
     map.current.easeTo({
       center: [userLocation.lng, userLocation.lat],
