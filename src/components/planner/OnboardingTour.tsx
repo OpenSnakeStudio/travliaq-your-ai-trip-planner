@@ -1097,11 +1097,15 @@ export default function OnboardingTour({
               // eslint-disable-next-line no-console
               console.log("[OnboardingTour] Manually positioning modal for step", idx);
 
-              // CRITICAL: The popover is not connected to the DOM! Force append it to body
-              if (!popover.wrapper.isConnected) {
+              // CRITICAL: The popover is not in the visible DOM tree! Force append it to body
+              // Check if it's actually visible in the document
+              if (!document.body.contains(popover.wrapper)) {
                 // eslint-disable-next-line no-console
-                console.log("[OnboardingTour] POPOVER NOT CONNECTED! Appending to body...");
+                console.log("[OnboardingTour] POPOVER NOT IN BODY! Appending...");
                 document.body.appendChild(popover.wrapper);
+              } else {
+                // eslint-disable-next-line no-console
+                console.log("[OnboardingTour] Popover already in body, but may need repositioning");
               }
 
               // Force immediate visibility and positioning with !important via cssText
