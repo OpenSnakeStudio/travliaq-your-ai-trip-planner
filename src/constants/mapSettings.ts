@@ -3,11 +3,17 @@
 // Zoom level used for flights tab - more zoomed out to show routes
 export const FLIGHTS_ZOOM = 5;
 
-// Zoom level used for accommodation/stays tab focus
-export const STAYS_ZOOM = 10;
+// Zoom level used for accommodation/stays tab focus (city level)
+export const STAYS_ZOOM = 12;
 
-// Zoom level used for activities tab focus
-export const ACTIVITIES_ZOOM = 10;
+// Zoom level used for activities tab focus (city level)
+export const ACTIVITIES_ZOOM = 12;
+
+// Zoom level for activity detail (when clicking on specific activity)
+export const ACTIVITY_DETAIL_ZOOM = 15;
+
+// Zoom level for user location focus
+export const USER_LOCATION_ZOOM = 6.5;
 
 // Calculate horizontal offset for stays tab when panel is open
 // Returns a negative value to shift camera left → city appears more to the right

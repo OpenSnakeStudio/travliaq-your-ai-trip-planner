@@ -11,7 +11,7 @@ import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBo
 import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
 import eventBus from "@/lib/eventBus";
-import { STAYS_ZOOM, ACTIVITIES_ZOOM, getStaysPanelOffset } from "@/constants/mapSettings";
+import { STAYS_ZOOM, ACTIVITIES_ZOOM, FLIGHTS_ZOOM, USER_LOCATION_ZOOM, getStaysPanelOffset } from "@/constants/mapSettings";
 import FlightPriceMarkers from "./FlightPriceMarkers";
 
 
@@ -823,11 +823,11 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const focus = (lng: number, lat: number) => {
       // Keep React-controlled state in sync with internal map animations.
       // Otherwise, the "center/zoom sync" effect will pull the camera back to the previous props (world view).
-      eventBus.emit("map:zoom", { center: [lng, lat], zoom: 5 });
+      eventBus.emit("map:zoom", { center: [lng, lat], zoom: FLIGHTS_ZOOM });
 
       map.current?.flyTo({
         center: [lng, lat],
-        zoom: 5, // Good zoom level to see region
+        zoom: FLIGHTS_ZOOM, // Good zoom level to see region
         duration: 1500, // Slightly longer for smoother feel from world view
         essential: true,
         curve: 1.4,
@@ -907,11 +907,11 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
 
     // Sync external state so we don't "snap back" to the previous controlled camera
-    eventBus.emit("map:zoom", { center: [userLocation.lng, userLocation.lat], zoom: 6.5 });
+    eventBus.emit("map:zoom", { center: [userLocation.lng, userLocation.lat], zoom: USER_LOCATION_ZOOM });
 
     map.current.easeTo({
       center: [userLocation.lng, userLocation.lat],
-      zoom: 6.5, // Wider zoom for better context
+      zoom: USER_LOCATION_ZOOM, // Wider zoom for better context
       duration: 700,
       essential: true,
     });
