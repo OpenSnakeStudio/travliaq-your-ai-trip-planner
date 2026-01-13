@@ -333,6 +333,8 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                 currentPhase: memoryContext.currentPhase || "research",
                 negativePreferences: negativeContext,
                 widgetHistory: memoryContext.widgetHistory || "",
+                // CRITICAL: Send active widgets context for "choose for me" functionality
+                activeWidgetsContext: memoryContext.activeWidgetsContext || "",
               }),
               signal: abortController.signal,
             }
