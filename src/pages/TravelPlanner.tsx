@@ -20,6 +20,7 @@ import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryConte
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
 import { WidgetHistoryProvider } from "@/contexts/WidgetHistoryContext";
+import { NegativePreferencesProvider } from "@/contexts/NegativePreferencesContext";
 import { usePlannerState } from "@/hooks/usePlannerState";
 import { useMapState } from "@/hooks/useMapState";
 import { useFlightState } from "@/hooks/useFlightState";
@@ -210,6 +211,7 @@ const TravelPlanner = () => {
           <AccommodationMemoryProvider>
             <ActivityMemoryProvider>
               <WidgetHistoryProvider>
+                <NegativePreferencesProvider>
               <Helmet>
                 <title>Planificateur | Travliaq</title>
                 <meta
@@ -389,6 +391,7 @@ const TravelPlanner = () => {
                   </>
                 )}
               </div>
+              </NegativePreferencesProvider>
               </WidgetHistoryProvider>
             </ActivityMemoryProvider>
           </AccommodationMemoryProvider>

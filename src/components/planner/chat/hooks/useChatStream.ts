@@ -45,6 +45,20 @@ export interface QuickReplyData {
 }
 
 /**
+ * Travel phase for adaptive chat behavior
+ */
+export type TravelPhase = "inspiration" | "research" | "comparison" | "planning" | "booking";
+
+/**
+ * Negative preference from user
+ */
+export interface NegativePreference {
+  category: string;
+  value: string;
+  reason?: string;
+}
+
+/**
  * Memory context for building API requests
  */
 export interface MemoryContext {
@@ -54,6 +68,10 @@ export interface MemoryContext {
   missingFields: MissingField[];
   // NEW: Widget interaction history for better LLM context
   widgetHistory?: string;
+  // NEW: Current travel phase for adaptive behavior
+  currentPhase?: TravelPhase;
+  // NEW: Negative preferences to avoid
+  negativePreferences?: NegativePreference[];
 }
 
 /**
@@ -187,6 +205,19 @@ function buildContextMessage(memoryContext: MemoryContext): string {
 }
 
 /**
+ * Build negative preferences context for LLM
+ */
+function buildNegativePreferencesContext(prefs: NegativePreference[]): string {
+  if (!prefs || prefs.length === 0) return "";
+  
+  const lines = prefs.map(p => {
+    return p.reason ? `- ${p.value} (${p.reason})` : `- ${p.value}`;
+  });
+  
+  return `[PRÉFÉRENCES NÉGATIVES - NE PAS PROPOSER]\n${lines.join("\n")}`;
+}
+
+/**
  * Hook options
  */
 export interface UseChatStreamOptions {
@@ -269,6 +300,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
           }
 
           const contextMessage = buildContextMessage(memoryContext);
+          const negativeContext = buildNegativePreferencesContext(memoryContext.negativePreferences || []);
 
           // Get session
           const session = (await supabase.auth.getSession()).data.session;
@@ -289,6 +321,9 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                 stream: true,
                 memoryContext: contextMessage,
                 missingFields: memoryContext.missingFields,
+                currentPhase: memoryContext.currentPhase || "research",
+                negativePreferences: negativeContext,
+                widgetHistory: memoryContext.widgetHistory || "",
               }),
               signal: abortController.signal,
             }

@@ -1,6 +1,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildPhaseSystemPrompt, type TravelPhase } from "./prompts/phasePrompts.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -319,8 +320,8 @@ serve(async (req) => {
       console.log("Anonymous user request");
     }
 
-    const { messages, stream = false, currentStep } = await req.json();
-    console.log("User:", userId, "Messages:", messages.length, "Stream:", stream);
+    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory } = await req.json();
+    console.log("User:", userId, "Messages:", messages.length, "Stream:", stream, "Phase:", currentPhase);
 
     const AZURE_OPENAI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY");
     const AZURE_OPENAI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");
@@ -338,7 +339,17 @@ serve(async (req) => {
     console.log("Calling Azure OpenAI:", url);
 
     const currentDate = new Date().toISOString().split('T')[0];
-    const systemPrompt = `Tu es un assistant de voyage bienveillant pour Travliaq. Tu guides l'utilisateur pas à pas, UNE QUESTION À LA FOIS, pour l'aider à trouver son vol idéal.
+    
+    // Build dynamic system prompt based on current phase
+    const phase: TravelPhase = currentPhase || "research";
+    const negativeContext = negativePreferences || "";
+    const widgetContext = widgetHistory || "";
+    
+    // Phase-specific persona prompt
+    const phasePrompt = buildPhaseSystemPrompt(phase, negativeContext, widgetContext, currentDate);
+    
+    // Base operational rules (always applied)
+    const baseSystemPrompt = `Tu es un assistant de voyage bienveillant pour Travliaq. Tu guides l'utilisateur pas à pas, UNE QUESTION À LA FOIS, pour l'aider à trouver son vol idéal.
 
 ## RÈGLE D'OR : CONTEXTE ET MÉMOIRE
 Tu disposes du contexte complet de la conversation incluant :
@@ -464,7 +475,12 @@ Si [INTERACTIONS UTILISATEUR] contient "Destination choisie : Tokyo, Japon" et "
 ## INFOS TECHNIQUES
 - Date actuelle : ${currentDate}
 - Année par défaut : 2025
-- Réponds en français`;
+- Réponds en français
+
+${phasePrompt}`;
+
+    // Combine base prompt with phase-specific prompt
+    const systemPrompt = baseSystemPrompt;
 
     // Non-streaming request (for tool calls)
     const response = await fetch(url, {
