@@ -1075,40 +1075,19 @@ export default function OnboardingTour({
           prevBtnText: "← Précédent",
           doneBtnText: "C'est parti ! ✨",
           onPopoverRender: (popover, opts) => {
-            // Debug: helps diagnose "overlay but no popover"
             const idx = opts.state.activeIndex ?? 0;
-            // eslint-disable-next-line no-console
-            console.log("[OnboardingTour] popover render", {
-              activeIndex: idx,
-              step: opts.config.steps?.[idx],
-              popoverElement: popover.wrapper,
-              popoverVisible: popover.wrapper.offsetParent !== null,
-              popoverPosition: popover.wrapper.style.position,
-              popoverTop: popover.wrapper.style.top,
-              popoverLeft: popover.wrapper.style.left,
-              popoverZIndex: popover.wrapper.style.zIndex,
-            });
-
             const total = opts.config.steps?.length ?? steps.length;
             renderProgressHeader(popover.wrapper, idx, total, opts.driver);
 
             // CRITICAL FIX: For steps 0 and 8 (intro/outro), manually position the popover
+            // Driver.js has a bug where it removes the popover from the DOM when using #onboarding-anchor
             if (idx === 0 || idx === 8) {
-              // eslint-disable-next-line no-console
-              console.log("[OnboardingTour] Manually positioning modal for step", idx);
-
-              // CRITICAL: The popover is not in the visible DOM tree! Force append it to body
-              // Check if it's actually visible in the document
+              // Ensure popover is in the body
               if (!document.body.contains(popover.wrapper)) {
-                // eslint-disable-next-line no-console
-                console.log("[OnboardingTour] POPOVER NOT IN BODY! Appending...");
                 document.body.appendChild(popover.wrapper);
-              } else {
-                // eslint-disable-next-line no-console
-                console.log("[OnboardingTour] Popover already in body, but may need repositioning");
               }
 
-              // Force immediate visibility and positioning with !important via cssText
+              // Force immediate visibility and positioning with !important
               popover.wrapper.style.cssText += `
                 position: fixed !important;
                 top: 50% !important;
@@ -1119,18 +1098,16 @@ export default function OnboardingTour({
                 visibility: visible !important;
                 opacity: 1 !important;
                 pointer-events: auto !important;
+                flex-direction: column !important;
               `;
 
-              // Force after a micro-delay to ensure driver.js doesn't override
+              // Driver.js removes the popover after initial render, so we re-append it
               setTimeout(() => {
-                // Check if still in DOM
                 if (!document.body.contains(popover.wrapper)) {
-                  // eslint-disable-next-line no-console
-                  console.error("[OnboardingTour] POPOVER WAS REMOVED FROM DOM! Re-appending...");
                   document.body.appendChild(popover.wrapper);
                 }
 
-                // Re-apply with !important
+                // Re-apply positioning to ensure it sticks
                 popover.wrapper.style.cssText += `
                   position: fixed !important;
                   top: 50% !important;
@@ -1143,40 +1120,6 @@ export default function OnboardingTour({
                   pointer-events: auto !important;
                   flex-direction: column !important;
                 `;
-
-                // Log computed styles to debug
-                const computed = window.getComputedStyle(popover.wrapper);
-                const rect = popover.wrapper.getBoundingClientRect();
-                const stillInBody = document.body.contains(popover.wrapper);
-
-                // eslint-disable-next-line no-console
-                console.log("[OnboardingTour] COMPUTED STYLES:");
-                // eslint-disable-next-line no-console
-                console.log("  stillInBody:", stillInBody);
-                // eslint-disable-next-line no-console
-                console.log("  display:", computed.display);
-                // eslint-disable-next-line no-console
-                console.log("  visibility:", computed.visibility);
-                // eslint-disable-next-line no-console
-                console.log("  opacity:", computed.opacity);
-                // eslint-disable-next-line no-console
-                console.log("  position:", computed.position);
-                // eslint-disable-next-line no-console
-                console.log("  top:", computed.top);
-                // eslint-disable-next-line no-console
-                console.log("  left:", computed.left);
-                // eslint-disable-next-line no-console
-                console.log("  transform:", computed.transform);
-                // eslint-disable-next-line no-console
-                console.log("  zIndex:", computed.zIndex);
-                // eslint-disable-next-line no-console
-                console.log("  width:", computed.width, "height:", computed.height);
-                // eslint-disable-next-line no-console
-                console.log("  clientRect:", rect.top, rect.left, rect.width, rect.height);
-                // eslint-disable-next-line no-console
-                console.log("  offsetParent:", popover.wrapper.offsetParent);
-                // eslint-disable-next-line no-console
-                console.log("  parentElement:", popover.wrapper.parentElement);
               }, 50);
             }
 
