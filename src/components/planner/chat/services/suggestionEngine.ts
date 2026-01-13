@@ -31,6 +31,13 @@ export interface SuggestionContext {
   // Temporal context
   isWeekend?: boolean;
   nextMonth?: string;
+  
+  // Inspire flow state
+  inspireFlowStep?: 'idle' | 'style' | 'interests' | 'extra' | 'must_haves' | 'dietary' | 'loading' | 'results';
+  
+  // Destinations proposed (not yet selected)
+  hasProposedDestinations?: boolean;
+  proposedDestinationNames?: string[];
 }
 
 export interface Suggestion {
@@ -293,32 +300,73 @@ function getSearchReadySuggestions(context: SuggestionContext): Suggestion[] {
   ];
 }
 
+// DESTINATION CHOICE suggestions (after inspire flow, destinations proposed)
+function getDestinationChoiceSuggestions(context: SuggestionContext): Suggestion[] {
+  const destinations = context.proposedDestinationNames || [];
+  const suggestions: Suggestion[] = [
+    {
+      id: 'choose-for-me',
+      label: 'Choisis pour moi',
+      message: 'Choisis la meilleure destination pour moi',
+      iconName: 'sparkles',
+    },
+  ];
+  
+  if (destinations.length > 0) {
+    suggestions.push({
+      id: 'more-about-first',
+      label: `Plus sur ${destinations[0]}`,
+      message: `Dis-moi en plus sur ${destinations[0]}`,
+      iconName: 'compass',
+    });
+  }
+  
+  suggestions.push({
+    id: 'other-destinations',
+    label: 'Autres destinations',
+    message: 'Propose-moi d\'autres destinations',
+    iconName: 'search',
+  });
+  
+  return suggestions;
+}
+
 /**
  * Main function to get contextual suggestions
  * Always returns relevant suggestions based on current state
  */
 export function getSuggestions(context: SuggestionContext): Suggestion[] {
-  // 1. INSPIRATION - no destination yet, show inspiring suggestions
+  // 1. DESTINATIONS PROPOSED - after inspire flow with results
+  if (context.inspireFlowStep === 'results' || context.hasProposedDestinations) {
+    return getDestinationChoiceSuggestions(context).slice(0, 3);
+  }
+  
+  // 2. During inspire flow (widgets active) - no static suggestions
+  if (context.inspireFlowStep && context.inspireFlowStep !== 'idle') {
+    return []; // Let widgets take precedence
+  }
+  
+  // 3. INSPIRATION - no destination yet, show inspiring suggestions
   if (!context.hasDestination) {
     return getInspirationSuggestions().slice(0, 3);
   }
   
-  // 2. Has destination but no dates - help them pick dates
+  // 4. Has destination but no dates - help them pick dates
   if (!context.hasDates) {
     return getDatesSuggestions(context).slice(0, 3);
   }
   
-  // 3. Has destination & dates but no travelers
+  // 5. Has destination & dates but no travelers
   if (!context.hasTravelers) {
     return getTravelersSuggestions().slice(0, 3);
   }
   
-  // 4. SEARCH READY (all info but on flights tab with no visible flights)
+  // 6. SEARCH READY (all info but on flights tab with no visible flights)
   if (context.currentTab === 'flights' && context.visibleFlightsCount === 0) {
     return getSearchReadySuggestions(context).slice(0, 3);
   }
   
-  // 5. TAB-BASED suggestions
+  // 7. TAB-BASED suggestions
   switch (context.currentTab) {
     case 'flights':
       return getFlightSuggestions(context).slice(0, 3);
