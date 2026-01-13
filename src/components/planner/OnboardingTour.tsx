@@ -1096,11 +1096,30 @@ export default function OnboardingTour({
             if (idx === 0 || idx === 8) {
               // eslint-disable-next-line no-console
               console.log("[OnboardingTour] Manually positioning modal for step", idx);
+
+              // Force immediate visibility and positioning
               popover.wrapper.style.position = 'fixed';
               popover.wrapper.style.top = '50%';
               popover.wrapper.style.left = '50%';
               popover.wrapper.style.transform = 'translate(-50%, -50%)';
               popover.wrapper.style.zIndex = '10005';
+              popover.wrapper.style.display = 'flex';
+              popover.wrapper.style.visibility = 'visible';
+              popover.wrapper.style.opacity = '1';
+
+              // Force after a micro-delay to ensure driver.js doesn't override
+              setTimeout(() => {
+                popover.wrapper.style.position = 'fixed';
+                popover.wrapper.style.top = '50%';
+                popover.wrapper.style.left = '50%';
+                popover.wrapper.style.transform = 'translate(-50%, -50%)';
+                popover.wrapper.style.zIndex = '10005';
+                popover.wrapper.style.display = 'flex';
+                popover.wrapper.style.visibility = 'visible';
+                popover.wrapper.style.opacity = '1';
+                // eslint-disable-next-line no-console
+                console.log("[OnboardingTour] Re-applied positioning after delay");
+              }, 50);
             }
 
             // Add an explicit "Arrêter" button inside the tooltip (in the footer)
