@@ -28,6 +28,7 @@ import { ActivityFilters } from "./ActivityFilters";
 import { ActivityDetailModal } from "./ActivityDetailModal";
 import { toast } from "sonner";
 import { eventBus } from "@/lib/eventBus";
+import { ACTIVITIES_ZOOM, ACTIVITY_DETAIL_ZOOM } from "@/constants/mapSettings";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import type { ViatorActivity } from "@/types/activity";
@@ -476,7 +477,7 @@ const ActivitiesPanel = () => {
       if (activity.coordinates) {
         eventBus.emit("map:zoom", {
           center: [activity.coordinates.lng, activity.coordinates.lat] as [number, number],
-          zoom: 15,
+          zoom: ACTIVITY_DETAIL_ZOOM,
         });
       }
     },
@@ -531,7 +532,7 @@ const ActivitiesPanel = () => {
     if (newCityData.lat && newCityData.lng) {
       eventBus.emit("map:zoom", {
         center: [newCityData.lng, newCityData.lat] as [number, number],
-        zoom: 10,
+        zoom: ACTIVITIES_ZOOM,
       });
     }
   }, [newCityData, newCityCheckIn, newCityCheckOut, addLocalDestination]);
@@ -592,7 +593,7 @@ const ActivitiesPanel = () => {
     if (city?.lat && city?.lng) {
       eventBus.emit("map:zoom", {
         center: [city.lng, city.lat] as [number, number],
-        zoom: 10,
+        zoom: ACTIVITIES_ZOOM,
       });
     }
   }, [cities]);
