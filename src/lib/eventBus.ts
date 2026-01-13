@@ -35,6 +35,7 @@ export type PlannerEvents = {
   
   // Map interactions
   "map:zoom": { center: [number, number]; zoom: number };
+  "map:zoomOnly": { zoom: number }; // Change zoom without moving center
   "map:moveToLocation": { lat: number; lng: number; zoom?: number };
   "map:getBounds": void;
   "map:bounds": {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { usePlannerEvent } from "@/lib/eventBus";
+import { usePlannerEvent, eventBus } from "@/lib/eventBus";
+import { FLIGHTS_ZOOM, STAYS_ZOOM, ACTIVITIES_ZOOM } from "@/constants/mapSettings";
 import type { TabType, MapPin } from "@/pages/TravelPlanner";
 
 const ACTIVE_TAB_KEY = "travliaq_planner_active_tab";
@@ -22,6 +23,20 @@ export function usePlannerState() {
   const [isPanelVisible, setIsPanelVisible] = useState(false);
   const [selectedPin, setSelectedPin] = useState<MapPin | null>(null);
 
+  // Get zoom level for a tab
+  const getZoomForTab = useCallback((tab: TabType): number => {
+    switch (tab) {
+      case "flights":
+        return FLIGHTS_ZOOM;
+      case "stays":
+        return STAYS_ZOOM;
+      case "activities":
+        return ACTIVITIES_ZOOM;
+      default:
+        return FLIGHTS_ZOOM;
+    }
+  }, []);
+
   // Event listener: tab change from event bus
   usePlannerEvent("tab:change", useCallback((data) => {
     setActiveTab(data.tab);
@@ -40,7 +55,7 @@ export function usePlannerState() {
     localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
   }, [activeTab]);
 
-  // Handler for tab change via UI
+  // Handler for tab change via UI - with automatic zoom adjustment
   const handleTabChange = useCallback((tab: TabType) => {
     // Toggle: if clicking on the same tab and panel is visible, close it
     if (tab === activeTab && isPanelVisible) {
@@ -49,8 +64,15 @@ export function usePlannerState() {
       setActiveTab(tab);
       setSelectedPin(null);
       setIsPanelVisible(true);
+      
+      // Emit zoom change for the new tab (without changing center)
+      // The map will adjust zoom level to match the tab's default
+      if (tab !== "preferences") {
+        const newZoom = getZoomForTab(tab);
+        eventBus.emit("map:zoomOnly", { zoom: newZoom });
+      }
     }
-  }, [activeTab, isPanelVisible]);
+  }, [activeTab, isPanelVisible, getZoomForTab]);
 
   const handlePinClick = useCallback((pin: MapPin) => {
     setSelectedPin(pin);

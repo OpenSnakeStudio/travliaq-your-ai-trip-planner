@@ -4,10 +4,10 @@
 export const FLIGHTS_ZOOM = 5;
 
 // Zoom level used for accommodation/stays tab focus (city level)
-export const STAYS_ZOOM = 12;
+export const STAYS_ZOOM = 13;
 
 // Zoom level used for activities tab focus (city level)
-export const ACTIVITIES_ZOOM = 12;
+export const ACTIVITIES_ZOOM = 13;
 
 // Zoom level for activity detail (when clicking on specific activity)
 export const ACTIVITY_DETAIL_ZOOM = 15;
