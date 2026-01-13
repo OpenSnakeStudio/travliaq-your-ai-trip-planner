@@ -52,6 +52,8 @@ export interface MemoryContext {
   activityContext: string;
   preferenceContext: string;
   missingFields: MissingField[];
+  // NEW: Widget interaction history for better LLM context
+  widgetHistory?: string;
 }
 
 /**
@@ -165,16 +167,23 @@ function sleep(ms: number): Promise<void> {
  * Build the context message for the API
  */
 function buildContextMessage(memoryContext: MemoryContext): string {
-  const { flightSummary, activityContext, preferenceContext, missingFields } = memoryContext;
+  const { flightSummary, activityContext, preferenceContext, missingFields, widgetHistory } = memoryContext;
 
-  if (!flightSummary) return "";
+  if (!flightSummary) return widgetHistory || "";
 
   const missingFieldsStr =
     missingFields.length > 0
       ? missingFields.map(getMissingFieldLabel).join(", ")
       : "Aucun - prêt à chercher";
 
-  return `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`;
+  let context = `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`;
+  
+  // Add widget history if available
+  if (widgetHistory) {
+    context += `\n${widgetHistory}`;
+  }
+  
+  return context;
 }
 
 /**

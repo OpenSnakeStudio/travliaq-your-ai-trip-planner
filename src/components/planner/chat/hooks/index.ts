@@ -29,6 +29,9 @@ export {
   type UseChatWorkflowReturn,
 } from "./useChatWorkflow";
 
+// Widget tracking for LLM context
+export { useWidgetTracking } from "./useWidgetTracking";
+
 // Performance optimization hooks
 export {
   useDebounce,

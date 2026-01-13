@@ -40,7 +40,7 @@ import {
   DestinationSuggestionsGrid,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking } from "./chat/hooks";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
@@ -243,6 +243,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // Custom hooks
   const { streamResponse, isStreaming } = useChatStream();
   const mapContext = useChatMapContext();
+  
+  // Widget tracking for LLM context
+  const widgetTracking = useWidgetTracking();
   
   // Intelligent scroll management
   const {
@@ -755,6 +758,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           activityContext: activityContext + (visualContext ? `\n${visualContext}` : ""),
           preferenceContext,
           missingFields,
+          widgetHistory: widgetTracking.getContextForLLM(),
         },
         (id, text, isComplete) => {
           // CRITICAL: Prevent late updates from resetting isStreaming after message is complete

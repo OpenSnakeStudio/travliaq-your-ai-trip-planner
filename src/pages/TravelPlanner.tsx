@@ -19,6 +19,7 @@ import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
 import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
+import { WidgetHistoryProvider } from "@/contexts/WidgetHistoryContext";
 import { usePlannerState } from "@/hooks/usePlannerState";
 import { useMapState } from "@/hooks/useMapState";
 import { useFlightState } from "@/hooks/useFlightState";
@@ -208,6 +209,7 @@ const TravelPlanner = () => {
           <AutoDetectDeparture />
           <AccommodationMemoryProvider>
             <ActivityMemoryProvider>
+              <WidgetHistoryProvider>
               <Helmet>
                 <title>Planificateur | Travliaq</title>
                 <meta
@@ -387,6 +389,7 @@ const TravelPlanner = () => {
                   </>
                 )}
               </div>
+              </WidgetHistoryProvider>
             </ActivityMemoryProvider>
           </AccommodationMemoryProvider>
         </FlightMemoryProvider>
