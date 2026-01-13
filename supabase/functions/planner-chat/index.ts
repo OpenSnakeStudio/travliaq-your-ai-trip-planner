@@ -146,12 +146,40 @@ const accommodationExtractionTool = {
   }
 };
 
-// Tool definition for generating quick replies based on response
+// Tool definition for generating intelligent contextual quick replies
 const quickRepliesExtractionTool = {
   type: "function",
   function: {
     name: "generate_quick_replies",
-    description: "Generate 2-4 quick reply buttons based on the options you just presented to the user. Call this AFTER every response where you present choices (destinations, dates, travelers, confirmation). Each button should represent a logical next action the user might take.",
+    description: `Generate 2-4 HIGHLY CONTEXTUAL quick reply buttons. Analyze the ENTIRE conversation to anticipate what the user most likely wants to say next.
+
+## WHEN TO GENERATE REPLIES
+ALWAYS generate quick_replies after your response. Think: "What are the 2-4 most likely things the user will say next?"
+
+## CONTEXT AWARENESS RULES
+1. **After proposing destinations**: Buttons = destination names the user can click to choose
+2. **After asking about dates**: Buttons = common date options ("Ce weekend", "Semaine prochaine", "Flexible")
+3. **After asking travelers count**: Buttons = common compositions ("Seul", "En couple", "En famille", "Entre amis")
+4. **After showing flights**: Buttons = decision options ("Le moins cher", "Le plus rapide", "Vol direct", "Compare-les")
+5. **After showing hotels**: Buttons = preference options ("Mieux noté", "Le plus central", "Avec piscine", "Le moins cher")
+6. **After confirmation request**: Buttons = ("Oui, parfait", "Non, modifie", "Plus d'options")
+7. **After general info/tip**: Buttons = logical next actions based on missing info
+
+## INTELLIGENCE GUIDELINES
+- If user just chose destination: suggest date-related buttons
+- If user confirmed dates: suggest traveler-related buttons
+- If trip is nearly complete: suggest "Lancer la recherche" or "Modifier quelque chose"
+- Always include 1 "alternative" button like "Autres options" or "Plus de choix"
+- Use the conversation history to avoid suggesting already-answered questions
+
+## EMOJI SELECTION
+- Destinations: Use country flag (🇪🇸🇵🇹🇮🇹🇬🇷🇫🇷🇯🇵🇹🇭🇲🇦🇭🇷🇺🇸🇬🇧🇩🇪🇳🇱🇨🇭🇦🇹🇧🇪🇮🇪🇸🇪🇳🇴🇩🇰🇫🇮🇵🇱🇨🇿🇭🇺🇷🇴🇧🇬🇷🇸🇭🇷🇸🇮🇲🇪🇦🇱🇲🇰🇧🇦🇽🇰🇲🇩🇺🇦🇧🇾🇱🇹🇱🇻🇪🇪🇮🇸🇬🇱🇫🇴🇲🇹🇨🇾🇹🇷🇮🇱🇯🇴🇱🇧🇸🇾🇮🇶🇮🇷🇸🇦🇦🇪🇶🇦🇰🇼🇧🇭🇴🇲🇾🇪🇪🇬🇱🇾🇹🇳🇩🇿🇲🇦🇲🇷🇸🇳🇬🇲🇲🇱🇳🇪🇧🇫🇨🇮🇬🇭🇹🇬🇧🇯🇳🇬🇨🇲🇨🇫🇹🇩🇸🇩🇪🇹🇰🇪🇺🇬🇷🇼🇧🇮🇹🇿🇲🇼🇲🇿🇿🇲🇿🇼🇧🇼🇳🇦🇿🇦🇱🇸🇸🇿🇲🇬🇲🇺🇰🇲🇸🇨🇷🇪🇹🇷🇮🇳🇵🇰🇧🇩🇱🇰🇲🇻🇳🇵🇧🇹🇲🇲🇹🇭🇱🇦🇰🇭🇻🇳🇲🇾🇸🇬🇮🇩🇵🇭🇧🇳🇹🇱🇨🇳🇭🇰🇲🇴🇹🇼🇯🇵🇰🇷🇰🇵🇲🇳🇷🇺🇰🇿🇺🇿🇹🇲🇹🇯🇰🇬🇦🇫🇵🇰🇮🇷🇮🇶🇸🇦🇾🇪🇴🇲🇦🇪🇶🇦🇧🇭🇰🇼🇦🇺🇳🇿🇫🇯🇵🇬🇳🇨🇻🇺🇸🇧🇼🇸🇹🇴🇨🇦🇺🇸🇲🇽🇬🇹🇧🇿🇸🇻🇭🇳🇳🇮🇨🇷🇵🇦🇨🇺🇯🇲🇭🇹🇩🇴🇵🇷🇧🇸🇧🇧🇹🇹🇬🇾🇸🇷🇨🇴🇻🇪🇪🇨🇵🇪🇧🇴🇨🇱🇦🇷🇺🇾🇵🇾🇧🇷)
+- Dates: 📅 📆 🗓️
+- Travelers: 👤 (solo) 💑 (couple) 👥 (group) 👨‍👩‍👧 (family)
+- Flights: ✈️ 💰 ⚡ ↔️
+- Hotels: 🏨 ⭐ 📍 🏊
+- Actions: ✅ ❌ 🔄 🔍 ➡️
+- Info: ℹ️ 💡 ❓`,
     parameters: {
       type: "object",
       properties: {
@@ -162,20 +190,24 @@ const quickRepliesExtractionTool = {
             properties: {
               label: { 
                 type: "string", 
-                description: "Short label for the button (max 20 chars): city name, action, etc. For destinations, just use the city/country name."
+                description: "Short button label (max 20 chars). Be concise and clear."
               },
               emoji: { 
                 type: "string", 
-                description: "Emoji for the button. For countries/cities, use the flag emoji (🇪🇸 for Spain, 🇵🇹 for Portugal, 🇮🇹 for Italy, 🇬🇷 for Greece, 🇫🇷 for France, 🇯🇵 for Japan, etc.). For actions: ✅ for confirm, 🔄 for alternatives, 📅 for dates, 👥 for travelers, ✈️ for flights."
+                description: "Single emoji that best represents the action or destination."
               },
               message: { 
                 type: "string", 
-                description: "Full message to send when the button is clicked. For destination choices, use 'Je choisis [destination]'. For confirmations, use 'Oui, ça me convient' or similar."
+                description: "Complete message sent when clicked. For destinations: 'Je choisis [name]'. For actions: full sentence describing the action."
               }
             },
             required: ["label", "emoji", "message"]
           },
-          description: "2-4 quick reply options based on what you just proposed"
+          description: "2-4 contextual quick replies anticipating user's next action"
+        },
+        reasoning: {
+          type: "string",
+          description: "Brief explanation of why these replies are relevant (for debugging)"
         }
       },
       required: ["replies"]
@@ -416,26 +448,26 @@ Réponse: "Tokyo en solo, super aventure ! 🗼 Quand veux-tu partir ?"
 - Phrases courtes (1-2 max)
 - Toujours encourageant
 
-## BOUTONS DE SUGGESTION DYNAMIQUES (TRÈS IMPORTANT)
-Après CHAQUE réponse où tu proposes des choix à l'utilisateur, tu DOIS utiliser l'outil generate_quick_replies pour créer 2-4 boutons cliquables.
+## BOUTONS DE SUGGESTION INTELLIGENTS (OBLIGATOIRE À CHAQUE RÉPONSE)
 
-Exemples de quand utiliser generate_quick_replies:
-- Tu proposes des destinations : [{emoji: "🇪🇸", label: "Barcelone", message: "Je choisis Barcelone"}, {emoji: "🇵🇹", label: "Lisbonne", message: "Je choisis Lisbonne"}]
-- Tu proposes des dates : [{emoji: "📅", label: "Ce weekend", message: "Je préfère ce weekend"}, {emoji: "📅", label: "Semaine prochaine", message: "Je pars la semaine prochaine"}]
-- Tu demandes une confirmation : [{emoji: "✅", label: "Oui, parfait", message: "Oui, ça me convient"}, {emoji: "🔄", label: "Autres options", message: "Propose-moi d'autres options"}]
-- Tu demandes le nombre de voyageurs : [{emoji: "👤", label: "Solo", message: "Je voyage seul"}, {emoji: "👥", label: "En couple", message: "Nous sommes 2 adultes"}, {emoji: "👨‍👩‍👧", label: "En famille", message: "Nous voyageons en famille"}]
+Tu DOIS TOUJOURS utiliser l'outil generate_quick_replies après CHAQUE réponse.
+Analyse toute la conversation pour anticiper les prochaines actions les plus probables de l'utilisateur.
 
-Drapeaux à utiliser pour les destinations:
-- Espagne/Barcelone/Madrid: 🇪🇸
-- Portugal/Lisbonne/Porto: 🇵🇹
-- Italie/Rome/Milan/Venise: 🇮🇹
-- Grèce/Athènes/Santorin: 🇬🇷
-- France/Paris/Nice: 🇫🇷
-- Japon/Tokyo/Kyoto: 🇯🇵
-- Thaïlande/Bangkok/Phuket: 🇹🇭
-- Croatie/Dubrovnik: 🇭🇷
-- Maroc/Marrakech: 🇲🇦
-- USA/New York/Miami: 🇺🇸
+### LOGIQUE CONTEXTUELLE
+1. **Tu viens de proposer des destinations** → Boutons = noms des destinations + "Autres options"
+2. **Tu demandes les dates** → "Ce weekend" / "Semaine prochaine" / "En [mois prochain]" / "Flexible"
+3. **Tu demandes les voyageurs** → "Seul" / "En couple" / "En famille" / "Entre amis"
+4. **Tu montres des vols** → "Le moins cher" / "Le plus rapide" / "Vol direct" / "Compare-les"
+5. **Tu montres des hôtels** → "Mieux noté" / "Le plus central" / "Le moins cher" / "Avec piscine"
+6. **Tu donnes des infos sur une destination** → "Ça m'intéresse" / "Budget estimé ?" / "Meilleure période ?" / "Autre destination"
+7. **Tu confirmes quelque chose** → "Continuer" / "Modifier" / "Chercher des vols"
+8. **Voyage presque complet** → "Lancer la recherche" / "Récapitule" / "Modifier"
+
+### EXEMPLES CONCRETS
+- Après "Le Japon est une destination fascinante !" avec choix de villes → [{emoji: "🗼", label: "Tokyo", message: "Je choisis Tokyo"}, {emoji: "⛩️", label: "Kyoto", message: "Je choisis Kyoto"}, {emoji: "🔄", label: "Autres villes", message: "Montre-moi d'autres villes"}]
+- Après "Quand souhaites-tu partir ?" → [{emoji: "📅", label: "Ce weekend", message: "Ce weekend"}, {emoji: "📆", label: "Semaine prochaine", message: "La semaine prochaine"}, {emoji: "🗓️", label: "Février", message: "En février"}, {emoji: "🤷", label: "Flexible", message: "Je suis flexible sur les dates"}]
+- Après présentation de vols → [{emoji: "💰", label: "Le moins cher", message: "Je prends le vol le moins cher"}, {emoji: "⚡", label: "Le plus rapide", message: "Je préfère le vol le plus rapide"}, {emoji: "⚖️", label: "Compare-les", message: "Compare ces vols pour moi"}]
+- Après "Super idée ! Où veux-tu aller ?" → [{emoji: "✨", label: "Inspire-moi", message: "Inspire-moi !"}, {emoji: "☀️", label: "Soleil", message: "Je cherche du soleil"}, {emoji: "🏙️", label: "City break", message: "Un city break en Europe"}]
 
 ## INFOS TECHNIQUES
 - Date actuelle : ${currentDate}
