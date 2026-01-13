@@ -212,4 +212,11 @@ export type ChatQuickAction =
   | { type: "updateFlight"; flightData: FlightFormData }
   | { type: "selectAirport"; field: "from" | "to"; airport: Airport }
   | { type: "triggerFlightSearch" }
-  | { type: "triggerMultiFlightSearch"; confirmedAirports: ConfirmedAirports };
+  | { type: "triggerMultiFlightSearch"; confirmedAirports: ConfirmedAirports }
+  | {
+      type: "chooseWidget";
+      widgetType: WidgetType;
+      option: string;
+      optionData?: Record<string, unknown>;
+      reason?: string;
+    };

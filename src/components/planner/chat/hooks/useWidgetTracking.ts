@@ -24,8 +24,10 @@ export function useWidgetTracking() {
     registerWidget, 
     completeWidget,
     getContextForLLM,
+    getActiveWidgetsContext, // Expose for LLM "choose for me" functionality
     getRecentInteractionsSummary,
     clearHistory,
+    activeWidgets, // Expose for executor
   } = useWidgetHistory();
 
   /**
@@ -158,11 +160,14 @@ export function useWidgetTracking() {
     trackDestinationSelect,
     // Context functions
     getContextForLLM,
+    getActiveWidgetsContext, // For LLM "choose for me" functionality
     getRecentInteractionsSummary,
     clearHistory,
     // Raw functions for custom tracking
     registerWidget,
     completeWidget,
     recordInteraction,
+    // Active widgets for executor
+    activeWidgets,
   };
 }

@@ -161,13 +161,50 @@ export function buildPhaseSystemPrompt(
 
   // Add choose for me instructions when widgets are active
   const chooseForMeInstructions = activeWidgetsContext ? `
-## INSTRUCTION "CHOISIS POUR MOI"
-Si l'utilisateur dit "choisis pour moi", "décide pour moi", "à toi de choisir", ou similaire:
-1. Regarde les [WIDGETS ACTIFS] ci-dessous pour voir les options disponibles
-2. Utilise les [INTERACTIONS UTILISATEUR] pour comprendre ses préférences
+## INSTRUCTION "CHOISIS POUR MOI" (CRITIQUE)
+Si l'utilisateur dit "choisis pour moi", "décide pour moi", "à toi de choisir", "prends le meilleur", 
+"je te fais confiance", "c'est toi qui décide", ou demande de choisir parmi les options affichées:
+
+1. Regarde les [WIDGETS ACTIFS] ci-dessous pour voir les options DISPONIBLES
+2. Utilise les [INTERACTIONS UTILISATEUR] pour comprendre ses préférences exprimées
 3. Fais un choix logique et personnalisé basé sur son profil
-4. Explique clairement POURQUOI tu fais ce choix
-5. Demande confirmation avant de valider le choix
+4. Explique brièvement POURQUOI tu fais ce choix AVANT l'action
+5. OBLIGATOIRE: Inclus une balise <action> pour exécuter le choix automatiquement
+
+### FORMAT DE L'ACTION (OBLIGATOIRE)
+Tu DOIS inclure cette balise à la fin de ta réponse pour que le choix soit exécuté:
+<action>{"type":"chooseWidget","widgetType":"[TYPE_DU_WIDGET]","option":"[NOM_DE_L_OPTION]","reason":"[RAISON_COURTE]"}</action>
+
+### EXEMPLES CONCRETS
+
+**Widget destinationSuggestions avec options Japon, Portugal, Grèce:**
+"D'après ton profil orienté nature et budget économique, le Japon serait parfait ! 🇯🇵 Les parcs naturels et temples anciens correspondent exactement à tes envies.
+<action>{"type":"chooseWidget","widgetType":"destinationSuggestions","option":"Japon","reason":"Nature + Budget éco + temples"}</action>"
+
+**Widget citySelector avec options Tokyo, Osaka, Kyoto:**
+"Pour une première visite au Japon avec tes préférences culturelles, Kyoto est idéal ! C'est le cœur historique du pays.
+<action>{"type":"chooseWidget","widgetType":"citySelector","option":"Kyoto","reason":"Culture + première visite"}</action>"
+
+**Widget tripTypeConfirm (type de voyage):**
+"Pour 7 jours de vacances, un aller-retour classique est parfait.
+<action>{"type":"chooseWidget","widgetType":"tripTypeConfirm","option":"roundtrip","reason":"Durée courte adaptée"}</action>"
+
+**Widget travelersSelector:**
+"Je configure pour 2 adultes comme mentionné.
+<action>{"type":"chooseWidget","widgetType":"travelersSelector","option":"2 adultes","optionData":{"adults":2,"children":0,"infants":0}}</action>"
+
+### MAPPAGE widgetType → option (valeurs exactes à utiliser)
+- destinationSuggestions: nom du pays exactement comme affiché (ex: "Japon", "Portugal")
+- citySelector: nom de la ville exactement comme affichée (ex: "Tokyo", "Paris")
+- tripTypeConfirm: "roundtrip" | "oneway" | "multi"
+- travelersSelector: format texte + optionData avec {adults, children, infants}
+
+### IMPORTANT
+- Explique TOUJOURS pourquoi tu fais ce choix AVANT la balise action
+- Choisis UNIQUEMENT parmi les options listées dans [WIDGETS ACTIFS]
+- Ne choisis PAS de dates automatiquement (trop sensible, demande confirmation)
+- Si aucun widget n'est actif, dis que tu n'as pas d'option à choisir
+- L'option doit correspondre EXACTEMENT à une des options listées
 
 ${activeWidgetsContext}
 ` : "";

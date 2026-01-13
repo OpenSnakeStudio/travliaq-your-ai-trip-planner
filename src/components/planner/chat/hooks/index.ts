@@ -32,6 +32,13 @@ export {
 // Widget tracking for LLM context
 export { useWidgetTracking } from "./useWidgetTracking";
 
+// Widget action executor for LLM "choose for me" functionality
+export {
+  useWidgetActionExecutor,
+  type ChooseWidgetAction,
+  type WidgetActionExecutorOptions,
+} from "./useWidgetActionExecutor";
+
 // Performance optimization hooks
 export {
   useDebounce,
