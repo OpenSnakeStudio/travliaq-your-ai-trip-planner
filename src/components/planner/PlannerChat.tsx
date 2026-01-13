@@ -1421,6 +1421,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                 visibleActivitiesCount: mapContext.visibleActivities.length,
                 cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
                 cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
+                // Inspire flow context
+                inspireFlowStep: inspireFlowStep,
+                hasProposedDestinations: destinationSuggestions.length > 0,
+                proposedDestinationNames: destinationSuggestions.map(d => d.countryName),
               }}
               dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
