@@ -790,6 +790,31 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       const activeWidgetsContext = widgetTracking.getActiveWidgetsContext();
       // Also get pending widgets from messages for more accurate options
       const pendingWidgets = widgetActionExecutor.getPendingWidgets();
+      
+      // Build detailed destination context for "choose for me"
+      let destinationDetailsContext = "";
+      const destinationWidgetMessage = messages.find(
+        (m) => m.widget === "destinationSuggestions" && !m.widgetConfirmed && m.widgetData?.suggestions
+      );
+      if (destinationWidgetMessage?.widgetData?.suggestions) {
+        const suggestions = destinationWidgetMessage.widgetData.suggestions as Array<{
+          countryName: string;
+          countryCode: string;
+          headline?: string;
+          description?: string;
+          matchScore?: number;
+          highlights?: string[];
+          budgetRange?: string;
+        }>;
+        destinationDetailsContext = `[DESTINATIONS PROPOSÉES - CHOISIS PARMI CELLES-CI]\n${suggestions.map((d, i) => 
+          `${i + 1}. **${d.countryName}** (${d.countryCode})${d.matchScore ? ` - ${d.matchScore}% match` : ""}\n` +
+          `   Titre: ${d.headline || "Non spécifié"}\n` +
+          `   Description: ${d.description || "Non spécifié"}\n` +
+          `   Points forts: ${d.highlights?.join(", ") || "Non spécifié"}\n` +
+          `   Budget: ${d.budgetRange || "Non spécifié"}`
+        ).join("\n\n")}`;
+      }
+      
       const pendingWidgetsContext = pendingWidgets.length > 0
         ? pendingWidgets.map((w) => 
             w.options 
@@ -798,9 +823,21 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           ).join("\n")
         : "";
       
-      const combinedWidgetContext = activeWidgetsContext || pendingWidgetsContext
-        ? `${activeWidgetsContext}\n${pendingWidgetsContext ? `[OPTIONS DÉTECTÉES]\n${pendingWidgetsContext}` : ""}`.trim()
+      // Prioritize destination details, then add user preferences context
+      const userPrefsForChoice = preferenceMemoryState
+        ? `\n[PRÉFÉRENCES UTILISATEUR POUR LE CHOIX]\n` +
+          `- Style: ${preferenceMemoryState.travelStyle || "non défini"}\n` +
+          `- Rythme: ${preferenceMemoryState.pace || "non défini"}\n` +
+          `- Intérêts: ${(preferenceMemoryState.interests as string[])?.join(", ") || "non définis"}\n` +
+          `- Niveau confort: ${preferenceMemoryState.comfortLabel || "non défini"}`
         : "";
+      
+      const combinedWidgetContext = [
+        destinationDetailsContext,
+        userPrefsForChoice,
+        activeWidgetsContext,
+        pendingWidgetsContext ? `[OPTIONS WIDGETS ACTIFS]\n${pendingWidgetsContext}` : ""
+      ].filter(Boolean).join("\n\n").trim();
 
       const { content, flightData, quickReplies } = await streamResponse(
         apiMessages,

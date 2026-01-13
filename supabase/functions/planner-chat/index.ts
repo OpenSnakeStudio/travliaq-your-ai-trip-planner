@@ -320,7 +320,7 @@ serve(async (req) => {
       console.log("Anonymous user request");
     }
 
-    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory } = await req.json();
+    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory, activeWidgetsContext } = await req.json();
     console.log("User:", userId, "Messages:", messages.length, "Stream:", stream, "Phase:", currentPhase);
 
     const AZURE_OPENAI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY");
@@ -344,9 +344,10 @@ serve(async (req) => {
     const phase: TravelPhase = currentPhase || "research";
     const negativeContext = negativePreferences || "";
     const widgetContext = widgetHistory || "";
+    const widgetsContext = activeWidgetsContext || "";
     
-    // Phase-specific persona prompt
-    const phasePrompt = buildPhaseSystemPrompt(phase, negativeContext, widgetContext, currentDate);
+    // Phase-specific persona prompt - NOW includes activeWidgetsContext for "choose for me"
+    const phasePrompt = buildPhaseSystemPrompt(phase, negativeContext, widgetContext, currentDate, widgetsContext);
     
     // Base operational rules (always applied)
     const baseSystemPrompt = `Tu es un assistant de voyage bienveillant pour Travliaq. Tu guides l'utilisateur pas à pas, UNE QUESTION À LA FOIS, pour l'aider à trouver son vol idéal.
