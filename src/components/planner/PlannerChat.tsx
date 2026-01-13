@@ -1425,6 +1425,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                 inspireFlowStep: inspireFlowStep,
                 hasProposedDestinations: destinationSuggestions.length > 0,
                 proposedDestinationNames: destinationSuggestions.map(d => d.countryName),
+                // Conversation context for intelligent anticipation
+                lastAssistantMessage: messages
+                  .filter(m => m.role === 'assistant' && !m.isTyping && m.text && m.text.length > 10)
+                  .slice(-1)[0]?.text,
+                lastUserMessage: messages
+                  .filter(m => m.role === 'user')
+                  .slice(-1)[0]?.text,
+                conversationTurn: messages.filter(m => m.role === 'user').length,
               }}
               dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
