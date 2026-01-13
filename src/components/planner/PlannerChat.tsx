@@ -839,7 +839,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         pendingWidgetsContext ? `[OPTIONS WIDGETS ACTIFS]\n${pendingWidgetsContext}` : ""
       ].filter(Boolean).join("\n\n").trim();
 
-      const { content, flightData, quickReplies } = await streamResponse(
+      const { content, flightData, quickReplies, destinationSuggestionRequest } = await streamResponse(
         apiMessages,
         messageId,
         {
@@ -868,6 +868,112 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           );
         }
       );
+
+      // Handle destination suggestion request from LLM
+      if (destinationSuggestionRequest) {
+        console.log("[PlannerChat] LLM requested destination suggestions:", destinationSuggestionRequest);
+        
+        // Update the message with loading state for destinations
+        const loadingText = destinationSuggestionRequest.exceededLimit
+          ? `Je ne peux afficher que 5 destinations maximum, mais voici mes ${Math.min(destinationSuggestionRequest.requestedCount, 5)} meilleures recommandations pour vous...`
+          : content || `Je recherche ${destinationSuggestionRequest.requestedCount} destinations parfaites pour vous...`;
+        
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === messageId
+              ? { ...m, text: loadingText, isStreaming: false, isTyping: true }
+              : m
+          )
+        );
+        
+        // Fetch destinations from API
+        try {
+          const prefs = getPreferences();
+          const payload: DestinationSuggestRequest = {
+            userLocation: departureCity ? { city: departureCity, country: departureCountry } : undefined,
+            styleAxes: {
+              chillVsIntense: prefs.styleAxes.chillVsIntense ?? 50,
+              cityVsNature: prefs.styleAxes.cityVsNature ?? 50,
+              ecoVsLuxury: prefs.styleAxes.ecoVsLuxury ?? 50,
+              touristVsLocal: prefs.styleAxes.touristVsLocal ?? 50,
+            },
+            interests: prefs.interests.slice(0, 5) as DestinationSuggestRequest["interests"],
+            mustHaves: {
+              accessibilityRequired: prefs.mustHaves.accessibilityRequired || false,
+              petFriendly: prefs.mustHaves.petFriendly || false,
+              familyFriendly: prefs.mustHaves.familyFriendly || false,
+              highSpeedWifi: prefs.mustHaves.highSpeedWifi || false,
+            },
+            dietaryRestrictions: prefs.dietaryRestrictions.length > 0 ? prefs.dietaryRestrictions : undefined,
+            travelStyle: prefs.travelStyle as DestinationSuggestRequest["travelStyle"],
+            occasion: prefs.tripContext.occasion as DestinationSuggestRequest["occasion"],
+            budgetLevel: prefs.styleAxes.ecoVsLuxury < 25 ? "budget" 
+              : prefs.styleAxes.ecoVsLuxury < 50 ? "comfort" 
+              : prefs.styleAxes.ecoVsLuxury < 75 ? "premium" 
+              : "luxury",
+            travelMonth: departureDateValue ? new Date(departureDateValue).getMonth() + 1 : new Date().getMonth() + 1,
+          };
+          
+          const limit = Math.min(destinationSuggestionRequest.requestedCount, 5);
+          const response = await getDestinationSuggestions(payload, { limit });
+          
+          if (response.success && response.suggestions.length > 0) {
+            // Store suggestions in memory for context
+            setDestinationSuggestions(response.suggestions);
+            setDestinationProfileScore(response.basedOnProfile?.completionScore || 0);
+            
+            // Update message with destination widget
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      text: `Voici ${response.suggestions.length} destination${response.suggestions.length > 1 ? 's' : ''} parfaite${response.suggestions.length > 1 ? 's' : ''} pour vous, basées sur votre profil (${response.basedOnProfile?.completionScore || 0}% de complétion) :`,
+                      isTyping: false,
+                      isStreaming: false,
+                      widget: "destinationSuggestions" as import("@/types/flight").WidgetType,
+                      widgetData: {
+                        suggestions: response.suggestions,
+                        basedOnProfile: response.basedOnProfile,
+                      },
+                    }
+                  : m
+              )
+            );
+            setInspireFlowStep("results");
+          } else {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === messageId
+                  ? {
+                      ...m,
+                      text: "Désolé, je n'ai pas pu trouver de destinations correspondant à vos critères. Essayez d'abord de me donner vos préférences de voyage avec 'Inspire-moi !' 🌍",
+                      isTyping: false,
+                      isStreaming: false,
+                    }
+                  : m
+              )
+            );
+          }
+        } catch (apiError) {
+          console.error("Error fetching destination suggestions:", apiError);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId
+                ? {
+                    ...m,
+                    text: "Une erreur est survenue lors de la recherche de destinations. Veuillez réessayer.",
+                    isTyping: false,
+                    isStreaming: false,
+                  }
+                : m
+            )
+          );
+        }
+        
+        setIsLoading(false);
+        return; // Early return - we handled the message
+      }
 
       // Update dynamic suggestions from AI response
       if (quickReplies?.replies && quickReplies.replies.length > 0) {
