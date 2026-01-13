@@ -1123,6 +1123,13 @@ export default function OnboardingTour({
 
               // Force after a micro-delay to ensure driver.js doesn't override
               setTimeout(() => {
+                // Check if still in DOM
+                if (!document.body.contains(popover.wrapper)) {
+                  // eslint-disable-next-line no-console
+                  console.error("[OnboardingTour] POPOVER WAS REMOVED FROM DOM! Re-appending...");
+                  document.body.appendChild(popover.wrapper);
+                }
+
                 // Re-apply with !important
                 popover.wrapper.style.cssText += `
                   position: fixed !important;
@@ -1134,13 +1141,18 @@ export default function OnboardingTour({
                   visibility: visible !important;
                   opacity: 1 !important;
                   pointer-events: auto !important;
+                  flex-direction: column !important;
                 `;
 
                 // Log computed styles to debug
                 const computed = window.getComputedStyle(popover.wrapper);
                 const rect = popover.wrapper.getBoundingClientRect();
+                const stillInBody = document.body.contains(popover.wrapper);
+
                 // eslint-disable-next-line no-console
                 console.log("[OnboardingTour] COMPUTED STYLES:");
+                // eslint-disable-next-line no-console
+                console.log("  stillInBody:", stillInBody);
                 // eslint-disable-next-line no-console
                 console.log("  display:", computed.display);
                 // eslint-disable-next-line no-console
@@ -1163,6 +1175,8 @@ export default function OnboardingTour({
                 console.log("  clientRect:", rect.top, rect.left, rect.width, rect.height);
                 // eslint-disable-next-line no-console
                 console.log("  offsetParent:", popover.wrapper.offsetParent);
+                // eslint-disable-next-line no-console
+                console.log("  parentElement:", popover.wrapper.parentElement);
               }, 50);
             }
 
