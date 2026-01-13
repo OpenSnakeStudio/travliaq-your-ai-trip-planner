@@ -784,19 +784,10 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, []);
 
   // Animate to user location on initial load - single smooth animation
-  // Use padding (not degrees) so the user point appears more to the right behind the left panel.
+  // Flow: World view → Zoom to user position → Open flights widget
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
-    
-    // If animation is not requested (e.g., we started from cached location), mark as complete immediately
-    if (!animateToUserLocation) {
-      if (!hasAnimatedRef.current) {
-        hasAnimatedRef.current = true;
-        // Don't call onAnimationComplete here - TravelPlanner handles it via skipInitialAnimation
-      }
-      return;
-    }
-    
+    if (!animateToUserLocation) return;
     if (hasAnimatedRef.current) return;
 
     hasAnimatedRef.current = true;
@@ -804,29 +795,32 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const leftPadding = isPanelOpen ? 450 : 350;
     map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
 
-    // Prefer already-detected userLocation (from AutoDetectDeparture) to avoid a second geolocation request.
+    // Animate to user location
     const focus = (lng: number, lat: number) => {
       map.current?.flyTo({
         center: [lng, lat],
-        zoom: 6.5, // Wider zoom for better context
-        duration: 1200,
+        zoom: 5, // Good zoom level to see region
+        duration: 1500, // Slightly longer for smoother feel from world view
         essential: true,
-        curve: 1.2,
+        curve: 1.4,
       });
-      setTimeout(() => onAnimationComplete?.(), 1200);
+      setTimeout(() => onAnimationComplete?.(), 1500);
     };
 
+    // Use already-detected userLocation if available
     if (userLocation?.lat && userLocation?.lng) {
       focus(userLocation.lng, userLocation.lat);
       return;
     }
 
+    // Otherwise request geolocation
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           focus(position.coords.longitude, position.coords.latitude);
         },
         () => {
+          // Geolocation failed - just complete without animation
           onAnimationComplete?.();
         },
         { timeout: 5000, enableHighAccuracy: false }

@@ -98,7 +98,6 @@ const TravelPlanner = () => {
     initialAnimationDone,
     setInitialAnimationDone,
     handleAnimationComplete,
-    skipInitialAnimation,
   } = useMapState();
 
   const {
@@ -126,10 +125,20 @@ const TravelPlanner = () => {
   const { chatRef, userLocation, searchMessageSentRef, setUserLocation } = useChatIntegration();
 
   // When switching between widgets OR closing the panel, default the map to the user's position.
+  // IMPORTANT: Don't trigger during initial animation - only on subsequent tab/panel changes
   const [userDefaultFocusNonce, setUserDefaultFocusNonce] = useState(0);
+  const hasInitializedRef = useRef(false);
+  
   useEffect(() => {
     if (!userLocation) return;
-    // Trigger refocus on tab change or panel close
+    
+    // Skip the first trigger (initial load) - let the main animation handle positioning
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      return;
+    }
+    
+    // Trigger refocus on tab change or panel close (after initial load)
     if (activeTab === "flights" || activeTab === "stays" || activeTab === "activities" || !isPanelVisible) {
       setUserDefaultFocusNonce((n) => n + 1);
     }
@@ -139,14 +148,6 @@ const TravelPlanner = () => {
   const handleOnboardingComplete = useCallback(() => {
     setOnboardingComplete(true);
   }, []);
-
-  // If we skip animation (user has cached location), immediately mark as done and show panel
-  useEffect(() => {
-    if (skipInitialAnimation && !initialAnimationDone) {
-      setInitialAnimationDone(true);
-      setIsPanelVisible(true);
-    }
-  }, [skipInitialAnimation, initialAnimationDone, setInitialAnimationDone, setIsPanelVisible]);
 
   // Callback to start animation after onboarding (kept for manual re-run)
   const handleRequestAnimation = useCallback(() => {
@@ -273,7 +274,7 @@ const TravelPlanner = () => {
                           onPinClick={handlePinClick}
                           selectedPinId={selectedPin?.id}
                           flightRoutes={flightRoutes}
-                          animateToUserLocation={onboardingComplete && !initialAnimationDone && !skipInitialAnimation}
+                          animateToUserLocation={onboardingComplete && !initialAnimationDone}
                           onAnimationComplete={() => {
                             setInitialAnimationDone(true);
                             setIsPanelVisible(true);
