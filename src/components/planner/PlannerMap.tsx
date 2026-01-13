@@ -720,25 +720,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     };
   }, []);
 
-  // Listen to zoom-only events (change zoom without moving center)
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    const handleZoomOnly = (data: { zoom: number }) => {
-      if (!map.current) return;
-      
-      map.current.easeTo({
-        zoom: data.zoom,
-        duration: 500,
-      });
-    };
-
-    eventBus.on("map:zoomOnly", handleZoomOnly);
-
-    return () => {
-      eventBus.off("map:zoomOnly", handleZoomOnly);
-    };
-  }, [mapLoaded]);
+  // NOTE: map:zoomOnly events are handled via useMapState -> props -> controlled flyTo effect
+  // Do NOT add a separate listener here to avoid conflicting animations
 
   // Fetch airports when map moves (only on flights tab)
   // IMPORTANT: Add buffer to bounds for stability during small pan/zoom movements
@@ -926,12 +909,19 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const leftPadding = isPanelOpen ? 450 : 350;
     map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
 
+    // Use tab-appropriate zoom level instead of USER_LOCATION_ZOOM
+    // This ensures returning to "flights" tab uses FLIGHTS_ZOOM, not a generic user zoom
+    const tabZoom = activeTab === "flights" ? FLIGHTS_ZOOM 
+                  : activeTab === "stays" ? STAYS_ZOOM 
+                  : activeTab === "activities" ? ACTIVITIES_ZOOM 
+                  : FLIGHTS_ZOOM;
+
     // Sync external state so we don't "snap back" to the previous controlled camera
-    eventBus.emit("map:zoom", { center: [userLocation.lng, userLocation.lat], zoom: USER_LOCATION_ZOOM });
+    eventBus.emit("map:zoom", { center: [userLocation.lng, userLocation.lat], zoom: tabZoom });
 
     map.current.easeTo({
       center: [userLocation.lng, userLocation.lat],
-      zoom: USER_LOCATION_ZOOM, // Wider zoom for better context
+      zoom: tabZoom,
       duration: 700,
       essential: true,
     });
