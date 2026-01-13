@@ -13,9 +13,14 @@ export function useMapState() {
   const [mapZoom, setMapZoom] = useState(1.8); // World zoom - shows continents
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
 
-  // Event listener: map zoom from event bus
+  // Event listener: map zoom from event bus (with center)
   usePlannerEvent("map:zoom", useCallback((data) => {
     setMapCenter(data.center);
+    setMapZoom(data.zoom);
+  }, []));
+
+  // Event listener: zoom only (keep current center)
+  usePlannerEvent("map:zoomOnly", useCallback((data) => {
     setMapZoom(data.zoom);
   }, []));
 

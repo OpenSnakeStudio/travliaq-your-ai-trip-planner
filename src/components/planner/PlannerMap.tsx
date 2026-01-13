@@ -720,6 +720,26 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     };
   }, []);
 
+  // Listen to zoom-only events (change zoom without moving center)
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const handleZoomOnly = (data: { zoom: number }) => {
+      if (!map.current) return;
+      
+      map.current.easeTo({
+        zoom: data.zoom,
+        duration: 500,
+      });
+    };
+
+    eventBus.on("map:zoomOnly", handleZoomOnly);
+
+    return () => {
+      eventBus.off("map:zoomOnly", handleZoomOnly);
+    };
+  }, [mapLoaded]);
+
   // Fetch airports when map moves (only on flights tab)
   // IMPORTANT: Add buffer to bounds for stability during small pan/zoom movements
   useEffect(() => {
