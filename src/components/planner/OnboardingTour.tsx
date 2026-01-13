@@ -1097,6 +1097,13 @@ export default function OnboardingTour({
               // eslint-disable-next-line no-console
               console.log("[OnboardingTour] Manually positioning modal for step", idx);
 
+              // CRITICAL: The popover is not connected to the DOM! Force append it to body
+              if (!popover.wrapper.isConnected) {
+                // eslint-disable-next-line no-console
+                console.log("[OnboardingTour] POPOVER NOT CONNECTED! Appending to body...");
+                document.body.appendChild(popover.wrapper);
+              }
+
               // Force immediate visibility and positioning with !important via cssText
               popover.wrapper.style.cssText += `
                 position: fixed !important;
