@@ -48,6 +48,7 @@ import { SmartSuggestions } from "./chat/SmartSuggestions";
 import { getDestinationSuggestions } from "@/services/destinations";
 import type { DestinationSuggestRequest, DestinationSuggestion } from "@/types/destinations";
 import { ScrollToBottomButton } from "./chat/ScrollToBottomButton";
+import { FLIGHTS_ZOOM } from "@/constants/mapSettings";
 
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
@@ -826,7 +827,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         if (flightData.to) {
           const coords = getCityCoords(flightData.to.toLowerCase().split(",")[0].trim());
           if (coords) {
-            emitTabAndZoom("flights", coords, 8);
+            emitTabAndZoom("flights", coords, FLIGHTS_ZOOM);
           } else {
             emitTabChange("flights");
           }
