@@ -849,7 +849,7 @@ export default function OnboardingTour({
   const steps: DriveStep[] = [
     // Step 0: Welcome - centered intro modal, no element highlighted
     {
-      element: "body",
+      element: "#onboarding-anchor",
       popover: {
         title: "✨ Bienvenue sur Travliaq !",
         description: `
@@ -1011,7 +1011,7 @@ export default function OnboardingTour({
     },
     // Step 8: Final - centered outro modal
     {
-      element: "body",
+      element: "#onboarding-anchor",
       popover: {
         title: "🚀 Vous êtes prêt !",
         description: `

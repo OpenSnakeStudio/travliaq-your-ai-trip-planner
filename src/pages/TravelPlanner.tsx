@@ -372,11 +372,19 @@ const TravelPlanner = () => {
 
                 {/* Onboarding Tour - only for new users who haven't seen it */}
                 {shouldShowOnboarding && (
-                  <OnboardingTour
-                    onPanelVisibilityChange={setIsPanelVisible}
-                    onComplete={handleOnboardingComplete}
-                    onRequestAnimation={handleRequestAnimation}
-                  />
+                  <>
+                    {/* Anchor div for onboarding modal steps (intro/outro) */}
+                    <div
+                      id="onboarding-anchor"
+                      className="fixed inset-0 pointer-events-none z-[9999]"
+                      aria-hidden="true"
+                    />
+                    <OnboardingTour
+                      onPanelVisibilityChange={setIsPanelVisible}
+                      onComplete={handleOnboardingComplete}
+                      onRequestAnimation={handleRequestAnimation}
+                    />
+                  </>
                 )}
               </div>
             </ActivityMemoryProvider>
