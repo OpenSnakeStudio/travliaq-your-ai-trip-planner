@@ -663,8 +663,45 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     
     // Detect "inspire" intent for preference widgets flow
     const isInspireIntent = /inspire|inspiration|idée|voyage|destination.*propos/i.test(userText);
+    
+    // If it's an "inspire" intent, show a beautiful message with the travel style widget directly
     if (isInspireIntent) {
-      lastIntentRef.current = "inspire";
+      const inspireMessages = [
+        "✨ **Parfait, laissez-moi vous inspirer !**\n\nPour créer un voyage qui vous ressemble, commençons par découvrir votre style de voyage. Choisissez ce qui vous correspond le mieux :",
+        "🌍 **L'aventure commence ici !**\n\nPour vous proposer des destinations uniques, j'ai besoin de mieux vous connaître. Quel type de voyageur êtes-vous ?",
+        "🎯 **Trouvons votre voyage idéal !**\n\nVotre prochain voyage sera à votre image. Indiquez-moi votre style pour des suggestions personnalisées :",
+        "💫 **Créons ensemble votre prochaine escapade !**\n\nChaque voyageur est unique. Partagez vos préférences pour que je puisse vous proposer des expériences sur mesure :",
+        "🗺️ **Prêt pour l'inspiration ?**\n\nPour vous guider vers la destination parfaite, dites-moi d'abord quel type d'expérience vous recherchez :",
+      ];
+      const randomMessage = inspireMessages[Math.floor(Math.random() * inspireMessages.length)];
+      
+      const userMessage: ChatMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        text: userText,
+      };
+      
+      userMessageCountRef.current += 1;
+      eventBus.emit("chat:userMessage", { text: userText, messageCount: userMessageCountRef.current });
+      
+      const inspireMessageId = `inspire-${Date.now()}`;
+      setMessages((prev) => [
+        ...prev.map((m) => (m.widget ? { ...m, widget: undefined } : m)),
+        userMessage,
+        {
+          id: inspireMessageId,
+          role: "assistant",
+          text: randomMessage,
+          widget: "preferenceStyle" as import("@/types/flight").WidgetType,
+        },
+      ]);
+      
+      // Clear input and exit - no need to call the API
+      setInput("");
+      if (inputRef.current) {
+        inputRef.current.style.height = "auto";
+      }
+      return;
     }
     
     const userMessage: ChatMessage = {
@@ -813,12 +850,6 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             : m
         )
       );
-      
-      // Reset inspire intent - the AI response already contains suggestions
-      // No need to add a second message with widgets
-      if (lastIntentRef.current === "inspire") {
-        lastIntentRef.current = null;
-      }
     } catch (err) {
       console.error("Failed to get chat response:", err);
       widgetFlow.resetFlowState();
