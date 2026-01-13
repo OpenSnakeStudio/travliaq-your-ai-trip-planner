@@ -895,26 +895,28 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       return; // Skip first trigger - initial animation already positioned the map
     }
 
-    // Apply for map widgets OR when panel is closed (user closed all widgets)
-    const isMapWidget = activeTab === "flights" || activeTab === "activities" || activeTab === "stays";
-    const shouldFocusOnUser = isMapWidget || !isPanelOpen;
-    if (!shouldFocusOnUser) return;
-
-    // For stays: if we already have accommodations with coordinates, that becomes the explicit target.
-    if (activeTab === "stays" && isPanelOpen) {
+    // For stays: if we have accommodations with coordinates, zoom on the city NOT user position
+    if (activeTab === "stays") {
       const hasAccomCoords = accommodationMemory.accommodations.some((a) => !!a.lat && !!a.lng);
-      if (hasAccomCoords) return;
+      if (hasAccomCoords) return; // Let the tab switch effect handle city zoom
     }
+
+    // For activities: if we have destinations with coordinates, zoom on the city NOT user position
+    if (activeTab === "activities") {
+      const hasActivityCoords = activityAllDestinations.some((d) => !!d.lat && !!d.lng);
+      if (hasActivityCoords) return; // Let the tab switch effect handle city zoom
+    }
+
+    // Only refocus on user location for flights tab OR when no city is selected
+    // This prevents overriding the city zoom for stays/activities
+    if (activeTab !== "flights" && isPanelOpen) return;
 
     const leftPadding = isPanelOpen ? 450 : 350;
     map.current.setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 });
 
     // Use tab-appropriate zoom level instead of USER_LOCATION_ZOOM
     // This ensures returning to "flights" tab uses FLIGHTS_ZOOM, not a generic user zoom
-    const tabZoom = activeTab === "flights" ? FLIGHTS_ZOOM 
-                  : activeTab === "stays" ? STAYS_ZOOM 
-                  : activeTab === "activities" ? ACTIVITIES_ZOOM 
-                  : FLIGHTS_ZOOM;
+    const tabZoom = FLIGHTS_ZOOM; // Only flights tab reaches this point now
 
     // Sync external state so we don't "snap back" to the previous controlled camera
     eventBus.emit("map:zoom", { center: [userLocation.lng, userLocation.lat], zoom: tabZoom });
@@ -933,6 +935,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     userLocation?.lat,
     userLocation?.lng,
     accommodationMemory.accommodations,
+    activityAllDestinations,
   ]);
 
   // Resize map when container size changes (panel resize)
