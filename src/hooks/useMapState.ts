@@ -1,20 +1,49 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { usePlannerEvent } from "@/lib/eventBus";
+
+const DEPARTURE_CACHE_KEY = 'travliaq_auto_departure';
 
 /**
  * Hook to manage map state (center, zoom, animation)
  * Includes event bus subscriptions for map updates
  * 
- * IMPORTANT: We start at zoom 1 (world view) so the map doesn't show any specific
- * region before user location is detected. This prevents the jarring animation
- * where map flies to Europe then back to user's actual location.
+ * IMPORTANT: We try to start the map centered on the user's cached location
+ * to avoid the jarring animation where map shows one region then flies elsewhere.
  */
 export function useMapState() {
-  // Start at world center with very low zoom - map will animate directly to user location
-  // This prevents the "fly to Europe then back" animation artifact
-  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 20]); // World center (slightly north for land visibility)
-  const [mapZoom, setMapZoom] = useState(1.5); // Very wide zoom - just show the whole world
+  // Try to get cached departure location for initial center
+  const getCachedLocation = (): { center: [number, number]; zoom: number } | null => {
+    try {
+      const cached = localStorage.getItem(DEPARTURE_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed?.airport?.lng && parsed?.airport?.lat) {
+          return {
+            center: [parsed.airport.lng, parsed.airport.lat],
+            zoom: 5, // Start at destination zoom level
+          };
+        }
+      }
+    } catch {
+      // Ignore cache errors
+    }
+    return null;
+  };
+
+  const cachedLocation = getCachedLocation();
+  
+  // If we have cached location, start there. Otherwise start at a neutral world view.
+  // This prevents showing Europe briefly before flying to user's actual location.
+  const [mapCenter, setMapCenter] = useState<[number, number]>(
+    cachedLocation?.center ?? [0, 30] // World center if no cache
+  );
+  const [mapZoom, setMapZoom] = useState(
+    cachedLocation?.zoom ?? 2 // Neutral zoom if no cache
+  );
   const [initialAnimationDone, setInitialAnimationDone] = useState(false);
+  
+  // If we started from cache, mark animation as already complete (no need to fly)
+  const [skipInitialAnimation] = useState(!!cachedLocation);
 
   // Event listener: map zoom from event bus
   usePlannerEvent("map:zoom", useCallback((data) => {
@@ -34,5 +63,6 @@ export function useMapState() {
     initialAnimationDone,
     setInitialAnimationDone,
     handleAnimationComplete,
+    skipInitialAnimation,
   };
 }
