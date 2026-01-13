@@ -1040,6 +1040,16 @@ export default function OnboardingTour({
     // So we can safely start the tour immediately
     const timer = setTimeout(() => {
       try {
+        // CRITICAL: Verify that the anchor element exists before starting
+        const anchorElement = document.getElementById("onboarding-anchor");
+        if (!anchorElement) {
+          // eslint-disable-next-line no-console
+          console.error("[OnboardingTour] #onboarding-anchor not found! Cannot start tour.");
+          return;
+        }
+        // eslint-disable-next-line no-console
+        console.log("[OnboardingTour] #onboarding-anchor found, starting tour...");
+
         // Defensive: if a previous instance is still around, kill it first
         driverRef.current?.destroy();
         driverRef.current = null;
@@ -1066,15 +1076,32 @@ export default function OnboardingTour({
           doneBtnText: "C'est parti ! ✨",
           onPopoverRender: (popover, opts) => {
             // Debug: helps diagnose "overlay but no popover"
+            const idx = opts.state.activeIndex ?? 0;
             // eslint-disable-next-line no-console
             console.log("[OnboardingTour] popover render", {
-              activeIndex: opts.state.activeIndex,
-              step: opts.config.steps?.[opts.state.activeIndex ?? 0],
+              activeIndex: idx,
+              step: opts.config.steps?.[idx],
+              popoverElement: popover.wrapper,
+              popoverVisible: popover.wrapper.offsetParent !== null,
+              popoverPosition: popover.wrapper.style.position,
+              popoverTop: popover.wrapper.style.top,
+              popoverLeft: popover.wrapper.style.left,
+              popoverZIndex: popover.wrapper.style.zIndex,
             });
 
-            const idx = opts.state.activeIndex ?? 0;
             const total = opts.config.steps?.length ?? steps.length;
             renderProgressHeader(popover.wrapper, idx, total, opts.driver);
+
+            // CRITICAL FIX: For steps 0 and 8 (intro/outro), manually position the popover
+            if (idx === 0 || idx === 8) {
+              // eslint-disable-next-line no-console
+              console.log("[OnboardingTour] Manually positioning modal for step", idx);
+              popover.wrapper.style.position = 'fixed';
+              popover.wrapper.style.top = '50%';
+              popover.wrapper.style.left = '50%';
+              popover.wrapper.style.transform = 'translate(-50%, -50%)';
+              popover.wrapper.style.zIndex = '10005';
+            }
 
             // Add an explicit "Arrêter" button inside the tooltip (in the footer)
             const footer = popover.wrapper.querySelector(".driver-popover-footer");
