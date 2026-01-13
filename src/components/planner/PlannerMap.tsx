@@ -840,9 +840,25 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Absolute default: when we don't have an explicit map target for the current widget,
   // re-focus the map on the user's position.
   // Also applies when the panel is closed (no explicit widget target).
+  // 
+  // IMPORTANT: This effect should NOT run during the initial animation sequence.
+  // It only triggers on userDefaultFocusNonce changes AFTER the initial animation is complete.
+  const initialFocusCompletedRef = useRef(false);
+  
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
     if (!userLocation?.lat || !userLocation?.lng) return;
+
+    // Skip if initial animation hasn't completed yet - let the initial flyTo handle positioning
+    // This prevents the "fly to Europe then back" artifact
+    if (!hasAnimatedRef.current) return;
+    
+    // Only trigger on nonce changes after the first focus is done
+    // This prevents double-animation on initial load
+    if (!initialFocusCompletedRef.current) {
+      initialFocusCompletedRef.current = true;
+      return; // Skip first trigger - initial animation already positioned the map
+    }
 
     // Apply for map widgets OR when panel is closed (user closed all widgets)
     const isMapWidget = activeTab === "flights" || activeTab === "activities" || activeTab === "stays";
