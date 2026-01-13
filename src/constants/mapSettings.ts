@@ -1,5 +1,8 @@
 // Shared map settings for consistent behavior across components
 
+// Zoom level used for flights tab - more zoomed out to show routes
+export const FLIGHTS_ZOOM = 5;
+
 // Zoom level used for accommodation/stays tab focus
 export const STAYS_ZOOM = 10;
 
