@@ -1127,21 +1127,31 @@ export default function OnboardingTour({
 
                 // Log computed styles to debug
                 const computed = window.getComputedStyle(popover.wrapper);
+                const rect = popover.wrapper.getBoundingClientRect();
                 // eslint-disable-next-line no-console
-                console.log("[OnboardingTour] Re-applied positioning after delay", {
-                  display: computed.display,
-                  visibility: computed.visibility,
-                  opacity: computed.opacity,
-                  position: computed.position,
-                  top: computed.top,
-                  left: computed.left,
-                  transform: computed.transform,
-                  zIndex: computed.zIndex,
-                  width: computed.width,
-                  height: computed.height,
-                  offsetParent: popover.wrapper.offsetParent,
-                  clientRect: popover.wrapper.getBoundingClientRect(),
-                });
+                console.log("[OnboardingTour] COMPUTED STYLES:");
+                // eslint-disable-next-line no-console
+                console.log("  display:", computed.display);
+                // eslint-disable-next-line no-console
+                console.log("  visibility:", computed.visibility);
+                // eslint-disable-next-line no-console
+                console.log("  opacity:", computed.opacity);
+                // eslint-disable-next-line no-console
+                console.log("  position:", computed.position);
+                // eslint-disable-next-line no-console
+                console.log("  top:", computed.top);
+                // eslint-disable-next-line no-console
+                console.log("  left:", computed.left);
+                // eslint-disable-next-line no-console
+                console.log("  transform:", computed.transform);
+                // eslint-disable-next-line no-console
+                console.log("  zIndex:", computed.zIndex);
+                // eslint-disable-next-line no-console
+                console.log("  width:", computed.width, "height:", computed.height);
+                // eslint-disable-next-line no-console
+                console.log("  clientRect:", rect.top, rect.left, rect.width, rect.height);
+                // eslint-disable-next-line no-console
+                console.log("  offsetParent:", popover.wrapper.offsetParent);
               }, 50);
             }
 
