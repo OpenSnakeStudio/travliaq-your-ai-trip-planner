@@ -505,67 +505,62 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   );
 
   // Auto-zoom to accommodation city when switching to stays tab
+  // AND auto-zoom to activity destination when switching to activities tab
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     const previousTab = prevActiveTabRef.current;
     prevActiveTabRef.current = activeTab;
 
-    // Only trigger when switching TO stays tab (not when already on it)
-    if (activeTab !== "stays" || previousTab === "stays") return;
+    // ============ STAYS TAB ============
+    if (activeTab === "stays" && previousTab !== "stays") {
+      // If we came from a hotel marker click, keep current zoom/center (no auto-zoom)
+      if (suppressNextStaysAutoZoomRef.current) {
+        suppressNextStaysAutoZoomRef.current = false;
+        return;
+      }
 
-    // If we came from a hotel marker click, keep current zoom/center (no auto-zoom)
-    if (suppressNextStaysAutoZoomRef.current) {
-      suppressNextStaysAutoZoomRef.current = false;
+      // Get the active accommodation or fallback to first one with coordinates
+      const activeAccom = getActiveAccommodation();
+      const accommodations = accommodationMemory.accommodations;
+
+      let targetAccom = activeAccom && activeAccom.lat && activeAccom.lng ? activeAccom : null;
+      if (!targetAccom) {
+        targetAccom = accommodations.find((acc) => acc.lat && acc.lng) || null;
+      }
+
+      if (targetAccom?.lat && targetAccom?.lng) {
+        // Use shared STAYS_ZOOM constant
+        staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: STAYS_ZOOM, city: targetAccom.city };
+
+        // Small delay to ensure the panel is rendered before we measure its width for the offset
+        setTimeout(() => {
+          focusStaysTarget(staysFocusRef.current!);
+        }, 50);
+      }
       return;
     }
 
-    // Get the active accommodation or fallback to first one with coordinates
-    const activeAccom = getActiveAccommodation();
-    const accommodations = accommodationMemory.accommodations;
+    // ============ ACTIVITIES TAB ============
+    if (activeTab === "activities" && previousTab !== "activities") {
+      // Get the first activity destination with coordinates
+      const targetDest = activityAllDestinations.find((dest) => dest.lat && dest.lng);
 
-    let targetAccom = activeAccom && activeAccom.lat && activeAccom.lng ? activeAccom : null;
-    if (!targetAccom) {
-      targetAccom = accommodations.find((acc) => acc.lat && acc.lng) || null;
+      if (targetDest?.lat && targetDest?.lng) {
+        const offsetX = getStaysOffsetX(); // Reuse same offset logic
+
+        setTimeout(() => {
+          map.current?.flyTo({
+            center: [targetDest.lng!, targetDest.lat!],
+            zoom: ACTIVITIES_ZOOM,
+            duration: 800,
+            essential: true,
+            offset: [offsetX, 0],
+          });
+        }, 50);
+      }
     }
-
-    if (targetAccom?.lat && targetAccom?.lng) {
-      // Use shared STAYS_ZOOM constant
-      staysFocusRef.current = { lng: targetAccom.lng, lat: targetAccom.lat, zoom: STAYS_ZOOM, city: targetAccom.city };
-
-      // Small delay to ensure the panel is rendered before we measure its width for the offset
-      setTimeout(() => {
-        focusStaysTarget(staysFocusRef.current!);
-      }, 50);
-    }
-  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, focusStaysTarget]);
-
-  // Auto-zoom to activity destination city when switching to activities tab
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    const previousTab = prevActiveTabRef.current;
-    // Note: prevActiveTabRef is updated in the stays effect above, so we check the ref value before it updates
-    // To avoid race conditions, we check if we're switching TO activities tab
-    if (activeTab !== "activities" || previousTab === "activities") return;
-
-    // Get the first activity destination with coordinates
-    const targetDest = activityAllDestinations.find((dest) => dest.lat && dest.lng);
-
-    if (targetDest?.lat && targetDest?.lng) {
-      const offsetX = getStaysOffsetX(); // Reuse same offset logic
-
-      setTimeout(() => {
-        map.current?.flyTo({
-          center: [targetDest.lng!, targetDest.lat!],
-          zoom: ACTIVITIES_ZOOM,
-          duration: 800,
-          essential: true,
-          offset: [offsetX, 0],
-        });
-      }, 50);
-    }
-  }, [activeTab, mapLoaded, activityAllDestinations, getStaysOffsetX]);
+  }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, focusStaysTarget, activityAllDestinations, getStaysOffsetX]);
 
   // When the stays panel opens/closes, ONLY adjust the horizontal offset - NO ZOOM CHANGE
   // This keeps the map at the same zoom level and just shifts it left/right
