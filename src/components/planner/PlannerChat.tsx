@@ -814,22 +814,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         )
       );
       
-      // Trigger "Inspire-moi" preference widgets flow after AI response
+      // Reset inspire intent - the AI response already contains suggestions
+      // No need to add a second message with widgets
       if (lastIntentRef.current === "inspire") {
-        lastIntentRef.current = null; // Reset to avoid triggering again
-        setInspireFlowStep("style");
-        
-        // Add preference style widget message
-        const styleMessageId = `pref-style-${Date.now()}`;
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: styleMessageId,
-            role: "assistant",
-            text: "Pour mieux vous inspirer, ajustez votre style de voyage :",
-            widget: "preferenceStyle" as import("@/types/flight").WidgetType,
-          },
-        ]);
+        lastIntentRef.current = null;
       }
     } catch (err) {
       console.error("Failed to get chat response:", err);
