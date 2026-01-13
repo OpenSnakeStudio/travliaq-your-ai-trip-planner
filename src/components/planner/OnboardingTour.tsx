@@ -1097,28 +1097,51 @@ export default function OnboardingTour({
               // eslint-disable-next-line no-console
               console.log("[OnboardingTour] Manually positioning modal for step", idx);
 
-              // Force immediate visibility and positioning
-              popover.wrapper.style.position = 'fixed';
-              popover.wrapper.style.top = '50%';
-              popover.wrapper.style.left = '50%';
-              popover.wrapper.style.transform = 'translate(-50%, -50%)';
-              popover.wrapper.style.zIndex = '10005';
-              popover.wrapper.style.display = 'flex';
-              popover.wrapper.style.visibility = 'visible';
-              popover.wrapper.style.opacity = '1';
+              // Force immediate visibility and positioning with !important via cssText
+              popover.wrapper.style.cssText += `
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                z-index: 10005 !important;
+                display: flex !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+              `;
 
               // Force after a micro-delay to ensure driver.js doesn't override
               setTimeout(() => {
-                popover.wrapper.style.position = 'fixed';
-                popover.wrapper.style.top = '50%';
-                popover.wrapper.style.left = '50%';
-                popover.wrapper.style.transform = 'translate(-50%, -50%)';
-                popover.wrapper.style.zIndex = '10005';
-                popover.wrapper.style.display = 'flex';
-                popover.wrapper.style.visibility = 'visible';
-                popover.wrapper.style.opacity = '1';
+                // Re-apply with !important
+                popover.wrapper.style.cssText += `
+                  position: fixed !important;
+                  top: 50% !important;
+                  left: 50% !important;
+                  transform: translate(-50%, -50%) !important;
+                  z-index: 10005 !important;
+                  display: flex !important;
+                  visibility: visible !important;
+                  opacity: 1 !important;
+                  pointer-events: auto !important;
+                `;
+
+                // Log computed styles to debug
+                const computed = window.getComputedStyle(popover.wrapper);
                 // eslint-disable-next-line no-console
-                console.log("[OnboardingTour] Re-applied positioning after delay");
+                console.log("[OnboardingTour] Re-applied positioning after delay", {
+                  display: computed.display,
+                  visibility: computed.visibility,
+                  opacity: computed.opacity,
+                  position: computed.position,
+                  top: computed.top,
+                  left: computed.left,
+                  transform: computed.transform,
+                  zIndex: computed.zIndex,
+                  width: computed.width,
+                  height: computed.height,
+                  offsetParent: popover.wrapper.offsetParent,
+                  clientRect: popover.wrapper.getBoundingClientRect(),
+                });
               }, 50);
             }
 
