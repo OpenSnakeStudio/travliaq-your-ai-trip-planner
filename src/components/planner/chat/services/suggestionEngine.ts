@@ -295,47 +295,43 @@ function getSearchReadySuggestions(context: SuggestionContext): Suggestion[] {
 
 /**
  * Main function to get contextual suggestions
- * Returns empty array if no relevant suggestions
+ * Always returns relevant suggestions based on current state
  */
 export function getSuggestions(context: SuggestionContext): Suggestion[] {
-  // 1. INSPIRATION (no destination) - only show if truly at the start
-  if (!context.hasDestination && !context.hasDates && !context.hasTravelers) {
+  // 1. INSPIRATION - no destination yet, show inspiring suggestions
+  if (!context.hasDestination) {
     return getInspirationSuggestions().slice(0, 3);
   }
   
-  // 2. Has destination but no dates
-  if (context.hasDestination && !context.hasDates) {
+  // 2. Has destination but no dates - help them pick dates
+  if (!context.hasDates) {
     return getDatesSuggestions(context).slice(0, 3);
   }
   
   // 3. Has destination & dates but no travelers
-  if (context.hasDestination && context.hasDates && !context.hasTravelers) {
+  if (!context.hasTravelers) {
     return getTravelersSuggestions().slice(0, 3);
   }
   
   // 4. SEARCH READY (all info but on flights tab with no visible flights)
-  if (context.hasDestination && context.hasDates && context.hasTravelers) {
-    if (context.currentTab === 'flights' && context.visibleFlightsCount === 0) {
-      return getSearchReadySuggestions(context).slice(0, 3);
-    }
+  if (context.currentTab === 'flights' && context.visibleFlightsCount === 0) {
+    return getSearchReadySuggestions(context).slice(0, 3);
   }
   
-  // 5. TAB-BASED suggestions - only if we have at least a destination
-  if (context.hasDestination) {
-    switch (context.currentTab) {
-      case 'flights':
-        return getFlightSuggestions(context).slice(0, 3);
-      case 'stays':
-        return getStaysSuggestions(context).slice(0, 3);
-      case 'activities':
-        return getActivitiesSuggestions(context).slice(0, 3);
-      case 'preferences':
-        return getPreferencesSuggestions(context).slice(0, 3);
-    }
+  // 5. TAB-BASED suggestions
+  switch (context.currentTab) {
+    case 'flights':
+      return getFlightSuggestions(context).slice(0, 3);
+    case 'stays':
+      return getStaysSuggestions(context).slice(0, 3);
+    case 'activities':
+      return getActivitiesSuggestions(context).slice(0, 3);
+    case 'preferences':
+      return getPreferencesSuggestions(context).slice(0, 3);
+    default:
+      // Fallback to inspiration if nothing else matches
+      return getInspirationSuggestions().slice(0, 3);
   }
-  
-  // 6. No relevant suggestions - return empty array
-  return [];
 }
 
 /**
