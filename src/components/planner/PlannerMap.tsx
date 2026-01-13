@@ -786,8 +786,18 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Animate to user location on initial load - single smooth animation
   // Use padding (not degrees) so the user point appears more to the right behind the left panel.
   useEffect(() => {
-    if (!map.current || !mapLoaded || hasAnimatedRef.current) return;
-    if (!animateToUserLocation) return;
+    if (!map.current || !mapLoaded) return;
+    
+    // If animation is not requested (e.g., we started from cached location), mark as complete immediately
+    if (!animateToUserLocation) {
+      if (!hasAnimatedRef.current) {
+        hasAnimatedRef.current = true;
+        // Don't call onAnimationComplete here - TravelPlanner handles it via skipInitialAnimation
+      }
+      return;
+    }
+    
+    if (hasAnimatedRef.current) return;
 
     hasAnimatedRef.current = true;
 

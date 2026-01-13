@@ -98,6 +98,7 @@ const TravelPlanner = () => {
     initialAnimationDone,
     setInitialAnimationDone,
     handleAnimationComplete,
+    skipInitialAnimation,
   } = useMapState();
 
   const {
@@ -138,6 +139,14 @@ const TravelPlanner = () => {
   const handleOnboardingComplete = useCallback(() => {
     setOnboardingComplete(true);
   }, []);
+
+  // If we skip animation (user has cached location), immediately mark as done and show panel
+  useEffect(() => {
+    if (skipInitialAnimation && !initialAnimationDone) {
+      setInitialAnimationDone(true);
+      setIsPanelVisible(true);
+    }
+  }, [skipInitialAnimation, initialAnimationDone, setInitialAnimationDone, setIsPanelVisible]);
 
   // Callback to start animation after onboarding (kept for manual re-run)
   const handleRequestAnimation = useCallback(() => {
@@ -264,7 +273,7 @@ const TravelPlanner = () => {
                           onPinClick={handlePinClick}
                           selectedPinId={selectedPin?.id}
                           flightRoutes={flightRoutes}
-                          animateToUserLocation={onboardingComplete && !initialAnimationDone}
+                          animateToUserLocation={onboardingComplete && !initialAnimationDone && !skipInitialAnimation}
                           onAnimationComplete={() => {
                             setInitialAnimationDone(true);
                             setIsPanelVisible(true);
