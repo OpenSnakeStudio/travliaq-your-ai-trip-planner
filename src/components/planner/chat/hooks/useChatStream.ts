@@ -72,6 +72,8 @@ export interface MemoryContext {
   currentPhase?: TravelPhase;
   // NEW: Negative preferences to avoid
   negativePreferences?: NegativePreference[];
+  // NEW: Active widgets context for "choose for me" functionality
+  activeWidgetsContext?: string;
 }
 
 /**
@@ -185,20 +187,27 @@ function sleep(ms: number): Promise<void> {
  * Build the context message for the API
  */
 function buildContextMessage(memoryContext: MemoryContext): string {
-  const { flightSummary, activityContext, preferenceContext, missingFields, widgetHistory } = memoryContext;
+  const { flightSummary, activityContext, preferenceContext, missingFields, widgetHistory, activeWidgetsContext } = memoryContext;
 
-  if (!flightSummary) return widgetHistory || "";
+  if (!flightSummary && !activeWidgetsContext) return widgetHistory || "";
 
   const missingFieldsStr =
     missingFields.length > 0
       ? missingFields.map(getMissingFieldLabel).join(", ")
       : "Aucun - prêt à chercher";
 
-  let context = `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`;
+  let context = flightSummary 
+    ? `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`
+    : "";
   
   // Add widget history if available
   if (widgetHistory) {
     context += `\n${widgetHistory}`;
+  }
+  
+  // Add active widgets context for "choose for me" functionality
+  if (activeWidgetsContext) {
+    context += `\n${activeWidgetsContext}`;
   }
   
   return context;

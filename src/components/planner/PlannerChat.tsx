@@ -40,7 +40,7 @@ import {
   DestinationSuggestionsGrid,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor } from "./chat/hooks";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
@@ -266,6 +266,25 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     updateMemory,
     updateTravelers,
     setMessages,
+  });
+
+  // Widget action executor for LLM "choose for me" functionality
+  // We need a ref for onDestinationSelect since it's defined later
+  const onDestinationSelectRef = useRef<((destination: import("@/types/destinations").DestinationSuggestion) => void) | null>(null);
+  
+  const widgetActionExecutor = useWidgetActionExecutor({
+    messages,
+    setMessages,
+    handleCitySelect: widgetFlow.handleCitySelect,
+    handleTripTypeConfirm: widgetFlow.handleTripTypeConfirm,
+    handleTravelersSelect: widgetFlow.handleTravelersSelect,
+    handleDateSelect: widgetFlow.handleDateSelect,
+    handleDateRangeSelect: widgetFlow.handleDateRangeSelect,
+    onDestinationSelect: (destination) => {
+      if (onDestinationSelectRef.current) {
+        onDestinationSelectRef.current(destination);
+      }
+    },
   });
 
   // Helper to find accommodation by city
@@ -751,6 +770,22 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         ? `\n[PRÉFÉRENCES] Rythme: ${preferenceMemoryState.pace}, Style: ${preferenceMemoryState.travelStyle}, Confort: ${preferenceMemoryState.comfortLabel}, Intérêts: ${(preferenceMemoryState.interests as string[])?.join(", ") || ""}`
         : "";
 
+      // Build active widgets context for "choose for me" functionality
+      const activeWidgetsContext = widgetTracking.getActiveWidgetsContext();
+      // Also get pending widgets from messages for more accurate options
+      const pendingWidgets = widgetActionExecutor.getPendingWidgets();
+      const pendingWidgetsContext = pendingWidgets.length > 0
+        ? pendingWidgets.map((w) => 
+            w.options 
+              ? `- Widget "${w.type}" avec options: ${w.options.join(", ")}`
+              : `- Widget "${w.type}" en attente`
+          ).join("\n")
+        : "";
+      
+      const combinedWidgetContext = activeWidgetsContext || pendingWidgetsContext
+        ? `${activeWidgetsContext}\n${pendingWidgetsContext ? `[OPTIONS DÉTECTÉES]\n${pendingWidgetsContext}` : ""}`.trim()
+        : "";
+
       const { content, flightData, quickReplies } = await streamResponse(
         apiMessages,
         messageId,
@@ -760,6 +795,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           preferenceContext,
           missingFields,
           widgetHistory: widgetTracking.getContextForLLM(),
+          activeWidgetsContext: combinedWidgetContext, // NEW: Include active widgets for "choose for me"
         },
         (id, text, isComplete) => {
           // CRITICAL: Prevent late updates from resetting isStreaming after message is complete
@@ -835,7 +871,14 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
         eventBus.emit("flight:updateFormData", flightData);
       } else if (action) {
-        if (action.type === "tab") {
+        if (action.type === "chooseWidget") {
+          // LLM chose for the user - execute the widget action
+          console.log("[PlannerChat] LLM chooseWidget action:", action);
+          const executed = widgetActionExecutor.executeChooseWidgetAction(action);
+          if (executed) {
+            console.log("[PlannerChat] Widget action executed successfully");
+          }
+        } else if (action.type === "tab") {
           emitTabChange(action.tab);
         } else if (action.type === "zoom") {
           eventBus.emit("map:zoom", { center: action.center, zoom: action.zoom });
