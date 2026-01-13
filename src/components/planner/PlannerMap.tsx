@@ -11,7 +11,7 @@ import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBo
 import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
 import eventBus from "@/lib/eventBus";
-import { STAYS_ZOOM, getStaysPanelOffset } from "@/constants/mapSettings";
+import { STAYS_ZOOM, ACTIVITIES_ZOOM, getStaysPanelOffset } from "@/constants/mapSettings";
 import FlightPriceMarkers from "./FlightPriceMarkers";
 
 
@@ -468,6 +468,9 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   // Get accommodation entries for markers
   const { memory: accommodationMemory, getActiveAccommodation } = useAccommodationMemory();
 
+  // Get activity entries for markers (needed for auto-zoom on tab switch)
+  const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
+
   // Track previous tab to detect tab switches
   const prevActiveTabRef = useRef<TabType>(activeTab);
 
@@ -537,6 +540,33 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     }
   }, [activeTab, mapLoaded, accommodationMemory.accommodations, getActiveAccommodation, focusStaysTarget]);
 
+  // Auto-zoom to activity destination city when switching to activities tab
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const previousTab = prevActiveTabRef.current;
+    // Note: prevActiveTabRef is updated in the stays effect above, so we check the ref value before it updates
+    // To avoid race conditions, we check if we're switching TO activities tab
+    if (activeTab !== "activities" || previousTab === "activities") return;
+
+    // Get the first activity destination with coordinates
+    const targetDest = activityAllDestinations.find((dest) => dest.lat && dest.lng);
+
+    if (targetDest?.lat && targetDest?.lng) {
+      const offsetX = getStaysOffsetX(); // Reuse same offset logic
+
+      setTimeout(() => {
+        map.current?.flyTo({
+          center: [targetDest.lng!, targetDest.lat!],
+          zoom: ACTIVITIES_ZOOM,
+          duration: 800,
+          essential: true,
+          offset: [offsetX, 0],
+        });
+      }, 50);
+    }
+  }, [activeTab, mapLoaded, activityAllDestinations, getStaysOffsetX]);
+
   // When the stays panel opens/closes, ONLY adjust the horizontal offset - NO ZOOM CHANGE
   // This keeps the map at the same zoom level and just shifts it left/right
   useEffect(() => {
@@ -558,8 +588,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     });
   }, [activeTab, isPanelOpen, mapLoaded, getStaysOffsetX]);
 
-  // Get activity entries for markers
-  const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
+  // Get pins based on active tab
 
   // Get pins based on active tab
   const getPinsForTab = useCallback((tab: TabType): MapPin[] => {

@@ -3,6 +3,9 @@
 // Zoom level used for accommodation/stays tab focus
 export const STAYS_ZOOM = 10;
 
+// Zoom level used for activities tab focus
+export const ACTIVITIES_ZOOM = 10;
+
 // Calculate horizontal offset for stays tab when panel is open
 // Returns a negative value to shift camera left → city appears more to the right
 export function getStaysPanelOffset(isPanelOpen: boolean): number {
