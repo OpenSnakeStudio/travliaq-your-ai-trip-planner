@@ -13,6 +13,7 @@ export { TripTypeConfirmWidget } from "./TripTypeWidget";
 export { CitySelectionWidget } from "./CitySelectionWidget";
 export { AirportButton, DualAirportSelection, AirportConfirmationWidget } from "./AirportWidgets";
 export { MarkdownMessage } from "./MarkdownMessage";
+export { ConfirmedWidget } from "./ConfirmedWidget";
 
 // Preference widgets (synced with PreferenceMemory)
 export { PreferenceStyleWidget } from "./PreferenceStyleWidget";

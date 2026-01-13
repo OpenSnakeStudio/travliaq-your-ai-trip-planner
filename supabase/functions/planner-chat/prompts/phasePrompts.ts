@@ -150,13 +150,27 @@ export function buildPhaseSystemPrompt(
   phase: TravelPhase,
   negativePreferences: string,
   widgetHistory: string,
-  currentDate: string
+  currentDate: string,
+  activeWidgetsContext?: string
 ): string {
   const phasePrompt = PHASE_PROMPTS[phase];
 
   const behaviorList = phasePrompt.behavior.map((b) => `- ${b}`).join("\n");
   const doNotList = phasePrompt.doNot.map((d) => `- ${d}`).join("\n");
   const examplesList = phasePrompt.examples.map((e, i) => `Exemple ${i + 1}:\n"${e}"`).join("\n\n");
+
+  // Add choose for me instructions when widgets are active
+  const chooseForMeInstructions = activeWidgetsContext ? `
+## INSTRUCTION "CHOISIS POUR MOI"
+Si l'utilisateur dit "choisis pour moi", "décide pour moi", "à toi de choisir", ou similaire:
+1. Regarde les [WIDGETS ACTIFS] ci-dessous pour voir les options disponibles
+2. Utilise les [INTERACTIONS UTILISATEUR] pour comprendre ses préférences
+3. Fais un choix logique et personnalisé basé sur son profil
+4. Explique clairement POURQUOI tu fais ce choix
+5. Demande confirmation avant de valider le choix
+
+${activeWidgetsContext}
+` : "";
 
   return `## PERSONA ACTIVE : PHASE ${phase.toUpperCase()}
 
@@ -177,7 +191,7 @@ ${doNotList}
 ${negativePreferences ? `\n${negativePreferences}\n` : ""}
 
 ${widgetHistory ? `\n${widgetHistory}\n` : ""}
-
+${chooseForMeInstructions}
 ## INFOS TECHNIQUES
 - Date actuelle : ${currentDate}
 - Année par défaut : 2025
