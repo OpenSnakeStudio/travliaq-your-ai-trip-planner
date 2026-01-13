@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom" />
 import { afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 
