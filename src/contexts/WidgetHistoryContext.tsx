@@ -21,6 +21,8 @@ export type WidgetInteractionType =
   | "must_haves_configured"
   | "dietary_configured"
   | "destination_selected"
+  | "destinations_proposed"
+  | "destinations_rejected"
   | "quick_filter_applied";
 
 export interface WidgetInteraction {
@@ -80,6 +82,15 @@ interface WidgetHistoryContextValue {
   // Get recent interactions summary
   getRecentInteractionsSummary: (count?: number) => string;
   
+  // Track destination suggestions proposed to user
+  trackDestinationsProposed: (destinations: Array<{ countryName: string; countryCode: string; matchScore?: number }>) => void;
+  
+  // Track destination selection (selected one = others are rejected)
+  trackDestinationSelection: (selected: { countryName: string; countryCode: string }, allProposed: Array<{ countryName: string; countryCode: string }>) => void;
+  
+  // Get proposed destinations context for LLM
+  getProposedDestinationsContext: () => string;
+  
   // Clear all history (on session reset)
   clearHistory: () => void;
 }
@@ -97,6 +108,8 @@ interface WidgetHistoryProviderProps {
 export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) {
   const [interactions, setInteractions] = useState<WidgetInteraction[]>([]);
   const [activeWidgets, setActiveWidgets] = useState<ActiveWidget[]>([]);
+  const [proposedDestinations, setProposedDestinations] = useState<Array<{ countryName: string; countryCode: string; matchScore?: number }>>([]);
+  const [rejectedDestinations, setRejectedDestinations] = useState<Array<{ countryName: string; countryCode: string }>>([]);
   const widgetIdCounter = useRef(0);
 
   const registerWidget = useCallback((messageId: string, widgetType: string, options?: string[]): string => {
@@ -210,9 +223,88 @@ export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) 
     return recent.map((i) => i.summary).join(" → ");
   }, [interactions]);
 
+  /**
+   * Track destinations proposed to user
+   */
+  const trackDestinationsProposed = useCallback((destinations: Array<{ countryName: string; countryCode: string; matchScore?: number }>) => {
+    setProposedDestinations(destinations);
+    
+    // Record interaction
+    const interaction: WidgetInteraction = {
+      id: `interaction-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      timestamp: Date.now(),
+      widgetType: "destinationSuggestions",
+      interactionType: "destinations_proposed",
+      data: { destinations },
+      summary: `Destinations proposées : ${destinations.map(d => d.countryName).join(", ")}`,
+    };
+    setInteractions((prev) => [...prev.slice(-50), interaction]);
+  }, []);
+
+  /**
+   * Track destination selection (selected one = others are rejected)
+   */
+  const trackDestinationSelection = useCallback((
+    selected: { countryName: string; countryCode: string },
+    allProposed: Array<{ countryName: string; countryCode: string }>
+  ) => {
+    // Mark non-selected as rejected
+    const rejected = allProposed.filter(d => d.countryCode !== selected.countryCode);
+    setRejectedDestinations((prev) => {
+      const newRejected = [...prev];
+      for (const dest of rejected) {
+        if (!newRejected.some(r => r.countryCode === dest.countryCode)) {
+          newRejected.push(dest);
+        }
+      }
+      return newRejected.slice(-20); // Keep last 20 rejections
+    });
+    
+    // Record rejection interaction
+    if (rejected.length > 0) {
+      const rejectionInteraction: WidgetInteraction = {
+        id: `interaction-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        timestamp: Date.now(),
+        widgetType: "destinationSuggestions",
+        interactionType: "destinations_rejected",
+        data: { rejected: rejected.map(d => d.countryName) },
+        summary: `Destinations NON sélectionnées (préférer d'autres) : ${rejected.map(d => d.countryName).join(", ")}`,
+      };
+      setInteractions((prev) => [...prev.slice(-50), rejectionInteraction]);
+    }
+    
+    // Clear proposed destinations
+    setProposedDestinations([]);
+  }, []);
+
+  /**
+   * Get proposed destinations context for LLM
+   */
+  const getProposedDestinationsContext = useCallback((): string => {
+    const parts: string[] = [];
+    
+    // Current proposals
+    if (proposedDestinations.length > 0) {
+      parts.push(`[DESTINATIONS ACTUELLEMENT PROPOSÉES]\n${proposedDestinations.map((d, i) => 
+        `${i + 1}. ${d.countryName} (${d.countryCode})${d.matchScore ? ` - ${d.matchScore}% match` : ""}`
+      ).join("\n")}`);
+    }
+    
+    // Rejected destinations (negative signal)
+    if (rejectedDestinations.length > 0) {
+      parts.push(`[DESTINATIONS REJETÉES - NE PAS REPROPOSER]\n${rejectedDestinations.map(d => 
+        `- ${d.countryName} (${d.countryCode})`
+      ).join("\n")}`);
+    }
+    
+    return parts.join("\n\n");
+  }, [proposedDestinations, rejectedDestinations]);
+
   const clearHistory = useCallback(() => {
     setInteractions([]);
     setActiveWidgets([]);
+    setProposedDestinations([]);
+    setRejectedDestinations([]);
   }, []);
 
   const value: WidgetHistoryContextValue = {
@@ -226,6 +318,9 @@ export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) 
     getContextForLLM,
     getActiveWidgetsContext,
     getRecentInteractionsSummary,
+    trackDestinationsProposed,
+    trackDestinationSelection,
+    getProposedDestinationsContext,
     clearHistory,
   };
 

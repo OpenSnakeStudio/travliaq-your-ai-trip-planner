@@ -31,6 +31,16 @@ export interface StreamResult {
   flightData: FlightFormData | null;
   accommodationData: any | null;
   quickReplies: QuickReplyData | null;
+  destinationSuggestionRequest: DestinationSuggestionRequest | null;
+}
+
+/**
+ * Destination suggestion request from LLM
+ */
+export interface DestinationSuggestionRequest {
+  requestedCount: number;
+  reason?: string;
+  exceededLimit?: boolean;
 }
 
 /**
@@ -350,6 +360,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
       // Reset content for this attempt
       fullContent = "";
       let quickReplies: QuickReplyData | null = null;
+      let destinationSuggestionRequest: DestinationSuggestionRequest | null = null;
       
       // Throttle UI updates to reduce re-renders (max every 50ms)
           let lastUpdateTime = 0;
@@ -403,6 +414,8 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                     accommodationData = parsed.accommodationData;
                   } else if (parsed.type === "quickReplies" && parsed.quickReplies) {
                     quickReplies = parsed.quickReplies;
+                  } else if (parsed.type === "destinationSuggestionRequest" && parsed.destinationSuggestionRequest) {
+                    destinationSuggestionRequest = parsed.destinationSuggestionRequest;
                   } else if (parsed.type === "content" && parsed.content) {
                     fullContent += parsed.content;
                     // Throttled content update to reduce flickering
@@ -420,7 +433,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
             onContentUpdate(messageId, fullContent, true);
           }
 
-          return { content: fullContent, flightData, accommodationData, quickReplies };
+          return { content: fullContent, flightData, accommodationData, quickReplies, destinationSuggestionRequest };
 
         } catch (err) {
           lastError = err instanceof Error && "type" in err

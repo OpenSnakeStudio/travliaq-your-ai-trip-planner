@@ -216,6 +216,49 @@ ALWAYS generate quick_replies after your response. Think: "What are the 2-4 most
   }
 };
 
+// Tool definition for requesting destination suggestions
+const destinationSuggestionTool = {
+  type: "function",
+  function: {
+    name: "request_destination_suggestions",
+    description: `À utiliser OBLIGATOIREMENT quand l'utilisateur demande des recommandations de destinations.
+
+DÉCLENCHEURS (appeler cet outil si l'utilisateur dit) :
+- "Fais-moi X recommandations de destinations"
+- "Suggère-moi des destinations"
+- "Propose-moi des pays"
+- "Où partir ?"
+- "Quelle destination me conseilles-tu ?"
+- "Donne-moi des idées de voyage"
+- "Recommande-moi X pays/destinations"
+- "Quelles sont les meilleures destinations pour moi ?"
+
+RÈGLES IMPORTANTES :
+1. Le nombre maximum de recommandations est 5 (si l'utilisateur demande plus, expliquer poliment)
+2. Le nombre par défaut est 3
+3. Cet outil déclenche l'appel à l'API de suggestions côté client
+4. Tu dois AUSSI générer un message d'accompagnement chaleureux`,
+    parameters: {
+      type: "object",
+      properties: {
+        requestedCount: {
+          type: "number",
+          description: "Nombre de destinations demandées par l'utilisateur (max 5, par défaut 3)"
+        },
+        reason: {
+          type: "string",
+          description: "Raison de la demande (inspiration, comparaison, etc.)"
+        },
+        exceededLimit: {
+          type: "boolean",
+          description: "TRUE si l'utilisateur a demandé plus de 5 recommandations (pour générer un message d'explication)"
+        }
+      },
+      required: ["requestedCount"]
+    }
+  }
+};
+
 // Tool definition for extracting travel preferences from user message
 const preferenceExtractionTool = {
   type: "function",
@@ -497,7 +540,7 @@ ${phasePrompt}`;
         ],
         temperature: 0.7,
         max_tokens: 500,
-        tools: [flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, quickRepliesExtractionTool],
+        tools: [flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool],
         tool_choice: "auto",
         stream: false, // First call is never streamed to handle tools
       }),
@@ -521,6 +564,7 @@ ${phasePrompt}`;
     let accommodationData = null;
     let preferencesData = null;
     let quickRepliesData = null;
+    let destinationSuggestionRequest = null;
 
     // Check if the model called any extraction tools
     if (choice?.message?.tool_calls) {
@@ -601,6 +645,21 @@ ${phasePrompt}`;
             console.error("Failed to parse quick replies:", e);
           }
         }
+        
+        if (toolCall.function?.name === "request_destination_suggestions") {
+          try {
+            destinationSuggestionRequest = JSON.parse(toolCall.function.arguments);
+            console.log("Destination suggestion request:", destinationSuggestionRequest);
+            
+            // Enforce max 5 limit
+            if (destinationSuggestionRequest.requestedCount > 5) {
+              destinationSuggestionRequest.requestedCount = 5;
+              destinationSuggestionRequest.exceededLimit = true;
+            }
+          } catch (e) {
+            console.error("Failed to parse destination suggestion request:", e);
+          }
+        }
       }
     }
 
@@ -655,15 +714,15 @@ ${phasePrompt}`;
             if (flightData) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "flightData", flightData })}\n\n`));
             }
-          if (accommodationData) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "accommodationData", accommodationData })}\n\n`));
-          }
-          if (preferencesData) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "preferencesData", preferencesData })}\n\n`));
-          }
-            // Send preferencesData as a special event
+            if (accommodationData) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "accommodationData", accommodationData })}\n\n`));
+            }
             if (preferencesData) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "preferencesData", preferencesData })}\n\n`));
+            }
+            // Send destinationSuggestionRequest as a special event
+            if (destinationSuggestionRequest) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "destinationSuggestionRequest", destinationSuggestionRequest })}\n\n`));
             }
             // Send quickRepliesData as a special event
             if (quickRepliesData) {
@@ -751,6 +810,12 @@ ${phasePrompt}`;
           if (accommodationData) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "accommodationData", accommodationData })}\n\n`));
           }
+          if (preferencesData) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "preferencesData", preferencesData })}\n\n`));
+          }
+          if (destinationSuggestionRequest) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "destinationSuggestionRequest", destinationSuggestionRequest })}\n\n`));
+          }
           if (quickRepliesData) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "quickReplies", quickReplies: quickRepliesData })}\n\n`));
           }
@@ -778,9 +843,9 @@ ${phasePrompt}`;
       content = "Désolé, je n'ai pas pu générer de réponse.";
     }
 
-    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData, "preferencesData:", preferencesData, "quickReplies:", quickRepliesData);
+    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData, "preferencesData:", preferencesData, "destinationSuggestionRequest:", destinationSuggestionRequest, "quickReplies:", quickRepliesData);
 
-    return new Response(JSON.stringify({ content, flightData, accommodationData, preferencesData, quickReplies: quickRepliesData }), {
+    return new Response(JSON.stringify({ content, flightData, accommodationData, preferencesData, destinationSuggestionRequest, quickReplies: quickRepliesData }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
