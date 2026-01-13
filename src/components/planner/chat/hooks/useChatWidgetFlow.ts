@@ -8,6 +8,8 @@
  * - City selection
  * - Airport selection
  * - Search button flow
+ * 
+ * Now integrated with widget tracking for LLM context.
  */
 
 import { useCallback, useRef } from "react";
@@ -18,6 +20,7 @@ import type { FlightMemory, AirportInfo, MissingField } from "@/contexts/FlightM
 import type { Airport } from "@/hooks/useNearestAirports";
 import type { WidgetType, CitySelectionData } from "@/types/flight";
 import type { ChatMessage } from "../types";
+import { useWidgetTracking } from "./useWidgetTracking";
 
 /**
  * Widget flow state - tracks pending operations
@@ -80,6 +83,9 @@ function parseDurationToDays(duration: string): number | null {
  */
 export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
   const { memory, updateMemory, updateTravelers, setMessages } = options;
+  
+  // Widget tracking for LLM context
+  const tracking = useWidgetTracking();
 
   // Refs for tracking flow state
   const pendingTravelersWidgetRef = useRef(false);
@@ -191,6 +197,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
       } else {
         updateMemory({ arrival: airportInfo });
       }
+      
+      // Track the interaction for LLM context
+      tracking.trackAirportSelect(airport.name, airport.iata, field === "from" ? "departure" : "arrival");
 
       // Add confirmation message
       const confirmText =
@@ -210,7 +219,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
       // Notify parent
       eventBus.emit("flight:selectAirport", { field, airport });
     },
-    [memory.departure, memory.arrival, updateMemory, setMessages]
+    [memory.departure, memory.arrival, updateMemory, setMessages, tracking]
   );
 
   /**
@@ -239,6 +248,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         nextMem = { ...nextMem, returnDate: date };
         updateMemory({ returnDate: date });
       }
+      
+      // Track the interaction for LLM context
+      tracking.trackDateSelect(date, dateType);
 
       // Remove widget from message
       setMessages((prev) =>
@@ -283,7 +295,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
 
       return nextMem;
     },
-    [memory, updateMemory, setMessages]
+    [memory, updateMemory, setMessages, tracking]
   );
 
   /**
@@ -296,6 +308,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
       // Clear pending refs
       pendingTripDurationRef.current = null;
       pendingPreferredMonthRef.current = null;
+      
+      // Track the interaction for LLM context
+      tracking.trackDateRangeSelect(departure, returnDate);
 
       // Remove widget from message
       setMessages((prev) =>
@@ -335,7 +350,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         ]);
       }
     },
-    [memory.passengers.adults, updateMemory, setMessages]
+    [memory.passengers.adults, updateMemory, setMessages, tracking]
   );
 
   /**
@@ -355,6 +370,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         infants: travelers.infants,
         childrenAges: [],
       });
+      
+      // Track the interaction for LLM context
+      tracking.trackTravelersSelect(travelers);
 
       // Remove widget from message
       setMessages((prev) =>
@@ -383,7 +401,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         },
       ]);
     },
-    [updateMemory, updateTravelers, setMessages]
+    [updateMemory, updateTravelers, setMessages, tracking]
   );
 
   /**
@@ -392,6 +410,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
   const handleTripTypeConfirm = useCallback(
     (messageId: string, tripType: "roundtrip" | "oneway" | "multi") => {
       updateMemory({ tripType });
+      
+      // Track the interaction for LLM context
+      tracking.trackTripTypeSelect(tripType);
 
       // Remove widget from message
       setMessages((prev) =>
@@ -423,7 +444,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         ]);
       }
     },
-    [updateMemory, setMessages]
+    [updateMemory, setMessages, tracking]
   );
 
   /**
@@ -440,6 +461,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
 
       // Update memory with selected city
       updateMemory({ arrival: { city: cityName, country: countryName, countryCode } });
+      
+      // Track the interaction for LLM context
+      tracking.trackCitySelect(cityName, countryName);
 
       // Remove widget from message
       setMessages((prev) =>
@@ -528,7 +552,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         ]);
       }
     },
-    [memory, updateMemory, setMessages]
+    [memory, updateMemory, setMessages, tracking]
   );
 
   /**
@@ -543,6 +567,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
     ) => {
       updateMemory({ departure: { city: cityName, country: countryName, countryCode } });
       pendingFromCountryRef.current = null;
+      
+      // Track the interaction for LLM context (departure city)
+      tracking.trackCitySelect(cityName, `${countryName} (départ)`);
 
       // Remove widget from message
       setMessages((prev) =>
@@ -563,7 +590,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         ]);
       }
     },
-    [memory.arrival?.city, updateMemory, setMessages]
+    [memory.arrival?.city, updateMemory, setMessages, tracking]
   );
 
   /**
@@ -603,6 +630,9 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
    */
   const handleTravelersConfirmSolo = useCallback(
     (messageId: string) => {
+      // Track solo confirmation (1 adult)
+      tracking.trackTravelersSelect({ adults: 1, children: 0, infants: 0 });
+      
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId ? { ...m, widget: undefined } : m
@@ -611,7 +641,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
       pendingSearchAfterTravelersRef.current = false;
       eventBus.emit("flight:triggerSearch");
     },
-    [setMessages]
+    [setMessages, tracking]
   );
 
   /**
@@ -623,6 +653,10 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
       travelers: { adults: number; children: number; infants: number }
     ) => {
       updateMemory({ passengers: travelers });
+      
+      // Track the interaction for LLM context
+      tracking.trackTravelersSelect(travelers);
+      
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId ? { ...m, widget: undefined } : m
@@ -646,7 +680,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         },
       ]);
     },
-    [updateMemory, setMessages]
+    [updateMemory, setMessages, tracking]
   );
 
   /**

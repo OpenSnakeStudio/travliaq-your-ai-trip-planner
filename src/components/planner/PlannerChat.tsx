@@ -1116,6 +1116,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.widget === "preferenceStyle" && (
                       <PreferenceStyleWidget
                         onContinue={() => {
+                          // Track style configuration
+                          const styleAxes = prefMemory.preferences.styleAxes;
+                          widgetTracking.trackStyleConfig({ ...styleAxes } as Record<string, number>);
+                          
                           // After style, show interests widget
                           setInspireFlowStep("interests");
                           const interestsId = `pref-interests-${Date.now()}`;
@@ -1136,6 +1140,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.widget === "preferenceInterests" && (
                       <PreferenceInterestsWidget
                         onContinue={() => {
+                          // Track interests selection
+                          const interests = prefMemory.preferences.interests;
+                          widgetTracking.trackInterestsSelect(interests);
+                          
                           // After interests, show "Autre chose?" question with suggestions
                           setInspireFlowStep("extra");
                           const questionId = `extra-question-${Date.now()}`;
@@ -1176,6 +1184,15 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.widget === "mustHaves" && (
                       <MustHavesWidget
                         onContinue={() => {
+                          // Track must-haves selection
+                          const mustHaves = prefMemory.preferences.mustHaves;
+                          widgetTracking.recordInteraction(
+                            `must-haves-${Date.now()}`,
+                            "must_haves_configured",
+                            { ...mustHaves },
+                            `Critères obligatoires configurés`
+                          );
+                          
                           // After must-haves, offer dietary or fetch destinations
                           const questionId = `after-musthaves-${Date.now()}`;
                           setMessages((prev) => [
@@ -1208,6 +1225,17 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {m.widget === "dietary" && (
                       <DietaryWidget
                         onContinue={() => {
+                          // Track dietary restrictions
+                          const dietary = prefMemory.preferences.dietaryRestrictions;
+                          if (dietary.length > 0) {
+                            widgetTracking.recordInteraction(
+                              `dietary-${Date.now()}`,
+                              "dietary_configured",
+                              { restrictions: dietary },
+                              `Restrictions alimentaires : ${dietary.join(", ")}`
+                            );
+                          }
+                          
                           // After dietary, fetch destinations directly
                           const loadingId = `fetching-destinations-${Date.now()}`;
                           setMessages((prev) => [
@@ -1232,6 +1260,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                         suggestions={m.widgetData.suggestions as DestinationSuggestion[]}
                         basedOnProfile={m.widgetData.basedOnProfile as { completionScore: number; keyFactors: string[] } | undefined}
                         onSelect={async (destination) => {
+                          // Track destination selection
+                          widgetTracking.trackDestinationSelect(destination.countryName, destination.countryCode);
+                          
                           // Store only country info - explicitly clear city to avoid airport search with country name
                           updateMemory({
                             arrival: {
