@@ -1,10 +1,20 @@
 /**
- * SuggestionEngine - Generates ultra-contextual suggestions
+ * SuggestionEngine - Intelligent context-aware suggestion generation
  * 
- * Based on workflow step, active tab, and visible content
+ * Generates smart suggestions based on:
+ * - Conversation history (what assistant just said)
+ * - User intent analysis
+ * - Current workflow step
+ * - Trip data completion status
+ * - Active visual context (map, panels)
  */
 
-import type { ReactNode } from "react";
+import { 
+  analyzeLastAssistantMessage, 
+  analyzeUserIntent, 
+  getAnticipatedSuggestions,
+  type AnticipatedSuggestion
+} from './messageAnalyzer';
 
 export interface SuggestionContext {
   // Workflow state
@@ -38,6 +48,11 @@ export interface SuggestionContext {
   // Destinations proposed (not yet selected)
   hasProposedDestinations?: boolean;
   proposedDestinationNames?: string[];
+  
+  // Conversation context (for intelligent anticipation)
+  lastAssistantMessage?: string;
+  lastUserMessage?: string;
+  conversationTurn?: number;
 }
 
 export interface Suggestion {
@@ -45,6 +60,7 @@ export interface Suggestion {
   label: string;
   message: string;
   iconName: 'sparkles' | 'sun' | 'building' | 'calendar' | 'zap' | 'user' | 'users' | 'plane' | 'scale' | 'sunrise' | 'star' | 'map-pin' | 'camera' | 'compass' | 'utensils' | 'search' | 'clock';
+  emoji?: string; // For anticipated suggestions
 }
 
 // Get current month name in French
@@ -332,41 +348,106 @@ function getDestinationChoiceSuggestions(context: SuggestionContext): Suggestion
 }
 
 /**
+ * Convert anticipated suggestions to standard suggestions format
+ */
+function convertAnticipatedToSuggestion(anticipated: AnticipatedSuggestion): Suggestion {
+  // Map emoji to appropriate icon
+  const emojiToIcon: Record<string, Suggestion['iconName']> = {
+    '✨': 'sparkles',
+    '☀️': 'sun',
+    '🏙️': 'building',
+    '🌍': 'compass',
+    '📍': 'map-pin',
+    '🎯': 'sparkles',
+    '🔄': 'search',
+    '📅': 'calendar',
+    '📆': 'calendar',
+    '🗓️': 'calendar',
+    '🤷': 'user',
+    '🧳': 'user',
+    '💑': 'users',
+    '👥': 'users',
+    '👨‍👩‍👧': 'users',
+    '💰': 'star',
+    '💵': 'star',
+    '💎': 'star',
+    '💶': 'star',
+    '⚡': 'zap',
+    '✈️': 'plane',
+    '⚖️': 'scale',
+    '⭐': 'star',
+    '🏊': 'star',
+    '✅': 'star',
+    '📋': 'calendar',
+    '🆓': 'star',
+    '👍': 'sparkles',
+    '👎': 'user',
+    'ℹ️': 'star',
+    '▶️': 'zap',
+    '🏨': 'building',
+    '✏️': 'star',
+    '❓': 'sparkles',
+  };
+  
+  return {
+    id: anticipated.id,
+    label: anticipated.label,
+    message: anticipated.message,
+    iconName: emojiToIcon[anticipated.emoji || ''] || 'sparkles',
+    emoji: anticipated.emoji,
+  };
+}
+
+/**
  * Main function to get contextual suggestions
- * Always returns relevant suggestions based on current state
+ * Prioritizes intelligent anticipated suggestions based on conversation context
  */
 export function getSuggestions(context: SuggestionContext): Suggestion[] {
-  // 1. DESTINATIONS PROPOSED - after inspire flow with results
+  // 1. INTELLIGENT ANTICIPATION - Based on last assistant message
+  // This takes highest priority when we have conversation context
+  if (context.lastAssistantMessage) {
+    const lastContent = analyzeLastAssistantMessage(context.lastAssistantMessage);
+    const userIntent = analyzeUserIntent(context.lastUserMessage);
+    const conversationTurn = context.conversationTurn ?? 0;
+    
+    const anticipated = getAnticipatedSuggestions(lastContent, userIntent, conversationTurn);
+    
+    if (anticipated.length > 0) {
+      return anticipated.map(convertAnticipatedToSuggestion).slice(0, 4);
+    }
+  }
+  
+  // 2. DESTINATIONS PROPOSED - after inspire flow with results
   if (context.inspireFlowStep === 'results' || context.hasProposedDestinations) {
     return getDestinationChoiceSuggestions(context).slice(0, 3);
   }
   
-  // 2. During inspire flow (widgets active) - no static suggestions
+  // 3. During inspire flow (widgets active) - no static suggestions
   if (context.inspireFlowStep && context.inspireFlowStep !== 'idle') {
     return []; // Let widgets take precedence
   }
   
-  // 3. INSPIRATION - no destination yet, show inspiring suggestions
+  // 4. INSPIRATION - no destination yet, show inspiring suggestions
   if (!context.hasDestination) {
     return getInspirationSuggestions().slice(0, 3);
   }
   
-  // 4. Has destination but no dates - help them pick dates
+  // 5. Has destination but no dates - help them pick dates
   if (!context.hasDates) {
     return getDatesSuggestions(context).slice(0, 3);
   }
   
-  // 5. Has destination & dates but no travelers
+  // 6. Has destination & dates but no travelers
   if (!context.hasTravelers) {
     return getTravelersSuggestions().slice(0, 3);
   }
   
-  // 6. SEARCH READY (all info but on flights tab with no visible flights)
+  // 7. SEARCH READY (all info but on flights tab with no visible flights)
   if (context.currentTab === 'flights' && context.visibleFlightsCount === 0) {
     return getSearchReadySuggestions(context).slice(0, 3);
   }
   
-  // 7. TAB-BASED suggestions
+  // 8. TAB-BASED suggestions
   switch (context.currentTab) {
     case 'flights':
       return getFlightSuggestions(context).slice(0, 3);

@@ -135,8 +135,10 @@ export function SmartSuggestions({
                 "focus:outline-none focus:ring-2 focus:ring-primary/30"
               )}
             >
-              {/* Emoji for dynamic suggestions, icon for static */}
+              {/* Emoji for dynamic/anticipated suggestions, icon for static */}
               {item.isDynamic ? (
+                <span className="text-sm">{item.emoji}</span>
+              ) : item.emoji ? (
                 <span className="text-sm">{item.emoji}</span>
               ) : (
                 item.iconName && iconMap[item.iconName as keyof typeof iconMap]
