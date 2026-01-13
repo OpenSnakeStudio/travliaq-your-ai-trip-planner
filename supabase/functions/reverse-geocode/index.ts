@@ -5,6 +5,38 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// In-memory rate limiting (per edge function instance)
+// Users typically need only 1-2 geocode calls per session
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const MAX_REQUESTS_PER_HOUR = 20;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 3600000 }); // 1 hour
+    return true;
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_HOUR) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Clean up old entries periodically to prevent memory leaks
+function cleanupRateLimitMap(): void {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetAt) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -12,6 +44,32 @@ serve(async (req) => {
   }
 
   try {
+    // Extract client IP for rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    
+    // Check rate limit
+    if (!checkRateLimit(clientIp)) {
+      console.warn(`[reverse-geocode] Rate limit exceeded for IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': '3600'
+          } 
+        }
+      );
+    }
+    
+    // Periodic cleanup (run occasionally, not on every request)
+    if (Math.random() < 0.01) {
+      cleanupRateLimitMap();
+    }
+    
     // Note: This is a public endpoint - no authentication required
     // It's used for auto-detecting user location from coordinates
     
@@ -39,7 +97,7 @@ serve(async (req) => {
     url.searchParams.set('lon', lon.toString());
     url.searchParams.set('accept-language', 'en');
     
-    console.log('[reverse-geocode] Request:', { lat, lon });
+    console.log('[reverse-geocode] Request:', { lat, lon, ip: clientIp });
     
     // Call Nominatim with proper User-Agent
     const response = await fetch(url.toString(), {
