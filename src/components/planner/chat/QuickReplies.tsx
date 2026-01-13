@@ -29,10 +29,9 @@ export function QuickReplies({
     const action = reply.action;
 
     switch (action.type) {
+      // IMPORTANT: sendMessage now behaves like fillInput - never send directly!
+      // This ensures users always have a chance to review/modify before sending
       case "sendMessage":
-        onSendMessage(action.message);
-        break;
-
       case "fillInput":
         onFillInput?.(action.message);
         break;

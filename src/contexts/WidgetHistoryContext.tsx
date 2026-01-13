@@ -41,6 +41,7 @@ export interface ActiveWidget {
   state: "pending" | "completed" | "dismissed";
   selectedValue?: unknown;
   displayLabel?: string;
+  options?: string[]; // Available options for "choose for me" functionality
 }
 
 interface WidgetHistoryContextValue {
@@ -51,7 +52,7 @@ interface WidgetHistoryContextValue {
   activeWidgets: ActiveWidget[];
   
   // Record a widget being shown
-  registerWidget: (messageId: string, widgetType: string) => string;
+  registerWidget: (messageId: string, widgetType: string, options?: string[]) => string;
   
   // Record a widget interaction (selection, completion, etc.)
   recordInteraction: (
@@ -72,6 +73,9 @@ interface WidgetHistoryContextValue {
   
   // Get serialized context for LLM
   getContextForLLM: () => string;
+  
+  // Get active widgets context for LLM (pending widgets with their options)
+  getActiveWidgetsContext: () => string;
   
   // Get recent interactions summary
   getRecentInteractionsSummary: (count?: number) => string;
@@ -95,7 +99,7 @@ export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) 
   const [activeWidgets, setActiveWidgets] = useState<ActiveWidget[]>([]);
   const widgetIdCounter = useRef(0);
 
-  const registerWidget = useCallback((messageId: string, widgetType: string): string => {
+  const registerWidget = useCallback((messageId: string, widgetType: string, options?: string[]): string => {
     const widgetId = `widget-${widgetType}-${Date.now()}-${++widgetIdCounter.current}`;
     
     setActiveWidgets((prev) => [
@@ -106,6 +110,7 @@ export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) 
         widgetType,
         createdAt: Date.now(),
         state: "pending",
+        options,
       },
     ]);
     
@@ -165,6 +170,39 @@ export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) 
     return `[INTERACTIONS UTILISATEUR]\n${lines.join("\n")}`;
   }, [interactions]);
 
+  /**
+   * Get active widgets context for LLM - pending widgets with their options
+   * This allows the LLM to understand what choices are available to help with "choose for me"
+   */
+  const getActiveWidgetsContext = useCallback((): string => {
+    const pending = activeWidgets.filter(w => w.state === "pending");
+    if (pending.length === 0) return "";
+    
+    const widgetTypeLabels: Record<string, string> = {
+      citySelector: "sélection de ville/destination",
+      destinationSuggestions: "suggestions de destinations",
+      datePicker: "sélection de date",
+      dateRangePicker: "sélection de dates",
+      returnDatePicker: "sélection de date de retour",
+      travelersSelector: "nombre de voyageurs",
+      tripTypeConfirm: "type de voyage (aller-retour, aller simple, multi-destinations)",
+      preferenceStyle: "style de voyage",
+      preferenceInterests: "centres d'intérêt",
+      mustHaves: "critères obligatoires",
+      dietary: "restrictions alimentaires",
+    };
+    
+    const lines = pending.map(w => {
+      const label = widgetTypeLabels[w.widgetType] || w.widgetType;
+      if (w.options && w.options.length > 0) {
+        return `- Widget "${label}" affiché avec options : ${w.options.join(", ")}`;
+      }
+      return `- Widget "${label}" en attente de sélection`;
+    });
+    
+    return `[WIDGETS ACTIFS - L'utilisateur voit ces widgets et peut demander "choisis pour moi"]\n${lines.join("\n")}`;
+  }, [activeWidgets]);
+
   const getRecentInteractionsSummary = useCallback((count = 5): string => {
     const recent = interactions.slice(-count);
     if (recent.length === 0) return "";
@@ -186,6 +224,7 @@ export function WidgetHistoryProvider({ children }: WidgetHistoryProviderProps) 
     dismissWidget,
     getWidgetByMessageId,
     getContextForLLM,
+    getActiveWidgetsContext,
     getRecentInteractionsSummary,
     clearHistory,
   };
