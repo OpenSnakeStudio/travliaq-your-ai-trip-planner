@@ -19,8 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
-import { useTravelMemoryStore } from "@/stores/hooks";
+import { useActivityMemoryStore, useTravelMemoryStore } from "@/stores/hooks";
 import { useLocationAutocomplete, type LocationResult } from "@/hooks/useLocationAutocomplete";
 
 import { ActivityCard } from "./ActivityCard";
@@ -31,7 +30,7 @@ import { eventBus } from "@/lib/eventBus";
 import { ACTIVITIES_ZOOM, ACTIVITY_DETAIL_ZOOM } from "@/constants/mapSettings";
 import { format, differenceInDays } from "date-fns";
 import { fr } from "date-fns/locale";
-import type { ViatorActivity } from "@/types/activity";
+import type { ViatorActivity, ActivityEntry as ApiActivityEntry, ActivityFilters as ApiActivityFilters } from "@/types/activity";
 import RangeCalendar from "@/components/RangeCalendar";
 import type { DateRange } from "react-day-picker";
 import { SyncBadgeInline } from "@/components/ui/SyncBadge";
@@ -258,7 +257,7 @@ const ActivitiesPanel = () => {
     getTotalBudget,
     addLocalDestination,
     removeLocalDestination,
-  } = useActivityMemory();
+  } = useActivityMemoryStore();
 
   // Get travelers from travel context
   const { memory: travelMemory } = useTravelMemoryStore();
@@ -325,13 +324,29 @@ const ActivitiesPanel = () => {
     const sorted = [...activitiesOnlyResults];
     switch (sortBy) {
       case "price_asc":
-        return sorted.sort((a, b) => (a.pricing?.from_price || 0) - (b.pricing?.from_price || 0));
+        return sorted.sort((a, b) => {
+          const priceA = a.pricing?.from_price ?? a.price ?? 0;
+          const priceB = b.pricing?.from_price ?? b.price ?? 0;
+          return priceA - priceB;
+        });
       case "price_desc":
-        return sorted.sort((a, b) => (b.pricing?.from_price || 0) - (a.pricing?.from_price || 0));
+        return sorted.sort((a, b) => {
+          const priceA = a.pricing?.from_price ?? a.price ?? 0;
+          const priceB = b.pricing?.from_price ?? b.price ?? 0;
+          return priceB - priceA;
+        });
       case "rating":
-        return sorted.sort((a, b) => (b.rating?.average || 0) - (a.rating?.average || 0));
+        return sorted.sort((a, b) => {
+          const ratingA = typeof a.rating === 'object' ? a.rating?.average : a.rating ?? 0;
+          const ratingB = typeof b.rating === 'object' ? b.rating?.average : b.rating ?? 0;
+          return (ratingB ?? 0) - (ratingA ?? 0);
+        });
       case "duration":
-        return sorted.sort((a, b) => (b.duration?.minutes || 0) - (a.duration?.minutes || 0));
+        return sorted.sort((a, b) => {
+          const durationA = typeof a.duration === 'object' ? a.duration?.minutes : a.duration ?? 0;
+          const durationB = typeof b.duration === 'object' ? b.duration?.minutes : b.duration ?? 0;
+          return (durationB ?? 0) - (durationA ?? 0);
+        });
       default:
         return sorted;
     }
@@ -773,8 +788,8 @@ const ActivitiesPanel = () => {
               {/* Filters Card */}
               <div className="rounded-xl border border-border/40 bg-card/50 p-3">
                 <ActivityFilters
-                  filters={activityState.activeFilters}
-                  onFiltersChange={updateFilters}
+                  filters={activityState.activeFilters as unknown as ApiActivityFilters}
+                  onFiltersChange={updateFilters as any}
                   compact={false}
                   travelers={travelers}
                 />
@@ -814,7 +829,7 @@ const ActivitiesPanel = () => {
                     {plannedActivities.slice(0, 3).map((activity) => (
                       <ActivityCard
                         key={activity.id}
-                        activity={activity}
+                        activity={activity as any}
                         mode="planned"
                         compact
                         onRemove={() => handleRemoveActivity(activity.id)}
@@ -892,10 +907,10 @@ const ActivitiesPanel = () => {
                   {sortedSearchResults.map((activity) => (
                     <ActivityCard
                       key={activity.id}
-                      activity={activity}
+                      activity={activity as any}
                       mode="search"
-                      onClick={() => handleActivityClick(activity)}
-                      onAdd={() => handleAddActivity(activity)}
+                      onClick={() => handleActivityClick(activity as any)}
+                      onAdd={() => handleAddActivity(activity as any)}
                     />
                   ))}
                 </div>
