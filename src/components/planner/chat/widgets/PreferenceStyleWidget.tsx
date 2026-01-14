@@ -7,9 +7,8 @@
 import { memo, useCallback } from "react";
 import { Sliders, ArrowRight } from "lucide-react";
 import { DualSlider } from "@/components/ui/dual-slider";
-import { usePreferenceMemory } from "@/contexts/preferences";
+import { usePreferenceMemoryStore, type StyleAxes } from "@/stores/hooks";
 import { cn } from "@/lib/utils";
-import type { StyleAxes } from "@/contexts/preferences";
 
 interface PreferenceStyleWidgetProps {
   /** Called when user clicks "Continue" to advance the flow */
@@ -33,7 +32,7 @@ const AXES_CONFIG: Array<{
 export const PreferenceStyleWidget = memo(function PreferenceStyleWidget({
   onContinue,
 }: PreferenceStyleWidgetProps) {
-  const { memory, setStyleAxis } = usePreferenceMemory();
+  const { memory, setStyleAxis } = usePreferenceMemoryStore();
   const axes = memory.preferences.styleAxes;
 
   const handleAxisChange = useCallback((key: keyof StyleAxes, value: number) => {

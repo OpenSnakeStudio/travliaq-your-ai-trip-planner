@@ -5,7 +5,7 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import type { TripContext } from "@/contexts/preferences";
+import type { TripContext } from "@/stores/hooks";
 
 interface OccasionOption {
   id: NonNullable<TripContext["occasion"]>;

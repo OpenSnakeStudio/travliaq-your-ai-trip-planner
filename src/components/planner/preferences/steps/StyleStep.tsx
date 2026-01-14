@@ -5,7 +5,7 @@
 
 import { memo } from "react";
 import { ChevronDown, Sparkles, Sliders } from "lucide-react";
-import { usePreferenceMemory } from "@/contexts/preferences";
+import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { StyleEqualizer, InterestPicker, SmartTagsWidget } from "../";
 import { SectionHeader } from "../widgets";
 
@@ -18,7 +18,7 @@ export const StyleStep = memo(function StyleStep({ onNextStep }: StyleStepProps)
     memory: { preferences },
     setStyleAxis,
     toggleInterest,
-  } = usePreferenceMemory();
+  } = usePreferenceMemoryStore();
 
   return (
     <div className="space-y-4">

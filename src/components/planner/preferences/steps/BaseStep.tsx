@@ -6,7 +6,7 @@
 import { memo, useState, useCallback } from "react";
 import { ChevronDown, Sparkles, Users, Zap, Heart, PartyPopper, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePreferenceMemory, type TravelStyle, type StyleAxes, type TripContext } from "@/contexts/preferences";
+import { usePreferenceMemoryStore, type TravelStyle, type StyleAxes, type TripContext } from "@/stores/hooks";
 import { TravelStyleSelector, OccasionSelector, PreferenceSummary } from "../";
 import { SectionHeader, type Step } from "../widgets";
 import { eventBus } from "@/lib/eventBus";
@@ -128,7 +128,7 @@ export const BaseStep = memo(function BaseStep({ onNextStep }: BaseStepProps) {
     setOccasion,
     getProfileCompletion,
     updatePreferences,
-  } = usePreferenceMemory();
+  } = usePreferenceMemoryStore();
 
   const [showPresets, setShowPresets] = useState(true);
   const completion = getProfileCompletion();

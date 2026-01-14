@@ -6,7 +6,7 @@
 
 import { memo, useCallback } from "react";
 import { ArrowRight } from "lucide-react";
-import { usePreferenceMemory } from "@/contexts/preferences";
+import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { cn } from "@/lib/utils";
 
 interface PreferenceInterestsWidgetProps {
@@ -33,7 +33,7 @@ const MAX_SELECTIONS = 5;
 export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget({
   onContinue,
 }: PreferenceInterestsWidgetProps) {
-  const { memory, toggleInterest } = usePreferenceMemory();
+  const { memory, toggleInterest } = usePreferenceMemoryStore();
   const selected = memory.preferences.interests;
   const isMaxReached = selected.length >= MAX_SELECTIONS;
 

@@ -6,7 +6,7 @@
 import { memo } from "react";
 import { ArrowRight, Utensils } from "lucide-react";
 import { DietaryPicker } from "@/components/planner/preferences/DietaryPicker";
-import { usePreferenceMemory } from "@/contexts/preferences";
+import { usePreferenceMemoryStore } from "@/stores/hooks";
 
 interface DietaryWidgetProps {
   onContinue?: () => void;
@@ -15,7 +15,7 @@ interface DietaryWidgetProps {
 export const DietaryWidget = memo(function DietaryWidget({
   onContinue,
 }: DietaryWidgetProps) {
-  const { memory, toggleDietaryRestriction } = usePreferenceMemory();
+  const { memory, toggleDietaryRestriction } = usePreferenceMemoryStore();
   const dietaryRestrictions = memory.preferences.dietaryRestrictions;
 
   // Count active restrictions

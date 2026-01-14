@@ -86,7 +86,7 @@ export interface PlannerChatRef {
   askAirportConfirmation: (data: import("@/types/flight").AirportConfirmationData) => void;
   handleActivityUpdate: (city: string, updates: Partial<import("@/stores/hooks").ActivityEntry>) => boolean;
   handleAddActivityForCity: (city: string, activity: Partial<import("@/stores/hooks").ActivityEntry>) => string | null;
-  handlePreferencesDetection: (detectedPrefs: Partial<import("@/contexts/PreferenceMemoryContext").TripPreferences>) => void;
+  handlePreferencesDetection: (detectedPrefs: Partial<import("@/stores/hooks").TripPreferences>) => void;
 }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {

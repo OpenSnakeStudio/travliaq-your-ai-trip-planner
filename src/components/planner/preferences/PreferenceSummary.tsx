@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, memo } from "react";
-import { usePreferenceMemory, type TripPreferences } from "@/contexts/preferences";
+import { usePreferenceMemoryStore, type TripPreferences } from "@/stores/hooks";
 import { Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -57,7 +57,7 @@ const PLACEHOLDER = "Affinez vos préférences pour découvrir votre profil voya
 const CHANGES_THRESHOLD = 3; // Regenerate every N changes to optimize LLM costs
 
 export const PreferenceSummary = memo(function PreferenceSummary({ className, compact = false }: PreferenceSummaryProps) {
-  const { getPreferences, getProfileCompletion } = usePreferenceMemory();
+  const { getPreferences, getProfileCompletion } = usePreferenceMemoryStore();
   const [summary, setSummary] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
