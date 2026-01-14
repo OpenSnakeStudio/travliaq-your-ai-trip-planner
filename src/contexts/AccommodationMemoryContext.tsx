@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useMemo, ReactNode, useEffect, useRef } from "react";
-import { useTravelMemory } from "./TravelMemoryContext";
-import { useFlightMemory } from "./FlightMemoryContext";
+import { useTravelMemoryStore } from "@/stores/hooks";
+import { useFlightMemoryStore } from "@/stores/hooks";
 import { usePreferenceMemory } from "./PreferenceMemoryContext";
 import { migrateAccommodationMemory } from "@/lib/memoryMigration";
 import { toastSuccess } from "@/lib/toast";
@@ -305,10 +305,10 @@ export function AccommodationMemoryProvider({ children }: { children: ReactNode 
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Access travel memory for room suggestions
-  const { memory: travelMemory, hasDestinations, hasDates } = useTravelMemory();
+  const { memory: travelMemory, hasDestinations, hasDates } = useTravelMemoryStore();
 
   // Access flight memory for trip type changes
-  const { memory: flightMemory } = useFlightMemory();
+  const { memory: flightMemory } = useFlightMemoryStore();
 
   // Access preferences for budget synchronization
   const { memory: { preferences } } = usePreferenceMemory();
