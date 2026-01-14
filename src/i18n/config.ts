@@ -1269,6 +1269,7 @@ const resources = {
       "planner.tabs.backToHome": "Retour à l'accueil",
       "planner.tabs.openChat": "Ouvrir le chat",
       "planner.tabs.leaveConfirm": "Quitter le planner ?",
+      "planner.myTrip": "Mon Voyage",
       // Step suggestions
       "planner.step.selectDestination": "Commençons par choisir votre destination",
       "planner.step.selectDates": "Parfait ! Maintenant, sélectionnons vos dates de voyage",
@@ -3082,6 +3083,7 @@ const resources = {
       "planner.tabs.backToHome": "Back to home",
       "planner.tabs.openChat": "Open chat",
       "planner.tabs.leaveConfirm": "Leave planner?",
+      "planner.myTrip": "My Trip",
       // Step suggestions
       "planner.step.selectDestination": "Let's start by choosing your destination",
       "planner.step.selectDates": "Perfect! Now let's select your travel dates",
