@@ -1147,7 +1147,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             className="flex-1 overflow-y-auto"
           >
             <div className="max-w-3xl mx-auto py-6 px-4 space-y-6">
-              {messages.filter((m) => !m.isHidden).map((m) => (
+              {/* Optimized: filter once, render visible messages */}
+              {messages.filter((m) => !m.isHidden).slice(-100).map((m) => (
                 <div key={m.id} className={cn("flex gap-2", m.role === "user" ? "flex-row-reverse" : "")}>
                   {/* Content - no avatars */}
                   <div className={cn("flex-1 min-w-0", m.role === "user" ? "text-right" : "")}>
