@@ -55,12 +55,15 @@ interface SearchAgainButtonProps {
 export function SearchAgainButton({
   onClick,
   isLoading = false,
-  label = "Modifier la recherche",
+  label,
   size = "md",
   variant = "outline",
   disabled = false,
   showIcon = true,
 }: SearchAgainButtonProps) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t("planner.nav.modifySearch");
+
   const sizeClasses = {
     sm: "px-3 py-1.5 text-xs gap-1.5",
     md: "px-4 py-2 text-sm gap-2",
@@ -100,7 +103,7 @@ export function SearchAgainButton({
           <Search size={iconSizes[size]} />
         )
       )}
-      <span>{label}</span>
+      <span>{displayLabel}</span>
     </button>
   );
 }
@@ -146,12 +149,13 @@ export function ViewMoreButton({
   variant = "button",
   disabled = false,
 }: ViewMoreButtonProps) {
+  const { t } = useTranslation();
   const getLabel = () => {
     if (label) return label;
     if (remainingCount !== undefined && remainingCount > 0) {
-      return `Voir ${remainingCount} résultat${remainingCount > 1 ? "s" : ""} de plus`;
+      return t("planner.nav.viewMoreResults", { count: remainingCount });
     }
-    return "Voir plus";
+    return t("planner.nav.viewMore");
   };
 
   const sizeClasses = {
@@ -258,11 +262,13 @@ interface BackButtonProps {
  */
 export function BackButton({
   onClick,
-  label = "Retour",
+  label,
   size = "md",
   variant = "text",
   disabled = false,
 }: BackButtonProps) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t("planner.nav.back");
   const sizeClasses = {
     sm: variant === "icon" ? "p-1.5" : "text-xs gap-1",
     md: variant === "icon" ? "p-2" : "text-sm gap-1.5",
@@ -356,15 +362,18 @@ interface ResetButtonProps {
  */
 export function ResetButton({
   onClick,
-  label = "Recommencer",
+  label,
   size = "md",
   variant = "text",
   confirmRequired = false,
   disabled = false,
 }: ResetButtonProps) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t("planner.nav.restart");
+
   const handleClick = () => {
     if (confirmRequired) {
-      if (window.confirm("Êtes-vous sûr de vouloir recommencer la planification ?")) {
+      if (window.confirm(t("planner.nav.restartConfirm"))) {
         onClick();
       }
     } else {
@@ -435,7 +444,7 @@ export function ResetButton({
 export function RefreshButton({
   onClick,
   isLoading = false,
-  label = "Actualiser",
+  label,
   size = "md",
   showLabel = false,
   disabled = false,
@@ -447,6 +456,8 @@ export function RefreshButton({
   showLabel?: boolean;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t("planner.nav.refresh");
   const iconSize = size === "sm" ? 14 : 16;
 
   return (
@@ -479,7 +490,7 @@ export function RefreshButton({
  */
 export function HomeButton({
   onClick,
-  label = "Accueil",
+  label,
   size = "md",
   showLabel = false,
   disabled = false,
@@ -490,6 +501,8 @@ export function HomeButton({
   showLabel?: boolean;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+  const displayLabel = label ?? t("planner.nav.home");
   const iconSize = size === "sm" ? 14 : 16;
 
   return (
