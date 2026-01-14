@@ -42,6 +42,13 @@ export {
 // Preference widget callbacks (Phase 2.1 optimization)
 export { usePreferenceWidgetCallbacks } from "./usePreferenceWidgetCallbacks";
 
+// Intent Handler (Sprint 2 - Intent routing)
+export {
+  useIntentHandler,
+  type UseIntentHandlerOptions,
+  type UseIntentHandlerReturn,
+} from "./useIntentHandler";
+
 // Performance optimization hooks
 export {
   useDebounce,

@@ -24,6 +24,22 @@ export interface APIMessage {
 }
 
 /**
+ * Intent classification from backend
+ */
+export interface IntentClassification {
+  primaryIntent: string;
+  confidence: number;
+  entities: Record<string, unknown>;
+  widgetToShow?: {
+    type: string;
+    reason: string;
+    data?: Record<string, unknown>;
+  };
+  nextExpectedIntent?: string;
+  requiresClarification?: boolean;
+}
+
+/**
  * Stream response result
  */
 export interface StreamResult {
@@ -32,6 +48,7 @@ export interface StreamResult {
   accommodationData: any | null;
   quickReplies: QuickReplyData | null;
   destinationSuggestionRequest: DestinationSuggestionRequest | null;
+  intentClassification: IntentClassification | null;
 }
 
 /**
@@ -361,6 +378,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
       fullContent = "";
       let quickReplies: QuickReplyData | null = null;
       let destinationSuggestionRequest: DestinationSuggestionRequest | null = null;
+      let intentClassification: IntentClassification | null = null;
       
       // Throttle UI updates to reduce re-renders (max every 50ms)
           let lastUpdateTime = 0;
@@ -408,7 +426,10 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                 try {
                   const parsed = JSON.parse(jsonStr);
 
-                  if (parsed.type === "flightData" && parsed.flightData) {
+                  if (parsed.type === "intentClassification" && parsed.intentClassification) {
+                    intentClassification = parsed.intentClassification;
+                    console.log("[Stream] Intent classified:", intentClassification.primaryIntent, "confidence:", intentClassification.confidence);
+                  } else if (parsed.type === "flightData" && parsed.flightData) {
                     flightData = parsed.flightData;
                   } else if (parsed.type === "accommodationData" && parsed.accommodationData) {
                     accommodationData = parsed.accommodationData;
@@ -433,7 +454,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
             onContentUpdate(messageId, fullContent, true);
           }
 
-          return { content: fullContent, flightData, accommodationData, quickReplies, destinationSuggestionRequest };
+          return { content: fullContent, flightData, accommodationData, quickReplies, destinationSuggestionRequest, intentClassification };
 
         } catch (err) {
           lastError = err instanceof Error && "type" in err

@@ -746,7 +746,11 @@ ${phasePrompt}`;
         const encoder = new TextEncoder();
         const readableStream = new ReadableStream({
           async start(controller) {
-            // Send flightData first as a special event
+            // Send intent classification first for frontend routing
+            if (intentClassification) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "intentClassification", intentClassification })}\n\n`));
+            }
+            // Send flightData as a special event
             if (flightData) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "flightData", flightData })}\n\n`));
             }
@@ -840,6 +844,10 @@ ${phasePrompt}`;
       const encoder = new TextEncoder();
       const readableStream = new ReadableStream({
         async start(controller) {
+          // Send intent classification first
+          if (intentClassification) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "intentClassification", intentClassification })}\n\n`));
+          }
           if (flightData) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "flightData", flightData })}\n\n`));
           }
@@ -879,9 +887,17 @@ ${phasePrompt}`;
       content = "Désolé, je n'ai pas pu générer de réponse.";
     }
 
-    console.log("Final response - content:", content, "flightData:", flightData, "accommodationData:", accommodationData, "preferencesData:", preferencesData, "destinationSuggestionRequest:", destinationSuggestionRequest, "quickReplies:", quickRepliesData);
+    console.log("Final response - content:", content, "flightData:", flightData, "intentClassification:", intentClassification?.primaryIntent);
 
-    return new Response(JSON.stringify({ content, flightData, accommodationData, preferencesData, destinationSuggestionRequest, quickReplies: quickRepliesData }), {
+    return new Response(JSON.stringify({ 
+      content, 
+      flightData, 
+      accommodationData, 
+      preferencesData, 
+      destinationSuggestionRequest, 
+      quickReplies: quickRepliesData,
+      intentClassification 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
