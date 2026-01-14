@@ -5,6 +5,7 @@
 
 import { memo, useCallback } from "react";
 import { Plane } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "./types";
 import { MessageActions } from "./MessageActions";
@@ -83,6 +84,7 @@ function ChatMessageItemComponent({
   onTriggerWidget,
   onDestinationSelect,
 }: ChatMessageItemProps) {
+  const { t } = useTranslation();
   return (
     <div className={cn("flex gap-2", m.role === "user" ? "flex-row-reverse" : "")}>
       {/* Content */}
@@ -136,7 +138,7 @@ function ChatMessageItemComponent({
         {/* Widgets */}
         {m.widget === "datePicker" && (
           <DatePickerWidget
-            label="Choisir la date de départ"
+            label={t("planner.datePicker.chooseDepartureDate")}
             value={memory.departureDate}
             onChange={(date) => widgetFlow.handleDateSelect(m.id, "departure", date)}
             preferredMonth={m.widgetData?.preferredMonth}
@@ -144,7 +146,7 @@ function ChatMessageItemComponent({
         )}
         {m.widget === "returnDatePicker" && (
           <DatePickerWidget
-            label="Choisir la date de retour"
+            label={t("planner.datePicker.chooseReturnDate")}
             value={memory.returnDate}
             onChange={(date) => widgetFlow.handleDateSelect(m.id, "return", date)}
             minDate={memory.departureDate || undefined}
@@ -228,7 +230,7 @@ function ChatMessageItemComponent({
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
             >
               <Plane className="h-4 w-4" />
-              Rechercher les vols maintenant
+              {t("planner.search.searchFlightsNow")}
             </button>
           </div>
         )}
