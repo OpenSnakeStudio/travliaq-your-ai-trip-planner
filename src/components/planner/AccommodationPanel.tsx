@@ -8,9 +8,9 @@ import {
 import { cn } from "@/lib/utils";
 import { toastInfo, toastError } from "@/lib/toast";
 import { logger, LogCategory } from "@/utils/logger";
-import { useTravelMemory } from "@/contexts/TravelMemoryContext";
+import { useTravelMemoryStore } from "@/stores/hooks";
 import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan } from "@/contexts/AccommodationMemoryContext";
-import { useFlightMemory } from "@/contexts/FlightMemoryContext";
+import { useFlightMemoryStore } from "@/stores/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -596,9 +596,9 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
   const { 
     memory: travelMemory, 
     updateTravelers,
-  } = useTravelMemory();
+  } = useTravelMemoryStore();
   
-  const { memory: flightMemory } = useFlightMemory();
+  const { memory: flightMemory } = useFlightMemoryStore();
   
   const {
     memory,

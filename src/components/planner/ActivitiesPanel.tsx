@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
-import { useTravelMemory } from "@/contexts/TravelMemoryContext";
+import { useTravelMemoryStore } from "@/stores/hooks";
 import { useLocationAutocomplete, type LocationResult } from "@/hooks/useLocationAutocomplete";
 
 import { ActivityCard } from "./ActivityCard";
@@ -261,7 +261,7 @@ const ActivitiesPanel = () => {
   } = useActivityMemory();
 
   // Get travelers from travel context
-  const { memory: travelMemory } = useTravelMemory();
+  const { memory: travelMemory } = useTravelMemoryStore();
   const travelers = useMemo(() => ({
     adults: travelMemory.travelers.adults,
     children: travelMemory.travelers.children,
