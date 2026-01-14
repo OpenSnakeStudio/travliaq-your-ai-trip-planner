@@ -39,6 +39,9 @@ export {
   type WidgetActionExecutorOptions,
 } from "./useWidgetActionExecutor";
 
+// Preference widget callbacks (Phase 2.1 optimization)
+export { usePreferenceWidgetCallbacks } from "./usePreferenceWidgetCallbacks";
+
 // Performance optimization hooks
 export {
   useDebounce,

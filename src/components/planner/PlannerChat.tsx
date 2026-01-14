@@ -40,7 +40,7 @@ import {
   DestinationSuggestionsGrid,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks } from "./chat/hooks";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
@@ -355,6 +355,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       setIsLoadingDestinations(false);
     }
   }, [departureCity, departureCountry, departureDateValue, getPreferences]);
+
+  // Preference widget callbacks (encapsulated for maintainability)
+  const preferenceCallbacks = usePreferenceWidgetCallbacks({
+    prefMemory,
+    widgetTracking,
+    setInspireFlowStep,
+    setMessages,
+    setDynamicSuggestions,
+    handleFetchDestinations,
+  });
 
   // Utilities to avoid infinite sync loops between local state ↔ persisted state
   const areStoredMessagesEqual = useCallback((a: StoredMessage[], b: StoredMessage[]) => {
@@ -1253,144 +1263,22 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     
                     {/* Preference Style Widget */}
                     {m.widget === "preferenceStyle" && (
-                      <PreferenceStyleWidget
-                        onContinue={() => {
-                          // Track style configuration
-                          const styleAxes = prefMemory.preferences.styleAxes;
-                          widgetTracking.trackStyleConfig({ ...styleAxes } as Record<string, number>);
-                          
-                          // After style, show interests widget
-                          setInspireFlowStep("interests");
-                          const interestsId = `pref-interests-${Date.now()}`;
-                          setMessages((prev) => [
-                            ...prev,
-                            {
-                              id: interestsId,
-                              role: "assistant",
-                              text: "Maintenant, sélectionnez vos centres d'intérêt :",
-                              widget: "preferenceInterests" as import("@/types/flight").WidgetType,
-                            },
-                          ]);
-                        }}
-                      />
+                      <PreferenceStyleWidget onContinue={preferenceCallbacks.onStyleContinue} />
                     )}
                     
                     {/* Preference Interests Widget */}
                     {m.widget === "preferenceInterests" && (
-                      <PreferenceInterestsWidget
-                        onContinue={() => {
-                          // Track interests selection
-                          const interests = prefMemory.preferences.interests;
-                          widgetTracking.trackInterestsSelect(interests);
-                          
-                          // After interests, show "Autre chose?" question with suggestions
-                          setInspireFlowStep("extra");
-                          const questionId = `extra-question-${Date.now()}`;
-                          setMessages((prev) => [
-                            ...prev,
-                            {
-                              id: questionId,
-                              role: "assistant",
-                              text: "Avez-vous autre chose à signaler ? (critères obligatoires, restrictions alimentaires...)",
-                            },
-                          ]);
-                          // Dynamic suggestions for extra options
-                          setDynamicSuggestions([
-                            {
-                              id: "must-haves",
-                              label: "Critères obligatoires",
-                              emoji: "⚠️",
-                              message: "__WIDGET__mustHaves",
-                            },
-                            {
-                              id: "dietary",
-                              label: "Restrictions alimentaires",
-                              emoji: "🍽️",
-                              message: "__WIDGET__dietary",
-                            },
-                            {
-                              id: "nothing-else",
-                              label: "Rien d'autre, suggérer !",
-                              emoji: "✈️",
-                              message: "__FETCH_DESTINATIONS__",
-                            },
-                          ]);
-                        }}
-                      />
+                      <PreferenceInterestsWidget onContinue={preferenceCallbacks.onInterestsContinue} />
                     )}
                     
                     {/* Must-Haves Widget */}
                     {m.widget === "mustHaves" && (
-                      <MustHavesWidget
-                        onContinue={() => {
-                          // Track must-haves selection
-                          const mustHaves = prefMemory.preferences.mustHaves;
-                          widgetTracking.recordInteraction(
-                            `must-haves-${Date.now()}`,
-                            "must_haves_configured",
-                            { ...mustHaves },
-                            `Critères obligatoires configurés`
-                          );
-                          
-                          // After must-haves, offer dietary or fetch destinations
-                          const questionId = `after-musthaves-${Date.now()}`;
-                          setMessages((prev) => [
-                            ...prev,
-                            {
-                              id: questionId,
-                              role: "assistant",
-                              text: "Parfait ! Autre chose à signaler ?",
-                            },
-                          ]);
-                          setDynamicSuggestions([
-                            {
-                              id: "dietary",
-                              label: "Restrictions alimentaires",
-                              emoji: "🍽️",
-                              message: "__WIDGET__dietary",
-                            },
-                            {
-                              id: "nothing-else",
-                              label: "Rien d'autre, suggérer !",
-                              emoji: "✈️",
-                              message: "__FETCH_DESTINATIONS__",
-                            },
-                          ]);
-                        }}
-                      />
+                      <MustHavesWidget onContinue={preferenceCallbacks.onMustHavesContinue} />
                     )}
                     
                     {/* Dietary Widget */}
                     {m.widget === "dietary" && (
-                      <DietaryWidget
-                        onContinue={() => {
-                          // Track dietary restrictions
-                          const dietary = prefMemory.preferences.dietaryRestrictions;
-                          if (dietary.length > 0) {
-                            widgetTracking.recordInteraction(
-                              `dietary-${Date.now()}`,
-                              "dietary_configured",
-                              { restrictions: dietary },
-                              `Restrictions alimentaires : ${dietary.join(", ")}`
-                            );
-                          }
-                          
-                          // After dietary, fetch destinations directly
-                          const loadingId = `fetching-destinations-${Date.now()}`;
-                          setMessages((prev) => [
-                            ...prev,
-                            {
-                              id: loadingId,
-                              role: "assistant",
-                              text: "Je recherche les meilleures destinations pour vous...",
-                              isTyping: true,
-                            },
-                          ]);
-                          setDynamicSuggestions([]);
-                          // Trigger destination fetch
-                          handleFetchDestinations(loadingId);
-                        }}
-                      />
+                      <DietaryWidget onContinue={preferenceCallbacks.onDietaryContinue} />
                     )}
                     
                     {/* Destination Suggestions Grid */}
