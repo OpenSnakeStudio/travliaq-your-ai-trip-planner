@@ -139,7 +139,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
             {suggestions.map((suggestion, index) => (
               <CarouselItem
                 key={`${suggestion.countryCode}-${index}`}
-                className="pl-3 basis-[95%]"
+                className="pl-3 basis-[93%]"
               >
                 <DestinationSuggestionCard
                   suggestion={suggestion}
@@ -152,52 +152,6 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
           </CarouselContent>
         </Carousel>
 
-        {/* Custom Navigation Arrows - Larger and more visible */}
-        <AnimatePresence>
-          {canScrollPrev && (
-            <motion.button
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-              onClick={scrollPrev}
-              className={cn(
-                "absolute left-1 top-1/2 -translate-y-1/2 z-10",
-                "h-12 w-12 rounded-full",
-                "bg-background/95 backdrop-blur-md shadow-xl border border-border/50",
-                "flex items-center justify-center",
-                "hover:bg-primary hover:text-primary-foreground hover:border-primary",
-                "transition-all duration-200",
-                "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              )}
-              aria-label="Destination précédente"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </motion.button>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
-          {canScrollNext && (
-            <motion.button
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              onClick={scrollNext}
-              className={cn(
-                "absolute right-1 top-1/2 -translate-y-1/2 z-10",
-                "h-12 w-12 rounded-full",
-                "bg-background/95 backdrop-blur-md shadow-xl border border-border/50",
-                "flex items-center justify-center",
-                "hover:bg-primary hover:text-primary-foreground hover:border-primary",
-                "transition-all duration-200",
-                "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              )}
-              aria-label="Destination suivante"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </motion.button>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Pagination Dots - Enhanced visibility */}

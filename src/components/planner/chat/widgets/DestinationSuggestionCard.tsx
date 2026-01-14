@@ -179,7 +179,7 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           )}
         </div>
 
-        <CardContent className="p-4 space-y-4 flex-1">
+        <CardContent className="p-4 space-y-3 flex-1">
           {/* Headline */}
           <h3 className="font-semibold text-base leading-tight text-foreground">
             {headline}
@@ -191,67 +191,48 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           </p>
 
           {/* Key Factors */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             {keyFactors.slice(0, 3).map((factor, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              <div key={i} className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-green-500 shrink-0" />
                 <span className="text-sm text-muted-foreground">{factor}</span>
               </div>
             ))}
           </div>
 
-          {/* Stats Section */}
-          <div className="space-y-2.5 pt-3 border-t border-border">
-            {/* Budget */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-amber-500/10">
-                <Wallet className="h-4 w-4 text-amber-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Budget journalier</p>
-                <p className="text-sm font-medium text-foreground">
-                  {estimatedBudgetPerPerson.min}–{estimatedBudgetPerPerson.max}€ /jour
-                </p>
-              </div>
+          {/* Stats Row - Compact horizontal */}
+          <div className="flex items-center gap-4 text-sm pt-2 border-t border-border">
+            <div className="flex items-center gap-1.5">
+              <Wallet className="h-4 w-4 text-amber-500" />
+              <span className="text-foreground font-medium">
+                {estimatedBudgetPerPerson.min}–{estimatedBudgetPerPerson.max}€
+              </span>
+              <span className="text-muted-foreground text-xs">/j</span>
             </div>
-
-            {/* Flight */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500/10">
-                <Plane className="h-4 w-4 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Vol aller-retour</p>
-                <p className="text-sm font-medium text-foreground">
-                  {flightPriceEstimate ? `≈ ${flightPriceEstimate}€` : "Non disponible"}
-                  <span className="text-xs font-normal text-muted-foreground ml-1">estimation</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Season */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-purple-500/10">
-                <Calendar className="h-4 w-4 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Meilleure période</p>
-                <p className="text-sm font-medium text-foreground">
-                  {bestSeasons.slice(0, 2).join(", ")}
-                </p>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 text-purple-500" />
+              <span className="text-foreground">{bestSeasons.slice(0, 2).join(", ")}</span>
             </div>
           </div>
 
+          {/* Flight estimate - separate line */}
+          <div className="flex items-center gap-1.5 text-sm">
+            <Plane className="h-4 w-4 text-blue-500" />
+            <span className="text-foreground">
+              Vol A/R : {flightPriceEstimate ? `≈${flightPriceEstimate}€` : "—"}
+            </span>
+            <span className="text-xs text-muted-foreground">(estimation)</span>
+          </div>
+
           {/* Activities */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {topActivities.slice(0, 4).map((activity, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-foreground"
               >
                 <span>{getActivityEmoji(activity.emoji)}</span>
-                <span className="truncate max-w-[100px]">{activity.name}</span>
+                <span className="truncate max-w-[90px]">{activity.name}</span>
               </span>
             ))}
           </div>
