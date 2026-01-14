@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Plane, ChevronDown, ChevronUp, Luggage, Star, Zap, Moon, Clock, Leaf, Info, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -107,7 +108,8 @@ const FlightCard = ({
   onToggleExpand,
   isRevealed,
   travelers = 1,
-  isFirst = false
+  isFirst = false,
+  t,
 }: { 
   flight: FlightOffer; 
   onSelect?: (flight: FlightOffer) => void;
@@ -116,6 +118,7 @@ const FlightCard = ({
   isRevealed: boolean;
   travelers?: number;
   isFirst?: boolean;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) => {
   const mainSegment = flight.outbound[0];
   const lastOutbound = flight.outbound[flight.outbound.length - 1];
@@ -157,22 +160,22 @@ const FlightCard = ({
         <div className="px-3 pt-2 pb-0 flex gap-1.5 flex-wrap">
           {isFirst && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[11px] font-semibold">
-              <Star className="h-2.5 w-2.5" /> Meilleur prix
+              <Star className="h-2.5 w-2.5" /> {t("planner.flightResults.bestPrice")}
             </span>
           )}
           {flight.isFastest && !isFirst && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[11px] font-semibold dark:bg-amber-900/30 dark:text-amber-400">
-              <Zap className="h-2.5 w-2.5" /> Plus rapide
+              <Zap className="h-2.5 w-2.5" /> {t("planner.flightResults.fastest")}
             </span>
           )}
           {flight.isLowestEmissions && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-[11px] font-semibold dark:bg-green-900/30 dark:text-green-400">
-              <Leaf className="h-2.5 w-2.5" /> Moins de CO₂
+              <Leaf className="h-2.5 w-2.5" /> {t("planner.flightResults.lowestCO2")}
             </span>
           )}
           {flight.hasNightLayover && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold dark:bg-indigo-900/30 dark:text-indigo-400">
-              <Moon className="h-2.5 w-2.5" /> Escale de nuit
+              <Moon className="h-2.5 w-2.5" /> {t("planner.flightResults.nightLayover")}
             </span>
           )}
         </div>
@@ -227,7 +230,7 @@ const FlightCard = ({
                     "text-[10px] font-medium",
                     flight.stops === 0 ? "text-green-600" : "text-amber-600"
                   )}>
-                    {flight.stops === 0 ? "Direct" : `${flight.stops} escale${flight.stops > 1 ? 's' : ''}`}
+                    {flight.stops === 0 ? t("planner.flightResults.direct") : t(flight.stops > 1 ? "planner.flightResults.stops" : "planner.flightResults.stop", { count: flight.stops })}
                   </span>
                   {flight.stops > 0 && layoverDisplay && (
                     <span className="text-[9px] text-muted-foreground block leading-tight">{layoverDisplay}</span>
@@ -251,7 +254,7 @@ const FlightCard = ({
             <span className="text-sm text-muted-foreground">{flight.currency}</span>
             {travelers > 1 && (
               <span className="text-[10px] text-muted-foreground ml-1">
-                ({flight.price} {flight.currency}/pers.)
+                ({flight.price} {flight.currency}{t("planner.flightResults.perPerson")})
               </span>
             )}
           </div>
@@ -262,7 +265,7 @@ const FlightCard = ({
             }}
             className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
           >
-            Sélectionner
+            {t("planner.flightResults.select")}
           </button>
         </div>
       </div>
@@ -274,11 +277,11 @@ const FlightCard = ({
       >
         {isExpanded ? (
           <>
-            <ChevronUp className="h-3.5 w-3.5" /> Masquer les détails
+            <ChevronUp className="h-3.5 w-3.5" /> {t("planner.flightResults.hideDetails")}
           </>
         ) : (
           <>
-            <ChevronDown className="h-3.5 w-3.5" /> Voir les détails
+            <ChevronDown className="h-3.5 w-3.5" /> {t("planner.flightResults.showDetails")}
           </>
         )}
       </button>
@@ -295,7 +298,7 @@ const FlightCard = ({
             {/* Outbound flights */}
             <div>
               <div className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2 uppercase tracking-wider">
-                <Plane className="h-4 w-4" /> Vol aller
+                <Plane className="h-4 w-4" /> {t("planner.flightResults.outboundFlight")}
               </div>
               <div className="space-y-3">
                 {flight.outbound.map((segment, idx) => (
@@ -340,13 +343,13 @@ const FlightCard = ({
                       {/* Segment details grid */}
                       <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
                         {segment.aircraft && (
-                          <SegmentDetailRow label="Appareil" value={segment.aircraft} icon={Plane} />
+                          <SegmentDetailRow label={t("planner.flightResults.aircraft")} value={segment.aircraft} icon={Plane} />
                         )}
                         {segment.legroom && (
-                          <SegmentDetailRow label="Espace jambes" value={segment.legroom} />
+                          <SegmentDetailRow label={t("planner.flightResults.legroom")} value={segment.legroom} />
                         )}
                         {segment.seatInfo && (
-                          <SegmentDetailRow label="Confort" value={segment.seatInfo} />
+                          <SegmentDetailRow label={t("planner.flightResults.comfort")} value={segment.seatInfo} />
                         )}
                         {segment.departureAirportName && (
                           <div className="col-span-2 text-[10px] text-muted-foreground">
@@ -390,7 +393,7 @@ const FlightCard = ({
                           {flight.layovers[idx].overnight ? <Moon className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                           <div>
                             <span className="text-sm font-medium">
-                              Escale à {flight.layovers[idx].city}
+                              {t("planner.flightResults.layoverAt", { city: flight.layovers[idx].city })}
                             </span>
                             <span className="text-xs opacity-80 ml-2">
                               {flight.layovers[idx].durationLabel}
@@ -408,7 +411,7 @@ const FlightCard = ({
             {flight.inbound && flight.inbound.length > 0 && (
               <div>
                 <div className="text-xs font-semibold text-muted-foreground mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <Plane className="h-4 w-4 rotate-180" /> Vol retour
+                  <Plane className="h-4 w-4 rotate-180" /> {t("planner.flightResults.returnFlight")}
                 </div>
                 <div className="space-y-3">
                   {flight.inbound.map((segment, idx) => (
@@ -460,13 +463,13 @@ const FlightCard = ({
                   <div className="text-sm">
                     {flight.baggage ? (
                       <span className="text-foreground">
-                        {flight.baggage.carryOn > 0 && `${flight.baggage.carryOn} cabine`}
+                        {flight.baggage.carryOn > 0 && `${flight.baggage.carryOn} ${t("planner.flightResults.carryOn")}`}
                         {flight.baggage.carryOn > 0 && flight.baggage.checked > 0 && " + "}
-                        {flight.baggage.checked > 0 && `${flight.baggage.checked} soute`}
-                        {flight.baggage.carryOn === 0 && flight.baggage.checked === 0 && "Non inclus"}
+                        {flight.baggage.checked > 0 && `${flight.baggage.checked} ${t("planner.flightResults.checked")}`}
+                        {flight.baggage.carryOn === 0 && flight.baggage.checked === 0 && t("planner.flightResults.notIncluded")}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground">Bagage cabine inclus</span>
+                      <span className="text-muted-foreground">{t("planner.flightResults.carryOnIncluded")}</span>
                     )}
                   </div>
                 </div>
@@ -495,7 +498,7 @@ const FlightCard = ({
             {flight.selfTransfer && (
               <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 text-xs">
                 <Info className="h-4 w-4 shrink-0 mt-0.5" />
-                <span>Ce vol implique un self-transfer : vous devrez récupérer vos bagages et repasser les contrôles de sécurité.</span>
+                <span>{t("planner.flightResults.selfTransferNote")}</span>
               </div>
             )}
           </div>
@@ -549,6 +552,7 @@ const FlightSkeleton = ({ delay = 0 }: { delay?: number }) => (
 
 // Main component
 const FlightResults = ({ flights, isLoading, onSelect, travelers = 1, tripType = "roundtrip" }: FlightResultsProps) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
   
@@ -567,7 +571,7 @@ const FlightResults = ({ flights, isLoading, onSelect, travelers = 1, tripType =
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">Recherche des meilleurs vols...</p>
+          <p className="text-sm text-muted-foreground">{t("planner.flightResults.loading")}</p>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '150ms' }} />
@@ -585,7 +589,7 @@ const FlightResults = ({ flights, isLoading, onSelect, travelers = 1, tripType =
     return (
       <div className="text-center py-12">
         <Plane className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-        <p className="text-muted-foreground">Aucun vol trouvé pour ces critères</p>
+        <p className="text-muted-foreground">{t("planner.flightResults.noResults")}</p>
       </div>
     );
   }
@@ -595,12 +599,12 @@ const FlightResults = ({ flights, isLoading, onSelect, travelers = 1, tripType =
       {/* Compact results header */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          <span className="font-semibold text-foreground">{flights.length}</span> vol{flights.length > 1 ? "s" : ""} trouvé{flights.length > 1 ? "s" : ""}
+          <span className="font-semibold text-foreground">{flights.length}</span> {flights.length > 1 ? t("planner.flightResults.flightsFound", { count: flights.length }) : t("planner.flightResults.flightFound")}
         </p>
         {flights.length > 3 && (
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <ChevronDown className="h-3 w-3 animate-bounce" />
-            Scroll pour plus
+            {t("planner.flightResults.scrollMore")}
           </p>
         )}
       </div>
@@ -616,6 +620,7 @@ const FlightResults = ({ flights, isLoading, onSelect, travelers = 1, tripType =
           isRevealed={revealedIds.has(flight.id)}
           travelers={travelers}
           isFirst={index === 0}
+          t={t}
         />
       ))}
     </div>

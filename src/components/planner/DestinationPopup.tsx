@@ -1,4 +1,5 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Play, X, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,6 +26,7 @@ const DestinationPopup = ({
   onDiscoverClick,
   position,
 }: DestinationPopupProps) => {
+  const { t } = useTranslation();
   const popupRef = useRef<HTMLDivElement | null>(null);
   const [popupWidth, setPopupWidth] = useState<number>(280);
 
@@ -109,7 +111,7 @@ const DestinationPopup = ({
                 <button
                   onClick={onClose}
                   className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0"
-                  aria-label="Fermer"
+                  aria-label={t("planner.destination.close")}
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -122,7 +124,7 @@ const DestinationPopup = ({
                   className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium transition-colors"
                 >
                   <Play className="h-3.5 w-3.5" fill="currentColor" />
-                  <span>Découvrir</span>
+                  <span>{t("planner.destination.discover")}</span>
                   <Sparkles className="h-3 w-3" />
                 </button>
               </div>

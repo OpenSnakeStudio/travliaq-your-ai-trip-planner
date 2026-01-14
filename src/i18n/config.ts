@@ -1407,6 +1407,11 @@ const resources = {
       "planner.flightResults.noResults": "Aucun vol trouvé",
       "planner.flightResults.noResultsDesc": "Essayez de modifier vos critères de recherche",
       "planner.flightResults.loading": "Recherche des vols...",
+      "planner.flightResults.flightFound": "vol trouvé",
+      "planner.flightResults.flightsFound": "vols trouvés",
+      "planner.flightResults.scrollMore": "Scroll pour plus",
+      "planner.flightResults.notIncluded": "Non inclus",
+      "planner.flightResults.carryOnIncluded": "Bagage cabine inclus",
       
       // DestinationPopup
       "planner.destination.close": "Fermer",
@@ -2931,6 +2936,11 @@ const resources = {
       // DestinationPopup
       "planner.destination.close": "Close",
       "planner.destination.discover": "Discover",
+      "planner.flightResults.flightFound": "flight found",
+      "planner.flightResults.flightsFound": "flights found",
+      "planner.flightResults.scrollMore": "Scroll for more",
+      "planner.flightResults.notIncluded": "Not included",
+      "planner.flightResults.carryOnIncluded": "Carry-on bag included",
       
       // BaseStep (preferences)
       "planner.presets.quickStart": "Quick start",
