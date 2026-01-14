@@ -5,6 +5,7 @@
 
 import type { AirportInfo, MissingField } from "@/stores/hooks";
 import type { FlightFormData } from "@/types/flight";
+import i18n from "@/i18n/config";
 
 /**
  * Memory update structure for flight data
@@ -61,22 +62,24 @@ export function flightDataToMemory(flightData: FlightFormData): FlightMemoryUpda
 }
 
 /**
- * Get field label in French for missing fields
+ * Get field label for missing fields
  */
 export function getMissingFieldLabel(field: MissingField): string {
+  const t = i18n.t.bind(i18n);
+  
   switch (field) {
     case "departure":
-      return "ville de départ";
+      return t("planner.missing.departure");
     case "arrival":
-      return "destination";
+      return t("planner.missing.arrival");
     case "departureDate":
-      return "date de départ";
+      return t("planner.missing.departureDate");
     case "returnDate":
-      return "date de retour";
+      return t("planner.missing.returnDate");
     case "passengers":
-      return "nombre de voyageurs";
+      return t("planner.missing.passengers");
     case "legs":
-      return "étapes du voyage";
+      return t("planner.missing.legs");
     default:
       return field;
   }
@@ -86,8 +89,10 @@ export function getMissingFieldLabel(field: MissingField): string {
  * Build missing fields list from memory context string
  */
 export function formatMissingFieldsMessage(missingFields: MissingField[]): string {
+  const t = i18n.t.bind(i18n);
+  
   if (missingFields.length === 0) {
-    return "Aucun - prêt à chercher";
+    return t("planner.missing.readyToSearch");
   }
   return missingFields.map(getMissingFieldLabel).join(", ");
 }

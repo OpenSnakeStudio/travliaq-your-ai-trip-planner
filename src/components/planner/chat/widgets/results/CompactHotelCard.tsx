@@ -21,6 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import { ResultBadge, type BadgeType } from "../advice/ResultBadges";
+import { useTranslation } from "react-i18next";
 
 /**
  * Hotel amenity type
@@ -132,6 +133,7 @@ function InlineHotelDisplay({
   onSelect?: () => void;
   onViewDetails?: () => void;
 }) {
+  const { t } = useTranslation();
   const { name, stars, rating, pricePerNight, currency = "€", location, selected } = hotel;
 
   return (
@@ -166,7 +168,7 @@ function InlineHotelDisplay({
             {pricePerNight}
             {currency}
           </span>
-          <span className="text-[10px] text-muted-foreground">/nuit</span>
+          <span className="text-[10px] text-muted-foreground">{t("planner.hotel.perNight")}</span>
         </div>
         {onSelect && (
           <button
@@ -198,27 +200,6 @@ function InlineHotelDisplay({
 
 /**
  * CompactHotelCard Component
- *
- * @example
- * ```tsx
- * <CompactHotelCard
- *   hotel={{
- *     id: "hotel-1",
- *     name: "Hotel Barcelona Center",
- *     stars: 4,
- *     rating: 8.7,
- *     reviewCount: 1234,
- *     location: "Gothic Quarter",
- *     distance: "500m from center",
- *     pricePerNight: 145,
- *     nights: 3,
- *     amenities: ["wifi", "breakfast", "pool"],
- *     image: "/hotel.jpg",
- *     badges: ["popular"],
- *   }}
- *   onSelect={() => addHotelToTrip(hotel)}
- * />
- * ```
  */
 export function CompactHotelCard({
   hotel,
@@ -229,6 +210,7 @@ export function CompactHotelCard({
   showTotalPrice = false,
   inline = false,
 }: CompactHotelCardProps) {
+  const { t } = useTranslation();
   const {
     name,
     stars,
@@ -259,6 +241,11 @@ export function CompactHotelCard({
   }
 
   const displayPrice = showTotalPrice && totalPrice ? totalPrice : pricePerNight;
+
+  const getNightsLabel = (nights: number) => {
+    if (nights === 1) return `1 ${t("planner.hotel.night")}`;
+    return `${nights} ${t("planner.hotel.nights")}`;
+  };
 
   return (
     <div
@@ -323,7 +310,7 @@ export function CompactHotelCard({
                 </div>
                 {reviewCount && (
                   <div className="text-[10px] text-muted-foreground mt-0.5">
-                    {reviewCount.toLocaleString()} avis
+                    {reviewCount.toLocaleString()} {t("planner.common.reviews")}
                   </div>
                 )}
               </div>
@@ -374,7 +361,7 @@ export function CompactHotelCard({
       >
         {/* Nights info */}
         <div className="text-xs text-muted-foreground">
-          {nights && `${nights} nuit${nights > 1 ? "s" : ""}`}
+          {nights && getNightsLabel(nights)}
         </div>
 
         {/* Price and actions */}
@@ -385,7 +372,7 @@ export function CompactHotelCard({
               {currency}
             </div>
             <div className="text-[10px] text-muted-foreground">
-              {showTotalPrice ? "total" : "/nuit"}
+              {showTotalPrice ? t("planner.hotel.total") : t("planner.hotel.perNight")}
             </div>
           </div>
 
@@ -396,7 +383,7 @@ export function CompactHotelCard({
                 type="button"
                 onClick={onCompare}
                 className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Comparer"
+                title={t("planner.action.compare")}
               >
                 <GitCompare size={16} />
               </button>

@@ -1,59 +1,25 @@
 /**
  * ContextualSuggestions - Proactive tips and suggestions
- *
- * Provides contextual tips, seasonal advice, and smart suggestions
- * based on the current workflow state and user selections.
  */
 
-import type { PlanningStep, WorkflowContext, StepSelections } from "../machines/workflowMachine";
+import type { PlanningStep, WorkflowContext } from "../machines/workflowMachine";
+import i18n from "@/i18n/config";
 
-/**
- * Suggestion types
- */
-export type SuggestionType =
-  | "tip"
-  | "savings"
-  | "timing"
-  | "seasonal"
-  | "location"
-  | "warning"
-  | "insight"
-  | "recommendation";
-
-/**
- * Suggestion priority
- */
+export type SuggestionType = "tip" | "savings" | "timing" | "seasonal" | "location" | "warning" | "insight" | "recommendation";
 export type SuggestionPriority = "high" | "medium" | "low";
 
-/**
- * Contextual suggestion
- */
 export interface ContextualSuggestion {
   id: string;
   type: SuggestionType;
   priority: SuggestionPriority;
   title: string;
   message: string;
-  /** Action button if applicable */
-  action?: {
-    label: string;
-    type: "navigate" | "apply" | "dismiss" | "learn_more";
-    data?: any;
-  };
-  /** When to show this suggestion */
-  trigger: {
-    step?: PlanningStep;
-    condition?: string;
-  };
-  /** Don't show again if dismissed */
+  action?: { label: string; type: "navigate" | "apply" | "dismiss" | "learn_more"; data?: any };
+  trigger: { step?: PlanningStep; condition?: string };
   dismissible?: boolean;
-  /** Expiration time */
   expiresAt?: Date;
 }
 
-/**
- * Seasonal data for destinations
- */
 interface SeasonalInfo {
   month: number;
   season: "low" | "shoulder" | "high" | "peak";
@@ -64,12 +30,8 @@ interface SeasonalInfo {
   crowdLevel: "low" | "moderate" | "high" | "very_high";
 }
 
-/**
- * Sample seasonal data (would come from API in production)
- */
 const SEASONAL_DATA: Record<string, SeasonalInfo[]> = {
   ES: [
-    // Spain
     { month: 1, season: "low", weather: "Frais", avgTemp: 12, priceMultiplier: 0.8, crowdLevel: "low" },
     { month: 2, season: "low", weather: "Frais", avgTemp: 13, priceMultiplier: 0.8, crowdLevel: "low" },
     { month: 3, season: "shoulder", weather: "Doux", avgTemp: 16, priceMultiplier: 0.9, crowdLevel: "moderate" },
@@ -84,7 +46,6 @@ const SEASONAL_DATA: Record<string, SeasonalInfo[]> = {
     { month: 12, season: "shoulder", weather: "Frais", avgTemp: 13, priceMultiplier: 0.9, crowdLevel: "moderate", events: ["Noël", "Nouvel An"] },
   ],
   IT: [
-    // Italy
     { month: 1, season: "low", weather: "Froid", avgTemp: 8, priceMultiplier: 0.75, crowdLevel: "low" },
     { month: 2, season: "low", weather: "Froid", avgTemp: 10, priceMultiplier: 0.75, crowdLevel: "low", events: ["Carnaval de Venise"] },
     { month: 3, season: "shoulder", weather: "Doux", avgTemp: 14, priceMultiplier: 0.9, crowdLevel: "moderate" },
@@ -99,7 +60,6 @@ const SEASONAL_DATA: Record<string, SeasonalInfo[]> = {
     { month: 12, season: "shoulder", weather: "Froid", avgTemp: 10, priceMultiplier: 0.85, crowdLevel: "moderate", events: ["Noël"] },
   ],
   PT: [
-    // Portugal
     { month: 1, season: "low", weather: "Doux", avgTemp: 12, priceMultiplier: 0.75, crowdLevel: "low" },
     { month: 2, season: "low", weather: "Doux", avgTemp: 13, priceMultiplier: 0.75, crowdLevel: "low" },
     { month: 3, season: "shoulder", weather: "Agréable", avgTemp: 16, priceMultiplier: 0.85, crowdLevel: "moderate" },
@@ -115,107 +75,75 @@ const SEASONAL_DATA: Record<string, SeasonalInfo[]> = {
   ],
 };
 
-/**
- * Get seasonal info for destination and date
- */
-export function getSeasonalInfo(
-  countryCode: string,
-  date: Date
-): SeasonalInfo | null {
+export function getSeasonalInfo(countryCode: string, date: Date): SeasonalInfo | null {
   const data = SEASONAL_DATA[countryCode.toUpperCase()];
   if (!data) return null;
-
   const month = date.getMonth() + 1;
   return data.find((s) => s.month === month) || null;
 }
 
-/**
- * Generate seasonal suggestion
- */
-function generateSeasonalSuggestion(
-  countryCode: string,
-  date: Date,
-  destination: string
-): ContextualSuggestion | null {
+function generateSeasonalSuggestion(countryCode: string, date: Date, destination: string): ContextualSuggestion | null {
+  const t = i18n.t.bind(i18n);
   const seasonal = getSeasonalInfo(countryCode, date);
   if (!seasonal) return null;
 
+  const percent = Math.round((1 - seasonal.priceMultiplier) * 100);
+  const percentHigh = Math.round((seasonal.priceMultiplier - 1) * 100);
+
   const messages: Record<SeasonalInfo["season"], string> = {
-    low: `Bonne nouvelle ! Vous voyagez en basse saison à ${destination}. Les prix sont environ ${Math.round((1 - seasonal.priceMultiplier) * 100)}% moins chers et les sites moins fréquentés.`,
-    shoulder: `Vous voyagez en intersaison à ${destination}. C'est un bon compromis entre prix et affluence.`,
-    high: `Attention, vous voyagez en haute saison à ${destination}. Attendez-vous à des prix ${Math.round((seasonal.priceMultiplier - 1) * 100)}% plus élevés.`,
-    peak: `C'est la très haute saison à ${destination} ! Les prix sont ${Math.round((seasonal.priceMultiplier - 1) * 100)}% plus élevés et les sites très fréquentés. Réservez tôt !`,
+    low: t("planner.suggestion.lowSeason", { destination, percent: Math.abs(percent) }),
+    shoulder: t("planner.suggestion.shoulderSeason", { destination }),
+    high: t("planner.suggestion.highSeasonMessage", { destination, percent: percentHigh }),
+    peak: t("planner.suggestion.peakSeasonMessage", { destination, percent: percentHigh }),
   };
 
   const titles: Record<SeasonalInfo["season"], string> = {
-    low: "Basse saison 👍",
-    shoulder: "Intersaison",
-    high: "Haute saison ⚠️",
-    peak: "Très haute saison 🔥",
+    low: t("planner.suggestion.lowSeasonTitle"),
+    shoulder: t("planner.suggestion.shoulderSeasonTitle"),
+    high: t("planner.suggestion.highSeasonTitle"),
+    peak: t("planner.suggestion.peakSeasonTitle"),
   };
 
-  const id = `seasonal-${countryCode}-${date.getMonth()}`;
-
   return {
-    id,
+    id: `seasonal-${countryCode}-${date.getMonth()}`,
     type: "seasonal",
     priority: seasonal.season === "peak" ? "high" : "medium",
     title: titles[seasonal.season],
     message: messages[seasonal.season],
     trigger: { step: "dates" },
     dismissible: true,
-    action:
-      seasonal.season === "peak"
-        ? {
-            label: "Voir d'autres dates",
-            type: "navigate",
-            data: { step: "dates" },
-          }
-        : undefined,
+    action: seasonal.season === "peak" ? { label: t("planner.suggestion.viewOtherDates"), type: "navigate", data: { step: "dates" } } : undefined,
   };
 }
 
-/**
- * Generate savings suggestions
- */
-function generateSavingsSuggestions(
-  context: WorkflowContext
-): ContextualSuggestion[] {
+function generateSavingsSuggestions(context: WorkflowContext): ContextualSuggestion[] {
+  const t = i18n.t.bind(i18n);
   const suggestions: ContextualSuggestion[] = [];
   const { selections } = context;
 
-  // Suggest midweek travel
   if (selections.dates?.departure) {
     const day = selections.dates.departure.getDay();
     if (day === 0 || day === 6 || day === 5) {
-      // Weekend
       suggestions.push({
         id: "savings-midweek",
         type: "savings",
         priority: "medium",
-        title: "Économisez sur les vols",
-        message:
-          "Les vols sont généralement 20-30% moins chers en milieu de semaine (mardi-mercredi).",
+        title: t("planner.suggestion.savingsFlights"),
+        message: t("planner.suggestion.savingsFlightsMessage"),
         trigger: { step: "dates" },
         dismissible: true,
-        action: {
-          label: "Modifier les dates",
-          type: "navigate",
-          data: { step: "dates" },
-        },
+        action: { label: t("planner.suggestion.modifyDates"), type: "navigate", data: { step: "dates" } },
       });
     }
   }
 
-  // Suggest budget hotels if luxury selected
   if (selections.hotels?.price && selections.hotels.price > 200) {
     suggestions.push({
       id: "savings-hotels",
       type: "savings",
       priority: "low",
-      title: "Alternatives d'hébergement",
-      message:
-        "Des options plus économiques existent. Appartements et auberges offrent souvent un meilleur rapport qualité-prix.",
+      title: t("planner.suggestion.alternativeAccommodation"),
+      message: t("planner.suggestion.alternativeAccommodationMessage"),
       trigger: { step: "hotels" },
       dismissible: true,
     });
@@ -224,29 +152,21 @@ function generateSavingsSuggestions(
   return suggestions;
 }
 
-/**
- * Generate timing suggestions
- */
-function generateTimingSuggestions(
-  context: WorkflowContext
-): ContextualSuggestion[] {
+function generateTimingSuggestions(context: WorkflowContext): ContextualSuggestion[] {
+  const t = i18n.t.bind(i18n);
   const suggestions: ContextualSuggestion[] = [];
   const { selections } = context;
 
-  // Early booking suggestion
   if (selections.dates?.departure) {
-    const daysUntil = Math.ceil(
-      (selections.dates.departure.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
+    const daysUntil = Math.ceil((selections.dates.departure.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 
     if (daysUntil > 60) {
       suggestions.push({
         id: "timing-early",
         type: "timing",
         priority: "low",
-        title: "Réservation anticipée",
-        message:
-          "Vous partez dans plus de 2 mois. Les meilleurs prix sont souvent disponibles 6-8 semaines avant le départ.",
+        title: t("planner.suggestion.earlyBooking"),
+        message: t("planner.suggestion.earlyBookingMessage"),
         trigger: { step: "flights" },
         dismissible: true,
       });
@@ -255,9 +175,8 @@ function generateTimingSuggestions(
         id: "timing-late",
         type: "timing",
         priority: "high",
-        title: "Réservation tardive",
-        message:
-          "Votre départ approche ! Les prix peuvent augmenter rapidement. Réservez dès que possible.",
+        title: t("planner.suggestion.lateBooking"),
+        message: t("planner.suggestion.lateBookingMessage"),
         trigger: { step: "flights" },
         dismissible: true,
       });
@@ -267,152 +186,42 @@ function generateTimingSuggestions(
   return suggestions;
 }
 
-/**
- * Generate step-specific tips
- */
 function generateStepTips(step: PlanningStep): ContextualSuggestion[] {
+  const t = i18n.t.bind(i18n);
   const tips: Record<PlanningStep, ContextualSuggestion[]> = {
     welcome: [],
-    destination: [
-      {
-        id: "tip-destination-1",
-        type: "tip",
-        priority: "low",
-        title: "Astuce",
-        message:
-          "Vous pouvez indiquer un pays ou une région, et je vous proposerai les meilleures villes à visiter.",
-        trigger: { step: "destination" },
-        dismissible: true,
-      },
-    ],
-    dates: [
-      {
-        id: "tip-dates-1",
-        type: "tip",
-        priority: "low",
-        title: "Dates flexibles ?",
-        message:
-          "Si vos dates sont flexibles, indiquez-le moi. Je peux trouver les jours les moins chers.",
-        trigger: { step: "dates" },
-        dismissible: true,
-      },
-    ],
-    travelers: [
-      {
-        id: "tip-travelers-1",
-        type: "tip",
-        priority: "low",
-        title: "Voyage en famille ?",
-        message:
-          "Si vous voyagez avec des enfants, je privilégierai les hébergements et activités adaptés.",
-        trigger: { step: "travelers" },
-        dismissible: true,
-      },
-    ],
-    flights: [
-      {
-        id: "tip-flights-1",
-        type: "insight",
-        priority: "medium",
-        title: "Comparer les options",
-        message:
-          "Les vols avec escale sont souvent moins chers. Je peux vous montrer les deux options.",
-        trigger: { step: "flights" },
-        dismissible: true,
-      },
-    ],
-    hotels: [
-      {
-        id: "tip-hotels-1",
-        type: "insight",
-        priority: "medium",
-        title: "Emplacement clé",
-        message:
-          "Un hôtel bien situé peut vous faire économiser sur les transports. Je prends en compte la proximité des sites.",
-        trigger: { step: "hotels" },
-        dismissible: true,
-      },
-    ],
-    activities: [
-      {
-        id: "tip-activities-1",
-        type: "recommendation",
-        priority: "medium",
-        title: "Expériences locales",
-        message:
-          "Je peux vous suggérer des activités basées sur vos intérêts : culture, gastronomie, aventure...",
-        trigger: { step: "activities" },
-        dismissible: true,
-      },
-    ],
-    transfers: [
-      {
-        id: "tip-transfers-1",
-        type: "tip",
-        priority: "low",
-        title: "Transferts aéroport",
-        message:
-          "Réserver un transfert privé peut être plus économique qu'un taxi, surtout à plusieurs.",
-        trigger: { step: "transfers" },
-        dismissible: true,
-      },
-    ],
+    destination: [{ id: "tip-destination-1", type: "tip", priority: "low", title: t("planner.tip.destination"), message: t("planner.tip.destinationMessage"), trigger: { step: "destination" }, dismissible: true }],
+    dates: [{ id: "tip-dates-1", type: "tip", priority: "low", title: t("planner.tip.datesFlexible"), message: t("planner.tip.datesFlexibleMessage"), trigger: { step: "dates" }, dismissible: true }],
+    travelers: [{ id: "tip-travelers-1", type: "tip", priority: "low", title: t("planner.tip.familyTravel"), message: t("planner.tip.familyTravelMessage"), trigger: { step: "travelers" }, dismissible: true }],
+    flights: [{ id: "tip-flights-1", type: "insight", priority: "medium", title: t("planner.tip.compareOptions"), message: t("planner.tip.compareOptionsMessage"), trigger: { step: "flights" }, dismissible: true }],
+    hotels: [{ id: "tip-hotels-1", type: "insight", priority: "medium", title: t("planner.tip.locationKey"), message: t("planner.tip.locationKeyMessage"), trigger: { step: "hotels" }, dismissible: true }],
+    activities: [{ id: "tip-activities-1", type: "recommendation", priority: "medium", title: t("planner.tip.localExperiences"), message: t("planner.tip.localExperiencesMessage"), trigger: { step: "activities" }, dismissible: true }],
+    transfers: [{ id: "tip-transfers-1", type: "tip", priority: "low", title: t("planner.tip.airportTransfers"), message: t("planner.tip.airportTransfersMessage"), trigger: { step: "transfers" }, dismissible: true }],
     recap: [],
     booking: [],
     complete: [],
   };
-
   return tips[step] || [];
 }
 
-/**
- * Get all suggestions for current context
- */
-export function getSuggestionsForContext(
-  context: WorkflowContext
-): ContextualSuggestion[] {
+export function getSuggestionsForContext(context: WorkflowContext): ContextualSuggestion[] {
   const suggestions: ContextualSuggestion[] = [];
   const { currentStep, selections } = context;
 
-  // Step-specific tips
   suggestions.push(...generateStepTips(currentStep));
 
-  // Seasonal suggestions
-  if (
-    selections.destination?.countryCode &&
-    selections.dates?.departure
-  ) {
-    const seasonal = generateSeasonalSuggestion(
-      selections.destination.countryCode,
-      selections.dates.departure,
-      selections.destination.city || selections.destination.country || ""
-    );
-    if (seasonal) {
-      suggestions.push(seasonal);
-    }
+  if (selections.destination?.countryCode && selections.dates?.departure) {
+    const seasonal = generateSeasonalSuggestion(selections.destination.countryCode, selections.dates.departure, selections.destination.city || selections.destination.country || "");
+    if (seasonal) suggestions.push(seasonal);
   }
 
-  // Savings suggestions
   suggestions.push(...generateSavingsSuggestions(context));
-
-  // Timing suggestions
   suggestions.push(...generateTimingSuggestions(context));
 
-  // Sort by priority
-  const priorityOrder: Record<SuggestionPriority, number> = {
-    high: 0,
-    medium: 1,
-    low: 2,
-  };
-
-  return suggestions.sort(
-    (a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]
-  );
+  const priorityOrder: Record<SuggestionPriority, number> = { high: 0, medium: 1, low: 2 };
+  return suggestions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 }
 
-/**
- * Get quick replies for current step
- */
 export interface QuickReply {
   id: string;
   label: string;
@@ -420,93 +229,66 @@ export interface QuickReply {
   data?: any;
 }
 
-export function getQuickRepliesForStep(
-  step: PlanningStep,
-  context: WorkflowContext
-): QuickReply[] {
+export function getQuickRepliesForStep(step: PlanningStep, context: WorkflowContext): QuickReply[] {
+  const t = i18n.t.bind(i18n);
   const replies: Record<PlanningStep, QuickReply[]> = {
     welcome: [
-      { id: "qr-start", label: "Planifier un voyage", action: "start_planning" },
-      { id: "qr-inspire", label: "M'inspirer", action: "get_inspiration" },
-      { id: "qr-resume", label: "Reprendre mon voyage", action: "resume_trip" },
+      { id: "qr-start", label: t("planner.quickReply.planTrip"), action: "start_planning" },
+      { id: "qr-inspire", label: t("planner.quickReply.getInspired"), action: "get_inspiration" },
+      { id: "qr-resume", label: t("planner.quickReply.resumeTrip"), action: "resume_trip" },
     ],
     destination: [
-      { id: "qr-beach", label: "Plage & soleil ☀️", action: "suggest_destination", data: { type: "beach" } },
-      { id: "qr-city", label: "City break 🏙️", action: "suggest_destination", data: { type: "city" } },
-      { id: "qr-nature", label: "Nature & aventure 🏔️", action: "suggest_destination", data: { type: "nature" } },
-      { id: "qr-culture", label: "Culture & histoire 🏛️", action: "suggest_destination", data: { type: "culture" } },
+      { id: "qr-beach", label: t("planner.quickReply.beach"), action: "suggest_destination", data: { type: "beach" } },
+      { id: "qr-city", label: t("planner.quickReply.cityBreak"), action: "suggest_destination", data: { type: "city" } },
+      { id: "qr-nature", label: t("planner.quickReply.nature"), action: "suggest_destination", data: { type: "nature" } },
+      { id: "qr-culture", label: t("planner.quickReply.culture"), action: "suggest_destination", data: { type: "culture" } },
     ],
     dates: [
-      { id: "qr-flexible", label: "Dates flexibles", action: "set_flexible_dates" },
-      { id: "qr-weekend", label: "Prochain week-end", action: "set_next_weekend" },
-      { id: "qr-week", label: "Une semaine", action: "set_one_week" },
+      { id: "qr-flexible", label: t("planner.quickReply.flexibleDates"), action: "set_flexible_dates" },
+      { id: "qr-weekend", label: t("planner.quickReply.nextWeekend"), action: "set_next_weekend" },
+      { id: "qr-week", label: t("planner.quickReply.oneWeek"), action: "set_one_week" },
     ],
     travelers: [
-      { id: "qr-solo", label: "Solo", action: "set_travelers", data: { adults: 1 } },
-      { id: "qr-couple", label: "En couple", action: "set_travelers", data: { adults: 2 } },
-      { id: "qr-family", label: "En famille", action: "show_travelers_widget" },
-      { id: "qr-group", label: "En groupe", action: "show_travelers_widget" },
+      { id: "qr-solo", label: t("planner.quickReply.solo"), action: "set_travelers", data: { adults: 1 } },
+      { id: "qr-couple", label: t("planner.quickReply.couple"), action: "set_travelers", data: { adults: 2 } },
+      { id: "qr-family", label: t("planner.quickReply.family"), action: "show_travelers_widget" },
+      { id: "qr-group", label: t("planner.quickReply.group"), action: "show_travelers_widget" },
     ],
     flights: [
-      { id: "qr-cheapest", label: "Le moins cher", action: "filter_flights", data: { sort: "price" } },
-      { id: "qr-direct", label: "Vols directs", action: "filter_flights", data: { direct: true } },
-      { id: "qr-morning", label: "Départ le matin", action: "filter_flights", data: { time: "morning" } },
+      { id: "qr-cheapest", label: t("planner.quickReply.cheapest"), action: "filter_flights", data: { sort: "price" } },
+      { id: "qr-direct", label: t("planner.quickReply.directFlights"), action: "filter_flights", data: { direct: true } },
+      { id: "qr-morning", label: t("planner.quickReply.morningDeparture"), action: "filter_flights", data: { time: "morning" } },
     ],
     hotels: [
-      { id: "qr-budget", label: "Petit budget", action: "filter_hotels", data: { priceRange: "budget" } },
-      { id: "qr-center", label: "Centre-ville", action: "filter_hotels", data: { location: "center" } },
-      { id: "qr-4star", label: "4 étoiles +", action: "filter_hotels", data: { minStars: 4 } },
+      { id: "qr-budget", label: t("planner.quickReply.budget"), action: "filter_hotels", data: { priceRange: "budget" } },
+      { id: "qr-center", label: t("planner.quickReply.center"), action: "filter_hotels", data: { location: "center" } },
+      { id: "qr-4star", label: t("planner.quickReply.fourStar"), action: "filter_hotels", data: { minStars: 4 } },
     ],
     activities: [
-      { id: "qr-popular", label: "Les plus populaires", action: "filter_activities", data: { sort: "popularity" } },
-      { id: "qr-free", label: "Activités gratuites", action: "filter_activities", data: { free: true } },
-      { id: "qr-skip", label: "Passer cette étape", action: "skip_step" },
+      { id: "qr-popular", label: t("planner.quickReply.popular"), action: "filter_activities", data: { sort: "popularity" } },
+      { id: "qr-free", label: t("planner.quickReply.freeActivities"), action: "filter_activities", data: { free: true } },
+      { id: "qr-skip", label: t("planner.quickReply.skipStep"), action: "skip_step" },
     ],
     transfers: [
-      { id: "qr-private", label: "Transfert privé", action: "search_transfers", data: { type: "private" } },
-      { id: "qr-shared", label: "Navette partagée", action: "search_transfers", data: { type: "shared" } },
-      { id: "qr-skip-transfer", label: "Pas besoin", action: "skip_step" },
+      { id: "qr-private", label: t("planner.quickReply.privateTransfer"), action: "search_transfers", data: { type: "private" } },
+      { id: "qr-shared", label: t("planner.quickReply.sharedShuttle"), action: "search_transfers", data: { type: "shared" } },
+      { id: "qr-skip-transfer", label: t("planner.quickReply.noNeed"), action: "skip_step" },
     ],
     recap: [
-      { id: "qr-modify", label: "Modifier quelque chose", action: "edit_trip" },
-      { id: "qr-confirm", label: "C'est parfait ! ✓", action: "confirm_trip" },
+      { id: "qr-modify", label: t("planner.quickReply.modifySomething"), action: "edit_trip" },
+      { id: "qr-confirm", label: t("planner.quickReply.perfect"), action: "confirm_trip" },
     ],
     booking: [
-      { id: "qr-book-all", label: "Tout réserver", action: "book_all" },
-      { id: "qr-book-flights", label: "Réserver les vols", action: "book_flights" },
+      { id: "qr-book-all", label: t("planner.quickReply.bookAll"), action: "book_all" },
+      { id: "qr-book-later", label: t("planner.quickReply.bookLater"), action: "save_for_later" },
     ],
-    complete: [
-      { id: "qr-new-trip", label: "Planifier un autre voyage", action: "new_trip" },
-      { id: "qr-share", label: "Partager mon voyage", action: "share_trip" },
-    ],
+    complete: [],
   };
-
   return replies[step] || [];
 }
 
-/**
- * Export suggestion presets
- */
 export const SUGGESTION_PRESETS = {
-  MIDWEEK_SAVINGS: {
-    id: "preset-midweek",
-    type: "savings" as SuggestionType,
-    priority: "medium" as SuggestionPriority,
-    title: "Économisez sur les vols",
-    message: "Les vols en milieu de semaine sont 20-30% moins chers.",
-  },
-  BOOK_EARLY: {
-    id: "preset-early",
-    type: "timing" as SuggestionType,
-    priority: "medium" as SuggestionPriority,
-    title: "Réservez tôt",
-    message: "Les meilleurs prix sont 6-8 semaines avant le départ.",
-  },
-  FLEXIBLE_DATES: {
-    id: "preset-flexible",
-    type: "tip" as SuggestionType,
-    priority: "low" as SuggestionPriority,
-    title: "Dates flexibles",
-    message: "Des dates flexibles peuvent vous faire économiser jusqu'à 40%.",
-  },
+  flexibleDates: { id: "preset-flexible", type: "tip" as SuggestionType, priority: "medium" as SuggestionPriority, title: "Dates flexibles", message: "Des dates flexibles peuvent vous faire économiser jusqu'à 30%", trigger: { step: "dates" as PlanningStep }, dismissible: true },
+  earlyBooking: { id: "preset-early", type: "timing" as SuggestionType, priority: "medium" as SuggestionPriority, title: "Réservez tôt", message: "Réserver 6-8 semaines à l'avance offre souvent les meilleurs prix", trigger: { step: "flights" as PlanningStep }, dismissible: true },
+  compareHotels: { id: "preset-compare", type: "insight" as SuggestionType, priority: "low" as SuggestionPriority, title: "Comparez", message: "Comparez plusieurs hôtels pour trouver le meilleur rapport qualité-prix", trigger: { step: "hotels" as PlanningStep }, dismissible: true },
 };
