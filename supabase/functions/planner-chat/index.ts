@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildPhaseSystemPrompt, type TravelPhase } from "./prompts/phasePrompts.ts";
+import { buildBaseSystemPrompt, buildChooseForMeInstructions, detectLanguage, type SupportedLanguage } from "./prompts/systemPrompts.ts";
 import { intentClassifierTool, parseIntentClassification, type IntentClassificationResult } from "./tools/intentClassifier.ts";
 
 const corsHeaders = {
@@ -364,8 +365,11 @@ serve(async (req) => {
       console.log("Anonymous user request");
     }
 
-    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory, activeWidgetsContext } = await req.json();
-    console.log("User:", userId, "Messages:", messages.length, "Stream:", stream, "Phase:", currentPhase);
+    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory, activeWidgetsContext, language: requestLanguage } = await req.json();
+    
+    // Detect language from request or default to French
+    const language: SupportedLanguage = detectLanguage(requestLanguage);
+    console.log("User:", userId, "Messages:", messages.length, "Stream:", stream, "Phase:", currentPhase, "Language:", language);
 
     const AZURE_OPENAI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY");
     const AZURE_OPENAI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");

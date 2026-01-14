@@ -50,12 +50,17 @@ export {
   useChatStream,
   useChatWidgetFlow,
   useChatImperativeHandlers,
+  useUnifiedIntentRouter,
   type APIMessage,
   type StreamResult,
   type MemoryContext,
   type UseChatWidgetFlowOptions,
   type WidgetFlowState,
   type UseChatImperativeHandlersOptions,
+  type UseUnifiedIntentRouterOptions,
+  type UseUnifiedIntentRouterReturn,
+  type FlowState,
+  type IntentProcessResult,
 } from "./hooks";
 
 // Utils

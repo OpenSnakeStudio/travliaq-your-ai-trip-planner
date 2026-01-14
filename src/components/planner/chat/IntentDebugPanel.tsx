@@ -5,22 +5,24 @@
  * Shows:
  * - Primary intent detected
  * - Confidence score with color coding
- * - Widget triggered
+ * - Widget triggered (backend vs frontend)
  * - Extracted entities
- * - Flow state
+ * - Flow state from unified router
  */
 
 import { useState, memo } from "react";
-import { Bug, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Bug, ChevronDown, ChevronUp, X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { IntentClassification } from "./hooks/useChatStream";
-import type { FlowState } from "./typeDefs/intent";
+import type { FlowState } from "./hooks/useUnifiedIntentRouter";
 
 interface IntentDebugPanelProps {
   intent: IntentClassification | null;
   flowState: FlowState | null;
   widgetTriggered: string | null;
+  backendWidget?: string | null;
   className?: string;
+  onForceWidget?: (widgetType: string) => void;
 }
 
 const CONFIDENCE_COLORS = {
@@ -39,7 +41,9 @@ function IntentDebugPanelComponent({
   intent, 
   flowState, 
   widgetTriggered,
-  className 
+  backendWidget,
+  className,
+  onForceWidget,
 }: IntentDebugPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -138,17 +142,29 @@ function IntentDebugPanelComponent({
             </div>
           )}
 
-          {/* Widget from backend */}
-          {intent.widgetToShow && (
+          {/* Widget comparison: backend vs frontend */}
+          {(intent.widgetToShow || backendWidget || widgetTriggered) && (
             <div>
               <span className="text-xs font-medium text-muted-foreground mb-1 block">
-                Backend Widget:
+                Widget Source:
               </span>
-              <div className="text-xs font-mono text-foreground">
-                {intent.widgetToShow.type}
-                <span className="text-muted-foreground ml-1">
-                  ({intent.widgetToShow.reason})
-                </span>
+              <div className="space-y-1">
+                {intent.widgetToShow && (
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="text-muted-foreground">Backend:</span>
+                    <span className="font-mono text-blue-500">{intent.widgetToShow.type}</span>
+                    <span className="text-muted-foreground text-[10px]">({intent.widgetToShow.reason})</span>
+                  </div>
+                )}
+                {widgetTriggered && widgetTriggered !== intent.widgetToShow?.type && (
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="text-muted-foreground">Shown:</span>
+                    <span className="font-mono text-primary">{widgetTriggered}</span>
+                    {intent.widgetToShow && (
+                      <span className="text-yellow-500 text-[10px]">(differs from backend)</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
