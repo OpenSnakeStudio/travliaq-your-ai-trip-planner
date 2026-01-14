@@ -18,7 +18,7 @@ import type { Airport } from "@/hooks/useNearestAirports";
 // import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 // import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
 // import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
-import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
+// import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { WidgetHistoryProvider } from "@/contexts/WidgetHistoryContext";
 import { NegativePreferencesProvider } from "@/contexts/NegativePreferencesContext";
 import { usePlannerState } from "@/hooks/usePlannerState";
@@ -203,7 +203,7 @@ const TravelPlanner = () => {
   }, [shouldConfirmLeave]);
 
   return (
-    <PreferenceMemoryProvider>
+    <>
       {/* Auto-detect departure airport from user's location */}
       <AutoDetectDeparture />
       <WidgetHistoryProvider>
@@ -389,7 +389,7 @@ const TravelPlanner = () => {
               </div>
             </NegativePreferencesProvider>
           </WidgetHistoryProvider>
-    </PreferenceMemoryProvider>
+    </>
   );
 };
 

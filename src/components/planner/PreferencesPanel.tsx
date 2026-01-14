@@ -6,7 +6,7 @@
 import { useState, lazy, Suspense, memo, useEffect, useMemo } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { usePreferenceMemory } from "@/contexts/preferences";
+import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { AIConflictBadge } from "./preferences";
 import { StepIndicator, StepErrorBoundary, type Step } from "./preferences/widgets";
 
@@ -58,7 +58,7 @@ const PreferencesPanel = memo(function PreferencesPanel() {
     memory: { preferences },
     getProfileCompletion,
     updatePreferences,
-  } = usePreferenceMemory();
+  } = usePreferenceMemoryStore();
 
   const [currentStep, setCurrentStep] = useState<Step>("base");
 

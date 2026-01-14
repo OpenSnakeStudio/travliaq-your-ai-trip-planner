@@ -5,7 +5,7 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import type { TravelStyle } from "@/contexts/preferences";
+import type { TravelStyle } from "@/stores/hooks";
 
 interface TravelStyleOption {
   id: TravelStyle;

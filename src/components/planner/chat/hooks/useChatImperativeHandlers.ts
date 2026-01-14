@@ -14,8 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toastSuccess, toastError } from "@/lib/toast";
 import { eventBus } from "@/lib/eventBus";
 import type { CountrySelectionEvent, AirportChoice, DualAirportChoice, AirportConfirmationData, CitySelectionData } from "@/types/flight";
-import type { AccommodationEntry, ActivityEntry } from "@/stores/hooks";
-import type { TripPreferences } from "@/contexts/PreferenceMemoryContext";
+import type { AccommodationEntry, ActivityEntry, TripPreferences } from "@/stores/hooks";
 import type { ChatMessage } from "../types";
 
 /**

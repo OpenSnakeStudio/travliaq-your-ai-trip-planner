@@ -6,8 +6,7 @@
 import { memo } from "react";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { MustHavesSwitches } from "@/components/planner/preferences/MustHavesSwitches";
-import { usePreferenceMemory } from "@/contexts/preferences";
-import type { MustHaves } from "@/contexts/preferences";
+import { usePreferenceMemoryStore, type MustHaves } from "@/stores/hooks";
 
 interface MustHavesWidgetProps {
   onContinue?: () => void;
@@ -16,7 +15,7 @@ interface MustHavesWidgetProps {
 export const MustHavesWidget = memo(function MustHavesWidget({
   onContinue,
 }: MustHavesWidgetProps) {
-  const { memory, toggleMustHave } = usePreferenceMemory();
+  const { memory, toggleMustHave } = usePreferenceMemoryStore();
   const mustHaves = memory.preferences.mustHaves;
 
   const handleToggle = (key: keyof MustHaves) => {

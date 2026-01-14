@@ -6,7 +6,7 @@
 import { memo, useCallback } from "react";
 import { DualSlider } from "@/components/ui/dual-slider";
 import { cn } from "@/lib/utils";
-import type { StyleAxes } from "@/contexts/preferences";
+import type { StyleAxes } from "@/stores/hooks";
 
 interface StyleEqualizerProps {
   axes: StyleAxes;

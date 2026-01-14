@@ -5,7 +5,7 @@
 
 import { memo } from "react";
 import { User, Shield, Utensils } from "lucide-react";
-import { usePreferenceMemory } from "@/contexts/preferences";
+import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { MustHavesSwitches, DietaryPicker } from "../";
 import { SectionHeader } from "../widgets";
 
@@ -18,7 +18,7 @@ export const CriteriaStep = memo(function CriteriaStep({ onGoBack }: CriteriaSte
     memory: { preferences },
     toggleMustHave,
     toggleDietaryRestriction,
-  } = usePreferenceMemory();
+  } = usePreferenceMemoryStore();
 
   return (
     <div className="space-y-4">

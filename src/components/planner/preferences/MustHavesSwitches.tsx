@@ -7,7 +7,7 @@
 import { memo, useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { MustHaves } from "@/contexts/preferences";
+import type { MustHaves } from "@/stores/hooks";
 
 interface MustHaveConfig {
   key: keyof MustHaves;
