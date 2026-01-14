@@ -96,6 +96,10 @@ export interface DestinationSuggestion {
   bestSeasons: string[];
   flightDurationFromOrigin?: string | null;
   flightPriceEstimate?: number | null;
+  // New API fields
+  imageUrl?: string;
+  imageCredit?: string;
+  flightPriceSource?: "api" | "cache" | "estimated";
 }
 
 export interface ProfileCompleteness {
