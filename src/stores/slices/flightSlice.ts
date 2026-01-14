@@ -1,12 +1,10 @@
 /**
  * Flight Slice
- * Manages flight search state including airports, dates, passengers, and multi-leg support
+ * Manages flight search state
  */
 
 import type { StateCreator } from 'zustand';
 import type {
-  PlannerStore,
-  FlightSlice,
   AirportInfo,
   FlightPassengers,
   FlightLegMemory,
@@ -17,11 +15,11 @@ import type {
 // Initial state
 const initialFlightState = {
   tripType: 'roundtrip' as TripType,
-  departure: null,
-  arrival: null,
-  departureDate: null,
-  returnDate: null,
-  legs: [],
+  departure: null as AirportInfo | null,
+  arrival: null as AirportInfo | null,
+  flightDepartureDate: null as Date | null,
+  flightReturnDate: null as Date | null,
+  legs: [] as FlightLegMemory[],
   passengers: {
     adults: 1,
     children: 0,
@@ -32,8 +30,40 @@ const initialFlightState = {
   flexibleDates: false,
 };
 
+export interface FlightSlice {
+  // State
+  tripType: TripType;
+  departure: AirportInfo | null;
+  arrival: AirportInfo | null;
+  flightDepartureDate: Date | null;
+  flightReturnDate: Date | null;
+  legs: FlightLegMemory[];
+  passengers: FlightPassengers;
+  cabinClass: CabinClass;
+  directOnly: boolean;
+  flexibleDates: boolean;
+  
+  // Computed
+  isReadyToSearch: boolean;
+  hasCompleteInfo: boolean;
+  
+  // Actions
+  setTripType: (type: TripType) => void;
+  setDeparture: (info: AirportInfo | null) => void;
+  setArrival: (info: AirportInfo | null) => void;
+  setFlightDates: (departure: Date | null, returnDate?: Date | null) => void;
+  setPassengers: (passengers: Partial<FlightPassengers>) => void;
+  setCabinClass: (cabinClass: CabinClass) => void;
+  setDirectOnly: (directOnly: boolean) => void;
+  setFlexibleDates: (flexible: boolean) => void;
+  addLeg: () => void;
+  removeLeg: (legId: string) => void;
+  updateLeg: (legId: string, update: Partial<FlightLegMemory>) => void;
+  resetFlight: () => void;
+}
+
 export const createFlightSlice: StateCreator<
-  PlannerStore,
+  FlightSlice,
   [['zustand/devtools', never], ['zustand/persist', unknown]],
   [],
   FlightSlice
@@ -41,39 +71,28 @@ export const createFlightSlice: StateCreator<
   // Initial state
   ...initialFlightState,
 
-  // Computed values
+  // Computed
   get isReadyToSearch() {
     const state = get();
     if (state.tripType === 'multi') {
-      return state.legs.every(
-        (leg) => leg.departure && leg.arrival && leg.date
-      );
+      return state.legs.every((leg) => leg.departure && leg.arrival && leg.date);
     }
-    const hasBasics = Boolean(
-      state.departure &&
-        state.arrival &&
-        state.departureDate
-    );
+    const hasBasics = Boolean(state.departure && state.arrival && state.flightDepartureDate);
     if (state.tripType === 'roundtrip') {
-      return hasBasics && Boolean(state.returnDate);
+      return hasBasics && Boolean(state.flightReturnDate);
     }
     return hasBasics;
   },
 
   get hasCompleteInfo() {
     const state = get();
-    return Boolean(
-      state.departure?.city &&
-        state.arrival?.city &&
-        state.passengers.adults >= 1
-    );
+    return Boolean(state.departure?.city && state.arrival?.city && state.passengers.adults >= 1);
   },
 
   // Actions
   setTripType: (type: TripType) => {
     set(
       (state) => {
-        // When switching to multi, initialize legs from current departure/arrival
         if (type === 'multi' && state.tripType !== 'multi') {
           const legs: FlightLegMemory[] = [];
           if (state.departure && state.arrival) {
@@ -81,7 +100,7 @@ export const createFlightSlice: StateCreator<
               id: crypto.randomUUID(),
               departure: state.departure,
               arrival: state.arrival,
-              date: state.departureDate,
+              date: state.flightDepartureDate,
             });
             legs.push({
               id: crypto.randomUUID(),
@@ -100,20 +119,19 @@ export const createFlightSlice: StateCreator<
             legs,
             departure: null,
             arrival: null,
-            departureDate: null,
-            returnDate: null,
+            flightDepartureDate: null,
+            flightReturnDate: null,
           };
         }
 
-        // When switching from multi to single, take first leg
         if (type !== 'multi' && state.tripType === 'multi' && state.legs.length > 0) {
           const firstLeg = state.legs[0];
           return {
             tripType: type,
             departure: firstLeg.departure,
             arrival: firstLeg.arrival,
-            departureDate: firstLeg.date,
-            returnDate: type === 'roundtrip' ? null : state.returnDate,
+            flightDepartureDate: firstLeg.date,
+            flightReturnDate: type === 'roundtrip' ? null : state.flightReturnDate,
             legs: [],
           };
         }
@@ -148,8 +166,8 @@ export const createFlightSlice: StateCreator<
   setFlightDates: (departure: Date | null, returnDate?: Date | null) => {
     set(
       {
-        departureDate: departure,
-        ...(returnDate !== undefined ? { returnDate } : {}),
+        flightDepartureDate: departure,
+        ...(returnDate !== undefined ? { flightReturnDate: returnDate } : {}),
       },
       false,
       'flight/setDates'
@@ -183,12 +201,7 @@ export const createFlightSlice: StateCreator<
       (state) => ({
         legs: [
           ...state.legs,
-          {
-            id: crypto.randomUUID(),
-            departure: null,
-            arrival: null,
-            date: null,
-          },
+          { id: crypto.randomUUID(), departure: null, arrival: null, date: null },
         ],
       }),
       false,
@@ -209,9 +222,7 @@ export const createFlightSlice: StateCreator<
   updateLeg: (legId: string, update: Partial<FlightLegMemory>) => {
     set(
       (state) => ({
-        legs: state.legs.map((l) =>
-          l.id === legId ? { ...l, ...update } : l
-        ),
+        legs: state.legs.map((l) => (l.id === legId ? { ...l, ...update } : l)),
       }),
       false,
       'flight/updateLeg'
