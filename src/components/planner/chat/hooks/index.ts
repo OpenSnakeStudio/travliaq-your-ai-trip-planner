@@ -42,7 +42,17 @@ export {
 // Preference widget callbacks (Phase 2.1 optimization)
 export { usePreferenceWidgetCallbacks } from "./usePreferenceWidgetCallbacks";
 
-// Intent Handler (Sprint 2 - Intent routing)
+// Unified Intent Router (Phase 2 - replaces useIntentHandler + useIntentRouter)
+export {
+  useUnifiedIntentRouter,
+  type UseUnifiedIntentRouterOptions,
+  type UseUnifiedIntentRouterReturn,
+  type FlowState,
+  type WidgetValidation,
+  type IntentProcessResult,
+} from "./useUnifiedIntentRouter";
+
+// Legacy: Intent Handler (deprecated - use useUnifiedIntentRouter)
 export {
   useIntentHandler,
   type UseIntentHandlerOptions,

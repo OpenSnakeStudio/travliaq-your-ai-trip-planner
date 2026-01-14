@@ -37,6 +37,7 @@ export interface IntentClassification {
   };
   nextExpectedIntent?: string;
   requiresClarification?: boolean;
+  clarificationQuestion?: string;
 }
 
 /**
