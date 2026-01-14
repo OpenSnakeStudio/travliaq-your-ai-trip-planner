@@ -1,28 +1,20 @@
 /**
- * DestinationSuggestionCard - Single destination suggestion display
+ * DestinationSuggestionCard - Premium destination suggestion card with hero image
  */
 
-import { memo } from "react";
-import { MapPin, Check, Calendar, Coins } from "lucide-react";
+import { memo, useState } from "react";
+import { motion } from "framer-motion";
+import { Check, Calendar, Wallet, Plane, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { DestinationSuggestion } from "@/types/destinations";
 
 interface DestinationSuggestionCardProps {
   suggestion: DestinationSuggestion;
   onSelect?: () => void;
   isLoading?: boolean;
-}
-
-/**
- * Convert country code to flag emoji
- */
-function getFlagEmoji(code: string): string {
-  if (!code || code.length !== 2) return "🌍";
-  const codePoints = code
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
+  animationDelay?: number;
 }
 
 /**
@@ -100,19 +92,24 @@ function getActivityEmoji(emojiName: string): string {
  * Get match score color based on value
  */
 function getScoreColor(score: number): string {
-  if (score >= 80) return "text-green-600 bg-green-50 dark:bg-green-900/30 dark:text-green-400";
-  if (score >= 60) return "text-amber-600 bg-amber-50 dark:bg-amber-900/30 dark:text-amber-400";
-  return "text-muted-foreground bg-muted";
+  if (score >= 80) return "bg-green-500/90 text-white";
+  if (score >= 60) return "bg-amber-500/90 text-white";
+  return "bg-muted text-muted-foreground";
 }
 
 export const DestinationSuggestionCard = memo(function DestinationSuggestionCard({
   suggestion,
   onSelect,
   isLoading = false,
+  animationDelay = 0,
 }: DestinationSuggestionCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
   const {
     countryCode,
     countryName,
+    flagEmoji,
     headline,
     description,
     matchScore,
@@ -120,86 +117,159 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
     estimatedBudgetPerPerson,
     topActivities,
     bestSeasons,
+    flightPriceEstimate,
+    imageUrl,
+    imageCredit,
   } = suggestion;
 
   return (
-    <div className="group p-4 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-lg transition-all duration-200">
-      {/* Header: Flag + Country + Score */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-3xl">{getFlagEmoji(countryCode)}</span>
-          <div>
-            <h3 className="font-semibold text-foreground leading-tight">{countryName}</h3>
-            <span className="text-xs text-muted-foreground">{countryCode}</span>
-          </div>
-        </div>
-        <div className={cn("px-2 py-1 rounded-full text-xs font-bold", getScoreColor(matchScore))}>
-          {matchScore}% match
-        </div>
-      </div>
-
-      {/* Headline */}
-      <p className="font-medium text-sm text-foreground mb-1">{headline}</p>
-
-      {/* Description */}
-      <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{description}</p>
-
-      {/* Key Factors */}
-      <div className="space-y-1 mb-3">
-        {keyFactors.slice(0, 3).map((factor, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-xs">
-            <Check className="h-3 w-3 text-green-500 shrink-0" />
-            <span className="text-muted-foreground">{factor}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Budget & Seasons */}
-      <div className="flex items-center gap-4 mb-3 text-xs">
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <Coins className="h-3.5 w-3.5" />
-          <span>
-            {estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€
-            <span className="text-muted-foreground/60">
-              {estimatedBudgetPerPerson.duration === "per_day" ? "/jour" : "/pers (7j)"}
-            </span>
-          </span>
-        </div>
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <Calendar className="h-3.5 w-3.5" />
-          <span>{bestSeasons.slice(0, 2).join(", ")}</span>
-        </div>
-      </div>
-
-      {/* Top Activities */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {topActivities.slice(0, 4).map((activity, i) => (
-          <span
-            key={i}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50 text-xs text-muted-foreground"
-          >
-            <span>{getActivityEmoji(activity.emoji)}</span>
-            <span>{activity.name}</span>
-          </span>
-        ))}
-      </div>
-
-      {/* Select Button */}
-      {onSelect && (
-        <button
-          onClick={onSelect}
-          disabled={isLoading}
-          className={cn(
-            "w-full py-2.5 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2",
-            "bg-primary text-primary-foreground hover:bg-primary/90",
-            "disabled:opacity-50 disabled:cursor-not-allowed"
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.4, delay: animationDelay, ease: "easeOut" }}
+      className="h-full"
+    >
+      <Card 
+        className="overflow-hidden border-0 shadow-lg h-full flex flex-col"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* IMAGE HERO */}
+        <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+          {/* Skeleton loading */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Skeleton className="w-full h-full" />
+              <Loader2 className="absolute h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           )}
-        >
-          <MapPin className="h-4 w-4" />
-          Choisir cette destination
-        </button>
-      )}
-    </div>
+
+          {/* Image with hover zoom */}
+          <motion.img
+            src={imageUrl}
+            alt={`${countryName} - ${headline}`}
+            className={cn(
+              "w-full h-full object-cover transition-opacity duration-300",
+              imageLoaded ? "opacity-100" : "opacity-0"
+            )}
+            animate={{ scale: isHovered ? 1.05 : 1 }}
+            transition={{ duration: 0.4 }}
+            onLoad={() => setImageLoaded(true)}
+          />
+
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+
+          {/* Badge pays + score */}
+          <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl drop-shadow-lg">{flagEmoji}</span>
+              <span className="text-white font-semibold text-lg drop-shadow-md">
+                {countryName}
+              </span>
+            </div>
+            <div
+              className={cn(
+                "px-3 py-1 rounded-full text-sm font-bold shadow-lg",
+                getScoreColor(matchScore)
+              )}
+            >
+              {matchScore}%
+            </div>
+          </div>
+
+          {/* Credit photo - visible on hover only */}
+          {imageCredit && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute bottom-1 right-2 text-[10px] text-white/60"
+            >
+              {imageCredit}
+            </motion.span>
+          )}
+        </div>
+
+        <CardContent className="p-4 space-y-3 flex-1">
+          {/* Headline */}
+          <h3 className="font-semibold text-base leading-tight text-foreground">
+            {headline}
+          </h3>
+
+          {/* Description */}
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {description}
+          </p>
+
+          {/* Key Factors */}
+          <div className="space-y-1">
+            {keyFactors.slice(0, 3).map((factor, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs">
+                <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                <span className="text-muted-foreground">{factor}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Stats Row: Budget | Vol | Saison */}
+          <div className="flex items-center justify-between text-xs border-t border-border pt-3 gap-2">
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Wallet className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+              <span>
+                {estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€
+                <span className="text-muted-foreground/60">/j</span>
+              </span>
+            </div>
+
+            {flightPriceEstimate && (
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Plane className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                <span>~{flightPriceEstimate}€</span>
+                <span className="text-[10px] text-muted-foreground/60">(est.)</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-1 text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+              <span className="truncate">{bestSeasons.slice(0, 2).join(", ")}</span>
+            </div>
+          </div>
+
+          {/* Activities badges */}
+          <div className="flex flex-wrap gap-1.5">
+            {topActivities.slice(0, 4).map((activity, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 text-xs text-muted-foreground"
+              >
+                <span>{getActivityEmoji(activity.emoji)}</span>
+                <span className="truncate max-w-[80px]">{activity.name}</span>
+              </span>
+            ))}
+          </div>
+        </CardContent>
+
+        {/* CTA Button */}
+        {onSelect && (
+          <CardFooter className="p-4 pt-0">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={onSelect}
+              disabled={isLoading}
+              className={cn(
+                "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
+                "bg-primary text-primary-foreground hover:bg-primary/90",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              Choisir cette destination
+            </motion.button>
+          </CardFooter>
+        )}
+      </Card>
+    </motion.div>
   );
 });
 
