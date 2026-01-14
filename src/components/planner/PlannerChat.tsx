@@ -9,7 +9,7 @@
  * - useChatMapContext: Map/widget context for LLM
  */
 
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback } from "react";
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback, useMemo, memo } from "react";
 import { Plane, History, Send, PanelLeftClose, Copy, ThumbsUp, ThumbsDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo-travliaq.png";
@@ -157,6 +157,94 @@ function MessageActions({ messageId, text }: { messageId: string; text: string }
   );
 }
 
+/**
+ * MemoizedSmartSuggestions - Performance-optimized wrapper
+ * Memoizes the context object to prevent re-renders on every parent update
+ */
+type InspireFlowStepType = 'idle' | 'style' | 'interests' | 'extra' | 'must_haves' | 'dietary' | 'loading' | 'results';
+
+interface MemoizedSmartSuggestionsProps {
+  memory: ReturnType<typeof useFlightMemory>['memory'];
+  mapContext: ReturnType<typeof useChatMapContext>;
+  inspireFlowStep: InspireFlowStepType;
+  destinationSuggestions: DestinationSuggestion[];
+  messages: ChatMessage[];
+  dynamicSuggestions: Array<{id: string; label: string; emoji: string; message: string}>;
+  onSuggestionClick: (message: string) => void;
+  isLoading: boolean;
+}
+
+const MemoizedSmartSuggestions = memo(function MemoizedSmartSuggestions({
+  memory,
+  mapContext,
+  inspireFlowStep,
+  destinationSuggestions,
+  messages,
+  dynamicSuggestions,
+  onSuggestionClick,
+  isLoading,
+}: MemoizedSmartSuggestionsProps) {
+  // Memoize the context object with primitive dependencies to avoid re-creation
+  const context = useMemo(() => {
+    const step: 'inspiration' | 'destination' | 'dates' | 'travelers' | 'search' | 'compare' | 'book' = 
+      !memory.arrival?.city ? "inspiration"
+        : !memory.departureDate ? "destination"
+        : memory.passengers.adults === 0 ? "dates"
+        : "compare";
+    
+    return {
+      workflowStep: step,
+    hasDestination: !!memory.arrival?.city,
+    hasDates: !!memory.departureDate,
+    hasTravelers: memory.passengers.adults > 0,
+    hasFlights: mapContext.visiblePrices.filter((p) => p.type === "flight").length > 0,
+    hasHotels: mapContext.visibleHotels.length > 0,
+    destinationName: memory.arrival?.city,
+    departureCity: memory.departure?.city,
+    currentTab: mapContext.activeTab,
+    visibleFlightsCount: mapContext.visiblePrices.filter((p) => p.type === "flight").length,
+    visibleHotelsCount: mapContext.visibleHotels.length,
+    visibleActivitiesCount: mapContext.visibleActivities.length,
+    cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
+    cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
+    // Inspire flow context
+    inspireFlowStep,
+    hasProposedDestinations: destinationSuggestions.length > 0,
+    proposedDestinationNames: destinationSuggestions.map(d => d.countryName),
+    // Conversation context for intelligent anticipation - memoized slices
+    lastAssistantMessage: messages
+      .filter(m => m.role === 'assistant' && !m.isTyping && m.text && m.text.length > 10)
+      .slice(-1)[0]?.text,
+    lastUserMessage: messages
+      .filter(m => m.role === 'user')
+      .slice(-1)[0]?.text,
+    conversationTurn: messages.filter(m => m.role === 'user').length,
+  }; }, [
+    memory.arrival?.city,
+    memory.departureDate,
+    memory.passengers.adults,
+    memory.departure?.city,
+    mapContext.visiblePrices,
+    mapContext.visibleHotels,
+    mapContext.visibleActivities,
+    mapContext.activeTab,
+    mapContext.getCheapestFlightPrice,
+    mapContext.getCheapestHotelPrice,
+    inspireFlowStep,
+    destinationSuggestions,
+    messages,
+  ]);
+
+  return (
+    <SmartSuggestions
+      context={context}
+      dynamicSuggestions={dynamicSuggestions}
+      onSuggestionClick={onSuggestionClick}
+      isLoading={isLoading}
+    />
+  );
+});
+
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
   // Memory contexts
   const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory: resetFlightMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
@@ -192,8 +280,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const isHardResetRef = useRef(false);
   
   // Inspire flow state: idle → style → interests → extra → loading → results
-  type InspireFlowStep = "idle" | "style" | "interests" | "extra" | "must_haves" | "dietary" | "loading" | "results";
-  const [inspireFlowStep, setInspireFlowStep] = useState<InspireFlowStep>("idle");
+  // Uses InspireFlowStepType defined at module level
+  const [inspireFlowStep, setInspireFlowStep] = useState<InspireFlowStepType>("idle");
   const [destinationSuggestions, setDestinationSuggestions] = useState<DestinationSuggestion[]>([]);
   const [destinationProfileScore, setDestinationProfileScore] = useState<number>(0);
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
@@ -1639,39 +1727,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
           {/* Smart Suggestions + Input */}
           <div className="relative z-20 border-t border-border bg-background" aria-hidden={isCollapsed}>
-            {/* Smart Suggestions */}
-            <SmartSuggestions
-              context={{
-                workflowStep: !memory.arrival?.city ? "inspiration"
-                  : !memory.departureDate ? "destination"
-                  : memory.passengers.adults === 0 ? "dates"
-                  : "compare",
-                hasDestination: !!memory.arrival?.city,
-                hasDates: !!memory.departureDate,
-                hasTravelers: memory.passengers.adults > 0,
-                hasFlights: mapContext.visiblePrices.filter((p) => p.type === "flight").length > 0,
-                hasHotels: mapContext.visibleHotels.length > 0,
-                destinationName: memory.arrival?.city,
-                departureCity: memory.departure?.city,
-                currentTab: mapContext.activeTab,
-                visibleFlightsCount: mapContext.visiblePrices.filter((p) => p.type === "flight").length,
-                visibleHotelsCount: mapContext.visibleHotels.length,
-                visibleActivitiesCount: mapContext.visibleActivities.length,
-                cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
-                cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
-                // Inspire flow context
-                inspireFlowStep: inspireFlowStep,
-                hasProposedDestinations: destinationSuggestions.length > 0,
-                proposedDestinationNames: destinationSuggestions.map(d => d.countryName),
-                // Conversation context for intelligent anticipation
-                lastAssistantMessage: messages
-                  .filter(m => m.role === 'assistant' && !m.isTyping && m.text && m.text.length > 10)
-                  .slice(-1)[0]?.text,
-                lastUserMessage: messages
-                  .filter(m => m.role === 'user')
-                  .slice(-1)[0]?.text,
-                conversationTurn: messages.filter(m => m.role === 'user').length,
-              }}
+            {/* Smart Suggestions - context is memoized to prevent re-renders */}
+            <MemoizedSmartSuggestions
+              memory={memory}
+              mapContext={mapContext}
+              inspireFlowStep={inspireFlowStep}
+              destinationSuggestions={destinationSuggestions}
+              messages={messages}
               dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
                 // CRITICAL: Suggestions should ONLY fill the input, never trigger actions
@@ -1783,4 +1845,5 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
 
 PlannerChatComponent.displayName = "PlannerChat";
 
-export default PlannerChatComponent;
+// Memoized export to prevent unnecessary re-renders from parent components
+export default memo(PlannerChatComponent);
