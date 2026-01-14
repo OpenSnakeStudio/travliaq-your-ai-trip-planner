@@ -6,6 +6,7 @@
  */
 
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { Lightbulb, TrendingDown, Clock, Calendar, MapPin, Info, AlertTriangle, Sparkles } from "lucide-react";
 
 /**
@@ -122,26 +123,8 @@ function getTipConfig(type: TipType) {
 /**
  * Default titles for tip types
  */
-function getDefaultTitle(type: TipType): string {
-  switch (type) {
-    case "savings":
-      return "Économisez";
-    case "timing":
-      return "Timing";
-    case "seasonal":
-      return "Conseil saisonnier";
-    case "location":
-      return "Localisation";
-    case "warning":
-      return "Attention";
-    case "insight":
-      return "Notre analyse";
-    case "pro":
-      return "Astuce";
-    case "info":
-    default:
-      return "Info";
-  }
+function getDefaultTitle(type: TipType, t: (key: string) => string): string {
+  return t(`planner.tips.type.${type}`);
 }
 
 /**
@@ -169,9 +152,10 @@ export function TipCard({
   size = "md",
   compact = false,
 }: TipCardProps) {
+  const { t } = useTranslation();
   const config = getTipConfig(type);
   const Icon = config.icon;
-  const displayTitle = title || getDefaultTitle(type);
+  const displayTitle = title || getDefaultTitle(type, t);
 
   if (compact) {
     return (

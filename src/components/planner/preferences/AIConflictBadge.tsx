@@ -21,16 +21,16 @@ interface AIConflictBadgeProps {
   className?: string;
 }
 
-const FIELD_LABELS: Record<string, string> = {
-  travelStyle: "Style de voyage",
-  comfortLevel: "Niveau de confort",
-  pace: "Rythme",
-  interests: "Centres d'intérêt",
-  occasion: "Occasion",
-  "styleAxes.chillVsIntense": "Énergie",
-  "styleAxes.ecoVsLuxury": "Budget",
-  "styleAxes.cityVsNature": "Environnement",
-  "styleAxes.touristVsLocal": "Authenticité",
+const FIELD_LABEL_KEYS: Record<string, string> = {
+  travelStyle: "planner.ai.conflict.travelStyle",
+  comfortLevel: "planner.ai.conflict.comfortLevel",
+  pace: "planner.ai.conflict.pace",
+  interests: "planner.ai.conflict.interests",
+  occasion: "planner.ai.conflict.occasion",
+  "styleAxes.chillVsIntense": "planner.ai.conflict.energy",
+  "styleAxes.ecoVsLuxury": "planner.ai.conflict.budget",
+  "styleAxes.cityVsNature": "planner.ai.conflict.environment",
+  "styleAxes.touristVsLocal": "planner.ai.conflict.authenticity",
 };
 
 export function AIConflictBadge({ onApply, className }: AIConflictBadgeProps) {
@@ -70,7 +70,7 @@ export function AIConflictBadge({ onApply, className }: AIConflictBadgeProps) {
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-amber-700 dark:text-amber-400 truncate">
-                {t("planner.ai.suggests", { field: FIELD_LABELS[conflict.field] || conflict.field })}
+                {t("planner.ai.suggests", { field: t(FIELD_LABEL_KEYS[conflict.field] || conflict.field) })}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
                 {t("planner.ai.detectedValueDifferent")}
