@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Cloud, Sun, CloudRain, ChevronDown, Plane, Check, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   format,
   startOfMonth,
@@ -322,8 +323,6 @@ export default function PlannerCalendar({
       {showPrices && (!origin || !destination) && (
         <div className="text-[10px] text-muted-foreground text-center py-1 px-2 bg-muted/30 rounded-lg">
           {t("planner.calendar.selectAirports")}
-        </div>
-      )}
         </div>
       )}
 
