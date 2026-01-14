@@ -262,8 +262,6 @@ export default function PlannerCalendar({
                   {format(dateRange.from!, "d MMM", { locale: locale === "en-US" ? undefined : fr })}
                 </div>
               </div>
-                </div>
-              </div>
             </div>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <div className="flex items-center gap-2">
@@ -466,8 +464,6 @@ export default function PlannerCalendar({
           className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
         >
           {t("planner.calendar.confirmDates")}
-        </button>
-      )}
         </button>
       )}
     </div>
