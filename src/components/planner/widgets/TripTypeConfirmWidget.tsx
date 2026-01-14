@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 type TripType = "roundtrip" | "oneway" | "multi";
@@ -18,6 +19,7 @@ export const TripTypeConfirmWidget = ({
   currentType = "roundtrip",
   onConfirm,
 }: TripTypeConfirmWidgetProps) => {
+  const { t } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
   const [selected, setSelected] = useState<TripType>(currentType);
 
@@ -27,17 +29,22 @@ export const TripTypeConfirmWidget = ({
     onConfirm(type);
   };
 
+  const getLabel = (type: TripType) => {
+    switch (type) {
+      case "roundtrip":
+        return t("planner.tripType.roundtrip");
+      case "oneway":
+        return t("planner.tripType.oneway");
+      case "multi":
+        return t("planner.tripType.multi");
+    }
+  };
+
   if (confirmed) {
-    const label =
-      selected === "roundtrip"
-        ? "Aller-retour"
-        : selected === "oneway"
-        ? "Aller simple"
-        : "Multi-destinations";
     return (
       <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium">
         <span>✓</span>
-        <span>{label}</span>
+        <span>{getLabel(selected)}</span>
       </div>
     );
   }
@@ -53,7 +60,7 @@ export const TripTypeConfirmWidget = ({
             : "bg-muted text-foreground hover:bg-muted/80"
         )}
       >
-        ↔ Aller-retour
+        ↔ {t("planner.tripType.roundtrip")}
       </button>
       <button
         onClick={() => handleSelect("oneway")}
@@ -64,7 +71,7 @@ export const TripTypeConfirmWidget = ({
             : "bg-muted text-foreground hover:bg-muted/80"
         )}
       >
-        → Aller simple
+        → {t("planner.tripType.oneway")}
       </button>
       <button
         onClick={() => handleSelect("multi")}
@@ -75,7 +82,7 @@ export const TripTypeConfirmWidget = ({
             : "bg-muted text-foreground hover:bg-muted/80"
         )}
       >
-        🔀 Multi-destinations
+        🔀 {t("planner.tripType.multi")}
       </button>
     </div>
   );

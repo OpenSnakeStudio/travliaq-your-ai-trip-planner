@@ -1,4 +1,5 @@
 import { memo, useState, useCallback, useRef, useLayoutEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, ExternalLink, ChevronLeft, ChevronRight, Bed, Users, Clock, Check, Shield, Heart, Utensils, Dumbbell, Bath, Tv, Phone, Snowflake, Loader2, Award, Flame, ThumbsUp, MapPinned, Sparkles, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

@@ -5,6 +5,7 @@
  * metrics like duration, stops, times, and baggage.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Plane,
