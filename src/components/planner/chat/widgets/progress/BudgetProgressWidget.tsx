@@ -168,6 +168,7 @@ function BarVariant({
   showBreakdown: boolean;
   isOverBudget: boolean;
 }) {
+  const { t } = useTranslation();
   const percentage = (spent / totalBudget) * 100;
 
   return (
