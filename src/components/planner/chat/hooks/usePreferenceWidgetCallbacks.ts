@@ -4,6 +4,7 @@
  */
 
 import { useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { ChatMessage } from "../types";
 import type { InspireFlowStep } from "../MemoizedSmartSuggestions";
 import type { WidgetType } from "@/types/flight";
@@ -55,6 +56,8 @@ export function usePreferenceWidgetCallbacks({
   setDynamicSuggestions,
   handleFetchDestinations,
 }: UsePreferenceWidgetCallbacksOptions): PreferenceWidgetCallbacks {
+  const { t } = useTranslation();
+
   /**
    * Called when user completes style widget
    */
@@ -71,11 +74,11 @@ export function usePreferenceWidgetCallbacks({
       {
         id: interestsId,
         role: "assistant",
-        text: "Maintenant, sélectionnez vos centres d'intérêt :",
+        text: t("planner.preference.selectInterests"),
         widget: "preferenceInterests" as WidgetType,
       },
     ]);
-  }, [prefMemory.preferences.styleAxes, widgetTracking, setInspireFlowStep, setMessages]);
+  }, [prefMemory.preferences.styleAxes, widgetTracking, setInspireFlowStep, setMessages, t]);
 
   /**
    * Called when user completes interests widget
@@ -93,7 +96,7 @@ export function usePreferenceWidgetCallbacks({
       {
         id: questionId,
         role: "assistant",
-        text: "Avez-vous autre chose à signaler ? (critères obligatoires, restrictions alimentaires...)",
+        text: t("planner.preference.anythingElse"),
       },
     ]);
 
@@ -101,24 +104,24 @@ export function usePreferenceWidgetCallbacks({
     setDynamicSuggestions([
       {
         id: "must-haves",
-        label: "Critères obligatoires",
+        label: t("planner.mustHaves.title"),
         emoji: "⚠️",
         message: "__WIDGET__mustHaves",
       },
       {
         id: "dietary",
-        label: "Restrictions alimentaires",
+        label: t("planner.dietary.title"),
         emoji: "🍽️",
         message: "__WIDGET__dietary",
       },
       {
         id: "nothing-else",
-        label: "Rien d'autre, suggérer !",
+        label: t("planner.suggestion.nothingElse"),
         emoji: "✈️",
         message: "__FETCH_DESTINATIONS__",
       },
     ]);
-  }, [prefMemory.preferences.interests, widgetTracking, setInspireFlowStep, setMessages, setDynamicSuggestions]);
+  }, [prefMemory.preferences.interests, widgetTracking, setInspireFlowStep, setMessages, setDynamicSuggestions, t]);
 
   /**
    * Called when user completes must-haves widget
@@ -130,7 +133,7 @@ export function usePreferenceWidgetCallbacks({
       `must-haves-${Date.now()}`,
       "must_haves_configured",
       { ...mustHaves },
-      `Critères obligatoires configurés`
+      t("planner.preference.mustHavesConfigured")
     );
 
     // After must-haves, offer dietary or fetch destinations
@@ -140,25 +143,25 @@ export function usePreferenceWidgetCallbacks({
       {
         id: questionId,
         role: "assistant",
-        text: "Parfait ! Autre chose à signaler ?",
+        text: t("planner.preference.afterMustHaves"),
       },
     ]);
 
     setDynamicSuggestions([
       {
         id: "dietary",
-        label: "Restrictions alimentaires",
+        label: t("planner.dietary.title"),
         emoji: "🍽️",
         message: "__WIDGET__dietary",
       },
       {
         id: "nothing-else",
-        label: "Rien d'autre, suggérer !",
+        label: t("planner.suggestion.nothingElse"),
         emoji: "✈️",
         message: "__FETCH_DESTINATIONS__",
       },
     ]);
-  }, [prefMemory.preferences.mustHaves, widgetTracking, setMessages, setDynamicSuggestions]);
+  }, [prefMemory.preferences.mustHaves, widgetTracking, setMessages, setDynamicSuggestions, t]);
 
   /**
    * Called when user completes dietary widget
@@ -171,7 +174,7 @@ export function usePreferenceWidgetCallbacks({
         `dietary-${Date.now()}`,
         "dietary_configured",
         { restrictions: dietary },
-        `Restrictions alimentaires : ${dietary.join(", ")}`
+        t("planner.preference.dietaryConfigured", { restrictions: dietary.join(", ") })
       );
     }
 
@@ -182,7 +185,7 @@ export function usePreferenceWidgetCallbacks({
       {
         id: loadingId,
         role: "assistant",
-        text: "Je recherche les meilleures destinations pour vous...",
+        text: t("planner.preference.searchingDestinations"),
         isTyping: true,
       },
     ]);
@@ -196,6 +199,7 @@ export function usePreferenceWidgetCallbacks({
     setMessages,
     setDynamicSuggestions,
     handleFetchDestinations,
+    t,
   ]);
 
   return {

@@ -4,8 +4,9 @@
  * Syncs with PreferenceMemory context
  */
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { cn } from "@/lib/utils";
 
@@ -14,18 +15,18 @@ interface PreferenceInterestsWidgetProps {
   onContinue?: () => void;
 }
 
-// Interests matching the screenshot exactly
-const INTERESTS = [
-  { id: "culture", label: "Culture", emoji: "🏛️" },
-  { id: "food", label: "Gastronomie", emoji: "🍽️" },
-  { id: "nature", label: "Nature", emoji: "🌲" },
-  { id: "beach", label: "Plage", emoji: "🏖️" },
-  { id: "wellness", label: "Bien-être", emoji: "🧘" },
-  { id: "sport", label: "Sport", emoji: "⚽" },
-  { id: "adventure", label: "Aventure", emoji: "🎢" },
-  { id: "nightlife", label: "Sorties", emoji: "🍸" },
-  { id: "shopping", label: "Shopping", emoji: "🛍️" },
-  { id: "history", label: "Histoire", emoji: "📜" },
+// Interests with i18n keys
+const INTERESTS_CONFIG = [
+  { id: "culture", labelKey: "planner.interest.culture", emoji: "🏛️" },
+  { id: "food", labelKey: "planner.interest.food", emoji: "🍽️" },
+  { id: "nature", labelKey: "planner.interest.nature", emoji: "🌲" },
+  { id: "beach", labelKey: "planner.interest.beach", emoji: "🏖️" },
+  { id: "wellness", labelKey: "planner.interest.wellness", emoji: "🧘" },
+  { id: "sport", labelKey: "planner.interest.sport", emoji: "⚽" },
+  { id: "adventure", labelKey: "planner.interest.adventure", emoji: "🎢" },
+  { id: "nightlife", labelKey: "planner.interest.nightlife", emoji: "🍸" },
+  { id: "shopping", labelKey: "planner.interest.shopping", emoji: "🛍️" },
+  { id: "history", labelKey: "planner.interest.history", emoji: "📜" },
 ];
 
 const MAX_SELECTIONS = 5;
@@ -33,6 +34,7 @@ const MAX_SELECTIONS = 5;
 export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget({
   onContinue,
 }: PreferenceInterestsWidgetProps) {
+  const { t } = useTranslation();
   const { memory, toggleInterest } = usePreferenceMemoryStore();
   const selected = memory.preferences.interests;
   const isMaxReached = selected.length >= MAX_SELECTIONS;
@@ -43,12 +45,19 @@ export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget
     }
   }, [toggleInterest]);
 
+  // Memoize translated interests
+  const translatedInterests = useMemo(() => 
+    INTERESTS_CONFIG.map(interest => ({
+      ...interest,
+      label: t(interest.labelKey),
+    })), [t]);
+
   return (
     <div className="mt-3 p-4 rounded-2xl bg-card border border-border shadow-md max-w-full">
       {/* Header with counter */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Sélectionnez jusqu'à {MAX_SELECTIONS}
+          {t("planner.preference.selectUpTo", { max: MAX_SELECTIONS })}
         </span>
         <span className={cn(
           "text-xs font-bold px-2 py-0.5 rounded-full",
@@ -62,7 +71,7 @@ export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget
       
       {/* Grid of interests - matching screenshot layout */}
       <div className="grid grid-cols-5 gap-2">
-        {INTERESTS.map((interest) => {
+        {translatedInterests.map((interest) => {
           const isSelected = selected.includes(interest.id);
           const isDisabled = !isSelected && isMaxReached;
           
@@ -94,7 +103,7 @@ export const PreferenceInterestsWidget = memo(function PreferenceInterestsWidget
           onClick={onContinue}
           className="mt-5 w-full py-2.5 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm"
         >
-          Continuer
+          {t("planner.preference.continue")}
           <ArrowRight className="h-4 w-4" />
         </button>
       )}
