@@ -7,6 +7,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface TravelersWidgetProps {
   initialValues?: { adults: number; children: number; infants: number };
@@ -17,6 +18,7 @@ export const TravelersWidget = ({
   initialValues = { adults: 1, children: 0, infants: 0 },
   onConfirm 
 }: TravelersWidgetProps) => {
+  const { t } = useTranslation();
   const [adults, setAdults] = useState(Math.max(1, initialValues.adults));
   const [children, setChildren] = useState(initialValues.children);
   const [infants, setInfants] = useState(Math.min(initialValues.infants, Math.max(1, initialValues.adults)));
@@ -68,14 +70,16 @@ export const TravelersWidget = ({
     </div>
   );
 
+  const total = adults + children + infants;
+
   if (confirmed) {
     return (
       <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium">
         <span>✓</span>
         <span>
-          {adults} adulte{adults > 1 ? "s" : ""}
-          {children > 0 && `, ${children} enfant${children > 1 ? "s" : ""}`}
-          {infants > 0 && `, ${infants} bébé${infants > 1 ? "s" : ""}`}
+          {adults} {adults > 1 ? t("planner.travelers.adults") : t("planner.travelers.adult")}
+          {children > 0 && `, ${children} ${children > 1 ? t("planner.travelers.children") : t("planner.travelers.child")}`}
+          {infants > 0 && `, ${infants} ${infants > 1 ? t("planner.travelers.infants") : t("planner.travelers.infant")}`}
         </span>
       </div>
     );
@@ -84,14 +88,14 @@ export const TravelersWidget = ({
   return (
     <div className="mt-3 p-4 rounded-2xl bg-muted/50 border border-border/50 space-y-4 max-w-xs">
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Nombre de voyageurs
+        {t("planner.travelers.countTitle")}
       </div>
       
       {/* Adults */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="font-medium text-sm">Adultes</div>
-          <div className="text-xs text-muted-foreground">12 ans et +</div>
+          <div className="font-medium text-sm">{t("planner.travelers.adults")}</div>
+          <div className="text-xs text-muted-foreground">{t("planner.travelers.adultsDesc")}</div>
         </div>
         <CounterButton value={adults} onChange={handleAdultsChange} min={1} />
       </div>
@@ -99,8 +103,8 @@ export const TravelersWidget = ({
       {/* Children */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="font-medium text-sm">Enfants</div>
-          <div className="text-xs text-muted-foreground">2-11 ans</div>
+          <div className="font-medium text-sm">{t("planner.travelers.children")}</div>
+          <div className="text-xs text-muted-foreground">{t("planner.travelers.childrenDesc")}</div>
         </div>
         <CounterButton value={children} onChange={setChildren} />
       </div>
@@ -108,8 +112,8 @@ export const TravelersWidget = ({
       {/* Infants */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="font-medium text-sm">Bébés</div>
-          <div className="text-xs text-muted-foreground">Moins de 2 ans</div>
+          <div className="font-medium text-sm">{t("planner.travelers.infants")}</div>
+          <div className="text-xs text-muted-foreground">{t("planner.travelers.infantsDesc")}</div>
         </div>
         <CounterButton value={infants} onChange={setInfants} max={adults} />
       </div>
@@ -119,7 +123,7 @@ export const TravelersWidget = ({
         onClick={handleConfirm}
         className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
       >
-        Confirmer ({adults + children + infants} voyageur{adults + children + infants > 1 ? "s" : ""})
+        {t("planner.travelers.confirm")} ({total} {total > 1 ? t("planner.travelers.travelersPlural") : t("planner.travelers.traveler")})
       </button>
     </div>
   );

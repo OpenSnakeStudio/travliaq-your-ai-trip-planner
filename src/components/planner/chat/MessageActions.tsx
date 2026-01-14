@@ -7,6 +7,7 @@ import { useState, memo } from "react";
 import { Copy, ThumbsUp, ThumbsDown, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface MessageActionsProps {
   messageId: string;
@@ -14,6 +15,7 @@ interface MessageActionsProps {
 }
 
 export const MessageActions = memo(function MessageActions({ messageId, text }: MessageActionsProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
 
@@ -21,10 +23,10 @@ export const MessageActions = memo(function MessageActions({ messageId, text }: 
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
-      toast.success("Copié !");
+      toast.success(t("planner.message.copied"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Impossible de copier");
+      toast.error(t("planner.message.copyError"));
     }
   };
 
@@ -43,8 +45,8 @@ export const MessageActions = memo(function MessageActions({ messageId, text }: 
       <button
         onClick={handleCopy}
         className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        title="Copier"
-        aria-label="Copier le message"
+        title={t("planner.message.copy")}
+        aria-label={t("planner.message.copyMessage")}
       >
         {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
       </button>
@@ -56,8 +58,8 @@ export const MessageActions = memo(function MessageActions({ messageId, text }: 
             ? "text-green-500 bg-green-500/10" 
             : "text-muted-foreground hover:text-foreground hover:bg-muted"
         )}
-        title="J'aime"
-        aria-label="J'aime cette réponse"
+        title={t("planner.message.like")}
+        aria-label={t("planner.message.likeResponse")}
       >
         <ThumbsUp className="h-3.5 w-3.5" />
       </button>
@@ -69,8 +71,8 @@ export const MessageActions = memo(function MessageActions({ messageId, text }: 
             ? "text-red-500 bg-red-500/10" 
             : "text-muted-foreground hover:text-foreground hover:bg-muted"
         )}
-        title="Je n'aime pas"
-        aria-label="Je n'aime pas cette réponse"
+        title={t("planner.message.dislike")}
+        aria-label={t("planner.message.dislikeResponse")}
       >
         <ThumbsDown className="h-3.5 w-3.5" />
       </button>
