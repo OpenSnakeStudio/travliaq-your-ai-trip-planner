@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Check,
@@ -200,12 +201,15 @@ function SummaryStep({
   onContinue: () => void;
   onBookItem?: (itemId: string) => void;
 }) {
+  const { t, i18n } = useTranslation();
   const typeIcons = {
     flight: Plane,
     hotel: Hotel,
     activity: MapPin,
     transfer: MapPin,
   };
+
+  const locale = i18n.language === "en" ? "en-US" : "fr-FR";
 
   return (
     <div className="space-y-4">
@@ -216,18 +220,17 @@ function SummaryStep({
           <div className="flex items-center gap-1.5">
             <Calendar size={14} />
             <span>
-              {summary.dates.departure.toLocaleDateString("fr-FR")}
+              {summary.dates.departure.toLocaleDateString(locale)}
               {summary.dates.return &&
-                ` - ${summary.dates.return.toLocaleDateString("fr-FR")}`}
+                ` - ${summary.dates.return.toLocaleDateString(locale)}`}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <Users size={14} />
             <span>
-              {summary.travelers.adults} adulte
-              {summary.travelers.adults > 1 ? "s" : ""}
+              {summary.travelers.adults} {summary.travelers.adults > 1 ? t("planner.booking.adults") : t("planner.booking.adult")}
               {summary.travelers.children > 0 &&
-                `, ${summary.travelers.children} enfant${summary.travelers.children > 1 ? "s" : ""}`}
+                `, ${summary.travelers.children} ${summary.travelers.children > 1 ? t("planner.booking.children") : t("planner.booking.child")}`}
             </span>
           </div>
         </div>
@@ -275,7 +278,7 @@ function SummaryStep({
                 {item.status === "confirmed" ? (
                   <span className="text-xs text-green-600 flex items-center gap-1">
                     <CheckCircle size={12} />
-                    Confirmé
+                    {t("planner.booking.confirmed")}
                   </span>
                 ) : item.bookingUrl ? (
                   <button
@@ -283,12 +286,12 @@ function SummaryStep({
                     onClick={() => onBookItem?.(item.id)}
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
-                    Réserver
+                    {t("planner.booking.reserve")}
                     <ExternalLink size={10} />
                   </button>
                 ) : (
                   <span className="text-xs text-muted-foreground">
-                    En attente
+                    {t("planner.booking.pending")}
                   </span>
                 )}
               </div>
@@ -300,7 +303,7 @@ function SummaryStep({
       {/* Price breakdown */}
       <div className="rounded-lg border bg-card p-4 space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Sous-total</span>
+          <span className="text-muted-foreground">{t("planner.booking.subtotal")}</span>
           <span>
             {summary.subtotal}
             {summary.currency}
@@ -308,7 +311,7 @@ function SummaryStep({
         </div>
         {summary.fees && summary.fees > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Frais de service</span>
+            <span className="text-muted-foreground">{t("planner.booking.serviceFees")}</span>
             <span>
               {summary.fees}
               {summary.currency}
@@ -317,7 +320,7 @@ function SummaryStep({
         )}
         {summary.discount && summary.discount > 0 && (
           <div className="flex justify-between text-sm text-green-600">
-            <span>Réduction</span>
+            <span>{t("planner.booking.discount")}</span>
             <span>
               -{summary.discount}
               {summary.currency}
@@ -325,7 +328,7 @@ function SummaryStep({
           </div>
         )}
         <div className="flex justify-between pt-2 border-t font-semibold text-lg">
-          <span>Total</span>
+          <span>{t("planner.booking.total")}</span>
           <span className="text-primary">
             {summary.total}
             {summary.currency}
@@ -343,7 +346,7 @@ function SummaryStep({
           "hover:scale-[1.01] active:scale-[0.99]"
         )}
       >
-        Continuer vers les voyageurs
+        {t("planner.booking.continueToTravelers")}
         <ChevronRight size={18} className="inline ml-2" />
       </button>
     </div>
@@ -366,6 +369,7 @@ function TravelersStep({
   onContinue: () => void;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const totalRequired =
     requiredCount.adults + requiredCount.children + requiredCount.infants;
 
@@ -408,11 +412,19 @@ function TravelersStep({
 
   const isValid = travelers.every((t) => t.firstName && t.lastName);
 
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case "adult": return t("planner.booking.adultLabel");
+      case "child": return t("planner.booking.childLabel");
+      case "infant": return t("planner.booking.infantLabel");
+      default: return "";
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="text-sm text-muted-foreground mb-4">
-        Entrez les informations de chaque voyageur telles qu'elles apparaissent
-        sur leurs documents d'identité.
+        {t("planner.booking.travelerInfo")}
       </div>
 
       {travelers.map((traveler, index) => (
@@ -420,16 +432,13 @@ function TravelersStep({
           <div className="flex items-center gap-2 mb-3">
             <User size={16} className="text-muted-foreground" />
             <span className="font-medium">
-              Voyageur {index + 1}
-              {traveler.type === "adult" && " (Adulte)"}
-              {traveler.type === "child" && " (Enfant)"}
-              {traveler.type === "infant" && " (Bébé)"}
+              {t("planner.booking.traveler")} {index + 1} {getTypeLabel(traveler.type)}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm text-muted-foreground">Prénom *</label>
+              <label className="text-sm text-muted-foreground">{t("planner.booking.firstName")} *</label>
               <input
                 type="text"
                 value={traveler.firstName}
@@ -441,7 +450,7 @@ function TravelersStep({
               />
             </div>
             <div>
-              <label className="text-sm text-muted-foreground">Nom *</label>
+              <label className="text-sm text-muted-foreground">{t("planner.booking.lastName")} *</label>
               <input
                 type="text"
                 value={traveler.lastName}
@@ -463,7 +472,7 @@ function TravelersStep({
           onClick={onBack}
           className="flex-1 py-3 rounded-lg font-medium border hover:bg-muted transition-colors"
         >
-          Retour
+          {t("planner.booking.back")}
         </button>
         <button
           type="button"
@@ -476,7 +485,7 @@ function TravelersStep({
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
         >
-          Continuer
+          {t("planner.booking.continue")}
         </button>
       </div>
     </div>
@@ -497,19 +506,20 @@ function ContactStep({
   onContinue: () => void;
   onBack: () => void;
 }) {
+  const { t } = useTranslation();
   const isValid = contact.email && contact.phone;
 
   return (
     <div className="space-y-4">
       <div className="text-sm text-muted-foreground mb-4">
-        Ces informations seront utilisées pour vos confirmations de réservation.
+        {t("planner.booking.contactInfo")}
       </div>
 
       <div className="rounded-lg border bg-card p-4 space-y-4">
         <div>
           <label className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Mail size={14} />
-            Email *
+            {t("planner.booking.email")} *
           </label>
           <input
             type="email"
@@ -523,7 +533,7 @@ function ContactStep({
         <div>
           <label className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Phone size={14} />
-            Téléphone *
+            {t("planner.booking.phone")} *
           </label>
           <input
             type="tel"
@@ -539,8 +549,7 @@ function ContactStep({
       <div className="flex items-start gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 text-sm">
         <Shield size={16} className="flex-shrink-0 mt-0.5" />
         <span>
-          Vos données sont sécurisées et ne seront partagées qu'avec les
-          prestataires de voyage.
+          {t("planner.booking.securityNote")}
         </span>
       </div>
 
@@ -551,7 +560,7 @@ function ContactStep({
           onClick={onBack}
           className="flex-1 py-3 rounded-lg font-medium border hover:bg-muted transition-colors"
         >
-          Retour
+          {t("planner.booking.back")}
         </button>
         <button
           type="button"
@@ -564,7 +573,7 @@ function ContactStep({
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
         >
-          Finaliser
+          {t("planner.booking.finalize")}
         </button>
       </div>
     </div>
@@ -583,6 +592,7 @@ function ConfirmationStep({
   onExport?: (format: "pdf" | "email") => void;
   onComplete?: () => void;
 }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const confirmedItems = summary.items.filter((i) => i.status === "confirmed");
@@ -602,12 +612,14 @@ function ConfirmationStep({
           <CheckCircle size={32} className="text-green-500" />
         </div>
         <h3 className="text-xl font-semibold mb-2">
-          Votre voyage est prêt !
+          {t("planner.booking.tripReady")}
         </h3>
         <p className="text-muted-foreground">
           {confirmedItems.length > 0
-            ? `${confirmedItems.length} réservation${confirmedItems.length > 1 ? "s" : ""} confirmée${confirmedItems.length > 1 ? "s" : ""}`
-            : "Finalisez vos réservations ci-dessous"}
+            ? confirmedItems.length > 1 
+              ? t("planner.booking.reservationsConfirmedPlural", { count: confirmedItems.length })
+              : t("planner.booking.reservationsConfirmed", { count: confirmedItems.length })
+            : t("planner.booking.finalizeBelow")}
         </p>
       </div>
 
@@ -615,7 +627,7 @@ function ConfirmationStep({
       {confirmedItems.length > 0 && (
         <div className="space-y-2">
           <h4 className="font-medium text-sm text-muted-foreground">
-            Réservations confirmées
+            {t("planner.booking.confirmedReservations")}
           </h4>
           {confirmedItems.map((item) => (
             <div
@@ -626,7 +638,7 @@ function ConfirmationStep({
                 <div className="font-medium">{item.name}</div>
                 {item.reference && (
                   <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    Réf: {item.reference}
+                    {t("planner.booking.ref")}: {item.reference}
                     <button
                       type="button"
                       onClick={() => handleCopyReference(item.reference!)}
@@ -647,7 +659,7 @@ function ConfirmationStep({
       {pendingItems.length > 0 && (
         <div className="space-y-2">
           <h4 className="font-medium text-sm text-muted-foreground">
-            À réserver
+            {t("planner.booking.toBook")}
           </h4>
           {pendingItems.map((item) => (
             <div
@@ -672,7 +684,7 @@ function ConfirmationStep({
                     "transition-all hover:scale-[1.02]"
                   )}
                 >
-                  Réserver
+                  {t("planner.booking.reserve")}
                   <ExternalLink size={14} className="inline ml-1.5" />
                 </a>
               )}
@@ -691,7 +703,7 @@ function ConfirmationStep({
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border hover:bg-muted transition-colors"
             >
               <Download size={16} />
-              Télécharger PDF
+              {t("planner.booking.downloadPdf")}
             </button>
             <button
               type="button"
@@ -699,7 +711,7 @@ function ConfirmationStep({
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border hover:bg-muted transition-colors"
             >
               <Mail size={16} />
-              Envoyer par email
+              {t("planner.booking.sendByEmail")}
             </button>
           </>
         )}
@@ -715,7 +727,7 @@ function ConfirmationStep({
             "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
-          Terminer
+          {t("planner.booking.finish")}
         </button>
       )}
     </div>
@@ -735,15 +747,16 @@ export function BookingFlowWidget({
   onExport,
   compact = false,
 }: BookingFlowWidgetProps) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<BookingStep>(initialStep);
   const [travelers, setTravelers] = useState<TravelerInfo[]>([]);
   const [contact, setContact] = useState<ContactInfo>({ email: "", phone: "" });
 
   const steps: { id: BookingStep; label: string }[] = [
-    { id: "summary", label: "Récapitulatif" },
-    { id: "travelers", label: "Voyageurs" },
-    { id: "contact", label: "Contact" },
-    { id: "confirmation", label: "Confirmation" },
+    { id: "summary", label: t("planner.booking.summary") },
+    { id: "travelers", label: t("planner.booking.travelers") },
+    { id: "contact", label: t("planner.booking.contact") },
+    { id: "confirmation", label: t("planner.booking.confirmation") },
   ];
 
   const handleTravelersChange = (newTravelers: TravelerInfo[]) => {
@@ -818,6 +831,7 @@ export function BookingSummaryCard({
   itemCount: number;
   onClick?: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -832,11 +846,10 @@ export function BookingSummaryCard({
         <Wallet className="text-primary" size={20} />
         <div className="text-left">
           <div className="font-medium">
-            {itemCount} élément{itemCount > 1 ? "s" : ""} sélectionné
-            {itemCount > 1 ? "s" : ""}
+            {itemCount} {itemCount > 1 ? t("planner.booking.itemsSelected") : t("planner.booking.itemSelected")}
           </div>
           <div className="text-sm text-muted-foreground">
-            Prêt à réserver
+            {t("planner.booking.readyToBook")}
           </div>
         </div>
       </div>
@@ -845,7 +858,7 @@ export function BookingSummaryCard({
           {total}
           {currency}
         </div>
-        <div className="text-xs text-muted-foreground">Total</div>
+        <div className="text-xs text-muted-foreground">{t("planner.booking.total")}</div>
       </div>
     </button>
   );
