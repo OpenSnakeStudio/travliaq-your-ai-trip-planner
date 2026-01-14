@@ -42,6 +42,8 @@ export interface TravelSlice {
   setActiveDestination: (index: number) => void;
   getActiveDestination: () => DestinationInfo | null;
   setDates: (departureDate: Date | null, returnDate: Date | null) => void;
+  setDepartureDate: (date: Date | null) => void;
+  setReturnDate: (date: Date | null) => void;
   resetTravel: () => void;
 }
 
@@ -138,6 +140,14 @@ export const createTravelSlice: StateCreator<
 
   setDates: (departureDate: Date | null, returnDate: Date | null) => {
     set({ departureDate, returnDate }, false, 'travel/setDates');
+  },
+
+  setDepartureDate: (date: Date | null) => {
+    set({ departureDate: date }, false, 'travel/setDepartureDate');
+  },
+
+  setReturnDate: (date: Date | null) => {
+    set({ returnDate: date }, false, 'travel/setReturnDate');
   },
 
   resetTravel: () => {
