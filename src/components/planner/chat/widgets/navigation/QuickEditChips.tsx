@@ -6,6 +6,7 @@
  */
 
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   Calendar,
   Users,
@@ -261,7 +262,21 @@ export function QuickEditChips({
 }
 
 /**
- * Common edit chip presets
+ * Common edit chip presets - uses i18n keys
+ */
+export function useCommonEditChips() {
+  const { t } = useTranslation();
+  return [
+    { id: "dates", action: "dates" as EditAction, label: t("planner.quickEdit.dates") },
+    { id: "travelers", action: "travelers" as EditAction, label: t("planner.quickEdit.travelers") },
+    { id: "departure", action: "departure_airport" as EditAction, label: t("planner.quickEdit.departure") },
+    { id: "destination", action: "destination" as EditAction, label: t("planner.quickEdit.destination") },
+    { id: "budget", action: "budget" as EditAction, label: t("planner.quickEdit.budget") },
+  ];
+}
+
+/**
+ * @deprecated Use useCommonEditChips() hook instead for translated labels
  */
 export const COMMON_EDIT_CHIPS: Omit<EditChip, "value">[] = [
   { id: "dates", action: "dates", label: "Dates" },
@@ -364,6 +379,7 @@ export function TripParametersBar({
   onEdit: (action: EditAction) => void;
   size?: "sm" | "md";
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2">
       {destination && (
@@ -419,7 +435,7 @@ export function TripParametersBar({
         type="button"
         onClick={() => onEdit("filters")}
         className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
-        title="Plus d'options"
+        title={t("planner.quickEdit.moreOptions")}
       >
         <Settings size={14} />
       </button>

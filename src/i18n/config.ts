@@ -2099,6 +2099,26 @@ const resources = {
       "planner.travelers.traveler": "voyageur",
       "planner.travelers.travelersPlural": "voyageurs",
 
+      // Planner - QuickEditChips
+      "planner.quickEdit.dates": "Dates",
+      "planner.quickEdit.travelers": "Voyageurs",
+      "planner.quickEdit.departure": "Départ",
+      "planner.quickEdit.destination": "Destination",
+      "planner.quickEdit.budget": "Budget",
+      "planner.quickEdit.moreOptions": "Plus d'options",
+
+      // Planner - ActivitySearchBar
+      "planner.activitySearch.placeholder": "Rechercher une destination...",
+      "planner.activitySearch.clear": "Effacer",
+      "planner.activitySearch.search": "Rechercher",
+      "planner.activitySearch.searching": "Recherche...",
+      "planner.activitySearch.quickFilters": "Filtres rapides",
+      "planner.activitySearch.category.culture": "Culture",
+      "planner.activitySearch.category.food": "Gastronomie",
+      "planner.activitySearch.category.nature": "Nature",
+      "planner.activitySearch.category.adventure": "Aventure",
+      "planner.activitySearch.category.beach": "Plage",
+
       // Planner - Accommodation (additional keys)
       "planner.accommodation.missingDates": "Dates manquantes",
       "planner.accommodation.chooseDates": "Choisissez une date d'arrivée et une date de départ pour lancer la recherche d'hébergements.",
@@ -2117,6 +2137,7 @@ const resources = {
       "planner.youtube.mute": "Couper le son",
       "planner.youtube.unmute": "Activer le son",
       "planner.youtube.scrollForNext": "Scroll pour la vidéo suivante",
+
 
       // Planner - Message Actions
       "planner.message.copy": "Copier",
@@ -4347,6 +4368,26 @@ const resources = {
       "planner.travelers.infant": "infant",
       "planner.travelers.traveler": "traveler",
       "planner.travelers.travelersPlural": "travelers",
+
+      // Planner - QuickEditChips
+      "planner.quickEdit.dates": "Dates",
+      "planner.quickEdit.travelers": "Travelers",
+      "planner.quickEdit.departure": "Departure",
+      "planner.quickEdit.destination": "Destination",
+      "planner.quickEdit.budget": "Budget",
+      "planner.quickEdit.moreOptions": "More options",
+
+      // Planner - ActivitySearchBar
+      "planner.activitySearch.placeholder": "Search a destination...",
+      "planner.activitySearch.clear": "Clear",
+      "planner.activitySearch.search": "Search",
+      "planner.activitySearch.searching": "Searching...",
+      "planner.activitySearch.quickFilters": "Quick filters",
+      "planner.activitySearch.category.culture": "Culture",
+      "planner.activitySearch.category.food": "Food",
+      "planner.activitySearch.category.nature": "Nature",
+      "planner.activitySearch.category.adventure": "Adventure",
+      "planner.activitySearch.category.beach": "Beach",
 
       // Planner - Accommodation (additional keys)
       "planner.accommodation.missingDates": "Missing dates",

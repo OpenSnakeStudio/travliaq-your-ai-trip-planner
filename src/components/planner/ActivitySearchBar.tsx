@@ -11,6 +11,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Search, MapPin, Calendar, X, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ActivitySearchParams } from "@/types/activity";
@@ -69,6 +70,7 @@ export const ActivitySearchBar = ({
   className,
   compact = false,
 }: ActivitySearchBarProps) => {
+  const { t } = useTranslation();
   const [city, setCity] = useState(defaultCity);
   const [countryCode, setCountryCode] = useState(defaultCountryCode);
   const [startDate, setStartDate] = useState(defaultStartDate);
@@ -83,11 +85,11 @@ export const ActivitySearchBar = ({
 
   // Quick category filters
   const quickCategories = [
-    { id: "culture", label: "Culture", emoji: "🎨" },
-    { id: "food", label: "Food", emoji: "🍽️" },
-    { id: "nature", label: "Nature", emoji: "🌲" },
-    { id: "adventure", label: "Aventure", emoji: "🧗" },
-    { id: "beach", label: "Plage", emoji: "🏖️" },
+    { id: "culture", label: t("planner.activitySearch.category.culture"), emoji: "🎨" },
+    { id: "food", label: t("planner.activitySearch.category.food"), emoji: "🍽️" },
+    { id: "nature", label: t("planner.activitySearch.category.nature"), emoji: "🌲" },
+    { id: "adventure", label: t("planner.activitySearch.category.adventure"), emoji: "🧗" },
+    { id: "beach", label: t("planner.activitySearch.category.beach"), emoji: "🏖️" },
   ];
 
   // Handle search submission
@@ -147,7 +149,7 @@ export const ActivitySearchBar = ({
             value={city}
             onChange={(e) => setCity(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Rechercher une destination..."
+            placeholder={t("planner.activitySearch.placeholder")}
             disabled={isSearching}
             className={cn(
               "flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground",
@@ -161,7 +163,7 @@ export const ActivitySearchBar = ({
             <button
               onClick={handleClear}
               className="p-1 hover:bg-muted rounded transition-colors flex-shrink-0"
-              title="Effacer"
+              title={t("planner.activitySearch.clear")}
             >
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
@@ -198,12 +200,12 @@ export const ActivitySearchBar = ({
             {isSearching ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Recherche...
+                {t("planner.activitySearch.searching")}
               </>
             ) : (
               <>
                 <Search className="h-4 w-4" />
-                Rechercher
+                {t("planner.activitySearch.search")}
               </>
             )}
           </button>
@@ -216,7 +218,7 @@ export const ActivitySearchBar = ({
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Filtres rapides
+              {t("planner.activitySearch.quickFilters")}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -258,12 +260,12 @@ export const ActivitySearchBar = ({
           {isSearching ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Recherche...
+              {t("planner.activitySearch.searching")}
             </>
           ) : (
             <>
               <Search className="h-4 w-4" />
-              Rechercher
+              {t("planner.activitySearch.search")}
             </>
           )}
         </button>
