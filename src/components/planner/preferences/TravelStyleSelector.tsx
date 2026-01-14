@@ -5,19 +5,20 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import type { TravelStyle } from "@/stores/hooks";
 
 interface TravelStyleOption {
   id: TravelStyle;
-  label: string;
+  labelKey: string;
   emoji: string;
 }
 
 const TRAVEL_STYLES: TravelStyleOption[] = [
-  { id: "solo", label: "Solo", emoji: "🧑" },
-  { id: "couple", label: "Duo", emoji: "💑" },
-  { id: "family", label: "Famille", emoji: "👨‍👩‍👧" },
-  { id: "friends", label: "Amis", emoji: "👯" },
+  { id: "solo", labelKey: "planner.preferences.travelStyle.solo", emoji: "🧑" },
+  { id: "couple", labelKey: "planner.preferences.travelStyle.duo", emoji: "💑" },
+  { id: "family", labelKey: "planner.preferences.travelStyle.family", emoji: "👨‍👩‍👧" },
+  { id: "friends", labelKey: "planner.preferences.travelStyle.friends", emoji: "👯" },
 ];
 
 interface TravelStyleSelectorProps {
@@ -26,6 +27,8 @@ interface TravelStyleSelectorProps {
 }
 
 export const TravelStyleSelector = memo(function TravelStyleSelector({ selected, onSelect }: TravelStyleSelectorProps) {
+  const { t } = useTranslation();
+  
   // Stable handler to prevent re-renders from breaking memo
   const handleSelect = useCallback((id: TravelStyle) => {
     onSelect(id);
@@ -48,7 +51,7 @@ export const TravelStyleSelector = memo(function TravelStyleSelector({ selected,
             )}
           >
             <span className="text-2xl">{style.emoji}</span>
-            <span className="text-xs font-semibold">{style.label}</span>
+            <span className="text-xs font-semibold">{t(style.labelKey)}</span>
           </button>
         );
       })}

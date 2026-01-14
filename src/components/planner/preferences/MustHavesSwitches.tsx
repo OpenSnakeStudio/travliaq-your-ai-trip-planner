@@ -7,19 +7,20 @@
 import { memo, useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import type { MustHaves } from "@/stores/hooks";
 
 interface MustHaveConfig {
   key: keyof MustHaves;
-  label: string;
+  labelKey: string;
   emoji: string;
 }
 
 const MUST_HAVES_CONFIG: MustHaveConfig[] = [
-  { key: "accessibilityRequired", label: "Accessibilité PMR", emoji: "♿" },
-  { key: "highSpeedWifi", label: "WiFi Haut Débit", emoji: "📶" },
-  { key: "petFriendly", label: "Accepte animaux", emoji: "🐾" },
-  { key: "familyFriendly", label: "Adapté enfants", emoji: "👶" },
+  { key: "accessibilityRequired", labelKey: "planner.preferences.mustHaves.accessibility", emoji: "♿" },
+  { key: "highSpeedWifi", labelKey: "planner.preferences.mustHaves.wifi", emoji: "📶" },
+  { key: "petFriendly", labelKey: "planner.preferences.mustHaves.pets", emoji: "🐾" },
+  { key: "familyFriendly", labelKey: "planner.preferences.mustHaves.children", emoji: "👶" },
 ];
 
 interface MustHavesSwitchesProps {
@@ -29,6 +30,8 @@ interface MustHavesSwitchesProps {
 }
 
 export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, onToggle, compact = false }: MustHavesSwitchesProps) {
+  const { t } = useTranslation();
+  
   // Stable handler to prevent re-renders from breaking memo
   const handleToggle = useCallback((key: keyof MustHaves) => {
     onToggle(key);
@@ -36,7 +39,7 @@ export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, on
 
   return (
     <div className={cn("grid grid-cols-2 gap-2", compact && "gap-1.5")}>
-      {MUST_HAVES_CONFIG.map(({ key, label, emoji }) => (
+      {MUST_HAVES_CONFIG.map(({ key, labelKey, emoji }) => (
         <div
           key={key}
           className={cn(
@@ -50,7 +53,7 @@ export const MustHavesSwitches = memo(function MustHavesSwitches({ mustHaves, on
         >
           <div className="flex items-center gap-1.5">
             <span className="text-sm">{emoji}</span>
-            <span className="text-[11px] font-medium text-foreground">{label}</span>
+            <span className="text-[11px] font-medium text-foreground">{t(labelKey)}</span>
           </div>
           {/* Stop propagation so both button and switch work */}
           <div onClick={(e) => e.stopPropagation()}>

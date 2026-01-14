@@ -5,6 +5,7 @@
 
 import { memo } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Sparkles } from "lucide-react";
 
@@ -23,6 +24,8 @@ export const ProfileCompletionCard = memo(function ProfileCompletionCard({
   detectedFromChat,
   compact = false,
 }: ProfileCompletionCardProps) {
+  const { t, i18n } = useTranslation();
+  
   const getCompletionColor = () => {
     if (completion >= 75) return "text-green-500";
     if (completion >= 50) return "text-amber-500";
@@ -30,11 +33,13 @@ export const ProfileCompletionCard = memo(function ProfileCompletionCard({
   };
 
   const getCompletionLabel = () => {
-    if (completion >= 75) return "Profil complet";
-    if (completion >= 50) return "Bon début";
-    if (completion >= 25) return "Quelques infos";
-    return "À compléter";
+    if (completion >= 75) return t("planner.preferences.profile.complete");
+    if (completion >= 50) return t("planner.preferences.profile.goodStart");
+    if (completion >= 25) return t("planner.preferences.profile.someInfo");
+    return t("planner.preferences.profile.toComplete");
   };
+
+  const dateLocale = i18n.language?.startsWith("en") ? "en-US" : "fr-FR";
 
   return (
     <div className={cn(
@@ -80,12 +85,12 @@ export const ProfileCompletionCard = memo(function ProfileCompletionCard({
           
           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
             <span>
-              Mis à jour : {lastUpdated.toLocaleDateString("fr-FR")}
+              {t("planner.preferences.profile.updated")}: {lastUpdated.toLocaleDateString(dateLocale)}
             </span>
             {detectedFromChat && (
               <span className="flex items-center gap-1 text-blue-500">
                 <Sparkles className="w-3 h-3" />
-                Détecté par IA
+                {t("planner.preferences.profile.detectedByAI")}
               </span>
             )}
           </div>

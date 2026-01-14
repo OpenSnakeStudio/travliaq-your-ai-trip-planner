@@ -1747,6 +1747,52 @@ const resources = {
       "planner.activityDetail.viewOnViator": "Voir sur Viator",
       "planner.activityDetail.removeFromPlanning": "Retirer du planning",
       "planner.activityDetail.addToPlanning": "Ajouter au planning",
+      
+      // PreferencesPanel - Travel Style Selector
+      "planner.preferences.travelStyle.solo": "Solo",
+      "planner.preferences.travelStyle.duo": "Duo",
+      "planner.preferences.travelStyle.family": "Famille",
+      "planner.preferences.travelStyle.friends": "Amis",
+      
+      // PreferencesPanel - Occasion Selector
+      "planner.preferences.occasion.vacation": "Vacances",
+      "planner.preferences.occasion.honeymoon": "Lune de miel",
+      "planner.preferences.occasion.anniversary": "Anniversaire",
+      "planner.preferences.occasion.birthday": "Fête",
+      "planner.preferences.occasion.workation": "Télétravail",
+      "planner.preferences.occasion.discovery": "Découverte",
+      
+      // PreferencesPanel - Must-Haves
+      "planner.preferences.mustHaves.accessibility": "Accessibilité PMR",
+      "planner.preferences.mustHaves.wifi": "WiFi Haut Débit",
+      "planner.preferences.mustHaves.pets": "Accepte animaux",
+      "planner.preferences.mustHaves.children": "Adapté enfants",
+      
+      // PreferencesPanel - Style Step
+      "planner.preferences.style.yourStyle": "Votre style de voyage",
+      "planner.preferences.style.interests": "Centres d'intérêt",
+      "planner.preferences.style.defineCriteria": "Définir vos critères",
+      
+      // PreferencesPanel - Criteria Step
+      "planner.preferences.criteria.mustHaves": "Critères obligatoires",
+      "planner.preferences.criteria.dietary": "Restrictions alimentaires",
+      "planner.preferences.criteria.viewSummary": "Voir le résumé",
+      
+      // PreferencesPanel - Profile Completion
+      "planner.preferences.profile.complete": "Profil complet",
+      "planner.preferences.profile.goodStart": "Bon début",
+      "planner.preferences.profile.someInfo": "Quelques infos",
+      "planner.preferences.profile.toComplete": "À compléter",
+      "planner.preferences.profile.updated": "Mis à jour",
+      "planner.preferences.profile.detectedByAI": "Détecté par IA",
+      
+      // PreferencesPanel - Smart Tags
+      "planner.preferences.smartTags.title": "Ton profil voyageur",
+      "planner.preferences.smartTags.emptyState": "Tes hashtags apparaîtront après quelques messages...",
+      "planner.preferences.smartTags.analyzing": "Analyse...",
+      "planner.preferences.smartTags.recalculate": "Recalculer",
+      "planner.preferences.smartTags.add": "Ajouter",
+      "planner.preferences.smartTags.placeholder": "#MonHashtag",
     },
   },
   en: {
@@ -3479,6 +3525,52 @@ const resources = {
       "planner.activityDetail.viewOnViator": "View on Viator",
       "planner.activityDetail.removeFromPlanning": "Remove from planning",
       "planner.activityDetail.addToPlanning": "Add to planning",
+      
+      // PreferencesPanel - Travel Style Selector
+      "planner.preferences.travelStyle.solo": "Solo",
+      "planner.preferences.travelStyle.duo": "Duo",
+      "planner.preferences.travelStyle.family": "Family",
+      "planner.preferences.travelStyle.friends": "Friends",
+      
+      // PreferencesPanel - Occasion Selector
+      "planner.preferences.occasion.vacation": "Vacation",
+      "planner.preferences.occasion.honeymoon": "Honeymoon",
+      "planner.preferences.occasion.anniversary": "Anniversary",
+      "planner.preferences.occasion.birthday": "Party",
+      "planner.preferences.occasion.workation": "Remote work",
+      "planner.preferences.occasion.discovery": "Discovery",
+      
+      // PreferencesPanel - Must-Haves
+      "planner.preferences.mustHaves.accessibility": "Accessibility",
+      "planner.preferences.mustHaves.wifi": "High-speed WiFi",
+      "planner.preferences.mustHaves.pets": "Pet-friendly",
+      "planner.preferences.mustHaves.children": "Child-friendly",
+      
+      // PreferencesPanel - Style Step
+      "planner.preferences.style.yourStyle": "Your travel style",
+      "planner.preferences.style.interests": "Interests",
+      "planner.preferences.style.defineCriteria": "Define your criteria",
+      
+      // PreferencesPanel - Criteria Step
+      "planner.preferences.criteria.mustHaves": "Required criteria",
+      "planner.preferences.criteria.dietary": "Dietary restrictions",
+      "planner.preferences.criteria.viewSummary": "View summary",
+      
+      // PreferencesPanel - Profile Completion
+      "planner.preferences.profile.complete": "Profile complete",
+      "planner.preferences.profile.goodStart": "Good start",
+      "planner.preferences.profile.someInfo": "Some info",
+      "planner.preferences.profile.toComplete": "To complete",
+      "planner.preferences.profile.updated": "Updated",
+      "planner.preferences.profile.detectedByAI": "Detected by AI",
+      
+      // PreferencesPanel - Smart Tags
+      "planner.preferences.smartTags.title": "Your traveler profile",
+      "planner.preferences.smartTags.emptyState": "Your hashtags will appear after a few messages...",
+      "planner.preferences.smartTags.analyzing": "Analyzing...",
+      "planner.preferences.smartTags.recalculate": "Recalculate",
+      "planner.preferences.smartTags.add": "Add",
+      "planner.preferences.smartTags.placeholder": "#MyHashtag",
     },
   },
 };
