@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { FaXTwitter } from "react-icons/fa6";
+import { useTranslation } from "react-i18next";
 
 type TripShareButtonsProps = {
   title: string;
@@ -23,9 +24,10 @@ export const TripShareButtons = ({
   totalDays,
   url = window.location.href 
 }: TripShareButtonsProps) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   
-  const shareText = `Découvrez mon itinéraire de ${totalDays} jours à ${destination} ! 🌍✨`;
+  const shareText = t("share.shareText", { days: totalDays, destination });
   const encodedText = encodeURIComponent(shareText);
   const encodedUrl = encodeURIComponent(url);
 
@@ -40,8 +42,8 @@ export const TripShareButtons = ({
     window.open(shareLinks[platform], "_blank", "width=600,height=400");
     setIsOpen(false);
     toast({
-      title: "Partage en cours",
-      description: `Ouverture de ${platform}...`,
+      title: t("share.sharing"),
+      description: t("share.openingPlatform", { platform }),
     });
   };
 
@@ -56,18 +58,18 @@ export const TripShareButtons = ({
           url: url,
         });
         toast({
-          title: "Partagé !",
-          description: "Itinéraire partagé avec succès",
+          title: t("share.shared"),
+          description: t("share.sharedSuccess"),
         });
       } catch (err) {
-        console.log("Partage annulé");
+        console.log(t("share.cancelled"));
       }
     } else {
       // Copier le lien dans le presse-papier
       await navigator.clipboard.writeText(`${shareText} ${url}`);
       toast({
-        title: "Lien copié !",
-        description: "Collez-le dans votre story Instagram",
+        title: t("share.linkCopied"),
+        description: t("share.pasteInstagram"),
       });
     }
     setIsOpen(false);
@@ -76,8 +78,8 @@ export const TripShareButtons = ({
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(url);
     toast({
-      title: "Lien copié !",
-      description: "Vous pouvez maintenant le partager",
+      title: t("share.linkCopied"),
+      description: t("share.canShareNow"),
     });
     setIsOpen(false);
   };
@@ -91,7 +93,7 @@ export const TripShareButtons = ({
           className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20"
         >
           <Share2 className="mr-2 h-5 w-5" />
-          Partager cet itinéraire
+          {t("share.shareItinerary")}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
@@ -139,7 +141,7 @@ export const TripShareButtons = ({
           className="text-travliaq-golden-sand hover:bg-travliaq-golden-sand/20 focus:bg-travliaq-golden-sand/20 cursor-pointer py-3 px-4 font-inter transition-all duration-200"
         >
           <Copy className="h-5 w-5 mr-3" />
-          <span className="font-medium">Copier le lien</span>
+          <span className="font-medium">{t("share.copyLink")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
