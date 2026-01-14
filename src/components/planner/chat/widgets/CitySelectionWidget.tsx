@@ -1,29 +1,58 @@
 /**
  * CitySelectionWidget - Select a city from a country with recommendations
+ * Now syncs with Zustand store on selection
  */
 
 import { useState } from "react";
 import { Star, MapPin, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CitySelectionData } from "@/types/flight";
+import { usePlannerStoreV2 } from "@/stores/plannerStoreV2";
 
 interface CitySelectionWidgetProps {
   citySelection: CitySelectionData;
   onSelect: (cityName: string) => void;
   isLoading?: boolean;
+  /** If true, this is for departure city (updates departure airport city) */
+  isDeparture?: boolean;
+  /** If true, skip syncing to Zustand */
+  skipStoreSync?: boolean;
 }
 
 export function CitySelectionWidget({
   citySelection,
   onSelect,
   isLoading = false,
+  isDeparture = false,
+  skipStoreSync = false,
 }: CitySelectionWidgetProps) {
+  const addDestination = usePlannerStoreV2((s) => s.addDestination);
+  const setDeparture = usePlannerStoreV2((s) => s.setDeparture);
+  const setArrival = usePlannerStoreV2((s) => s.setArrival);
+  
   const [confirmed, setConfirmed] = useState(false);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   const handleSelect = (cityName: string) => {
     setSelectedCity(cityName);
     setConfirmed(true);
+    
+    // Sync to Zustand store
+    if (!skipStoreSync) {
+      if (isDeparture) {
+        // Update departure airport city
+        setDeparture({ city: cityName, country: citySelection.countryName, countryCode: citySelection.countryCode });
+      } else {
+        // Add as destination and update arrival
+        addDestination({
+          city: cityName,
+          country: citySelection.countryName,
+          countryCode: citySelection.countryCode,
+        });
+        setArrival({ city: cityName, country: citySelection.countryName, countryCode: citySelection.countryCode });
+      }
+    }
+    
     onSelect(cityName);
   };
 

@@ -1,25 +1,35 @@
 /**
  * TripTypeConfirmWidget - Quick chips for roundtrip / oneway / multi
+ * Now syncs with Zustand store on confirmation
  */
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { usePlannerStoreV2 } from "@/stores/plannerStoreV2";
 
 interface TripTypeConfirmWidgetProps {
   currentType?: "roundtrip" | "oneway" | "multi";
   onConfirm: (tripType: "roundtrip" | "oneway" | "multi") => void;
+  /** If true, skip syncing to Zustand */
+  skipStoreSync?: boolean;
 }
 
 export function TripTypeConfirmWidget({
   currentType = "roundtrip",
   onConfirm,
+  skipStoreSync = false,
 }: TripTypeConfirmWidgetProps) {
+  const setTripType = usePlannerStoreV2((s) => s.setTripType);
   const [confirmed, setConfirmed] = useState(false);
   const [selected, setSelected] = useState(currentType);
 
   const handleSelect = (type: "roundtrip" | "oneway" | "multi") => {
     setSelected(type);
     setConfirmed(true);
+    // Sync to Zustand store
+    if (!skipStoreSync) {
+      setTripType(type);
+    }
     onConfirm(type);
   };
 
