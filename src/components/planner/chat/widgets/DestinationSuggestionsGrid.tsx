@@ -124,33 +124,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
 
       {/* Carousel Container */}
       <div className="relative group">
-        {/* Navigation Arrows - Fade in on hover */}
-        {canScrollPrev && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={scrollPrev}
-            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/90 border border-border shadow-lg backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-background hover:scale-110"
-            aria-label="Destination précédente"
-          >
-            <ChevronLeft className="h-5 w-5 text-foreground" />
-          </motion.button>
-        )}
-        {canScrollNext && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={scrollNext}
-            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/90 border border-border shadow-lg backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-background hover:scale-110"
-            aria-label="Destination suivante"
-          >
-            <ChevronRight className="h-5 w-5 text-foreground" />
-          </motion.button>
-        )}
-
-        {/* Main Carousel - Shows ~1.2 cards for peek effect */}
+        {/* Main Carousel */}
         <Carousel
           setApi={setApi}
           opts={{
@@ -179,27 +153,60 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
         </Carousel>
       </div>
 
-      {/* Pagination Dots - Enhanced visibility */}
+      {/* Navigation - Arrows + Pagination together */}
       {count > 1 && (
-        <div className="flex justify-center items-center gap-3 pt-2">
-          <span className="text-xs text-muted-foreground font-medium">
-            {current + 1} / {count}
-          </span>
-          <div className="flex gap-1.5">
-            {Array.from({ length: count }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => api?.scrollTo(index)}
-                aria-label={`Aller à la destination ${index + 1}`}
-                className={cn(
-                  "h-2 rounded-full transition-all duration-300",
-                  current === index
-                    ? "bg-primary w-8"
-                    : "bg-muted-foreground/25 w-2 hover:bg-muted-foreground/40"
-                )}
-              />
-            ))}
+        <div className="flex justify-center items-center gap-4 pt-2">
+          {/* Previous Arrow */}
+          <button
+            onClick={scrollPrev}
+            disabled={!canScrollPrev}
+            className={cn(
+              "p-2 rounded-full border border-border bg-background shadow-sm transition-all duration-200",
+              canScrollPrev 
+                ? "hover:bg-muted hover:scale-105 text-foreground" 
+                : "opacity-30 cursor-not-allowed text-muted-foreground"
+            )}
+            aria-label="Destination précédente"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+
+          {/* Pagination Dots */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium">
+              {current + 1} / {count}
+            </span>
+            <div className="flex gap-1.5">
+              {Array.from({ length: count }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => api?.scrollTo(index)}
+                  aria-label={`Aller à la destination ${index + 1}`}
+                  className={cn(
+                    "h-2 rounded-full transition-all duration-300",
+                    current === index
+                      ? "bg-primary w-6"
+                      : "bg-muted-foreground/25 w-2 hover:bg-muted-foreground/40"
+                  )}
+                />
+              ))}
+            </div>
           </div>
+
+          {/* Next Arrow */}
+          <button
+            onClick={scrollNext}
+            disabled={!canScrollNext}
+            className={cn(
+              "p-2 rounded-full border border-border bg-background shadow-sm transition-all duration-200",
+              canScrollNext 
+                ? "hover:bg-muted hover:scale-105 text-foreground" 
+                : "opacity-30 cursor-not-allowed text-muted-foreground"
+            )}
+            aria-label="Destination suivante"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
       )}
 
