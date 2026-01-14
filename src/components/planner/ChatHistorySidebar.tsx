@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import { Plus, MessageSquare, Trash2, X, History, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLocale } from "@/hooks/useLocale";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,8 @@ export const ChatHistorySidebar = ({
   onDeleteSession,
   onDeleteAllSessions,
 }: ChatHistorySidebarProps) => {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [showNewSessionConfirm, setShowNewSessionConfirm] = useState(false);
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
@@ -85,7 +88,7 @@ export const ChatHistorySidebar = ({
     setIsCreatingSession(true);
     
     // Show toast
-    toast.loading("Création de la conversation...", { id: "new-session" });
+    toast.loading(t("planner.chat.creatingToast"), { id: "new-session" });
     
     onClose();
     
@@ -98,7 +101,7 @@ export const ChatHistorySidebar = ({
     await new Promise((resolve) => setTimeout(resolve, 500));
     
     setIsCreatingSession(false);
-    toast.success("Nouvelle conversation créée", { id: "new-session" });
+    toast.success(t("planner.chat.createdToast"), { id: "new-session" });
     
     // Release lock after additional delay
     setTimeout(() => {
@@ -115,7 +118,7 @@ export const ChatHistorySidebar = ({
     setIsDeletingAll(true);
     
     // Show toast
-    toast.loading("Suppression de l'historique...", { id: "delete-all" });
+    toast.loading(t("planner.chat.deletingToast"), { id: "delete-all" });
     
     onClose();
     
@@ -127,7 +130,7 @@ export const ChatHistorySidebar = ({
     await new Promise((resolve) => setTimeout(resolve, 600));
     
     setIsDeletingAll(false);
-    toast.success("Historique supprimé", { id: "delete-all" });
+    toast.success(t("planner.chat.deletedToast"), { id: "delete-all" });
     
     // Release lock after additional delay
     setTimeout(() => {
@@ -157,7 +160,7 @@ export const ChatHistorySidebar = ({
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
             <History className="h-5 w-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Historique</h2>
+            <h2 className="font-semibold text-foreground">{t("planner.chat.history")}</h2>
           </div>
           <button
             onClick={onClose}
@@ -185,7 +188,7 @@ export const ChatHistorySidebar = ({
             ) : (
               <Plus className="h-4 w-4" />
             )}
-            {isCreatingSession ? "Création..." : "Nouvelle conversation"}
+            {isCreatingSession ? t("planner.chat.creating") : t("planner.chat.newConversation")}
           </button>
         </div>
 
@@ -193,7 +196,7 @@ export const ChatHistorySidebar = ({
         <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1">
           {sortedSessions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              Aucune conversation
+              {t("planner.chat.noConversation")}
             </div>
           ) : (
             sortedSessions.map((session) => (
@@ -230,7 +233,7 @@ export const ChatHistorySidebar = ({
                     {session.preview}
                   </div>
                   <div className="text-[10px] text-muted-foreground/70 mt-1">
-                    {format(session.updatedAt, "d MMM, HH:mm", { locale: fr })}
+                    {format(session.updatedAt, "d MMM, HH:mm", { locale: dateFnsLocale })}
                   </div>
                 </div>
 
@@ -273,7 +276,7 @@ export const ChatHistorySidebar = ({
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              {isDeletingAll ? "Suppression..." : "Tout supprimer"}
+              {isDeletingAll ? t("planner.chat.deleting") : t("planner.chat.deleteAll")}
             </button>
           </div>
         )}
@@ -285,18 +288,18 @@ export const ChatHistorySidebar = ({
       }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette conversation ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("planner.dialog.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. La conversation sera définitivement supprimée.
+              {t("planner.dialog.deleteDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t("planner.dialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Supprimer
+              {t("planner.dialog.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -306,13 +309,13 @@ export const ChatHistorySidebar = ({
       <AlertDialog open={showNewSessionConfirm} onOpenChange={setShowNewSessionConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Nouvelle conversation ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("planner.dialog.newTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Réinitialiser vols, hébergements, activités et préférences ?
+              {t("planner.dialog.newDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isCreatingSession}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isCreatingSession}>{t("planner.dialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleNewSession}
               disabled={isCreatingSession}
@@ -320,10 +323,10 @@ export const ChatHistorySidebar = ({
               {isCreatingSession ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Création...
+                  {t("planner.chat.creating")}
                 </>
               ) : (
-                "Confirmer"
+                t("planner.dialog.confirm")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -334,13 +337,13 @@ export const ChatHistorySidebar = ({
       <AlertDialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer tout l'historique ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("planner.dialog.deleteAllTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Toutes les conversations, vols, hébergements et préférences seront définitivement supprimés.
+              {t("planner.dialog.deleteAllDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingAll}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingAll}>{t("planner.dialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDeleteAll}
               disabled={isDeletingAll}
@@ -349,10 +352,10 @@ export const ChatHistorySidebar = ({
               {isDeletingAll ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  Suppression...
+                  {t("planner.chat.deleting")}
                 </>
               ) : (
-                "Tout supprimer"
+                t("planner.chat.deleteAll")
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

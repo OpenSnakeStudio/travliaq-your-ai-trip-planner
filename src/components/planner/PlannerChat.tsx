@@ -1140,7 +1140,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             <img src={logo} alt="Travliaq" className="h-6 w-6 object-contain shrink-0" />
             <span className="font-medium text-foreground text-sm truncate max-w-[240px]">
               {(() => {
-                const title = sessions.find((s) => s.id === activeSessionId)?.title || "Nouvelle conversation";
+                const title = sessions.find((s) => s.id === activeSessionId)?.title || t("planner.chat.newConversation");
                 return title.replace(/^\p{Extended_Pictographic}\s*/u, "");
               })()}
             </span>
@@ -1150,7 +1150,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             <button
               onClick={() => setIsHistoryOpen(true)}
               className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              title="Historique"
+              title={t("planner.chat.history")}
             >
               <History className="h-4 w-4" />
             </button>
@@ -1159,7 +1159,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               <button
                 onClick={onToggleCollapse}
                 className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                title="Fermer le chat"
+                title={t("planner.chat.closeChat")}
               >
                 <PanelLeftClose className="h-4 w-4" />
               </button>
@@ -1237,7 +1237,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     {/* Widgets */}
                     {m.widget === "datePicker" && (
                       <DatePickerWidget
-                        label="Choisir la date de départ"
+                        label={t("planner.widget.selectDepartureDate")}
                         value={memory.departureDate}
                         onChange={(date) => widgetFlow.handleDateSelect(m.id, "departure", date)}
                         preferredMonth={m.widgetData?.preferredMonth}
@@ -1245,7 +1245,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     )}
                     {m.widget === "returnDatePicker" && (
                       <DatePickerWidget
-                        label="Choisir la date de retour"
+                        label={t("planner.widget.selectReturnDate")}
                         value={memory.returnDate}
                         onChange={(date) => widgetFlow.handleDateSelect(m.id, "return", date)}
                         minDate={memory.departureDate || undefined}
@@ -1578,7 +1578,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                     document.body.classList.remove("driver-active");
                     document.documentElement.classList.remove("driver-active");
                   }}
-                  placeholder={isLoading ? "Réponse en cours..." : "Envoyer un message..."}
+                  placeholder={isLoading ? t("planner.chat.inputLoading") : t("planner.chat.inputPlaceholder")}
                   rows={1}
                   disabled={false}
                   className="pointer-events-auto flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -1601,13 +1601,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                       ? "bg-primary text-primary-foreground hover:bg-primary/90"
                       : "bg-muted text-muted-foreground cursor-not-allowed"
                   )}
-                  aria-label="Envoyer"
+                  aria-label={t("planner.chat.send")}
                 >
                   <Send className="h-4 w-4" />
                 </button>
               </div>
               <p className="text-xs text-muted-foreground text-center mt-2">
-                Tapez une destination ou demandez des vols, activités, hébergements
+                {t("planner.chat.inputHelper")}
               </p>
             </div>
           </div>

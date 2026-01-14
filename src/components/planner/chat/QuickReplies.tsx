@@ -1,8 +1,10 @@
 /**
  * QuickReplies - Clickable chips after assistant messages for guided interaction
+ * Fully i18n-enabled
  */
 
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { eventBus, emitTabChange } from "@/lib/eventBus";
 import type { QuickReply, QuickReplyAction } from "./types";
 
@@ -106,25 +108,130 @@ export function QuickReplies({
 }
 
 /**
+ * Hook to get localized quick reply presets
+ */
+export function useQuickReplyPresets() {
+  const { t } = useTranslation();
+  
+  return {
+    afterDestination: (city: string): QuickReply[] => [
+      {
+        id: "when-to-go",
+        label: t("planner.quick.whenToGo"),
+        icon: "📅",
+        action: { type: "triggerWidget", widget: "datePicker" },
+      },
+      {
+        id: "budget",
+        label: t("planner.quick.howMuch"),
+        icon: "💰",
+        action: { type: "fillInput", message: `Quel est le budget moyen pour un voyage à ${city}?` },
+      },
+      {
+        id: "activities",
+        label: t("planner.quick.seeActivities"),
+        icon: "🎭",
+        action: { type: "navigate", tab: "activities" },
+      },
+    ],
+
+    afterFlightSearch: (): QuickReply[] => [
+      {
+        id: "cheapest",
+        label: t("planner.quick.cheapestFlight"),
+        icon: "💵",
+        action: { type: "fillInput", message: "Montre-moi le vol le moins cher" },
+        variant: "primary",
+      },
+      {
+        id: "fastest",
+        label: t("planner.quick.fastestFlight"),
+        icon: "⚡",
+        action: { type: "fillInput", message: "Montre-moi le vol le plus rapide" },
+      },
+      {
+        id: "hotels",
+        label: t("planner.quick.findHotel"),
+        icon: "🏨",
+        action: { type: "navigate", tab: "stays" },
+      },
+    ],
+
+    afterDateSelection: (): QuickReply[] => [
+      {
+        id: "travelers",
+        label: t("planner.quick.travelers"),
+        icon: "👥",
+        action: { type: "triggerWidget", widget: "travelersSelector" },
+      },
+      {
+        id: "flexible",
+        label: t("planner.quick.flexible"),
+        icon: "🔄",
+        action: { type: "fillInput", message: "Je suis flexible sur les dates, +/- quelques jours" },
+      },
+    ],
+
+    afterAccommodation: (): QuickReply[] => [
+      {
+        id: "activities",
+        label: t("planner.quick.discoverActivities"),
+        icon: "🎡",
+        action: { type: "navigate", tab: "activities" },
+        variant: "primary",
+      },
+      {
+        id: "other-hotels",
+        label: t("planner.quick.otherHotels"),
+        icon: "🏨",
+        action: { type: "fillInput", message: "Montre-moi d'autres options d'hébergement" },
+      },
+      {
+        id: "summary",
+        label: t("planner.quick.summary"),
+        icon: "📋",
+        action: { type: "fillInput", message: "Fais-moi un récapitulatif de mon voyage" },
+      },
+    ],
+
+    general: (): QuickReply[] => [
+      {
+        id: "help",
+        label: t("planner.quick.help"),
+        icon: "❓",
+        action: { type: "fillInput", message: "Comment puis-je planifier mon voyage?" },
+      },
+      {
+        id: "inspire",
+        label: t("planner.quick.inspireMe"),
+        icon: "✨",
+        action: { type: "fillInput", message: "Suggère-moi une destination pour mes prochaines vacances" },
+      },
+    ],
+  };
+}
+
+/**
  * Pre-defined quick reply sets for common scenarios
+ * @deprecated Use useQuickReplyPresets() hook instead for i18n support
  */
 export const QUICK_REPLY_PRESETS = {
   afterDestination: (city: string): QuickReply[] => [
     {
       id: "when-to-go",
-      label: "Quand partir?",
+      label: "When to go?",
       icon: "📅",
       action: { type: "triggerWidget", widget: "datePicker" },
     },
     {
       id: "budget",
-      label: "Combien ça coûte?",
+      label: "How much?",
       icon: "💰",
-      action: { type: "fillInput", message: `Quel est le budget moyen pour un voyage à ${city}?` },
+      action: { type: "fillInput", message: `What is the average budget for a trip to ${city}?` },
     },
     {
       id: "activities",
-      label: "Voir les activités",
+      label: "See activities",
       icon: "🎭",
       action: { type: "navigate", tab: "activities" },
     },
@@ -133,20 +240,20 @@ export const QUICK_REPLY_PRESETS = {
   afterFlightSearch: (): QuickReply[] => [
     {
       id: "cheapest",
-      label: "Vol le moins cher",
+      label: "Cheapest flight",
       icon: "💵",
-      action: { type: "fillInput", message: "Montre-moi le vol le moins cher" },
+      action: { type: "fillInput", message: "Show me the cheapest flight" },
       variant: "primary",
     },
     {
       id: "fastest",
-      label: "Vol le plus rapide",
+      label: "Fastest flight",
       icon: "⚡",
-      action: { type: "fillInput", message: "Montre-moi le vol le plus rapide" },
+      action: { type: "fillInput", message: "Show me the fastest flight" },
     },
     {
       id: "hotels",
-      label: "Chercher un hôtel",
+      label: "Find a hotel",
       icon: "🏨",
       action: { type: "navigate", tab: "stays" },
     },
@@ -155,52 +262,52 @@ export const QUICK_REPLY_PRESETS = {
   afterDateSelection: (): QuickReply[] => [
     {
       id: "travelers",
-      label: "Nombre de voyageurs",
+      label: "Number of travelers",
       icon: "👥",
       action: { type: "triggerWidget", widget: "travelersSelector" },
     },
     {
       id: "flexible",
-      label: "Dates flexibles?",
+      label: "Flexible dates?",
       icon: "🔄",
-      action: { type: "fillInput", message: "Je suis flexible sur les dates, +/- quelques jours" },
+      action: { type: "fillInput", message: "I'm flexible on dates, +/- a few days" },
     },
   ],
 
   afterAccommodation: (): QuickReply[] => [
     {
       id: "activities",
-      label: "Découvrir les activités",
+      label: "Discover activities",
       icon: "🎡",
       action: { type: "navigate", tab: "activities" },
       variant: "primary",
     },
     {
       id: "other-hotels",
-      label: "Autres hôtels",
+      label: "Other hotels",
       icon: "🏨",
-      action: { type: "fillInput", message: "Montre-moi d'autres options d'hébergement" },
+      action: { type: "fillInput", message: "Show me other accommodation options" },
     },
     {
       id: "summary",
-      label: "Récapitulatif",
+      label: "Summary",
       icon: "📋",
-      action: { type: "fillInput", message: "Fais-moi un récapitulatif de mon voyage" },
+      action: { type: "fillInput", message: "Give me a summary of my trip" },
     },
   ],
 
   general: (): QuickReply[] => [
     {
       id: "help",
-      label: "Aide",
+      label: "Help",
       icon: "❓",
-      action: { type: "fillInput", message: "Comment puis-je planifier mon voyage?" },
+      action: { type: "fillInput", message: "How can I plan my trip?" },
     },
     {
       id: "inspire",
-      label: "Inspire-moi",
+      label: "Inspire me",
       icon: "✨",
-      action: { type: "fillInput", message: "Suggère-moi une destination pour mes prochaines vacances" },
+      action: { type: "fillInput", message: "Suggest a destination for my next vacation" },
     },
   ],
 } as const;
