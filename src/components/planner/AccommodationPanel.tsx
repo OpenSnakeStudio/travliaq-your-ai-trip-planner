@@ -540,65 +540,139 @@ const ChipButton = ({
   </button>
 );
 
-// Accommodation type config - DISTINCT icons
-const ACCOMMODATION_TYPES: { id: AccommodationType; label: string; icon: React.ElementType }[] = [
-  { id: "hotel", label: "Hôtel", icon: Hotel },
-  { id: "apartment", label: "Appart", icon: Home },
-  { id: "villa", label: "Villa", icon: Castle },
-  { id: "hostel", label: "Auberge", icon: Tent },
-  { id: "guesthouse", label: "Maison", icon: House },
-  { id: "any", label: "Tous", icon: Building2 },
-];
+// Accommodation type icons (labels are translated via i18n)
+const ACCOMMODATION_TYPE_ICONS: Record<AccommodationType, React.ElementType> = {
+  hotel: Hotel,
+  apartment: Home,
+  villa: Castle,
+  hostel: Tent,
+  guesthouse: House,
+  any: Building2,
+};
 
-// Essential amenities config
-const ESSENTIAL_AMENITIES: { id: EssentialAmenity; label: string; icon: React.ElementType }[] = [
-  { id: "wifi", label: "WiFi", icon: Wifi },
-  { id: "parking", label: "Parking", icon: Car },
-  { id: "breakfast", label: "Petit-déj", icon: Coffee },
-  { id: "ac", label: "Clim", icon: Wind },
-  { id: "pool", label: "Piscine", icon: Waves },
-  { id: "kitchen", label: "Cuisine", icon: Utensils },
-];
+// Essential amenity icons (labels are translated via i18n)
+const AMENITY_ICONS: Record<EssentialAmenity, React.ElementType> = {
+  wifi: Wifi,
+  parking: Car,
+  breakfast: Coffee,
+  ac: Wind,
+  pool: Waves,
+  kitchen: Utensils,
+};
 
-// Rating options (1-10 scale)
-const RATING_OPTIONS = [
-  { value: null, label: "Tous" },
-  { value: 7, label: "7+" },
-  { value: 8, label: "8+" },
-  { value: 9, label: "9+" },
-];
+// Meal plan icons
+const MEAL_PLAN_ICONS: Record<MealPlan, React.ElementType> = {
+  none: Coffee, // fallback icon for "none"
+  breakfast: Coffee,
+  half: Soup,
+  full: ChefHat,
+  "all-inclusive": Utensils,
+};
 
-// Meal plan options with DISTINCT icons
-const MEAL_PLANS: { id: MealPlan; label: string; icon: React.ElementType }[] = [
-  { id: "breakfast", label: "Petit-déj", icon: Coffee },
-  { id: "half", label: "Demi-pension", icon: Soup },
-  { id: "full", label: "Pension complète", icon: ChefHat },
-  { id: "all-inclusive", label: "All-inclusive", icon: Utensils },
-];
+// View icons
+const VIEW_ICONS: Record<string, React.ElementType> = {
+  sea: Waves,
+  mountain: Mountain,
+  city: Building,
+  garden: Flower2,
+  pool: Droplets,
+};
 
-// Views options with DISTINCT icons
-const VIEW_OPTIONS: { id: string; label: string; icon: React.ElementType }[] = [
-  { id: "Mer", label: "Mer", icon: Waves },
-  { id: "Montagne", label: "Montagne", icon: Mountain },
-  { id: "Ville", label: "Ville", icon: Building },
-  { id: "Jardin", label: "Jardin", icon: Flower2 },
-  { id: "Piscine", label: "Piscine", icon: Droplets },
-];
+// Service icons
+const SERVICE_ICONS: Record<string, React.ElementType> = {
+  roomService: ConciergeBell,
+  spa: Droplets,
+  gym: Dumbbell,
+  shuttle: Bus,
+};
 
-// Services options with DISTINCT icons
-const SERVICE_OPTIONS: { id: string; label: string; icon: React.ElementType }[] = [
-  { id: "Room service", label: "Room service", icon: ConciergeBell },
-  { id: "Spa", label: "Spa", icon: Droplets },
-  { id: "Salle de sport", label: "Gym", icon: Dumbbell },
-  { id: "Navette aéroport", label: "Navette", icon: Bus },
-];
+// Accessibility icons
+const ACCESSIBILITY_ICONS: Record<string, React.ElementType> = {
+  pmr: Accessibility,
+  baby: Baby,
+  pets: Dog,
+};
 
-// Accessibility options with icons
-const ACCESSIBILITY_OPTIONS: { id: string; label: string; icon: React.ElementType }[] = [
-  { id: "PMR", label: "PMR", icon: Accessibility },
-  { id: "Lit bébé", label: "Bébé", icon: Baby },
-  { id: "Animaux acceptés", label: "Animaux", icon: Dog },
-];
+// Hook for translated accommodation types
+function useAccommodationTypes() {
+  const { t } = useTranslation();
+  return [
+    { id: "hotel" as AccommodationType, label: t("planner.accommodation.type.hotel"), icon: ACCOMMODATION_TYPE_ICONS.hotel },
+    { id: "apartment" as AccommodationType, label: t("planner.accommodation.type.apartment"), icon: ACCOMMODATION_TYPE_ICONS.apartment },
+    { id: "villa" as AccommodationType, label: t("planner.accommodation.type.villa"), icon: ACCOMMODATION_TYPE_ICONS.villa },
+    { id: "hostel" as AccommodationType, label: t("planner.accommodation.type.hostel"), icon: ACCOMMODATION_TYPE_ICONS.hostel },
+    { id: "guesthouse" as AccommodationType, label: t("planner.accommodation.type.guesthouse"), icon: ACCOMMODATION_TYPE_ICONS.guesthouse },
+    { id: "any" as AccommodationType, label: t("planner.accommodation.type.any"), icon: ACCOMMODATION_TYPE_ICONS.any },
+  ];
+}
+
+// Hook for translated amenities
+function useEssentialAmenities() {
+  const { t } = useTranslation();
+  return [
+    { id: "wifi" as EssentialAmenity, label: t("planner.accommodation.amenities.wifi"), icon: AMENITY_ICONS.wifi },
+    { id: "parking" as EssentialAmenity, label: t("planner.accommodation.amenities.parking"), icon: AMENITY_ICONS.parking },
+    { id: "breakfast" as EssentialAmenity, label: t("planner.accommodation.amenities.breakfast"), icon: AMENITY_ICONS.breakfast },
+    { id: "ac" as EssentialAmenity, label: t("planner.accommodation.amenities.ac"), icon: AMENITY_ICONS.ac },
+    { id: "pool" as EssentialAmenity, label: t("planner.accommodation.amenities.pool"), icon: AMENITY_ICONS.pool },
+    { id: "kitchen" as EssentialAmenity, label: t("planner.accommodation.amenities.kitchen"), icon: AMENITY_ICONS.kitchen },
+  ];
+}
+
+// Hook for translated rating options
+function useRatingOptions() {
+  const { t } = useTranslation();
+  return [
+    { value: null, label: t("planner.accommodation.rating.all") },
+    { value: 7, label: "7+" },
+    { value: 8, label: "8+" },
+    { value: 9, label: "9+" },
+  ];
+}
+
+// Hook for translated meal plans
+function useMealPlans() {
+  const { t } = useTranslation();
+  return [
+    { id: "breakfast" as MealPlan, label: t("planner.accommodation.amenities.breakfast"), icon: MEAL_PLAN_ICONS.breakfast },
+    { id: "half" as MealPlan, label: t("planner.accommodation.filters.halfBoard"), icon: MEAL_PLAN_ICONS.half },
+    { id: "full" as MealPlan, label: t("planner.accommodation.filters.fullBoard"), icon: MEAL_PLAN_ICONS.full },
+    { id: "all-inclusive" as MealPlan, label: t("planner.accommodation.filters.allInclusive"), icon: MEAL_PLAN_ICONS["all-inclusive"] },
+  ];
+}
+
+// Hook for translated view options
+function useViewOptions() {
+  const { t } = useTranslation();
+  return [
+    { id: "sea", label: t("planner.accommodation.filters.sea"), icon: VIEW_ICONS.sea },
+    { id: "mountain", label: t("planner.accommodation.filters.mountain"), icon: VIEW_ICONS.mountain },
+    { id: "city", label: t("planner.accommodation.filters.city"), icon: VIEW_ICONS.city },
+    { id: "garden", label: t("planner.accommodation.filters.garden"), icon: VIEW_ICONS.garden },
+    { id: "pool", label: t("planner.accommodation.filters.poolView"), icon: VIEW_ICONS.pool },
+  ];
+}
+
+// Hook for translated service options
+function useServiceOptions() {
+  const { t } = useTranslation();
+  return [
+    { id: "roomService", label: t("planner.accommodation.filters.roomService"), icon: SERVICE_ICONS.roomService },
+    { id: "spa", label: t("planner.accommodation.filters.spa"), icon: SERVICE_ICONS.spa },
+    { id: "gym", label: t("planner.accommodation.filters.gym"), icon: SERVICE_ICONS.gym },
+    { id: "shuttle", label: t("planner.accommodation.filters.shuttle"), icon: SERVICE_ICONS.shuttle },
+  ];
+}
+
+// Hook for translated accessibility options
+function useAccessibilityOptions() {
+  const { t } = useTranslation();
+  return [
+    { id: "pmr", label: t("planner.accommodation.filters.pmr"), icon: ACCESSIBILITY_ICONS.pmr },
+    { id: "baby", label: t("planner.accommodation.filters.baby"), icon: ACCESSIBILITY_ICONS.baby },
+    { id: "pets", label: t("planner.accommodation.filters.pets"), icon: ACCESSIBILITY_ICONS.pets },
+  ];
+}
 
 const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) => {
   const { 
@@ -635,6 +709,17 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
     getHotelDetailsFromCache,
     setIsLoadingHotelDetails,
   } = useAccommodationMemoryStore();
+
+  const { t } = useTranslation();
+  
+  // Translated option arrays
+  const ACCOMMODATION_TYPES = useAccommodationTypes();
+  const ESSENTIAL_AMENITIES = useEssentialAmenities();
+  const RATING_OPTIONS = useRatingOptions();
+  const MEAL_PLANS = useMealPlans();
+  const VIEW_OPTIONS = useViewOptions();
+  const SERVICE_OPTIONS = useServiceOptions();
+  const ACCESSIBILITY_OPTIONS = useAccessibilityOptions();
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -1774,7 +1859,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
       <div className="rounded-xl border border-border/40 bg-card/50 p-2.5 space-y-2.5">
         {/* Type d'hébergement */}
         <div className="space-y-1.5">
-          <span className="text-xs text-muted-foreground">Type</span>
+          <span className="text-xs text-muted-foreground">{t("planner.accommodation.type.label")}</span>
           <div className="flex gap-1.5 flex-wrap">
             {ACCOMMODATION_TYPES.map((type) => (
               <ChipButton
@@ -1792,7 +1877,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
         {/* Note minimum */}
         <div className="space-y-1.5">
-          <span className="text-xs text-muted-foreground">Note minimum</span>
+          <span className="text-xs text-muted-foreground">{t("planner.accommodation.rating.min")}</span>
           <div className="flex gap-1.5">
             {RATING_OPTIONS.map((option) => (
               <button
@@ -1814,7 +1899,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
         {/* Équipements */}
         <div className="space-y-1.5">
-          <span className="text-xs text-muted-foreground">Équipements</span>
+          <span className="text-xs text-muted-foreground">{t("planner.accommodation.amenities.label")}</span>
           <div className="flex gap-1.5 flex-wrap">
             {ESSENTIAL_AMENITIES.map((amenity) => (
               <ChipButton
@@ -1836,14 +1921,14 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
         <CollapsibleTrigger asChild>
           <button className="w-full flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
             <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isAdvancedOpen && "rotate-180")} />
-            <span>Filtres avancés</span>
+            <span>{t("planner.accommodation.filters.advanced")}</span>
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="pt-2">
           <div className="rounded-xl border border-border/40 bg-card/50 p-3 space-y-3">
             {/* Formule repas */}
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Formule repas</span>
+              <span className="text-xs text-muted-foreground">{t("planner.accommodation.filters.mealPlan")}</span>
               <div className="flex gap-1.5 flex-wrap">
                 {MEAL_PLANS.map((meal) => (
                   <ChipButton
@@ -1861,7 +1946,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
             {/* Vue */}
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Vue</span>
+              <span className="text-xs text-muted-foreground">{t("planner.accommodation.filters.views")}</span>
               <div className="flex gap-1.5 flex-wrap">
                 {VIEW_OPTIONS.map((view) => (
                   <ChipButton
@@ -1879,7 +1964,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
             {/* Services */}
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Services</span>
+              <span className="text-xs text-muted-foreground">{t("planner.accommodation.filters.services")}</span>
               <div className="flex gap-1.5 flex-wrap">
                 {SERVICE_OPTIONS.map((service) => (
                   <ChipButton
@@ -1897,7 +1982,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
             {/* Accessibilité */}
             <div className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">Accessibilité</span>
+              <span className="text-xs text-muted-foreground">{t("planner.accommodation.filters.accessibility")}</span>
               <div className="flex gap-1.5 flex-wrap">
                 {ACCESSIBILITY_OPTIONS.map((access) => (
                   <ChipButton
