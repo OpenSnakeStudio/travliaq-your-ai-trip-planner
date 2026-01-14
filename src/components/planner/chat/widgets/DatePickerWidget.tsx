@@ -1,15 +1,17 @@
 /**
  * DatePickerWidget - Inline calendar for date selection
  * Now syncs with Zustand store on confirmation
+ * Fully i18n-enabled with locale-aware formatting
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { CalendarIcon } from "lucide-react";
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameDay, isSameMonth, isBefore, startOfDay } from "date-fns";
-import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { parsePreferredMonth } from "../types";
 import { usePlannerStoreV2 } from "@/stores/plannerStoreV2";
+import { useLocale } from "@/hooks/useLocale";
 
 interface DatePickerWidgetProps {
   label: string;
@@ -32,8 +34,11 @@ export function DatePickerWidget({
   dateField,
   skipStoreSync = false,
 }: DatePickerWidgetProps) {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const setDepartureDate = usePlannerStoreV2((s) => s.setDepartureDate);
   const setReturnDate = usePlannerStoreV2((s) => s.setReturnDate);
+  
   // Determine initial month: preferredMonth > value > minDate > today
   const getInitialMonth = () => {
     const parsed = parsePreferredMonth(preferredMonth);
@@ -48,7 +53,11 @@ export function DatePickerWidget({
   const [selectedDate, setSelectedDate] = useState<Date | null>(value);
 
   const weekStartsOn = 1; // Monday
-  const weekDayLabels = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
+  
+  // Get weekday labels from i18n
+  const weekDayLabels = useMemo(() => {
+    return t("planner.datePicker.weekdays").split(",");
+  }, [t]);
 
   // Get days for the current month
   const getMonthDays = () => {
@@ -93,7 +102,7 @@ export function DatePickerWidget({
     return (
       <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium">
         <CalendarIcon className="h-4 w-4" />
-        <span>{format(selectedDate, "d MMMM yyyy", { locale: fr })}</span>
+        <span>{format(selectedDate, "d MMMM yyyy", { locale: dateFnsLocale })}</span>
       </div>
     );
   }
@@ -110,18 +119,18 @@ export function DatePickerWidget({
           type="button"
           className="h-8 w-8 rounded-lg border border-border hover:bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
           onClick={() => setBaseMonth(addMonths(baseMonth, -1))}
-          aria-label="Mois précédent"
+          aria-label={t("common.back")}
         >
           ‹
         </button>
         <span className="text-sm font-medium">
-          {format(baseMonth, "MMMM yyyy", { locale: fr })}
+          {format(baseMonth, "MMMM yyyy", { locale: dateFnsLocale })}
         </span>
         <button
           type="button"
           className="h-8 w-8 rounded-lg border border-border hover:bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
           onClick={() => setBaseMonth(addMonths(baseMonth, 1))}
-          aria-label="Mois suivant"
+          aria-label={t("common.back")}
         >
           ›
         </button>
@@ -177,7 +186,10 @@ export function DatePickerWidget({
             : "bg-muted text-muted-foreground cursor-not-allowed"
         )}
       >
-        {selectedDate ? `Confirmer : ${format(selectedDate, "d MMMM", { locale: fr })}` : "Sélectionnez une date"}
+        {selectedDate 
+          ? t("planner.datePicker.confirmDate", { date: format(selectedDate, "d MMMM", { locale: dateFnsLocale }) })
+          : t("planner.datePicker.selectDate")
+        }
       </button>
     </div>
   );

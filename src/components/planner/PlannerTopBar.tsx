@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Plane, Compass, Bed, SlidersHorizontal, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,18 +20,19 @@ interface PlannerTopBarProps {
   confirmLeaveMessage?: string;
 }
 
-// Order: Flights → Stays → Activities → Preferences
-const tabs: { id: TabType; icon: React.ElementType; label: string; emoji: string }[] = [
-  { id: "flights", icon: Plane, label: "Vols", emoji: "✈️" },
-  { id: "stays", icon: Bed, label: "Hébergements", emoji: "🏨" },
-  { id: "activities", icon: Compass, label: "Activités", emoji: "🎭" },
-  { id: "preferences", icon: SlidersHorizontal, label: "Préférences", emoji: "⚙️" },
-];
-
 export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed, onOpenChat, confirmLeave, confirmLeaveMessage }: PlannerTopBarProps) {
+  const { t } = useTranslation();
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const { preferences, updateTemperatureUnit } = useUserPreferences();
+
+  // Order: Flights → Stays → Activities → Preferences
+  const tabs = useMemo(() => [
+    { id: "flights" as TabType, icon: Plane, label: t("planner.tabs.flights"), emoji: "✈️" },
+    { id: "stays" as TabType, icon: Bed, label: t("planner.tabs.stays"), emoji: "🏨" },
+    { id: "activities" as TabType, icon: Compass, label: t("planner.tabs.activities"), emoji: "🎭" },
+    { id: "preferences" as TabType, icon: SlidersHorizontal, label: t("planner.tabs.preferences"), emoji: "⚙️" },
+  ], [t]);
 
   return (
     <>
@@ -52,10 +54,10 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
               >
                 <Link
                   to="/"
-                  title="Retour à l'accueil"
+                  title={t("planner.tabs.backToHome")}
                   onClick={(e) => {
                     if (!confirmLeave) return;
-                    const ok = window.confirm(confirmLeaveMessage || "Quitter le planner ?");
+                    const ok = window.confirm(confirmLeaveMessage || t("planner.tabs.leaveConfirm"));
                     if (!ok) e.preventDefault();
                   }}
                 >
@@ -68,8 +70,8 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
                 <button
                   onClick={onOpenChat}
                   className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                  title="Ouvrir le chat"
-                  aria-label="Ouvrir le chat"
+                  title={t("planner.tabs.openChat")}
+                  aria-label={t("planner.tabs.openChat")}
                 >
                   <PanelLeft className="h-4 w-4" />
                 </button>
@@ -79,26 +81,26 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
           </AnimatePresence>
 
           <nav className="flex items-center gap-1" aria-label="Navigation des onglets">
-            {tabs.map((t) => {
-              const Icon = t.icon;
-              const isActive = activeTab === t.id;
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
 
               return (
                 <button
-                  key={t.id}
-                  onClick={() => onTabChange(t.id)}
-                  data-tour={`${t.id}-tab`}
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
+                  data-tour={`${tab.id}-tab`}
                   className={cn(
                     "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-200",
                     isActive
                       ? "bg-primary text-primary-foreground shadow-md"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
-                  aria-label={t.label}
+                  aria-label={tab.label}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  <span className="text-base">{t.emoji}</span>
-                  <span className="hidden sm:inline">{t.label}</span>
+                  <span className="text-base">{tab.emoji}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -111,7 +113,7 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
           <button
             onClick={() => setCurrencyOpen(true)}
             className="flex items-center justify-center px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
-            title="Devise"
+            title={t("preferences.currency")}
           >
             {{ EUR: "€", USD: "$", GBP: "£" }[preferences.currency] || "€"}
           </button>
@@ -122,7 +124,7 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
           <button
             onClick={() => setLanguageOpen(true)}
             className="flex items-center justify-center px-2.5 py-1.5 text-xs transition-colors hover:bg-muted"
-            title="Langue"
+            title={t("preferences.language")}
           >
             {{ fr: "🇫🇷", en: "🇬🇧", es: "🇪🇸" }[preferences.language] || "🇫🇷"}
           </button>
@@ -133,7 +135,7 @@ export default function PlannerTopBar({ activeTab, onTabChange, isChatCollapsed,
           <button
             onClick={() => updateTemperatureUnit(preferences.temperatureUnit === "C" ? "F" : "C")}
             className="flex items-center justify-center px-2.5 py-1.5 text-xs font-medium transition-colors hover:bg-muted"
-            title="Changer l'unité de température"
+            title={t("preferences.temperature")}
           >
             {preferences.temperatureUnit === "C" ? "°C" : "°F"}
           </button>
