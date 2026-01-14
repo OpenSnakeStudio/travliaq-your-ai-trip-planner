@@ -42,6 +42,13 @@ export {
 // Preference widget callbacks (Phase 2.1 optimization)
 export { usePreferenceWidgetCallbacks } from "./usePreferenceWidgetCallbacks";
 
+// Intent Router (Phase 3 - Robust intent detection)
+export {
+  useIntentRouter,
+  type UseIntentRouterOptions,
+  type UseIntentRouterReturn,
+} from "./useIntentRouter";
+
 // Performance optimization hooks
 export {
   useDebounce,

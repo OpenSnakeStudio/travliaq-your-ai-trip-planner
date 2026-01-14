@@ -2,6 +2,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildPhaseSystemPrompt, type TravelPhase } from "./prompts/phasePrompts.ts";
+import { intentClassifierTool, parseIntentClassification, type IntentClassificationResult } from "./tools/intentClassifier.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -540,7 +541,7 @@ ${phasePrompt}`;
         ],
         temperature: 0.7,
         max_tokens: 500,
-        tools: [flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool],
+        tools: [intentClassifierTool, flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool],
         tool_choice: "auto",
         stream: false, // First call is never streamed to handle tools
       }),
@@ -565,10 +566,45 @@ ${phasePrompt}`;
     let preferencesData = null;
     let quickRepliesData = null;
     let destinationSuggestionRequest = null;
+    let intentClassification: IntentClassificationResult | null = null;
 
     // Check if the model called any extraction tools
     if (choice?.message?.tool_calls) {
       for (const toolCall of choice.message.tool_calls) {
+        // Handle intent classification (new primary tool)
+        if (toolCall.function?.name === "classify_intent") {
+          intentClassification = parseIntentClassification(toolCall.function.arguments);
+          if (intentClassification) {
+            console.log("Intent classified:", intentClassification.primaryIntent, "confidence:", intentClassification.confidence);
+            
+            // Map intent entities to flightData for backward compatibility
+            const entities = intentClassification.entities;
+            if (entities.destinationCity || entities.destinationCountryCode || entities.preferredMonth || entities.adults) {
+              flightData = {
+                to: entities.destinationCity,
+                toCountryCode: entities.destinationCountryCode,
+                toCountryName: entities.destinationCountry,
+                from: entities.departureCity,
+                fromCountryCode: entities.departureCountryCode,
+                departureDate: entities.exactDepartureDate,
+                returnDate: entities.exactReturnDate,
+                preferredMonth: entities.preferredMonth,
+                tripDuration: entities.tripDuration,
+                adults: entities.adults,
+                children: entities.children,
+                infants: entities.infants,
+                needsCitySelection: !!entities.destinationCountryCode && !entities.destinationCity,
+                needsDateWidget: !!entities.preferredMonth && !entities.exactDepartureDate,
+                needsTravelersWidget: entities.travelStyle === "family" || entities.travelStyle === "friends" || entities.travelStyle === "group"
+              };
+              // Clean empty values
+              flightData = Object.fromEntries(
+                Object.entries(flightData).filter(([_, v]) => v !== null && v !== undefined && v !== "")
+              );
+            }
+          }
+        }
+        
         if (toolCall.function?.name === "update_flight_widget") {
           try {
             flightData = JSON.parse(toolCall.function.arguments);
