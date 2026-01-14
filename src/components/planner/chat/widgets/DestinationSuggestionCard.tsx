@@ -191,44 +191,49 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           </p>
 
           {/* Key Factors - Simple */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {keyFactors.slice(0, 3).map((factor, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                <span className="text-muted-foreground">{factor}</span>
+              <div key={i} className="flex items-start gap-2 text-xs">
+                <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
+                <span className="text-muted-foreground leading-tight">{factor}</span>
               </div>
             ))}
           </div>
 
-          {/* Stats Row: Budget | Vol | Saison */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs border-t border-border pt-3">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Wallet className="h-3.5 w-3.5 text-amber-500" />
-              <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
+          {/* Stats Grid - Well aligned */}
+          <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
+            <div className="flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-amber-500 shrink-0" />
+              <span className="text-xs text-muted-foreground">
+                {estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j
+              </span>
             </div>
 
-            {flightPriceEstimate && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Plane className="h-3.5 w-3.5 text-blue-500" />
-                <span>~{flightPriceEstimate}€ A/R</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <Plane className="h-4 w-4 text-blue-500 shrink-0" />
+              <span className="text-xs text-muted-foreground">
+                {flightPriceEstimate ? `~${flightPriceEstimate}€` : "N/A"}{" "}
+                <span className="text-[10px] opacity-70">(est.)</span>
+              </span>
+            </div>
 
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5 text-purple-500" />
-              <span>{bestSeasons.slice(0, 2).join(", ")}</span>
+            <div className="flex items-center gap-2 col-span-2">
+              <Calendar className="h-4 w-4 text-purple-500 shrink-0" />
+              <span className="text-xs text-muted-foreground">
+                {bestSeasons.slice(0, 2).join(", ")}
+              </span>
             </div>
           </div>
 
-          {/* Activities */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* Activities - Clean grid */}
+          <div className="grid grid-cols-2 gap-1.5">
             {topActivities.slice(0, 4).map((activity, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/50 text-xs text-muted-foreground"
+                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground"
               >
-                <span>{getActivityEmoji(activity.emoji)}</span>
-                <span className="truncate max-w-[80px]">{activity.name}</span>
+                <span className="text-sm">{getActivityEmoji(activity.emoji)}</span>
+                <span className="truncate">{activity.name}</span>
               </span>
             ))}
           </div>
