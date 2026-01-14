@@ -5,6 +5,7 @@
  * with personalized reasons and match indicators.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Sparkles,
@@ -166,17 +167,18 @@ export function ResultRecommendation({
   showMatchScore = true,
   compact = false,
 }: ResultRecommendationProps) {
+  const { t } = useTranslation();
   const { type, title, matchScore, reasons, summary, price, rating, image } = data;
 
   if (compact) {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
-        <div className="flex-shrink-0 rounded-full bg-primary/10 p-2 text-primary">
+      <div className="flex-shrink-0 rounded-full bg-primary/10 p-2 text-primary">
           <Sparkles size={16} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-primary">Recommandé pour vous</span>
+            <span className="text-xs font-medium text-primary">{t("planner.recommendation.recommendedForYou")}</span>
             {matchScore && showMatchScore && <MatchScore score={matchScore} />}
           </div>
           <p className="text-sm font-medium text-foreground truncate">{title}</p>
@@ -208,7 +210,7 @@ export function ResultRecommendation({
             <Sparkles size={14} />
           </div>
           <span className="text-xs font-medium text-primary uppercase tracking-wide">
-            Recommandé pour vous
+            {t("planner.recommendation.recommendedForYou")}
           </span>
         </div>
         {matchScore !== undefined && showMatchScore && <MatchScore score={matchScore} />}
@@ -297,7 +299,7 @@ export function ResultRecommendation({
               size === "sm" ? "px-4 py-1.5 text-sm" : "px-5 py-2 text-sm"
             )}
           >
-            Sélectionner
+            {t("planner.recommendation.select")}
             <ChevronRight size={14} />
           </button>
         )}
@@ -309,7 +311,7 @@ export function ResultRecommendation({
               "px-4 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             )}
           >
-            Détails
+            {t("planner.recommendation.details")}
           </button>
         )}
       </div>
@@ -329,8 +331,11 @@ interface InlineRecommendationProps {
 export function InlineRecommendation({
   message,
   onAction,
-  actionLabel = "Voir",
+  actionLabel,
 }: InlineRecommendationProps) {
+  const { t } = useTranslation();
+  const label = actionLabel || t("planner.recommendation.view");
+  
   return (
     <div className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5">
       <Sparkles size={14} className="text-primary flex-shrink-0" />
@@ -341,7 +346,7 @@ export function InlineRecommendation({
           onClick={onAction}
           className="text-sm font-medium text-primary hover:underline"
         >
-          {actionLabel} →
+          {label} →
         </button>
       )}
     </div>

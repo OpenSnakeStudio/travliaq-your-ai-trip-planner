@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Cloud, Sun, CloudRain, ChevronDown, Plane, Check, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   format,
   startOfMonth,
@@ -75,6 +75,8 @@ export default function PlannerCalendar({
   tripType = "roundtrip",
   tripDays = 7,
 }: PlannerCalendarProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === "en" ? "en-US" : "fr-FR";
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [localShowPrices, setLocalShowPrices] = useState(false);
   const [localShowWeather, setLocalShowWeather] = useState(false);
@@ -255,9 +257,11 @@ export default function PlannerCalendar({
                 <Plane className="h-4 w-4 text-primary" />
               </div>
               <div className="text-left">
-                <div className="text-xs text-muted-foreground">Aller</div>
+                <div className="text-xs text-muted-foreground">{t("planner.calendar.outbound")}</div>
                 <div className="text-sm font-medium text-foreground">
-                  {format(dateRange.from!, "d MMM", { locale: fr })}
+                  {format(dateRange.from!, "d MMM", { locale: locale === "en-US" ? undefined : fr })}
+                </div>
+              </div>
                 </div>
               </div>
             </div>
@@ -267,9 +271,9 @@ export default function PlannerCalendar({
                 <Plane className="h-4 w-4 text-primary rotate-180" />
               </div>
               <div className="text-left">
-                <div className="text-xs text-muted-foreground">Retour</div>
+                <div className="text-xs text-muted-foreground">{t("planner.calendar.return")}</div>
                 <div className="text-sm font-medium text-foreground">
-                  {format(dateRange.to!, "d MMM", { locale: fr })}
+                  {format(dateRange.to!, "d MMM", { locale: locale === "en-US" ? undefined : fr })}
                 </div>
               </div>
             </div>
@@ -297,7 +301,7 @@ export default function PlannerCalendar({
           >
             {showPrices && <Check className="h-3 w-3 text-primary-foreground" />}
           </div>
-          <span className="text-xs text-foreground">Prix</span>
+          <span className="text-xs text-foreground">{t("planner.calendar.prices")}</span>
           {pricesLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
@@ -312,14 +316,16 @@ export default function PlannerCalendar({
           >
             {showWeather && <Check className="h-3 w-3 text-primary-foreground" />}
           </div>
-          <span className="text-xs text-foreground">Météo</span>
+          <span className="text-xs text-foreground">{t("planner.calendar.weather")}</span>
         </label>
       </div>
       
       {/* Missing airports warning */}
       {showPrices && (!origin || !destination) && (
         <div className="text-[10px] text-muted-foreground text-center py-1 px-2 bg-muted/30 rounded-lg">
-          Sélectionnez un aéroport de départ et d'arrivée pour voir les prix
+          {t("planner.calendar.selectAirports")}
+        </div>
+      )}
         </div>
       )}
 
@@ -332,7 +338,7 @@ export default function PlannerCalendar({
           <ChevronLeft className="h-4 w-4" />
         </button>
         <h3 className="text-sm font-semibold text-foreground capitalize">
-          {format(currentMonth, "MMMM yyyy", { locale: fr })}
+          {format(currentMonth, "MMMM yyyy", { locale: locale === "en-US" ? undefined : fr })}
         </h3>
         <button
           onClick={goToNextMonth}
@@ -435,7 +441,7 @@ export default function PlannerCalendar({
           {showPrices && (
             <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              <span>Meilleur prix</span>
+              <span>{t("planner.calendar.bestPrice")}</span>
             </div>
           )}
           {showWeather && (
@@ -454,13 +460,14 @@ export default function PlannerCalendar({
         </div>
       )}
 
-      {/* Confirm button when dates selected */}
       {hasSelection && (
         <button
           onClick={() => setIsExpanded(false)}
           className="w-full py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
         >
-          Confirmer les dates
+          {t("planner.calendar.confirmDates")}
+        </button>
+      )}
         </button>
       )}
     </div>

@@ -5,6 +5,7 @@
  * users plan activities appropriately.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Sun,
@@ -136,19 +137,7 @@ const CONDITION_BG: Record<WeatherCondition, string> = {
   windy: "bg-gradient-to-br from-teal-50 to-slate-100 dark:from-teal-900/20 dark:to-slate-800/30",
 };
 
-/**
- * Weather condition labels (French)
- */
-const CONDITION_LABELS: Record<WeatherCondition, string> = {
-  sunny: "Ensoleillé",
-  partly_cloudy: "Partiellement nuageux",
-  cloudy: "Nuageux",
-  rainy: "Pluvieux",
-  stormy: "Orageux",
-  snowy: "Neigeux",
-  foggy: "Brumeux",
-  windy: "Venteux",
-};
+// Condition labels are now retrieved via i18n
 
 /**
  * Convert Celsius to Fahrenheit
@@ -166,12 +155,12 @@ function formatTemp(temp: number, unit: "celsius" | "fahrenheit"): string {
 }
 
 /**
- * Format day name
+ * Format day name with i18n
  */
-function formatDayName(date: Date, index: number): string {
-  if (index === 0) return "Aujourd'hui";
-  if (index === 1) return "Demain";
-  return date.toLocaleDateString("fr-FR", { weekday: "short" });
+function formatDayName(date: Date, index: number, t: (key: string) => string, locale: string): string {
+  if (index === 0) return t("planner.weather.today");
+  if (index === 1) return t("planner.weather.tomorrow");
+  return date.toLocaleDateString(locale === "en" ? "en-US" : "fr-FR", { weekday: "short" });
 }
 
 /**
@@ -209,6 +198,8 @@ function DayForecastCard({
   compact,
   showDetails,
   onClick,
+  t,
+  locale,
 }: {
   forecast: DailyForecast;
   index: number;
@@ -216,13 +207,18 @@ function DayForecastCard({
   compact: boolean;
   showDetails: boolean;
   onClick?: () => void;
+  t: (key: string) => string;
+  locale: string;
 }) {
   const Icon = CONDITION_ICONS[forecast.condition];
-  const dayName = formatDayName(forecast.date, index);
-  const dateStr = forecast.date.toLocaleDateString("fr-FR", {
+  const dayName = formatDayName(forecast.date, index, t, locale);
+  const dateStr = forecast.date.toLocaleDateString(locale === "en" ? "en-US" : "fr-FR", {
     day: "numeric",
     month: "short",
   });
+  
+  // Condition labels via i18n
+  const conditionLabel = t(`planner.weather.conditions.${forecast.condition}`);
 
   if (compact) {
     return (
@@ -280,7 +276,7 @@ function DayForecastCard({
 
         {/* Condition label */}
         <div className="text-sm text-muted-foreground mt-1">
-          {forecast.description || CONDITION_LABELS[forecast.condition]}
+          {forecast.description || conditionLabel}
         </div>
       </div>
 
@@ -291,7 +287,7 @@ function DayForecastCard({
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Droplets size={14} />
-              <span>Précipitations</span>
+              <span>{t("planner.weather.precipitation")}</span>
             </div>
             <span className="font-medium">{forecast.precipitationChance}%</span>
           </div>
@@ -301,7 +297,7 @@ function DayForecastCard({
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Wind size={14} />
-                <span>Vent</span>
+                <span>{t("planner.weather.wind")}</span>
               </div>
               <span className="font-medium">{forecast.windSpeed} km/h</span>
             </div>
@@ -312,7 +308,7 @@ function DayForecastCard({
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Droplets size={14} />
-                <span>Humidité</span>
+                <span>{t("planner.weather.humidity")}</span>
               </div>
               <span className="font-medium">{forecast.humidity}%</span>
             </div>
@@ -377,10 +373,13 @@ export function WeatherWidget({
   showDetails = false,
   onDayClick,
 }: WeatherWidgetProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
+  
   if (forecasts.length === 0) {
     return (
       <div className="rounded-lg border bg-card p-4 text-center text-muted-foreground">
-        Aucune prévision météo disponible
+        {t("planner.weather.noForecast")}
       </div>
     );
   }
@@ -400,10 +399,10 @@ export function WeatherWidget({
       <div className="p-4 border-b bg-muted/30">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold text-lg">Météo à {location}</h3>
+            <h3 className="font-semibold text-lg">{t("planner.weather.weatherAt", { location })}</h3>
             <p className="text-sm text-muted-foreground">
-              {forecasts.length} jours • Moy. {avgHigh}°/{avgLow}°
-              {rainyDays > 0 && ` • ${rainyDays} jour${rainyDays > 1 ? "s" : ""} de pluie`}
+              {t("planner.weather.days", { count: forecasts.length })} • {t("planner.weather.avg")} {avgHigh}°/{avgLow}°
+              {rainyDays > 0 && ` • ${t("planner.weather.rainyDays", { count: rainyDays })}`}
             </p>
           </div>
           <Cloud className="text-muted-foreground" size={24} />
@@ -439,6 +438,8 @@ export function WeatherWidget({
             compact={compact}
             showDetails={showDetails}
             onClick={onDayClick ? () => onDayClick(forecast, index) : undefined}
+            t={t}
+            locale={locale}
           />
         ))}
       </div>
@@ -456,18 +457,22 @@ export function WeatherStrip({
   forecasts: DailyForecast[];
   unit?: "celsius" | "fahrenheit";
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language;
+  
   return (
     <div className="flex gap-1 overflow-x-auto py-1">
       {forecasts.slice(0, 7).map((forecast, index) => {
         const Icon = CONDITION_ICONS[forecast.condition];
+        const conditionLabel = t(`planner.weather.conditions.${forecast.condition}`);
         return (
           <div
             key={index}
             className="flex flex-col items-center gap-0.5 px-2 py-1 rounded bg-muted/50 min-w-[48px]"
-            title={CONDITION_LABELS[forecast.condition]}
+            title={conditionLabel}
           >
             <span className="text-[10px] text-muted-foreground">
-              {formatDayName(forecast.date, index).slice(0, 3)}
+              {formatDayName(forecast.date, index, t, locale).slice(0, 3)}
             </span>
             <Icon size={16} className={CONDITION_COLORS[forecast.condition]} />
             <span className="text-xs font-medium">{forecast.tempHigh}°</span>

@@ -4,7 +4,8 @@
  * Offers "Apply suggestion" button
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Sparkles, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePlannerEvent } from "@/lib/eventBus";
@@ -33,6 +34,7 @@ const FIELD_LABELS: Record<string, string> = {
 };
 
 export function AIConflictBadge({ onApply, className }: AIConflictBadgeProps) {
+  const { t } = useTranslation();
   const [conflicts, setConflicts] = useState<ConflictData[]>([]);
   
   // Listen for conflict events
@@ -68,10 +70,10 @@ export function AIConflictBadge({ onApply, className }: AIConflictBadgeProps) {
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
             <div className="min-w-0">
               <p className="text-xs font-medium text-amber-700 dark:text-amber-400 truncate">
-                L'IA suggère : {FIELD_LABELS[conflict.field] || conflict.field}
+                {t("planner.ai.suggests", { field: FIELD_LABELS[conflict.field] || conflict.field })}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
-                Valeur détectée différente de votre sélection
+                {t("planner.ai.detectedValueDifferent")}
               </p>
             </div>
           </div>
@@ -80,14 +82,14 @@ export function AIConflictBadge({ onApply, className }: AIConflictBadgeProps) {
             <button
               onClick={() => handleApply(conflict)}
               className="p-1.5 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 transition-colors"
-              title="Appliquer la suggestion"
+              title={t("planner.ai.applySuggestion")}
             >
               <Check className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => handleDismiss(conflict.field)}
               className="p-1.5 rounded-md hover:bg-muted/50 text-muted-foreground transition-colors"
-              title="Ignorer"
+              title={t("planner.ai.ignore")}
             >
               <X className="w-3.5 h-3.5" />
             </button>
