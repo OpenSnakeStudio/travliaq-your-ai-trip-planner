@@ -2530,6 +2530,14 @@ const resources = {
       // Planner - Navigation
       "planner.nav.tabNavigation": "Navigation des onglets",
       
+      // Planner - Date Picker Labels
+      "planner.datePicker.chooseDepartureDate": "Choisir la date de départ",
+      "planner.datePicker.chooseReturnDate": "Choisir la date de retour",
+      
+      // Planner - Dual Airport Labels
+      "planner.dualAirport.departure": "Départ",
+      "planner.dualAirport.arrival": "Arrivée",
+      
     },
   },
   en: {
@@ -5044,6 +5052,14 @@ const resources = {
       
       // Planner - Navigation
       "planner.nav.tabNavigation": "Tab navigation",
+      
+      // Planner - Date Picker Labels
+      "planner.datePicker.chooseDepartureDate": "Choose departure date",
+      "planner.datePicker.chooseReturnDate": "Choose return date",
+      
+      // Planner - Dual Airport Labels
+      "planner.dualAirport.departure": "Departure",
+      "planner.dualAirport.arrival": "Arrival",
       
     },
   },

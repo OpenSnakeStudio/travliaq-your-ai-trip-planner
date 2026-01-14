@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { Plane, Check, Star, AlertTriangle, Clock, MapPin, ThumbsUp, ThumbsDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { Airport } from "@/hooks/useNearestAirports";
 import type { AirportChoice, DualAirportChoice, AirportConfirmationData, ConfirmedAirports } from "@/types/flight";
@@ -11,7 +12,7 @@ import type { AirportChoice, DualAirportChoice, AirportConfirmationData, Confirm
 /**
  * Get pros/cons for an airport based on its characteristics
  */
-function getAirportProsAndCons(airport: Airport, isRecommended: boolean, allAirports: Airport[]) {
+function getAirportProsAndCons(airport: Airport, isRecommended: boolean, allAirports: Airport[], t: (key: string) => string) {
   const pros: string[] = [];
   const cons: string[] = [];
   
@@ -20,26 +21,26 @@ function getAirportProsAndCons(airport: Airport, isRecommended: boolean, allAirp
   const maxDistance = Math.max(...allAirports.map(a => a.distance_km));
   
   if (airport.distance_km === minDistance && allAirports.length > 1) {
-    pros.push("Le plus proche");
+    pros.push(t("planner.airport.closest"));
   } else if (airport.distance_km === maxDistance && allAirports.length > 1) {
-    cons.push("Plus éloigné");
+    cons.push(t("planner.airport.farthest"));
   }
   
   // Check airport size by name patterns (major airports usually have specific keywords)
   const name = airport.name.toLowerCase();
   if (name.includes("international") || name.includes("charles de gaulle") || name.includes("heathrow") || name.includes("schiphol")) {
-    pros.push("Aéroport international majeur");
+    pros.push(t("planner.airport.majorInternational"));
   }
   
   if (isRecommended) {
-    pros.push("Plus de vols disponibles");
-    pros.push("Meilleure connexion");
+    pros.push(t("planner.airport.moreFlights"));
+    pros.push(t("planner.airport.betterConnection"));
   } else {
     // Potential advantages for smaller airports
     if (airport.distance_km < 30) {
-      pros.push("Accès rapide depuis le centre");
+      pros.push(t("planner.airport.quickAccess"));
     }
-    cons.push("Moins de choix de vols");
+    cons.push(t("planner.airport.lessFlightChoice"));
   }
   
   return { pros, cons };
@@ -87,12 +88,14 @@ export function DualAirportSelection({
   onSelect: (field: "from" | "to", airport: Airport) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTranslation();
+  
   return (
     <div className="mt-3 grid grid-cols-2 gap-3">
       {choices.from && (
         <div className="space-y-1.5">
           <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-            <span className="text-primary">✈</span> Départ · {choices.from.cityName}
+            <span className="text-primary">✈</span> {t("planner.dualAirport.departure")} · {choices.from.cityName}
           </div>
           <div className="space-y-1">
             {choices.from.airports.map((airport) => (
@@ -109,7 +112,7 @@ export function DualAirportSelection({
       {choices.to && (
         <div className="space-y-1.5">
           <div className="text-xs font-medium text-muted-foreground flex items-center gap-1">
-            <span className="text-primary">🛬</span> Arrivée · {choices.to.cityName}
+            <span className="text-primary">🛬</span> {t("planner.dualAirport.arrival")} · {choices.to.cityName}
           </div>
           <div className="space-y-1">
             {choices.to.airports.map((airport) => (
@@ -145,14 +148,15 @@ function RecommendedAirportCard({
   onReject: () => void;
   disabled?: boolean;
 }) {
-  const { pros } = getAirportProsAndCons(airport, true, allAirports);
+  const { t } = useTranslation();
+  const { pros } = getAirportProsAndCons(airport, true, allAirports, t);
   
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5">
         <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
         <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide">
-          {label} recommandé
+          {label} {t("planner.airport.recommended")}
         </span>
       </div>
       
@@ -169,7 +173,7 @@ function RecommendedAirportCard({
             <div className="flex items-center gap-2">
               <span className="font-bold text-primary text-lg">{airport.iata}</span>
               <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-                Meilleur choix
+                {t("planner.airport.bestChoice")}
               </span>
             </div>
             <div className="text-sm text-foreground font-medium mt-0.5">
@@ -177,7 +181,7 @@ function RecommendedAirportCard({
             </div>
             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
               <MapPin className="w-3 h-3" />
-              <span>{airport.distance_km.toFixed(0)} km du centre</span>
+              <span>{t("planner.airport.kmFromCenter", { km: airport.distance_km.toFixed(0) })}</span>
             </div>
             
             {/* Pros */}
@@ -204,7 +208,7 @@ function RecommendedAirportCard({
             )}
           >
             <Check className="w-4 h-4 inline mr-1.5" />
-            Accepter
+            {t("planner.airport.accept")}
           </button>
           <button
             onClick={onReject}
@@ -215,7 +219,7 @@ function RecommendedAirportCard({
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
-            Voir les autres
+            {t("planner.airport.seeOthers")}
           </button>
         </div>
       </div>
@@ -239,7 +243,8 @@ function AlternativeAirportCard({
   onSelect: () => void;
   disabled?: boolean;
 }) {
-  const { pros, cons } = getAirportProsAndCons(airport, false, allAirports);
+  const { t } = useTranslation();
+  const { pros, cons } = getAirportProsAndCons(airport, false, allAirports, t);
   
   return (
     <button
@@ -303,6 +308,7 @@ export function AirportConfirmationWidget({
   onConfirm: (confirmed: ConfirmedAirports) => void;
   isLoading?: boolean;
 }) {
+  const { t, i18n } = useTranslation();
   const [confirmed, setConfirmed] = useState(false);
   const [showAlternatives, setShowAlternatives] = useState<Record<number, { from: boolean; to: boolean }>>({});
 
@@ -368,7 +374,7 @@ export function AirportConfirmationWidget({
       <div className="mt-3 p-4 rounded-2xl bg-primary/10 border border-primary/30 max-w-md">
         <div className="flex items-center gap-2 text-primary font-medium text-sm mb-2">
           <Check className="w-4 h-4" />
-          <span>Aéroports confirmés</span>
+          <span>{t("planner.airport.confirmedAirports")}</span>
         </div>
         <div className="space-y-1.5">
           {data.legs.map(leg => {
@@ -389,7 +395,7 @@ export function AirportConfirmationWidget({
   return (
     <div className="mt-3 p-4 rounded-2xl bg-muted/50 border border-border/50 max-w-xl space-y-4">
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Sélection des aéroports
+        {t("planner.airport.airportSelection")}
       </div>
 
       {/* Legs */}
@@ -410,7 +416,7 @@ export function AirportConfirmationWidget({
                 <span className="font-medium text-foreground">{leg.from.city} → {leg.to.city}</span>
                 {leg.date && (
                   <span className="ml-auto text-xs bg-muted px-2 py-0.5 rounded-full">
-                    {leg.date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                    {leg.date.toLocaleDateString(i18n.language === "en" ? "en-US" : "fr-FR", { day: "numeric", month: "short" })}
                   </span>
                 )}
               </div>
@@ -421,7 +427,7 @@ export function AirportConfirmationWidget({
                   {!showFromAlts ? (
                     <RecommendedAirportCard
                       airport={selected.from}
-                      label="Départ"
+                      label={t("planner.airport.departure")}
                       allAirports={allFromAirports}
                       onAccept={() => {}}
                       onReject={() => toggleAlternatives(leg.legIndex, "from")}
@@ -430,7 +436,7 @@ export function AirportConfirmationWidget({
                   ) : (
                     <div className="space-y-2">
                       <div className="text-xs font-medium text-muted-foreground">
-                        Aéroports de départ disponibles
+                        {t("planner.airport.availableDeparture")}
                       </div>
                       {allFromAirports.map((airport, airportIdx) => (
                         <AlternativeAirportCard
@@ -451,7 +457,7 @@ export function AirportConfirmationWidget({
                   {!showToAlts ? (
                     <RecommendedAirportCard
                       airport={selected.to}
-                      label="Arrivée"
+                      label={t("planner.airport.arrival")}
                       allAirports={allToAirports}
                       onAccept={() => {}}
                       onReject={() => toggleAlternatives(leg.legIndex, "to")}
@@ -460,7 +466,7 @@ export function AirportConfirmationWidget({
                   ) : (
                     <div className="space-y-2">
                       <div className="text-xs font-medium text-muted-foreground">
-                        Aéroports d'arrivée disponibles
+                        {t("planner.airport.availableArrival")}
                       </div>
                       {allToAirports.map((airport, airportIdx) => (
                         <AlternativeAirportCard
@@ -490,12 +496,14 @@ export function AirportConfirmationWidget({
         {isLoading ? (
           <>
             <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-            Recherche en cours...
+            {t("planner.airport.searchingFlights")}
           </>
         ) : (
           <>
             <Plane className="h-4 w-4" />
-            Rechercher {data.legs.length} vol{data.legs.length > 1 ? "s" : ""}
+            {data.legs.length > 1 
+              ? t("planner.airport.searchFlightsPlural", { count: data.legs.length })
+              : t("planner.airport.searchFlights", { count: data.legs.length })}
           </>
         )}
       </button>
