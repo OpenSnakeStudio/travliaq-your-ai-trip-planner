@@ -13,11 +13,11 @@ import {
   type AdvancedFilters,
   type RoomConfig,
   type HotelSearchResult,
-  type HotelDetails,
   initialAccommodationState,
   createDefaultAccommodation,
   BUDGET_PRESETS,
 } from './accommodationTypes';
+import type { HotelDetails } from '@/services/hotels/hotelService';
 
 export interface AccommodationActions {
   addAccommodation: (entry?: Partial<AccommodationEntry>) => void;
@@ -260,7 +260,7 @@ export const createAccommodationSlice: StateCreator<
   },
 
   getHotelDetailsFromCache: (hotelId: string) => {
-    return get().hotelDetailsCache[hotelId] || null;
+    return (get().hotelDetailsCache[hotelId] as HotelDetails) || null;
   },
 
   updateAccommodationBatch: (updater: (state: AccommodationState) => Partial<AccommodationState>) => {

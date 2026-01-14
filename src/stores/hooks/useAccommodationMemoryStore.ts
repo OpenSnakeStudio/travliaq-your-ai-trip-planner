@@ -19,8 +19,8 @@ import type {
   RoomConfig,
   AdvancedFilters,
   HotelSearchResult,
-  HotelDetails,
 } from '../slices/accommodationTypes';
+import type { HotelDetails } from '@/services/hotels/hotelService';
 
 // Re-export types for compatibility
 export type { 
@@ -139,7 +139,7 @@ export function useAccommodationMemoryStore(): AccommodationMemoryStoreValue {
     showHotelResults: store.showHotelResults,
     selectedHotelForDetailId: store.selectedHotelForDetailId,
     isLoadingHotelDetails: store.isLoadingHotelDetails,
-    hotelDetailsCache: store.hotelDetailsCache,
+    hotelDetailsCache: store.hotelDetailsCache as Record<string, HotelDetails>,
   }), [
     store.accommodations,
     store.activeAccommodationIndex,
