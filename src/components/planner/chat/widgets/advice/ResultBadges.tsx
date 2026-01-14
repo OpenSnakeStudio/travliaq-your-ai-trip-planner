@@ -5,6 +5,7 @@
  * popular choices, recommended options, etc.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Sparkles,

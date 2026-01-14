@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Plane, ArrowRight, RefreshCw } from "lucide-react";
 
@@ -22,9 +23,9 @@ export interface StopOption {
  * Default stop options
  */
 export const DEFAULT_STOP_OPTIONS: StopOption[] = [
-  { id: "any", label: "Tous", value: null },
-  { id: "direct", label: "Direct", value: 0 },
-  { id: "1stop", label: "1 escale max", value: 1 },
+  { id: "any", label: "planner.flights.toggle.all", value: null },
+  { id: "direct", label: "planner.flights.toggle.direct", value: 0 },
+  { id: "1stop", label: "planner.flights.toggle.maxOneStop", value: 1 },
 ];
 
 /**
@@ -104,14 +105,15 @@ function ChipsVersion({
   size: "sm" | "md";
   disabled: boolean;
 }) {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: "px-2.5 py-1 text-xs gap-1",
     md: "px-3 py-1.5 text-sm gap-1.5",
   };
 
   const options = [
-    { id: "any", label: "Tous les vols", value: false, icon: <RefreshCw size={14} /> },
-    { id: "direct", label: "Directs uniquement", value: true, icon: <ArrowRight size={14} /> },
+    { id: "any", label: t("planner.flights.toggle.allFlights"), value: false, icon: <RefreshCw size={14} /> },
+    { id: "direct", label: t("planner.flights.toggle.directOnly"), value: true, icon: <ArrowRight size={14} /> },
   ];
 
   return (

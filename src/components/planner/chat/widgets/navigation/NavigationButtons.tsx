@@ -5,6 +5,7 @@
  * for controlling the planning workflow from the chat.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Search,

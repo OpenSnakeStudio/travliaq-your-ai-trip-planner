@@ -5,6 +5,7 @@
  * Includes visual progress bars and alerts for over-budget situations.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Wallet,
@@ -175,7 +176,7 @@ function BarVariant({
       <div>
         <div className="flex items-center justify-between mb-1">
           <span className={cn("text-muted-foreground", size === "sm" ? "text-xs" : "text-sm")}>
-            Dépensé
+            {t("planner.budget.spent")}
           </span>
           <span className={cn("font-semibold", size === "sm" ? "text-sm" : "text-base")}>
             {formatAmount(spent, currency)} / {formatAmount(totalBudget, currency)}
@@ -202,12 +203,12 @@ function BarVariant({
           {isOverBudget ? (
             <>
               <AlertTriangle size={14} className="text-red-500" />
-              <span className="text-sm text-red-500 font-medium">Dépassement</span>
+              <span className="text-sm text-red-500 font-medium">{t("planner.budget.overspent")}</span>
             </>
           ) : (
             <>
               <CheckCircle2 size={14} className="text-green-500" />
-              <span className="text-sm text-muted-foreground">Restant</span>
+              <span className="text-sm text-muted-foreground">{t("planner.budget.remaining")}</span>
             </>
           )}
         </div>
@@ -316,6 +317,7 @@ export function BudgetProgressWidget({
   showBreakdown = true,
   variant = "bar",
 }: BudgetProgressWidgetProps) {
+  const { t } = useTranslation();
   const spent = categories.reduce((sum, cat) => sum + cat.amount, 0);
   const remaining = totalBudget - spent;
   const isOverBudget = spent > totalBudget;
@@ -345,7 +347,7 @@ export function BudgetProgressWidget({
           isOverBudget={isOverBudget}
         />
         <div className="flex-1">
-          <div className="text-sm text-muted-foreground">Budget utilisé</div>
+          <div className="text-sm text-muted-foreground">{t("planner.budget.budgetUsed")}</div>
           <div className={cn("font-bold", size === "sm" ? "text-lg" : "text-xl")}>
             {formatAmount(displaySpent, currency)}
           </div>
