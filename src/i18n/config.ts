@@ -1642,6 +1642,16 @@ const resources = {
       "planner.accommodation.shortName": "Hébgt {{num}}",
       "planner.accommodation.searchCity": "Rechercher une ville...",
       
+      // Hotels (HotelSearchResults)
+      "planner.hotels.perNight": "nuit",
+      "planner.hotels.total": "Total",
+      "planner.hotels.viewDetails": "Voir détails",
+      "planner.hotels.inDestination": "Hébergements à {{destination}}",
+      "planner.hotels.searching": "Recherche en cours...",
+      "planner.hotels.resultsCount": "{{count}} résultats · {{nights}} nuit(s)",
+      "planner.hotels.noResults": "Aucun hébergement trouvé pour ces critères",
+      "planner.hotels.modifySearch": "Modifier la recherche",
+      
       // ActivitiesPanel
       "planner.activities.searching": "Recherche...",
       "planner.activities.minChars": "Tapez au moins 3 caractères",
@@ -1700,6 +1710,15 @@ const resources = {
       "planner.activities.activitiesFound": "{{count}} activité(s) trouvée(s)",
       "planner.activities.noActivityFound": "Aucune activité trouvée",
       "planner.activities.tryCriteria": "Essayez de modifier vos critères de recherche",
+      "planner.activities.durationUnspecified": "Durée non spécifiée",
+      "planner.activities.popular": "Populaire",
+      "planner.activities.topRated": "Top noté",
+      "planner.activities.activity": "Activité",
+      "planner.activities.attraction": "Attraction",
+      "planner.activities.reviews": "avis",
+      "planner.activities.perPerson": "pers",
+      "planner.activities.details": "Détails",
+      "planner.activities.remove": "Supprimer",
       
       // PreferencesPanel
       "planner.preferences.detectedByAI": "Préférences détectées par l'IA",
@@ -3456,6 +3475,16 @@ const resources = {
       "planner.accommodation.shortName": "Stay {{num}}",
       "planner.accommodation.searchCity": "Search for a city...",
       
+      // Hotels (HotelSearchResults)
+      "planner.hotels.perNight": "night",
+      "planner.hotels.total": "Total",
+      "planner.hotels.viewDetails": "View details",
+      "planner.hotels.inDestination": "Stays in {{destination}}",
+      "planner.hotels.searching": "Searching...",
+      "planner.hotels.resultsCount": "{{count}} results · {{nights}} night(s)",
+      "planner.hotels.noResults": "No accommodations found for these criteria",
+      "planner.hotels.modifySearch": "Modify search",
+      
       // ActivitiesPanel
       "planner.activities.searching": "Searching...",
       "planner.activities.minChars": "Type at least 3 characters",
@@ -3514,6 +3543,15 @@ const resources = {
       "planner.activities.activitiesFound": "{{count}} activity(ies) found",
       "planner.activities.noActivityFound": "No activities found",
       "planner.activities.tryCriteria": "Try modifying your search criteria",
+      "planner.activities.durationUnspecified": "Duration not specified",
+      "planner.activities.popular": "Popular",
+      "planner.activities.topRated": "Top rated",
+      "planner.activities.activity": "Activity",
+      "planner.activities.attraction": "Attraction",
+      "planner.activities.reviews": "reviews",
+      "planner.activities.perPerson": "person",
+      "planner.activities.details": "Details",
+      "planner.activities.remove": "Remove",
       
       // PreferencesPanel
       "planner.preferences.detectedByAI": "Preferences detected by AI",
