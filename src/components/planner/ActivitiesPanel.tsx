@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useActivityMemoryStore, useTravelMemoryStore } from "@/stores/hooks";
 import { useLocationAutocomplete, type LocationResult } from "@/hooks/useLocationAutocomplete";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/useLocale";
 
 import { ActivityCard } from "./ActivityCard";
 import { ActivityFilters } from "./ActivityFilters";
@@ -28,8 +30,7 @@ import { ActivityDetailModal } from "./ActivityDetailModal";
 import { toast } from "sonner";
 import { eventBus } from "@/lib/eventBus";
 import { ACTIVITIES_ZOOM, ACTIVITY_DETAIL_ZOOM } from "@/constants/mapSettings";
-import { format, differenceInDays } from "date-fns";
-import { fr } from "date-fns/locale";
+import { format, differenceInDays, type Locale } from "date-fns";
 import type { ViatorActivity, ActivityEntry as ApiActivityEntry, ActivityFilters as ApiActivityFilters } from "@/types/activity";
 import RangeCalendar from "@/components/RangeCalendar";
 import type { DateRange } from "react-day-picker";
@@ -82,13 +83,13 @@ const EmptyState = ({
 );
 
 // Format date range display (like AccommodationPanel)
-const formatDateRange = (checkIn: Date | null, checkOut: Date | null) => {
+const formatDateRange = (checkIn: Date | null, checkOut: Date | null, locale: Locale, t: (key: string, opts?: any) => string) => {
   if (!checkIn) return null;
-  const start = format(checkIn, "d MMM.", { locale: fr });
+  const start = format(checkIn, "d MMM.", { locale });
   if (checkOut) {
-    const end = format(checkOut, "d MMM.", { locale: fr });
+    const end = format(checkOut, "d MMM.", { locale });
     const nights = differenceInDays(checkOut, checkIn);
-    return `${start} → ${end} (${nights}n)`;
+    return `${start} → ${end} (${nights}${t("planner.activities.nights")})`;
   }
   return start;
 };
@@ -97,7 +98,7 @@ const formatDateRange = (checkIn: Date | null, checkOut: Date | null) => {
 function DestinationInput({ 
   value, 
   onChange,
-  placeholder = "Ville ou destination",
+  placeholder,
   onLocationSelect,
 }: { 
   value: string; 
@@ -105,6 +106,7 @@ function DestinationInput({
   placeholder?: string;
   onLocationSelect?: (location: LocationResult) => void;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -147,7 +149,7 @@ function DestinationInput({
             value={search}
             onChange={handleInputChange}
             onFocus={() => search.length >= 3 && setIsOpen(true)}
-            placeholder={placeholder}
+            placeholder={placeholder || t("planner.activities.cityOrDestination")}
             className="flex-1 min-w-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
@@ -158,10 +160,10 @@ function DestinationInput({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         {isLoading ? (
-          <div className="p-3 text-xs text-muted-foreground text-center">Recherche...</div>
+          <div className="p-3 text-xs text-muted-foreground text-center">{t("planner.activities.searching")}</div>
         ) : locations.length === 0 ? (
           <div className="p-3 text-xs text-muted-foreground text-center">
-            {search.length < 3 ? "Tapez au moins 3 caractères" : "Aucun résultat"}
+            {search.length < 3 ? t("planner.activities.minChars") : t("planner.activities.noResults")}
           </div>
         ) : (
           <div className="py-1">
@@ -198,6 +200,8 @@ function CompactDateRange({
   checkOut: Date | null;
   onChange: (checkIn: Date | null, checkOut: Date | null) => void;
 }) {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleRangeChange = (range: DateRange | undefined) => {
@@ -210,7 +214,7 @@ function CompactDateRange({
   const value: DateRange | undefined = checkIn ? { from: checkIn, to: checkOut || undefined } : undefined;
 
   const formatDateCompact = (date: Date) => {
-    return format(date, "dd MMM", { locale: fr });
+    return format(date, "dd MMM", { locale: dateFnsLocale });
   };
 
   const nights = checkIn && checkOut ? differenceInDays(checkOut, checkIn) : 0;
@@ -223,10 +227,10 @@ function CompactDateRange({
           {checkIn && checkOut ? (
             <span className="truncate text-foreground">
               {formatDateCompact(checkIn)} → {formatDateCompact(checkOut)}
-              <span className="text-muted-foreground ml-1">({nights}n)</span>
+              <span className="text-muted-foreground ml-1">({nights}{t("planner.activities.nights")})</span>
             </span>
           ) : (
-            <span className="text-muted-foreground">Dates</span>
+            <span className="text-muted-foreground">{t("planner.activities.dates")}</span>
           )}
         </button>
       </PopoverTrigger>
@@ -242,6 +246,8 @@ function CompactDateRange({
 // ============================================================================
 
 const ActivitiesPanel = () => {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const {
     state: activityState,
     allDestinations, // Computed: inherited from accommodations + local
@@ -360,7 +366,7 @@ const ActivitiesPanel = () => {
   // Handle search using context method
   const handleSearch = useCallback(async () => {
     if (!activeCity) {
-      toast.error("Veuillez sélectionner une ville");
+      toast.error(t("planner.activities.selectCity"));
       return;
     }
 
@@ -395,7 +401,7 @@ const ActivitiesPanel = () => {
   // Handle map bounds search (search in visible map area)
   const handleMapBoundsSearch = useCallback(async () => {
     if (!activeCity) {
-      toast.error("Veuillez sélectionner une ville");
+      toast.error(t("planner.activities.selectCity"));
       return;
     }
 
@@ -422,7 +428,7 @@ const ActivitiesPanel = () => {
       });
 
       if (!mapBounds) {
-        toast.error("Impossible de récupérer la zone visible");
+        toast.error(t("planner.activities.cannotGetVisibleArea"));
         return;
       }
 
@@ -443,17 +449,17 @@ const ActivitiesPanel = () => {
 
       if (result.activities.length > 0 || result.attractions.length > 0) {
         setCurrentView("results");
-        toast.success(`${result.attractions.length} attractions et ${result.activities.length} activités trouvées dans cette zone`);
+        toast.success(t("planner.activities.foundInZone", { attractions: result.attractions.length, activities: result.activities.length }));
         console.log(
           `[Activities] Map bounds search: ${result.activities.length} activities + ${result.attractions.length} attractions`
         );
       } else {
         setCurrentView("results");
-        toast.info("Aucune activité trouvée dans cette zone");
+        toast.info(t("planner.activities.noActivityInZone"));
       }
     } catch (error: any) {
       console.error("[Activities] Map bounds search error:", error);
-      toast.error("Erreur lors de la recherche dans cette zone");
+      toast.error(t("planner.activities.searchZoneError"));
       setCurrentView("results");
     } finally {
       eventBus.emit("map:searchInAreaStatus", { isSearching: false });
@@ -464,22 +470,22 @@ const ActivitiesPanel = () => {
   const handleAddActivity = useCallback(
     (viatorActivity: ViatorActivity) => {
       if (!activeCity) {
-        toast.error("Veuillez sélectionner une destination");
+        toast.error(t("planner.activities.selectDestination"));
         return;
       }
       addActivityFromSearch(viatorActivity, activeCity.id);
-      toast.success("Activité ajoutée !");
+      toast.success(t("planner.activities.activityAdded"));
     },
-    [activeCity, addActivityFromSearch]
+    [activeCity, addActivityFromSearch, t]
   );
 
   // Handle remove activity
   const handleRemoveActivity = useCallback(
     (activityId: string) => {
       removeActivity(activityId);
-      toast.success("Activité retirée");
+      toast.success(t("planner.activities.activityRemoved"));
     },
-    [removeActivity]
+    [removeActivity, t]
   );
 
   // Handle activity click - open detail modal
@@ -520,7 +526,7 @@ const ActivitiesPanel = () => {
   // Handle confirm adding city - adds as LOCAL destination (not affecting accommodations)
   const handleConfirmAddCity = useCallback(() => {
     if (!newCityData?.city) {
-      toast.error("Veuillez sélectionner une ville");
+      toast.error(t("planner.activities.selectCity"));
       return;
     }
 
@@ -541,7 +547,7 @@ const ActivitiesPanel = () => {
     setNewCityCheckIn(null);
     setNewCityCheckOut(null);
     
-    toast.success(`${newCityData.city} ajoutée !`);
+    toast.success(t("planner.activities.cityAdded", { city: newCityData.city }));
     
     // Zoom to new city
     if (newCityData.lat && newCityData.lng) {
@@ -550,7 +556,7 @@ const ActivitiesPanel = () => {
         zoom: ACTIVITIES_ZOOM,
       });
     }
-  }, [newCityData, newCityCheckIn, newCityCheckOut, addLocalDestination]);
+  }, [newCityData, newCityCheckIn, newCityCheckOut, addLocalDestination, t]);
 
   // Handle location select for new city
   const handleNewCityLocationSelect = useCallback((location: LocationResult) => {
@@ -569,17 +575,17 @@ const ActivitiesPanel = () => {
     
     // Check if it's an inherited destination
     if (city.isInherited) {
-      toast.error("Cette destination provient des hébergements. Modifiez-la dans l'onglet Hébergements.");
+      toast.error(t("planner.activities.inheritedDestination"));
       return;
     }
     
     if (cities.filter((c) => !c.isInherited).length <= 0 && cities.length <= 1) {
-      toast.error("Vous devez avoir au moins une destination");
+      toast.error(t("planner.activities.needOneDestination"));
       return;
     }
     
     removeLocalDestination(cityId);
-    toast.success("Destination retirée");
+    toast.success(t("planner.activities.destinationRemoved"));
 
     // If we removed the active city, switch to first city
     if (activeCityIndex >= cities.length - 1) {
@@ -680,7 +686,7 @@ const ActivitiesPanel = () => {
           <button
             onClick={handleStartAddCity}
             className="h-7 w-7 flex items-center justify-center rounded-lg text-primary hover:bg-primary/10 transition-colors border border-dashed border-primary/30 hover:border-primary/50"
-            title="Ajouter une destination"
+            title={t("planner.activities.addDestination")}
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
@@ -691,7 +697,7 @@ const ActivitiesPanel = () => {
       {isAddingCity && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-foreground">Nouvelle destination</span>
+            <span className="text-xs font-medium text-foreground">{t("planner.activities.newDestination")}</span>
             <button
               onClick={handleCancelAddCity}
               className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors"
@@ -705,7 +711,7 @@ const ActivitiesPanel = () => {
             <DestinationInput
               value={newCityInput}
               onChange={setNewCityInput}
-              placeholder="Rechercher une ville..."
+              placeholder={t("planner.activities.searchCity")}
               onLocationSelect={handleNewCityLocationSelect}
             />
           </div>
@@ -730,7 +736,7 @@ const ActivitiesPanel = () => {
             className="w-full"
           >
             <Plus className="h-3.5 w-3.5 mr-1" />
-            Ajouter {newCityData?.city || "cette ville"}
+            {t("planner.activities.addCity", { city: newCityData?.city || t("planner.activities.thisCity") })}
           </Button>
         </div>
       )}
@@ -739,8 +745,8 @@ const ActivitiesPanel = () => {
       {cities.length === 0 && !isAddingCity && (
         <EmptyState
           icon={Compass}
-          title="Aucune destination"
-          description="Ajoutez une destination pour explorer les activités"
+          title={t("planner.activities.noDestination")}
+          description={t("planner.activities.addDestinationToExplore")}
           action={
             <Button
               onClick={handleStartAddCity}
@@ -749,7 +755,7 @@ const ActivitiesPanel = () => {
               className="gap-2"
             >
               <Plus className="h-3.5 w-3.5" />
-              Ajouter une destination
+              {t("planner.activities.addDestination")}
             </Button>
           }
         />
@@ -769,10 +775,10 @@ const ActivitiesPanel = () => {
               <CalendarDays className="h-4 w-4 text-primary shrink-0" />
               {activeCity.checkIn && activeCity.checkOut ? (
                 <span className="text-foreground">
-                  {formatDateRange(activeCity.checkIn, activeCity.checkOut)}
+                  {formatDateRange(activeCity.checkIn, activeCity.checkOut, dateFnsLocale, t)}
                 </span>
               ) : (
-                <span className="text-muted-foreground">Dates à définir</span>
+                <span className="text-muted-foreground">{t("planner.activities.datesToDefine")}</span>
               )}
             </div>
           </div>
@@ -805,12 +811,12 @@ const ActivitiesPanel = () => {
                 {isSearching ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Recherche en cours...
+                    {t("planner.activities.searchInProgress")}
                   </>
                 ) : (
                   <>
                     <Search className="h-4 w-4" />
-                    Rechercher des activités
+                    {t("planner.activities.searchActivities")}
                   </>
                 )}
               </Button>
@@ -821,7 +827,7 @@ const ActivitiesPanel = () => {
                 <div className="space-y-2 pt-4 border-t border-border/30">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-foreground">
-                      Activités sélectionnées ({plannedActivities.length})
+                      {t("planner.activities.selectedActivities", { count: plannedActivities.length })}
                     </p>
                     <p className="text-xs text-primary font-semibold">{getTotalBudget()}€</p>
                   </div>
@@ -837,7 +843,7 @@ const ActivitiesPanel = () => {
                     ))}
                     {plannedActivities.length > 3 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        +{plannedActivities.length - 3} autres
+                        +{plannedActivities.length - 3} {t("planner.activities.others")}
                       </p>
                     )}
                   </div>
@@ -856,7 +862,7 @@ const ActivitiesPanel = () => {
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Retour
+                  {t("planner.activities.back")}
                 </button>
 
                 {/* Sort options */}
@@ -868,11 +874,11 @@ const ActivitiesPanel = () => {
                       onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                       className="text-xs bg-transparent border-none text-muted-foreground focus:outline-none cursor-pointer"
                     >
-                      <option value="default">Par défaut</option>
-                      <option value="price_asc">Prix ↑</option>
-                      <option value="price_desc">Prix ↓</option>
-                      <option value="rating">Meilleures notes</option>
-                      <option value="duration">Plus longue durée</option>
+                      <option value="default">{t("planner.activities.sort.default")}</option>
+                      <option value="price_asc">{t("planner.activities.sort.priceAsc")}</option>
+                      <option value="price_desc">{t("planner.activities.sort.priceDesc")}</option>
+                      <option value="rating">{t("planner.activities.sort.rating")}</option>
+                      <option value="duration">{t("planner.activities.sort.duration")}</option>
                     </select>
                   </div>
                 )}
@@ -882,12 +888,12 @@ const ActivitiesPanel = () => {
               {!searchError && sortedSearchResults.length > 0 && (
                 <div className="flex flex-col gap-0.5">
                   <p className="text-xs font-medium text-foreground">
-                    {sortedSearchResults.length} activité{sortedSearchResults.length > 1 ? "s" : ""} trouvée{sortedSearchResults.length > 1 ? "s" : ""}
+                    {t("planner.activities.activitiesFound", { count: sortedSearchResults.length })}
                   </p>
                   {/* Show attractions count if any */}
                   {attractionsCount > 0 && (
                     <p className="text-xs text-muted-foreground">
-                      + {attractionsCount} attraction{attractionsCount > 1 ? "s" : ""} sur la carte
+                      + {t("planner.activities.attractionsOnMap", { count: attractionsCount })}
                     </p>
                   )}
                 </div>
@@ -920,8 +926,8 @@ const ActivitiesPanel = () => {
               {!searchError && sortedSearchResults.length === 0 && !isSearching && (
                 <EmptyState
                   icon={Search}
-                  title="Aucune activité trouvée"
-                  description="Essayez de modifier vos critères de recherche"
+                  title={t("planner.activities.noActivityFound")}
+                  description={t("planner.activities.tryCriteria")}
                 />
               )}
 
