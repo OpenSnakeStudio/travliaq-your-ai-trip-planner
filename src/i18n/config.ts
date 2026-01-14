@@ -2790,23 +2790,6 @@ const resources = {
       "planner.accommodation.toast.booking": "Réservation",
       "planner.accommodation.toast.bookingSoon": "La réservation sera bientôt disponible !",
 
-      // Planner - Accommodation Labels
-      "planner.accommodation.accommodationIndex": "Hébergement {{index}}",
-      "planner.accommodation.accommodationShort": "Hébgt {{index}}",
-      "planner.accommodation.addDestination": "Ajouter une destination",
-      "planner.accommodation.syncedWithFlights": "Synchronisé avec vos vols",
-      "planner.accommodation.searchCity": "Rechercher une ville...",
-      "planner.accommodation.whereTo": "Où allez-vous ?",
-      "planner.accommodation.searching": "Recherche...",
-      "planner.accommodation.minChars": "3 caractères minimum",
-      "planner.accommodation.noResults": "Aucun résultat",
-      "planner.accommodation.adult": "adulte",
-      "planner.accommodation.child": "enfant",
-      "planner.accommodation.searchInArea": "Rechercher dans cette zone",
-      "planner.accommodation.searchHotels": "Rechercher",
-      "planner.accommodation.budgetPerNight": "Budget par nuit",
-      "planner.accommodation.search": "Rechercher",
-
       // Planner - PlannerCard
       "planner.card.perNight": "/nuit",
       "planner.card.fromCity": "Depuis {{city}}",
@@ -5647,23 +5630,6 @@ const resources = {
       "planner.accommodation.toast.destinationAddedDesc": "{{name}} has been added to your accommodations",
       "planner.accommodation.toast.booking": "Booking",
       "planner.accommodation.toast.bookingSoon": "Booking will be available soon!",
-
-      // Planner - Accommodation Labels
-      "planner.accommodation.accommodationIndex": "Accommodation {{index}}",
-      "planner.accommodation.accommodationShort": "Acc. {{index}}",
-      "planner.accommodation.addDestination": "Add a destination",
-      "planner.accommodation.syncedWithFlights": "Synced with your flights",
-      "planner.accommodation.searchCity": "Search for a city...",
-      "planner.accommodation.whereTo": "Where are you going?",
-      "planner.accommodation.searching": "Searching...",
-      "planner.accommodation.minChars": "3 characters minimum",
-      "planner.accommodation.noResults": "No results",
-      "planner.accommodation.adult": "adult",
-      "planner.accommodation.child": "child",
-      "planner.accommodation.searchInArea": "Search in this area",
-      "planner.accommodation.searchHotels": "Search",
-      "planner.accommodation.budgetPerNight": "Budget per night",
-      "planner.accommodation.search": "Search",
 
       // Planner - PlannerCard
       "planner.card.perNight": "/night",
