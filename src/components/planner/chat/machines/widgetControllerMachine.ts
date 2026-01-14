@@ -8,7 +8,7 @@
 
 import { createMachine, assign } from "xstate";
 import type { WidgetType, CitySelectionData } from "@/types/flight";
-import type { ClassifiedIntent, ExtractedEntities, IntentType } from "../types/intent";
+import type { ClassifiedIntent, ExtractedEntities, IntentType } from "../typeDefs/intent";
 
 /**
  * Traveler configuration

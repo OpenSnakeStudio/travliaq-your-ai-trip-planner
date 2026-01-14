@@ -12,14 +12,14 @@
 import { useCallback, useMemo } from "react";
 import type { FlightMemory } from "@/stores/hooks";
 import type { WidgetType } from "@/types/flight";
-import type { 
-  ClassifiedIntent, 
-  ExtractedEntities, 
-  FlowState, 
+import type {
+  ClassifiedIntent,
+  ExtractedEntities,
+  FlowState,
   IntentWidgetRule,
   WidgetValidation,
-  IntentType 
-} from "../types/intent";
+  IntentType,
+} from "../typeDefs/intent";
 
 /**
  * Widget rule definitions - maps intents to widgets with conditions
