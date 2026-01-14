@@ -34,12 +34,14 @@ export type {
   AccommodationMemory,
   AccommodationMemoryStoreValue,
   AccommodationEntry,
+  AccommodationState,
   BudgetPreset,
   AccommodationType,
   EssentialAmenity,
   RoomConfig,
   AdvancedFilters,
   HotelSearchResult,
+  HotelDetails,
 } from './useAccommodationMemoryStore';
 export { BUDGET_PRESETS } from './useAccommodationMemoryStore';
 

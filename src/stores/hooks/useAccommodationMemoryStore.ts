@@ -12,24 +12,27 @@ import { usePlannerStoreV2 } from '../plannerStoreV2';
 import { useTravelMemoryStore } from './useTravelMemoryStore';
 import type { 
   AccommodationEntry, 
+  AccommodationState,
   BudgetPreset, 
   AccommodationType, 
   EssentialAmenity, 
   RoomConfig,
   AdvancedFilters,
   HotelSearchResult,
-  BUDGET_PRESETS,
+  HotelDetails,
 } from '../slices/accommodationTypes';
 
 // Re-export types for compatibility
 export type { 
   AccommodationEntry, 
+  AccommodationState,
   BudgetPreset, 
   AccommodationType, 
   EssentialAmenity, 
   RoomConfig,
   AdvancedFilters,
   HotelSearchResult,
+  HotelDetails,
 };
 export { BUDGET_PRESETS } from '../slices/accommodationTypes';
 
@@ -46,6 +49,7 @@ export interface AccommodationMemory {
   showHotelResults: boolean;
   selectedHotelForDetailId: string | null;
   isLoadingHotelDetails: boolean;
+  hotelDetailsCache: Record<string, HotelDetails>;
 }
 
 // Context-compatible return type
@@ -92,12 +96,19 @@ export interface AccommodationMemoryStoreValue {
   // Reset
   resetMemory: () => void;
   
+  // Batch update (for sync operations)
+  updateMemoryBatch: (updater: (state: AccommodationState) => Partial<AccommodationState>) => void;
+  
   // Hotel search state
   setHotelSearchResults: (results: HotelSearchResult[]) => void;
   setShowHotelResults: (show: boolean) => void;
   setSelectedHotelForDetailId: (id: string | null) => void;
   clearHotelSearch: () => void;
   setIsLoadingHotelDetails: (loading: boolean) => void;
+  
+  // Hotel details cache
+  setHotelDetails: (hotelId: string, details: HotelDetails) => void;
+  getHotelDetailsFromCache: (hotelId: string) => HotelDetails | null;
   
   // Computed values
   isReadyToSearch: boolean;
@@ -128,6 +139,7 @@ export function useAccommodationMemoryStore(): AccommodationMemoryStoreValue {
     showHotelResults: store.showHotelResults,
     selectedHotelForDetailId: store.selectedHotelForDetailId,
     isLoadingHotelDetails: store.isLoadingHotelDetails,
+    hotelDetailsCache: store.hotelDetailsCache,
   }), [
     store.accommodations,
     store.activeAccommodationIndex,
@@ -140,6 +152,7 @@ export function useAccommodationMemoryStore(): AccommodationMemoryStoreValue {
     store.showHotelResults,
     store.selectedHotelForDetailId,
     store.isLoadingHotelDetails,
+    store.hotelDetailsCache,
   ]);
 
   // Get active accommodation
@@ -287,6 +300,13 @@ export function useAccommodationMemoryStore(): AccommodationMemoryStoreValue {
     setSelectedHotelForDetailId: store.setSelectedHotelForDetailId,
     clearHotelSearch: store.clearHotelSearch,
     setIsLoadingHotelDetails: store.setIsLoadingHotelDetails,
+    
+    // Hotel details cache
+    setHotelDetails: store.setHotelDetails,
+    getHotelDetailsFromCache: store.getHotelDetailsFromCache,
+    
+    // Batch update
+    updateMemoryBatch: store.updateAccommodationBatch,
     
     // Computed
     isReadyToSearch,

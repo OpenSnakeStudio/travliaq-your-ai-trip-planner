@@ -73,6 +73,35 @@ export interface HotelSearchResult {
   bookingUrl?: string;
 }
 
+// Hotel details (from API)
+export interface HotelDetails {
+  id: string;
+  name: string;
+  description?: string;
+  images: string[];
+  rating: number;
+  reviewCount: number;
+  pricePerNight: number;
+  currency: string;
+  address: string;
+  lat: number;
+  lng: number;
+  amenities: string[];
+  stars?: number;
+  policies?: {
+    checkIn?: string;
+    checkOut?: string;
+    cancellation?: string;
+  };
+  rooms?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    maxOccupancy: number;
+    amenities: string[];
+  }>;
+}
+
 // Accommodation state
 export interface AccommodationState {
   accommodations: AccommodationEntry[];
@@ -86,6 +115,8 @@ export interface AccommodationState {
   showHotelResults: boolean;
   selectedHotelForDetailId: string | null;
   isLoadingHotelDetails: boolean;
+  // Hotel details cache (runtime only)
+  hotelDetailsCache: Record<string, HotelDetails>;
 }
 
 // Budget presets values
@@ -132,4 +163,5 @@ export const initialAccommodationState: AccommodationState = {
   showHotelResults: false,
   selectedHotelForDetailId: null,
   isLoadingHotelDetails: false,
+  hotelDetailsCache: {},
 };

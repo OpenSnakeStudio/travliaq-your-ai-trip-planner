@@ -13,6 +13,7 @@ import {
   type AdvancedFilters,
   type RoomConfig,
   type HotelSearchResult,
+  type HotelDetails,
   initialAccommodationState,
   createDefaultAccommodation,
   BUDGET_PRESETS,
@@ -40,6 +41,11 @@ export interface AccommodationActions {
   setSelectedHotelForDetailId: (id: string | null) => void;
   clearHotelSearch: () => void;
   setIsLoadingHotelDetails: (loading: boolean) => void;
+  // Hotel details cache
+  setHotelDetails: (hotelId: string, details: HotelDetails) => void;
+  getHotelDetailsFromCache: (hotelId: string) => HotelDetails | null;
+  // Batch update for sync operations
+  updateAccommodationBatch: (updater: (state: AccommodationState) => Partial<AccommodationState>) => void;
   resetAccommodation: () => void;
 }
 
@@ -241,6 +247,28 @@ export const createAccommodationSlice: StateCreator<
 
   setIsLoadingHotelDetails: (loading: boolean) => {
     set({ isLoadingHotelDetails: loading }, false, 'accommodation/setLoadingDetails');
+  },
+
+  setHotelDetails: (hotelId: string, details: HotelDetails) => {
+    set(
+      (state) => ({
+        hotelDetailsCache: { ...state.hotelDetailsCache, [hotelId]: details },
+      }),
+      false,
+      'accommodation/setHotelDetails'
+    );
+  },
+
+  getHotelDetailsFromCache: (hotelId: string) => {
+    return get().hotelDetailsCache[hotelId] || null;
+  },
+
+  updateAccommodationBatch: (updater: (state: AccommodationState) => Partial<AccommodationState>) => {
+    set(
+      (state) => updater(state),
+      false,
+      'accommodation/batchUpdate'
+    );
   },
 
   resetAccommodation: () => {
