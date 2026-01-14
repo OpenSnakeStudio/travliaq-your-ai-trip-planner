@@ -8,8 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 import { toastInfo, toastError } from "@/lib/toast";
 import { logger, LogCategory } from "@/utils/logger";
-import { useTravelMemoryStore, useFlightMemoryStore } from "@/stores/hooks";
-import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan } from "@/contexts/AccommodationMemoryContext";
+import { useTravelMemoryStore, useFlightMemoryStore, useAccommodationMemoryStore, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig } from "@/stores/hooks";
+import type { MealPlan } from "@/stores/slices/accommodationTypes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -625,7 +625,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
     setHotelDetails,
     getHotelDetailsFromCache,
     setIsLoadingHotelDetails,
-  } = useAccommodationMemory();
+  } = useAccommodationMemoryStore();
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);

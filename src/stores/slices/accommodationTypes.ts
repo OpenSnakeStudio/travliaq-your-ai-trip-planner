@@ -73,34 +73,9 @@ export interface HotelSearchResult {
   bookingUrl?: string;
 }
 
-// Hotel details (from API)
-export interface HotelDetails {
-  id: string;
-  name: string;
-  description?: string;
-  images: string[];
-  rating: number;
-  reviewCount: number;
-  pricePerNight: number;
-  currency: string;
-  address: string;
-  lat: number;
-  lng: number;
-  amenities: string[];
-  stars?: number;
-  policies?: {
-    checkIn?: string;
-    checkOut?: string;
-    cancellation?: string;
-  };
-  rooms?: Array<{
-    id: string;
-    name: string;
-    price: number;
-    maxOccupancy: number;
-    amenities: string[];
-  }>;
-}
+// Note: HotelDetails is imported from the hotel service
+// We use a generic Record type here to avoid circular dependencies
+// The actual type is defined in @/services/hotels/hotelService
 
 // Accommodation state
 export interface AccommodationState {
@@ -115,8 +90,8 @@ export interface AccommodationState {
   showHotelResults: boolean;
   selectedHotelForDetailId: string | null;
   isLoadingHotelDetails: boolean;
-  // Hotel details cache (runtime only)
-  hotelDetailsCache: Record<string, HotelDetails>;
+  // Hotel details cache (runtime only) - uses generic type to avoid circular deps
+  hotelDetailsCache: Record<string, unknown>;
 }
 
 // Budget presets values
