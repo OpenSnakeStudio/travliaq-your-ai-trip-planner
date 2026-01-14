@@ -12,6 +12,7 @@
 import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback, memo } from "react";
 import { Plane, History, Send, PanelLeftClose } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
@@ -19,7 +20,7 @@ import { useChatScroll } from "@/hooks/useChatScroll";
 import { useChatMapContext } from "@/hooks/useChatMapContext";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS } from "date-fns/locale";
 
 // Chat module imports
 import {
@@ -40,9 +41,8 @@ import {
   DestinationSuggestionsGrid,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useIntentHandler } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useUnifiedIntentRouter } from "./chat/hooks";
 import { IntentDebugPanel } from "./chat/IntentDebugPanel";
-import { useIntentRouter } from "./chat/hooks/useIntentRouter";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
@@ -58,6 +58,7 @@ import { FLIGHTS_ZOOM } from "@/constants/mapSettings";
 import type { CountrySelectionEvent } from "@/types/flight";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
 import { useFlightMemoryStore, useTravelMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, usePreferenceMemoryStore, type AccommodationEntry } from "@/stores/hooks";
+import { useLocale } from "@/hooks/useLocale";
 import { eventBus, emitTabChange, emitTabAndZoom } from "@/lib/eventBus";
 
 // Re-export types for external consumers
@@ -92,6 +93,10 @@ export interface PlannerChatRef {
 }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
+  // i18n and locale
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
+  
   // Memory contexts
   const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory: resetFlightMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemoryStore();
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation, resetMemory: resetAccommodationMemory } = useAccommodationMemoryStore();
@@ -186,20 +191,15 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // Widget tracking for LLM context
   const widgetTracking = useWidgetTracking();
   
-  // Intent router for flow state
-  const intentRouter = useIntentRouter({ memory });
-  
-  // Intent handler for processing backend classifications
-  const intentHandler = useIntentHandler({
+  // Unified Intent Router - single source of truth for intent processing
+  const intentRouter = useUnifiedIntentRouter({
     memory,
-    onShowWidget: useCallback((widgetType, data) => {
-      console.log("[PlannerChat] Intent handler triggered widget:", widgetType, data);
+    onWidgetTriggered: useCallback((widgetType, data) => {
+      console.log("[PlannerChat] Unified intent router triggered widget:", widgetType, data);
       setLastWidgetTriggered(widgetType);
-      // Widget will be set by the normal flow based on flightData
     }, []),
-    onTriggerSearch: useCallback(() => {
-      console.log("[PlannerChat] Intent handler triggered search");
-      // Could trigger search here
+    onSearchTriggered: useCallback(() => {
+      console.log("[PlannerChat] Unified intent router triggered search");
     }, []),
   });
   // Intelligent scroll management
@@ -530,12 +530,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     if (isSwitchingSessionRef.current || isHardResetRef.current) return;
     if (!hasCompleteInfo || widgetFlow.isSearchButtonShown()) return;
 
-    const departure = departureCity || "départ";
-    const arrival = arrivalCity || "destination";
+    const departure = departureCity || t("planner.departure");
+    const arrival = arrivalCity || t("planner.askDestination");
     const depCode = departureIata ? ` (${departureIata})` : "";
     const arrCode = arrivalIata ? ` (${arrivalIata})` : "";
-    const depDate = departureDateForReady ? format(departureDateForReady, "d MMMM yyyy", { locale: fr }) : "-";
-    const retDate = returnDateForReady ? format(returnDateForReady, "d MMMM yyyy", { locale: fr }) : null;
+    const depDate = departureDateForReady ? format(departureDateForReady, "d MMMM yyyy", { locale: dateFnsLocale }) : "-";
+    const retDate = returnDateForReady ? format(returnDateForReady, "d MMMM yyyy", { locale: dateFnsLocale }) : null;
     const travelers = passengersTotal;
 
     if (needsDepartureAirport || needsArrivalAirport) {
@@ -666,16 +666,16 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     }
     
     // Detect "inspire" intent for preference widgets flow
-    const isInspireIntent = /inspire|inspiration|idée|voyage|destination.*propos/i.test(userText);
+    const isInspireIntent = /inspire|inspiration|idée|voyage|destination.*propos|suggest|recommend/i.test(userText);
     
     // If it's an "inspire" intent, show a beautiful message with the travel style widget directly
     if (isInspireIntent) {
       const inspireMessages = [
-        "✨ **Parfait, laissez-moi vous inspirer !**\n\nPour créer un voyage qui vous ressemble, commençons par découvrir votre style de voyage. Choisissez ce qui vous correspond le mieux :",
-        "🌍 **L'aventure commence ici !**\n\nPour vous proposer des destinations uniques, j'ai besoin de mieux vous connaître. Quel type de voyageur êtes-vous ?",
-        "🎯 **Trouvons votre voyage idéal !**\n\nVotre prochain voyage sera à votre image. Indiquez-moi votre style pour des suggestions personnalisées :",
-        "💫 **Créons ensemble votre prochaine escapade !**\n\nChaque voyageur est unique. Partagez vos préférences pour que je puisse vous proposer des expériences sur mesure :",
-        "🗺️ **Prêt pour l'inspiration ?**\n\nPour vous guider vers la destination parfaite, dites-moi d'abord quel type d'expérience vous recherchez :",
+        t("planner.inspire.title1"),
+        t("planner.inspire.title2"),
+        t("planner.inspire.title3"),
+        t("planner.inspire.title4"),
+        t("planner.inspire.title5"),
       ];
       const randomMessage = inspireMessages[Math.floor(Math.random() * inspireMessages.length)];
       
@@ -838,8 +838,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         console.log("[PlannerChat] Intent classification received:", intentClassification);
         setLastIntentClassification(intentClassification);
         
-        // Process through intent handler for validation and potential widget triggering
-        const intentResult = intentHandler.processIntent(intentClassification);
+        // Process through unified intent router for validation and potential widget triggering
+        const intentResult = intentRouter.processIntent(intentClassification);
         if (intentResult.widgetType) {
           setLastWidgetTriggered(intentResult.widgetType);
         }

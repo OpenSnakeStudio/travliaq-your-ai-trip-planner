@@ -52,13 +52,6 @@ export {
   type IntentProcessResult,
 } from "./useUnifiedIntentRouter";
 
-// Legacy: Intent Handler (deprecated - use useUnifiedIntentRouter)
-export {
-  useIntentHandler,
-  type UseIntentHandlerOptions,
-  type UseIntentHandlerReturn,
-} from "./useIntentHandler";
-
 // Performance optimization hooks
 export {
   useDebounce,
