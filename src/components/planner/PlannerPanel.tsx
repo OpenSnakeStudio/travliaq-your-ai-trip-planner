@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Calendar as CalendarIcon, Users, Plane, MapPin, Building2, Star, Clock, Wifi, Car, Coffee, Wind, X, Heart, Utensils, TreePine, Palette, Waves, Dumbbell, Sparkles, Loader2, Search, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TabType, SelectedAirport } from "@/pages/TravelPlanner";
@@ -56,14 +57,17 @@ interface PlannerPanelProps {
   onConfirmedMultiAirportsConsumed?: () => void;
 }
 
-const tabLabels: Record<TabType, string> = {
-  flights: "Vols",
-  activities: "Activités",
-  stays: "Hébergements",
-  preferences: "Préférences",
-};
+const getTabLabels = (t: (key: string) => string): Record<TabType, string> => ({
+  flights: t("planner.tabs.flights"),
+  activities: t("planner.tabs.activities"),
+  stays: t("planner.tabs.stays"),
+  preferences: t("planner.tabs.preferences"),
+});
 
 const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onClose, isVisible = true, onFlightRoutesChange, flightFormData, onFlightFormDataConsumed, onCountrySelected, onAskAirportChoice, onAskDualAirportChoice, onAskAirportConfirmation, selectedAirport, onSelectedAirportConsumed, onUserLocationDetected, onSearchReady, triggerSearch, onSearchTriggered, confirmedMultiAirports, onConfirmedMultiAirportsConsumed }: PlannerPanelProps) => {
+  const { t } = useTranslation();
+  const tabLabels = getTabLabels(t);
+  
   if (!isVisible && layout === "overlay") return null;
 
   const wrapperClass =
@@ -74,7 +78,7 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
   const innerClass = layout === "overlay" ? "pointer-events-auto h-full overflow-y-auto themed-scroll" : "";
 
   return (
-    <aside className={wrapperClass} aria-label="Panneau de filtres" data-tour="widgets-panel">
+    <aside className={wrapperClass} aria-label={t("planner.flights.closePanel")} data-tour="widgets-panel">
       <div className={cn(innerClass, layout === "overlay" && "rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg overflow-hidden")}>
         {/* Header with close button */}
         {layout === "overlay" && (
@@ -84,7 +88,7 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
               <button
                 onClick={onClose}
                 className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                aria-label="Fermer le panneau"
+                aria-label={t("planner.flights.closePanel")}
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -189,6 +193,8 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   confirmedMultiAirports?: ConfirmedAirports | null;
   onConfirmedMultiAirportsConsumed?: () => void;
 }) => {
+  const { t, i18n } = useTranslation();
+  
   // Access flight memory for synchronization
   const { memory, updateMemory } = useFlightMemoryStore();
   
@@ -1418,7 +1424,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
             className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Modifier
+            {t("planner.flights.modify")}
           </button>
           
           {/* Multi-destination: Compact segment tabs */}
@@ -1473,7 +1479,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
           <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-green-700 dark:text-green-400">
-                {Object.keys(selectedFlights).length}/{validLegIndices.length} vols sélectionnés
+                {Object.keys(selectedFlights).length}/{validLegIndices.length} {t("planner.flights.selected")}
               </span>
               <span className="text-sm font-bold text-green-700 dark:text-green-400">
                 {getTotalSelectedPrice().toFixed(0)} €
@@ -1481,7 +1487,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
             </div>
             {allFlightsSelected && (
               <button className="w-full py-2 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 transition-colors">
-                Réserver l'itinéraire complet
+                {t("planner.flights.bookItinerary")}
               </button>
             )}
           </div>
@@ -1513,7 +1519,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            Aller-retour
+            {t("planner.flights.roundtrip")}
           </button>
           <button
             onClick={() => handleTripTypeChange("oneway")}
@@ -1524,7 +1530,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            Aller simple
+            {t("planner.flights.oneway")}
           </button>
           <button
             onClick={() => handleTripTypeChange("multi")}
@@ -1535,7 +1541,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            Multi-destinations
+            {t("planner.flights.multiCity")}
           </button>
         </div>
       </div>
@@ -1554,12 +1560,12 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
       {/* Passengers & Baggage Section */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-foreground">Passagers & Bagages</span>
+          <span className="text-xs font-medium text-foreground">{t("planner.flights.passengers")}</span>
           <button
             onClick={addPassenger}
             className="text-[10px] text-primary hover:text-primary/80 font-medium transition-colors"
           >
-            + Ajouter
+            {t("planner.flights.addPassenger")}
           </button>
         </div>
         
@@ -1578,8 +1584,8 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                   onChange={(e) => updatePassenger(passenger.id, { type: e.target.value as "adult" | "child" })}
                   className="text-[11px] bg-transparent border-none text-foreground focus:outline-none cursor-pointer font-medium"
                 >
-                  <option value="adult">Adulte</option>
-                  <option value="child">Enfant</option>
+                  <option value="adult">{t("planner.flights.adult")}</option>
+                  <option value="child">{t("planner.flights.child")}</option>
                 </select>
               </div>
 
@@ -1588,7 +1594,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 {/* Cabin bags */}
                 <div className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <span className="text-xs">🧳</span>
-                  <span className="text-[10px] text-muted-foreground">Cabine</span>
+                  <span className="text-[10px] text-muted-foreground">{t("planner.flights.cabin")}</span>
                   <button
                     onClick={() => updatePassenger(passenger.id, { cabinBags: Math.max(0, passenger.cabinBags - 1) })}
                     className="w-5 h-5 rounded bg-background/50 hover:bg-primary/20 hover:text-primary text-foreground flex items-center justify-center text-xs font-medium transition-colors ml-1"
@@ -1607,7 +1613,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 {/* Checked bags */}
                 <div className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <span className="text-xs">🛄</span>
-                  <span className="text-[10px] text-muted-foreground">Soute</span>
+                  <span className="text-[10px] text-muted-foreground">{t("planner.flights.hold")}</span>
                   <button
                     onClick={() => updatePassenger(passenger.id, { checkedBags: Math.max(0, passenger.checkedBags - 1) })}
                     className="w-5 h-5 rounded bg-background/50 hover:bg-primary/20 hover:text-primary text-foreground flex items-center justify-center text-xs font-medium transition-colors ml-1"
@@ -1640,12 +1646,12 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
 
       {/* Class Selection */}
       <div className="space-y-2">
-        <span className="text-xs font-medium text-foreground">Classe</span>
+        <span className="text-xs font-medium text-foreground">{t("planner.flights.cabinClass")}</span>
         <div className="flex gap-2">
           {[
-            { id: "economy", label: "Économique" },
-            { id: "business", label: "Affaires" },
-            { id: "first", label: "Première" },
+            { id: "economy", label: t("planner.flights.economy") },
+            { id: "business", label: t("planner.flights.business") },
+            { id: "first", label: t("planner.flights.first") },
           ].map((c) => (
             <button
               key={c.id}
@@ -1665,13 +1671,13 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
 
       {/* Options Section */}
       <div className="space-y-2">
-        <span className="text-xs font-medium text-foreground">Options</span>
+        <span className="text-xs font-medium text-foreground">{t("planner.flights.options")}</span>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { key: "directOnly" as const, label: "Vols directs", icon: "✈️" },
-            { key: "flexibleDates" as const, label: "Dates flexibles", icon: "📅" },
-            { key: "includeNearbyAirports" as const, label: "Aéroports proches", icon: "📍" },
-            { key: "noEveningFlights" as const, label: "Pas de vol le soir", icon: "🌙" },
+            { key: "directOnly" as const, label: t("planner.flights.directOnly"), icon: "✈️" },
+            { key: "flexibleDates" as const, label: t("planner.flights.flexibleDates"), icon: "📅" },
+            { key: "includeNearbyAirports" as const, label: t("planner.flights.nearbyAirports"), icon: "📍" },
+            { key: "noEveningFlights" as const, label: t("planner.flights.noEveningFlights"), icon: "🌙" },
           ].map((opt) => (
             <button
               key={opt.key}
@@ -1695,7 +1701,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
         {/* Multi-destination: Summary of legs */}
         {tripType === "multi" && legs.length > 1 && (
           <div className="space-y-2">
-            <span className="text-xs font-medium text-foreground">Segments à rechercher</span>
+            <span className="text-xs font-medium text-foreground">{t("planner.flights.segmentsToSearch")}</span>
             <div className="grid gap-1.5">
               {legs.map((leg, index) => {
                 const hasFrom = leg.from?.trim();
@@ -1704,7 +1710,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 const isComplete = hasFrom && hasTo && hasDate;
                 const fromCode = leg.from?.match(/\(([A-Z]{3})\)/)?.[1] || leg.from?.split(",")[0]?.trim() || "?";
                 const toCode = leg.to?.match(/\(([A-Z]{3})\)/)?.[1] || leg.to?.split(",")[0]?.trim() || "?";
-                const dateStr = leg.date ? leg.date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "Date ?";
+                const dateStr = leg.date ? leg.date.toLocaleDateString(i18n.language === "en" ? "en-GB" : "fr-FR", { day: "numeric", month: "short" }) : t("planner.flights.date") + " ?";
                 
                 return (
                   <div
@@ -1752,7 +1758,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
             );
             isComplete = completeLegs.length >= 2; // At least 2 complete legs for multi
             if (!isComplete) {
-              missingInfo.push(`${2 - completeLegs.length} segment(s) incomplet(s)`);
+              missingInfo.push(t("planner.flights.incompleteSegments", { count: 2 - completeLegs.length }));
             }
           } else {
             const firstLeg = legs[0];
@@ -1760,14 +1766,14 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
             const hasTo = firstLeg?.to?.trim();
             const hasDate = firstLeg?.date;
             isComplete = Boolean(hasFrom && hasTo && hasDate);
-            if (!hasFrom) missingInfo.push("départ");
-            if (!hasTo) missingInfo.push("destination");
-            if (!hasDate) missingInfo.push("date");
+            if (!hasFrom) missingInfo.push(t("planner.flights.departure").toLowerCase());
+            if (!hasTo) missingInfo.push(t("planner.flights.destination").toLowerCase());
+            if (!hasDate) missingInfo.push(t("planner.flights.date").toLowerCase());
           }
 
           const searchLabel = tripType === "multi" 
-            ? `Rechercher ${legs.filter(l => l.from?.trim() && l.to?.trim() && l.date).length} vols`
-            : "Rechercher des vols";
+            ? t("planner.flights.searchNFlights", { count: legs.filter(l => l.from?.trim() && l.to?.trim() && l.date).length })
+            : t("planner.flights.searchFlights");
 
           return (
             <>
@@ -1784,7 +1790,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 {isSearchingAirports || isMultiSearching ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    {isMultiSearching ? "Recherche en cours..." : "Vérification..."}
+                    {isMultiSearching ? t("planner.flights.searching") : t("planner.flights.searchingAirports")}
                   </>
                 ) : (
                   <>
