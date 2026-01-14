@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback, memo, useMemo } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/mapbox-overrides.css";
+import { useTranslation } from "react-i18next";
 import type { TabType, MapPin } from "@/pages/TravelPlanner";
 import type { FlightRoutePoint } from "./PlannerPanel";
 import { useFlightMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, type MemoryRoutePoint } from "@/stores/hooks";
@@ -300,6 +301,7 @@ interface PlannerMapProps {
 }
 
 const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete, isPanelOpen = false, userLocation, onDestinationClick, userDefaultFocusNonce }: PlannerMapProps) => {
+  const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -1880,6 +1882,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         pinEl.style.transform = "scale(1.08)";
 
         // Show tooltip
+        const reviewsLabel = t("planner.common.reviews");
         tooltip.setHTML(`
           <div class="bg-card border rounded-lg shadow-xl w-64 overflow-hidden">
             ${imageUrl ? `<img src="${imageUrl}" class="w-full h-32 object-cover" alt="${attraction.title}" />` : ''}
@@ -1888,7 +1891,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
               <div class="flex items-center gap-1">
                 <span class="text-amber-400">★</span>
                 <span class="text-xs font-medium">${typeof rating === 'number' ? rating.toFixed(1) : rating}</span>
-                <span class="text-xs text-muted-foreground ml-1">(${typeof attraction.rating === 'object' ? attraction.rating?.count || 0 : attraction.reviewCount || 0} avis)</span>
+                <span class="text-xs text-muted-foreground ml-1">(${typeof attraction.rating === 'object' ? attraction.rating?.count || 0 : attraction.reviewCount || 0} ${reviewsLabel})</span>
               </div>
             </div>
           </div>
@@ -2171,7 +2174,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
                 : 'hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-xl cursor-pointer'
               }
             `}
-            title={isSearchingInArea ? "Recherche en cours..." : "Rechercher des activités dans la zone visible"}
+            title={isSearchingInArea ? t("planner.common.searchInProgressTitle") : t("planner.common.searchActivitiesInZone")}
           >
             <svg
               className={`h-3.5 w-3.5 ${isSearchingInArea ? 'animate-spin' : ''}`}
@@ -2189,7 +2192,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
                 }
               />
             </svg>
-            {isSearchingInArea ? "Recherche..." : "Rechercher dans cette zone"}
+            {isSearchingInArea ? t("planner.common.searchInProgress") : t("planner.common.searchInZone")}
           </button>
         </div>
       )}
