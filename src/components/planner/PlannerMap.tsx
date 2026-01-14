@@ -4,8 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/mapbox-overrides.css";
 import type { TabType, MapPin } from "@/pages/TravelPlanner";
 import type { FlightRoutePoint } from "./PlannerPanel";
-import { useFlightMemoryStore, type MemoryRoutePoint } from "@/stores/hooks";
-import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
+import { useFlightMemoryStore, useAccommodationMemoryStore, type MemoryRoutePoint } from "@/stores/hooks";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
 import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBounds";
 import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
@@ -466,7 +465,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   }, [activeTab, departureAirports, destinationIatas, fetchPrices]);
 
   // Get accommodation entries for markers
-  const { memory: accommodationMemory, getActiveAccommodation } = useAccommodationMemory();
+  const { memory: accommodationMemory, getActiveAccommodation } = useAccommodationMemoryStore();
 
   // Get activity entries for markers (needed for auto-zoom on tab switch)
   const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();

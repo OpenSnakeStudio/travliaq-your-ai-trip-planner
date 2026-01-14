@@ -17,7 +17,7 @@ import type { Airport } from "@/hooks/useNearestAirports";
 // Legacy providers removed - using Zustand stores instead
 // import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
 // import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
-import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
+// import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
 import { WidgetHistoryProvider } from "@/contexts/WidgetHistoryContext";
@@ -207,9 +207,8 @@ const TravelPlanner = () => {
     <PreferenceMemoryProvider>
       {/* Auto-detect departure airport from user's location */}
       <AutoDetectDeparture />
-      <AccommodationMemoryProvider>
-        <ActivityMemoryProvider>
-          <WidgetHistoryProvider>
+      <ActivityMemoryProvider>
+        <WidgetHistoryProvider>
             <NegativePreferencesProvider>
               <Helmet>
                 <title>Planificateur | Travliaq</title>
@@ -393,7 +392,6 @@ const TravelPlanner = () => {
             </NegativePreferencesProvider>
           </WidgetHistoryProvider>
         </ActivityMemoryProvider>
-      </AccommodationMemoryProvider>
     </PreferenceMemoryProvider>
   );
 };

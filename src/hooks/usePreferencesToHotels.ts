@@ -6,11 +6,11 @@
 import { useCallback } from "react";
 import { usePlannerEvent } from "@/lib/eventBus";
 import { usePreferenceMemory } from "@/contexts/PreferenceMemoryContext";
-import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
+import { useAccommodationMemoryStore } from "@/stores/hooks";
 
 export function usePreferencesToHotels() {
   const { getHotelFilters } = usePreferenceMemory();
-  const { memory, getActiveAccommodation, setBudgetPreset, toggleAmenity, toggleType } = useAccommodationMemory();
+  const { memory, getActiveAccommodation, setBudgetPreset, toggleAmenity, toggleType } = useAccommodationMemoryStore();
   
   // Apply preferences to hotel filters when event is received
   const applyPreferencesToHotels = useCallback(() => {

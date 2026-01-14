@@ -16,7 +16,7 @@ import type {
   ConfirmedAirports,
   CountrySelectionEvent,
 } from "@/types/flight";
-import type { AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
+import type { AccommodationEntry } from "@/stores/hooks";
 import type { ViatorActivity } from "@/types/activity";
 import type { HotelResult } from "@/components/planner/HotelSearchResults";
 import type { NormalizedDestination, DestinationSource } from "@/types/destination";
