@@ -5,21 +5,22 @@
 
 import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import type { TripContext } from "@/stores/hooks";
 
 interface OccasionOption {
   id: NonNullable<TripContext["occasion"]>;
-  label: string;
+  labelKey: string;
   emoji: string;
 }
 
 const OCCASIONS: OccasionOption[] = [
-  { id: "vacation", label: "Vacances", emoji: "🌴" },
-  { id: "honeymoon", label: "Lune de miel", emoji: "💒" },
-  { id: "anniversary", label: "Anniversaire", emoji: "🎂" },
-  { id: "birthday", label: "Fête", emoji: "🎉" },
-  { id: "workation", label: "Télétravail", emoji: "💻" },
-  { id: "other", label: "Découverte", emoji: "🗺️" },
+  { id: "vacation", labelKey: "planner.preferences.occasion.vacation", emoji: "🌴" },
+  { id: "honeymoon", labelKey: "planner.preferences.occasion.honeymoon", emoji: "💒" },
+  { id: "anniversary", labelKey: "planner.preferences.occasion.anniversary", emoji: "🎂" },
+  { id: "birthday", labelKey: "planner.preferences.occasion.birthday", emoji: "🎉" },
+  { id: "workation", labelKey: "planner.preferences.occasion.workation", emoji: "💻" },
+  { id: "other", labelKey: "planner.preferences.occasion.discovery", emoji: "🗺️" },
 ];
 
 interface OccasionSelectorProps {
@@ -28,6 +29,8 @@ interface OccasionSelectorProps {
 }
 
 export const OccasionSelector = memo(function OccasionSelector({ selected, onSelect }: OccasionSelectorProps) {
+  const { t } = useTranslation();
+  
   // Stable handler to prevent re-renders from breaking memo
   const handleSelect = useCallback((id: TripContext["occasion"], isCurrentlySelected: boolean) => {
     onSelect(isCurrentlySelected ? undefined : id);
@@ -50,7 +53,7 @@ export const OccasionSelector = memo(function OccasionSelector({ selected, onSel
             )}
           >
             <span className="text-sm">{occasion.emoji}</span>
-            <span>{occasion.label}</span>
+            <span>{t(occasion.labelKey)}</span>
           </button>
         );
       })}

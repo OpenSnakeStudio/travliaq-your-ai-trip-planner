@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Hash, X, Plus, Sparkles, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { eventBus } from "@/lib/eventBus";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ function saveStoredTags(data: StoredTags) {
 }
 
 export function SmartTagsWidget({ className }: SmartTagsWidgetProps) {
+  const { t, i18n } = useTranslation();
   const [tags, setTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -100,13 +102,21 @@ export function SmartTagsWidget({ className }: SmartTagsWidgetProps) {
     try {
       // Build a summary of the conversation (last 10 messages max)
       const recentMessages = history.slice(-10).join("\n");
+      const isEnglish = i18n.language?.startsWith("en");
       
-      const response = await supabase.functions.invoke("planner-chat", {
-        body: {
-          messages: [
-            {
-              role: "system",
-              content: `Tu es un assistant qui analyse les messages d'un utilisateur pour déterminer son profil de voyageur.
+      const systemPrompt = isEnglish
+        ? `You are an assistant that analyzes user messages to determine their traveler profile.
+Based on the messages below, generate EXACTLY 3 hashtags that best describe this traveler.
+
+Rules:
+- Each hashtag starts with #
+- One word per hashtag (e.g.: #Adventurer, #Romantic, #Foodie)
+- Reply ONLY with the 3 hashtags separated by commas
+- Valid examples: #Adventurer, #Luxury, #Culture
+
+User messages:
+${recentMessages}`
+        : `Tu es un assistant qui analyse les messages d'un utilisateur pour déterminer son profil de voyageur.
 Basé sur les messages ci-dessous, génère EXACTEMENT 3 hashtags qui décrivent le mieux ce voyageur.
 
 Règles:
@@ -116,12 +126,17 @@ Règles:
 - Exemples valides: #Aventurier, #Luxe, #Culture
 
 Messages de l'utilisateur:
-${recentMessages}`
-            },
-            {
-              role: "user",
-              content: "Génère les 3 hashtags qui me décrivent le mieux."
-            }
+${recentMessages}`;
+
+      const userPrompt = isEnglish
+        ? "Generate the 3 hashtags that best describe me."
+        : "Génère les 3 hashtags qui me décrivent le mieux.";
+      
+      const response = await supabase.functions.invoke("planner-chat", {
+        body: {
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
           ],
           stream: false,
         },
@@ -132,8 +147,8 @@ ${recentMessages}`
         // Parse hashtags from response
         const extractedTags = content
           .split(/[,\n]+/)
-          .map((t: string) => t.trim())
-          .filter((t: string) => t.startsWith("#") && t.length > 1)
+          .map((tag: string) => tag.trim())
+          .filter((tag: string) => tag.startsWith("#") && tag.length > 1)
           .slice(0, 3);
         
         if (extractedTags.length > 0) {
@@ -146,7 +161,7 @@ ${recentMessages}`
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [i18n.language]);
 
   // Listen for user chat messages
   useEffect(() => {
@@ -185,7 +200,7 @@ ${recentMessages}`
 
   // Remove a tag
   const handleRemoveTag = (tagToRemove: string) => {
-    setTags((prev) => prev.filter((t) => t !== tagToRemove));
+    setTags((prev) => prev.filter((tag) => tag !== tagToRemove));
     isManuallySetRef.current = true;
   };
 
@@ -225,7 +240,7 @@ ${recentMessages}`
         className
       )}>
         <Hash className="w-3 h-3" />
-        <span className="italic">Tes hashtags apparaîtront après quelques messages...</span>
+        <span className="italic">{t("planner.preferences.smartTags.emptyState")}</span>
       </div>
     );
   }
@@ -236,18 +251,18 @@ ${recentMessages}`
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
           <Sparkles className="h-3 w-3" />
-          <span>Ton profil voyageur</span>
+          <span>{t("planner.preferences.smartTags.title")}</span>
         </div>
         <div className="flex items-center gap-1">
           {isLoading ? (
             <span className="text-[10px] text-muted-foreground animate-pulse">
-              Analyse...
+              {t("planner.preferences.smartTags.analyzing")}
             </span>
           ) : conversationHistoryRef.current.length >= 2 ? (
             <button
               onClick={handleRefresh}
               className="text-muted-foreground hover:text-primary transition-colors p-1"
-              title="Recalculer"
+              title={t("planner.preferences.smartTags.recalculate")}
             >
               <RefreshCw className="w-3 h-3" />
             </button>
@@ -293,7 +308,7 @@ ${recentMessages}`
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-full border border-dashed border-muted-foreground/30 hover:border-primary/50"
             >
               <Plus className="w-3 h-3" />
-              <span>Ajouter</span>
+              <span>{t("planner.preferences.smartTags.add")}</span>
             </button>
           )}
         </div>
@@ -306,7 +321,7 @@ ${recentMessages}`
             <Input
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              placeholder="#MonHashtag"
+              placeholder={t("planner.preferences.smartTags.placeholder")}
               className="h-7 text-xs"
               onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
               autoFocus

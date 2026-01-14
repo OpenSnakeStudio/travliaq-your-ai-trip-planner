@@ -5,6 +5,7 @@
 
 import { memo } from "react";
 import { ChevronDown, Sparkles, Sliders } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { StyleEqualizer, InterestPicker, SmartTagsWidget } from "../";
 import { SectionHeader } from "../widgets";
@@ -14,6 +15,7 @@ interface StyleStepProps {
 }
 
 export const StyleStep = memo(function StyleStep({ onNextStep }: StyleStepProps) {
+  const { t } = useTranslation();
   const {
     memory: { preferences },
     setStyleAxis,
@@ -24,7 +26,7 @@ export const StyleStep = memo(function StyleStep({ onNextStep }: StyleStepProps)
     <div className="space-y-4">
       {/* Style Equalizer */}
       <div>
-        <SectionHeader icon={Sliders} title="Votre style de voyage" />
+        <SectionHeader icon={Sliders} title={t("planner.preferences.style.yourStyle")} />
         <StyleEqualizer
           axes={preferences.styleAxes}
           onAxisChange={setStyleAxis}
@@ -33,7 +35,7 @@ export const StyleStep = memo(function StyleStep({ onNextStep }: StyleStepProps)
 
       {/* Interests */}
       <div>
-        <SectionHeader icon={Sparkles} title="Centres d'interet" />
+        <SectionHeader icon={Sparkles} title={t("planner.preferences.style.interests")} />
         <InterestPicker
           selected={preferences.interests}
           onToggle={toggleInterest}
@@ -49,7 +51,7 @@ export const StyleStep = memo(function StyleStep({ onNextStep }: StyleStepProps)
         onClick={onNextStep}
         className="w-full py-2.5 px-4 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
       >
-        Definir vos criteres
+        {t("planner.preferences.style.defineCriteria")}
         <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
       </button>
     </div>
