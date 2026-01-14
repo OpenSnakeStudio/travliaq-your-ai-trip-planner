@@ -3,7 +3,7 @@
  */
 
 // Types (from types folder)
-export * from "./types/index";
+export * from "./types";
 
 // Core components
 export { ChatInput, type ChatInputRef } from "./ChatInput";
