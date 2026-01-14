@@ -201,19 +201,19 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           </div>
 
           {/* Stats - One stable line with compact text */}
-          <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground bg-muted/60 rounded-lg py-2 px-2">
+          <div className="flex items-center justify-center gap-2.5 text-xs text-muted-foreground bg-muted/60 rounded-lg py-2 px-3">
             <div className="flex items-center gap-1">
-              <Wallet className="h-3 w-3 text-amber-500 shrink-0" />
+              <Wallet className="h-3.5 w-3.5 text-amber-500 shrink-0" />
               <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
             </div>
             <span className="text-border/60">|</span>
             <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-purple-500 shrink-0" />
+              <Calendar className="h-3.5 w-3.5 text-purple-500 shrink-0" />
               <span>{bestSeasons.slice(0, 2).join(", ")}</span>
             </div>
             <span className="text-border/60">|</span>
             <div className="flex items-center gap-1">
-              <Plane className="h-3 w-3 text-blue-500 shrink-0" />
+              <Plane className="h-3.5 w-3.5 text-blue-500 shrink-0" />
               <span>~{flightPriceEstimate || "—"}€</span>
             </div>
           </div>
