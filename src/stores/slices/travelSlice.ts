@@ -4,26 +4,49 @@
  */
 
 import type { StateCreator } from 'zustand';
-import type { PlannerStore, TravelSlice, TravelersInfo, DestinationInfo } from '../types';
-
-const STORAGE_KEY = 'travliaq_planner_store';
+import type { TravelersInfo, DestinationInfo } from '../types';
 
 // Initial state
 const initialTravelState = {
   travelers: {
     adults: 1,
     children: 0,
-    childrenAges: [],
+    childrenAges: [] as number[],
     infants: 0,
   },
-  destinations: [],
-  departureDate: null,
-  returnDate: null,
+  destinations: [] as DestinationInfo[],
+  departureDate: null as Date | null,
+  returnDate: null as Date | null,
   activeDestinationIndex: 0,
 };
 
+export interface TravelSlice {
+  // State
+  travelers: TravelersInfo;
+  destinations: DestinationInfo[];
+  departureDate: Date | null;
+  returnDate: Date | null;
+  activeDestinationIndex: number;
+  
+  // Computed
+  hasDestinations: boolean;
+  hasDates: boolean;
+  hasTravelers: boolean;
+  
+  // Actions
+  updateTravelers: (travelers: Partial<TravelersInfo>) => void;
+  getTotalTravelers: () => number;
+  addDestination: (destination: Omit<DestinationInfo, 'id'>) => void;
+  removeDestination: (id: string) => void;
+  updateDestination: (id: string, update: Partial<DestinationInfo>) => void;
+  setActiveDestination: (index: number) => void;
+  getActiveDestination: () => DestinationInfo | null;
+  setDates: (departureDate: Date | null, returnDate: Date | null) => void;
+  resetTravel: () => void;
+}
+
 export const createTravelSlice: StateCreator<
-  PlannerStore,
+  TravelSlice,
   [['zustand/devtools', never], ['zustand/persist', unknown]],
   [],
   TravelSlice
@@ -31,7 +54,7 @@ export const createTravelSlice: StateCreator<
   // Initial state
   ...initialTravelState,
 
-  // Computed values (derived from state)
+  // Computed values
   get hasDestinations() {
     return get().destinations.length > 0;
   },
