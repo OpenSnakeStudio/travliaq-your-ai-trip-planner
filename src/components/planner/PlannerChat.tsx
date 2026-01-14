@@ -1044,6 +1044,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           airportFetchKeyRef.current = null;
           widgetFlow.resetFlowState();
 
+          // Close the widget panel when creating a new session
+          eventBus.emit("panel:toggle", { visible: false });
+
           // Reset all persisted memories (localStorage-backed)
           resetFlightMemory();
           resetTravelMemory();
@@ -1074,6 +1077,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           userMessageCountRef.current = 0;
           airportFetchKeyRef.current = null;
           widgetFlow.resetFlowState();
+
+          // Close the widget panel when deleting all sessions
+          eventBus.emit("panel:toggle", { visible: false });
 
           // Reset all persisted memories (localStorage-backed)
           resetFlightMemory();

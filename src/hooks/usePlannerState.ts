@@ -50,6 +50,11 @@ export function usePlannerState() {
     setIsPanelVisible(true);
   }, []));
 
+  // Event listener: panel toggle (for chat session reset/delete)
+  usePlannerEvent("panel:toggle", useCallback((data) => {
+    setIsPanelVisible(data.visible);
+  }, []));
+
   // Persist active tab changes
   useEffect(() => {
     localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
