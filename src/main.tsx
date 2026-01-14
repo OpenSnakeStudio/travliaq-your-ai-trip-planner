@@ -114,8 +114,8 @@ createRoot(document.getElementById("root")!).render(
               <p className="text-foreground font-medium">
                 Une erreur est survenue. Veuillez rafraîchir la page.
               </p>
-              <pre className="text-left text-xs overflow-auto max-h-64 rounded-lg border border-border bg-muted/40 p-3">
-                {String((error instanceof Error ? error.message : error) ?? "Unknown error")}
+              <pre className="text-left text-xs overflow-auto max-h-64 rounded-lg border border-border bg-muted/40 p-3 whitespace-pre-wrap">
+                {error instanceof Error ? (error.stack || error.message) : String(error ?? "Unknown error")}
               </pre>
               <button
                 type="button"

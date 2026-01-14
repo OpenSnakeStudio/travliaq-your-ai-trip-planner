@@ -43,10 +43,6 @@ export interface FlightSlice {
   directOnly: boolean;
   flexibleDates: boolean;
   
-  // Computed
-  isReadyToSearch: boolean;
-  hasCompleteInfo: boolean;
-  
   // Actions
   setTripType: (type: TripType) => void;
   setDeparture: (info: AirportInfo | null) => void;
@@ -70,25 +66,6 @@ export const createFlightSlice: StateCreator<
 > = (set, get) => ({
   // Initial state
   ...initialFlightState,
-
-  // Computed
-  get isReadyToSearch() {
-    const state = get();
-    if (state.tripType === 'multi') {
-      return state.legs.every((leg) => leg.departure && leg.arrival && leg.date);
-    }
-    const hasBasics = Boolean(state.departure && state.arrival && state.flightDepartureDate);
-    if (state.tripType === 'roundtrip') {
-      return hasBasics && Boolean(state.flightReturnDate);
-    }
-    return hasBasics;
-  },
-
-  get hasCompleteInfo() {
-    const state = get();
-    return Boolean(state.departure?.city && state.arrival?.city && state.passengers.adults >= 1);
-  },
-
   // Actions
   setTripType: (type: TripType) => {
     set(
