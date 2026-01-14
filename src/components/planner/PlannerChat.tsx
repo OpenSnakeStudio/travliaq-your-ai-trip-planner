@@ -9,8 +9,8 @@
  * - useChatMapContext: Map/widget context for LLM
  */
 
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback, useMemo, memo } from "react";
-import { Plane, History, Send, PanelLeftClose, Copy, ThumbsUp, ThumbsDown, Check } from "lucide-react";
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback, memo } from "react";
+import { Plane, History, Send, PanelLeftClose } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
@@ -44,7 +44,9 @@ import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetT
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
-import { SmartSuggestions } from "./chat/SmartSuggestions";
+import { MemoizedSmartSuggestions, type InspireFlowStep } from "./chat/MemoizedSmartSuggestions";
+import { MessageBubble } from "./chat/MessageBubble";
+import { MessageActions } from "./chat/MessageActions";
 import { getDestinationSuggestions } from "@/services/destinations";
 import type { DestinationSuggestRequest, DestinationSuggestion } from "@/types/destinations";
 import { ScrollToBottomButton } from "./chat/ScrollToBottomButton";
@@ -91,160 +93,6 @@ export interface PlannerChatRef {
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/contexts/PreferenceMemoryContext").TripPreferences>) => void;
 }
 
-/**
- * MessageActions - Copy, Like, Dislike buttons for assistant messages
- */
-function MessageActions({ messageId, text }: { messageId: string; text: string }) {
-  const [copied, setCopied] = useState(false);
-  const [feedback, setFeedback] = useState<"like" | "dislike" | null>(null);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      toast.success("Copié !");
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Impossible de copier");
-    }
-  };
-
-  const handleLike = () => {
-    setFeedback(feedback === "like" ? null : "like");
-  };
-
-  const handleDislike = () => {
-    setFeedback(feedback === "dislike" ? null : "dislike");
-  };
-
-  return (
-    <div className="flex items-center gap-1 mt-1 max-w-[85%]">
-      <button
-        onClick={handleCopy}
-        className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        title="Copier"
-        aria-label="Copier le message"
-      >
-        {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
-      </button>
-      <button
-        onClick={handleLike}
-        className={cn(
-          "p-1.5 rounded-md transition-colors",
-          feedback === "like" 
-            ? "text-green-500 bg-green-500/10" 
-            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-        )}
-        title="J'aime"
-        aria-label="J'aime cette réponse"
-      >
-        <ThumbsUp className="h-3.5 w-3.5" />
-      </button>
-      <button
-        onClick={handleDislike}
-        className={cn(
-          "p-1.5 rounded-md transition-colors",
-          feedback === "dislike" 
-            ? "text-red-500 bg-red-500/10" 
-            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-        )}
-        title="Je n'aime pas"
-        aria-label="Je n'aime pas cette réponse"
-      >
-        <ThumbsDown className="h-3.5 w-3.5" />
-      </button>
-    </div>
-  );
-}
-
-/**
- * MemoizedSmartSuggestions - Performance-optimized wrapper
- * Memoizes the context object to prevent re-renders on every parent update
- */
-type InspireFlowStepType = 'idle' | 'style' | 'interests' | 'extra' | 'must_haves' | 'dietary' | 'loading' | 'results';
-
-interface MemoizedSmartSuggestionsProps {
-  memory: ReturnType<typeof useFlightMemory>['memory'];
-  mapContext: ReturnType<typeof useChatMapContext>;
-  inspireFlowStep: InspireFlowStepType;
-  destinationSuggestions: DestinationSuggestion[];
-  messages: ChatMessage[];
-  dynamicSuggestions: Array<{id: string; label: string; emoji: string; message: string}>;
-  onSuggestionClick: (message: string) => void;
-  isLoading: boolean;
-}
-
-const MemoizedSmartSuggestions = memo(function MemoizedSmartSuggestions({
-  memory,
-  mapContext,
-  inspireFlowStep,
-  destinationSuggestions,
-  messages,
-  dynamicSuggestions,
-  onSuggestionClick,
-  isLoading,
-}: MemoizedSmartSuggestionsProps) {
-  // Memoize the context object with primitive dependencies to avoid re-creation
-  const context = useMemo(() => {
-    const step: 'inspiration' | 'destination' | 'dates' | 'travelers' | 'search' | 'compare' | 'book' = 
-      !memory.arrival?.city ? "inspiration"
-        : !memory.departureDate ? "destination"
-        : memory.passengers.adults === 0 ? "dates"
-        : "compare";
-    
-    return {
-      workflowStep: step,
-    hasDestination: !!memory.arrival?.city,
-    hasDates: !!memory.departureDate,
-    hasTravelers: memory.passengers.adults > 0,
-    hasFlights: mapContext.visiblePrices.filter((p) => p.type === "flight").length > 0,
-    hasHotels: mapContext.visibleHotels.length > 0,
-    destinationName: memory.arrival?.city,
-    departureCity: memory.departure?.city,
-    currentTab: mapContext.activeTab,
-    visibleFlightsCount: mapContext.visiblePrices.filter((p) => p.type === "flight").length,
-    visibleHotelsCount: mapContext.visibleHotels.length,
-    visibleActivitiesCount: mapContext.visibleActivities.length,
-    cheapestFlightPrice: mapContext.getCheapestFlightPrice(),
-    cheapestHotelPrice: mapContext.getCheapestHotelPrice(),
-    // Inspire flow context
-    inspireFlowStep,
-    hasProposedDestinations: destinationSuggestions.length > 0,
-    proposedDestinationNames: destinationSuggestions.map(d => d.countryName),
-    // Conversation context for intelligent anticipation - memoized slices
-    lastAssistantMessage: messages
-      .filter(m => m.role === 'assistant' && !m.isTyping && m.text && m.text.length > 10)
-      .slice(-1)[0]?.text,
-    lastUserMessage: messages
-      .filter(m => m.role === 'user')
-      .slice(-1)[0]?.text,
-    conversationTurn: messages.filter(m => m.role === 'user').length,
-  }; }, [
-    memory.arrival?.city,
-    memory.departureDate,
-    memory.passengers.adults,
-    memory.departure?.city,
-    mapContext.visiblePrices,
-    mapContext.visibleHotels,
-    mapContext.visibleActivities,
-    mapContext.activeTab,
-    mapContext.getCheapestFlightPrice,
-    mapContext.getCheapestHotelPrice,
-    inspireFlowStep,
-    destinationSuggestions,
-    messages,
-  ]);
-
-  return (
-    <SmartSuggestions
-      context={context}
-      dynamicSuggestions={dynamicSuggestions}
-      onSuggestionClick={onSuggestionClick}
-      isLoading={isLoading}
-    />
-  );
-});
-
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
   // Memory contexts
   const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory: resetFlightMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
@@ -280,8 +128,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const isHardResetRef = useRef(false);
   
   // Inspire flow state: idle → style → interests → extra → loading → results
-  // Uses InspireFlowStepType defined at module level
-  const [inspireFlowStep, setInspireFlowStep] = useState<InspireFlowStepType>("idle");
+  // Uses InspireFlowStep type from MemoizedSmartSuggestions
+  const [inspireFlowStep, setInspireFlowStep] = useState<InspireFlowStep>("idle");
   const [destinationSuggestions, setDestinationSuggestions] = useState<DestinationSuggestion[]>([]);
   const [destinationProfileScore, setDestinationProfileScore] = useState<number>(0);
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
