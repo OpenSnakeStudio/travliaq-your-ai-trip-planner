@@ -1089,12 +1089,17 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    const memoryPoints = getRoutePoints();
-    
+    const memoryPointsRaw = getRoutePoints();
+
+    // Guard: some points may not have coordinates yet (e.g., city chosen before geocoding)
+    const memoryPoints = memoryPointsRaw.filter(
+      (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)
+    );
+
     // Create a signature for the route POINTS only (not including activeTab)
     // This way we detect when the route itself changes
     const pointsSignature = JSON.stringify(
-      memoryPoints.map(p => ({
+      memoryPoints.map((p) => ({
         lat: p.lat.toFixed(4),
         lng: p.lng.toFixed(4),
         type: p.type,
