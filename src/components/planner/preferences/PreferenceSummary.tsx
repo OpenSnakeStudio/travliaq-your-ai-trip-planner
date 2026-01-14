@@ -9,6 +9,7 @@ import { usePreferenceMemoryStore, type TripPreferences } from "@/stores/hooks";
 import { Sparkles, Loader2, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface PreferenceSummaryProps {
   className?: string;
@@ -25,38 +26,39 @@ function getPreferencesHash(prefs: TripPreferences): string {
   });
 }
 
-function getEnergyLabel(chillVsIntense: number): string {
-  if (chillVsIntense < 30) return "zen et détente";
-  if (chillVsIntense < 50) return "équilibrée";
-  if (chillVsIntense < 70) return "dynamique";
-  return "intense et sportive";
+function getEnergyLabel(chillVsIntense: number, t: (key: string) => string): string {
+  if (chillVsIntense < 30) return t("planner.summary.energy.zen");
+  if (chillVsIntense < 50) return t("planner.summary.energy.balanced");
+  if (chillVsIntense < 70) return t("planner.summary.energy.dynamic");
+  return t("planner.summary.energy.intense");
 }
 
-function getTerrainLabel(cityVsNature: number): string {
-  if (cityVsNature < 30) return "urbain et culturel";
-  if (cityVsNature < 50) return "mixte ville/nature";
-  if (cityVsNature < 70) return "grands espaces";
-  return "nature sauvage";
+function getTerrainLabel(cityVsNature: number, t: (key: string) => string): string {
+  if (cityVsNature < 30) return t("planner.summary.terrain.urban");
+  if (cityVsNature < 50) return t("planner.summary.terrain.mixed");
+  if (cityVsNature < 70) return t("planner.summary.terrain.open");
+  return t("planner.summary.terrain.wild");
 }
 
-function getBudgetLabel(ecoVsLuxury: number): string {
-  if (ecoVsLuxury < 25) return "économique";
-  if (ecoVsLuxury < 50) return "malin";
-  if (ecoVsLuxury < 75) return "confortable";
-  return "luxueux";
+function getBudgetLabel(ecoVsLuxury: number, t: (key: string) => string): string {
+  if (ecoVsLuxury < 25) return t("planner.summary.budget.budget");
+  if (ecoVsLuxury < 50) return t("planner.summary.budget.smart");
+  if (ecoVsLuxury < 75) return t("planner.summary.budget.comfortable");
+  return t("planner.summary.budget.luxury");
 }
 
-function getAuthLabel(touristVsLocal: number): string {
-  if (touristVsLocal < 30) return "incontournables";
-  if (touristVsLocal < 50) return "équilibré";
-  if (touristVsLocal < 70) return "expériences locales";
-  return "aventure authentique";
+function getAuthLabel(touristVsLocal: number, t: (key: string) => string): string {
+  if (touristVsLocal < 30) return t("planner.summary.auth.classic");
+  if (touristVsLocal < 50) return t("planner.summary.auth.balanced");
+  if (touristVsLocal < 70) return t("planner.summary.auth.local");
+  return t("planner.summary.auth.authentic");
 }
 
-const PLACEHOLDER = "Affinez vos préférences pour découvrir votre profil voyageur unique...";
 const CHANGES_THRESHOLD = 3; // Regenerate every N changes to optimize LLM costs
 
 export const PreferenceSummary = memo(function PreferenceSummary({ className, compact = false }: PreferenceSummaryProps) {
+  const { t, i18n } = useTranslation();
+  const PLACEHOLDER = t("planner.summary.placeholder");
   const { getPreferences, getProfileCompletion } = usePreferenceMemoryStore();
   const [summary, setSummary] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -106,30 +108,34 @@ export const PreferenceSummary = memo(function PreferenceSummary({ className, co
         workation: "télétravail + voyage"
       }[prefs.tripContext.occasion] || "" : "";
 
-      const prompt = `Tu es un assistant voyage bienveillant. Décris ce voyageur de manière chaleureuse et personnalisée en 2-3 phrases courtes.
+      // Use the current language for the prompt
+      const isEnglish = i18n.language?.startsWith("en");
+      const promptLang = isEnglish ? "English" : "French";
+      
+      const prompt = `You are a friendly travel assistant. Describe this traveler warmly and personally in 2-3 short sentences. Respond in ${promptLang}.
 
-TON STYLE :
-- Parle comme un ami qui le connaît bien
-- Utilise "tu" et sois chaleureux
-- Mets en avant ce qui le rend unique
-- Maximum 40 mots, phrases courtes
-- Pas de métaphores compliquées, reste simple et authentique
-- Un emoji maximum en fin de phrase
+YOUR STYLE:
+- Speak like a friend who knows them well
+- Use "you" and be warm
+- Highlight what makes them unique
+- Maximum 40 words, short sentences
+- No complicated metaphors, stay simple and authentic
+- One emoji maximum at end of sentence
 
-PROFIL :
-- Type : voyage ${styleLabel}
-- Énergie : ${getEnergyLabel(prefs.styleAxes.chillVsIntense)}
-- Environnement préféré : ${getTerrainLabel(prefs.styleAxes.cityVsNature)}
-- Budget : ${getBudgetLabel(prefs.styleAxes.ecoVsLuxury)}
-- Style : ${getAuthLabel(prefs.styleAxes.touristVsLocal)}
-- Ce qui t'attire : ${interestsList}${occasionLabel ? `\n- Occasion : ${occasionLabel}` : ""}
+PROFILE:
+- Type: ${styleLabel} trip
+- Energy: ${getEnergyLabel(prefs.styleAxes.chillVsIntense, t)}
+- Preferred environment: ${getTerrainLabel(prefs.styleAxes.cityVsNature, t)}
+- Budget: ${getBudgetLabel(prefs.styleAxes.ecoVsLuxury, t)}
+- Style: ${getAuthLabel(prefs.styleAxes.touristVsLocal, t)}
+- What attracts you: ${interestsList}${occasionLabel ? `\n- Occasion: ${occasionLabel}` : ""}
 
-EXEMPLES :
-- "Tu aimes voyager en duo, entre découvertes culturelles et bons restos. Un rythme tranquille avec une touche de confort. 🌿"
-- "Aventurier solo, tu préfères sortir des sentiers battus. Nature et authenticité sont tes mots-clés. ⛰️"
-- "En famille, tu cherches des expériences accessibles à tous. Plage et activités fun sont au programme ! 🏖️"
+EXAMPLES:
+- "You love traveling as a couple, between cultural discoveries and good restaurants. A relaxed pace with a touch of comfort. 🌿"
+- "Solo adventurer, you prefer going off the beaten path. Nature and authenticity are your keywords. ⛰️"
+- "As a family, you're looking for experiences accessible to everyone. Beach and fun activities are on the agenda! 🏖️"
 
-Réponds uniquement avec la description, sans guillemets.`;
+Respond only with the description, without quotes.`;
 
       const { data, error } = await supabase.functions.invoke("planner-chat", {
         body: {
@@ -149,7 +155,7 @@ Réponds uniquement avec la description, sans guillemets.`;
     } finally {
       setIsLoading(false);
     }
-  }, [prefs, completion]);
+  }, [prefs, completion, t, i18n.language]);
 
   // Debounced generation on preference change
   useEffect(() => {
@@ -175,7 +181,7 @@ Réponds uniquement avec la description, sans guillemets.`;
     return (
       <div className={cn("text-xs text-muted-foreground italic", className)}>
         {isLoading ? (
-          <span className="text-primary/70">✨ Génération du profil...</span>
+          <span className="text-primary/70">✨ {t("planner.summary.generating")}</span>
         ) : summary ? (
           <span className="line-clamp-2">{summary}</span>
         ) : (
@@ -196,13 +202,13 @@ Réponds uniquement avec la description, sans guillemets.`;
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
           <Sparkles className="h-3.5 w-3.5" />
-          <span>Ton profil voyageur</span>
+          <span>{t("planner.summary.yourProfile")}</span>
         </div>
         <button
           onClick={handleRefresh}
           disabled={isLoading || completion < 20}
           className="p-1 rounded-md hover:bg-muted/50 disabled:opacity-40 transition-colors"
-          title="Régénérer le profil"
+          title={t("planner.summary.regenerate")}
         >
           <RefreshCw className={cn("h-3 w-3 text-muted-foreground", isLoading && "animate-spin")} />
         </button>
@@ -217,7 +223,7 @@ Réponds uniquement avec la description, sans guillemets.`;
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
               <span className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
             </span>
-            <span className="text-xs">Analyse de ton style...</span>
+            <span className="text-xs">{t("planner.summary.analyzing")}</span>
           </div>
         ) : summary ? (
           <p className="text-foreground/90">{summary}</p>
