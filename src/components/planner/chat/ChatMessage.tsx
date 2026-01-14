@@ -4,6 +4,7 @@
 
 import { Plane } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { ChatMessage as ChatMessageType } from "./types";
 import { QuickReplies } from "./QuickReplies";
@@ -45,6 +46,14 @@ interface ChatMessageProps {
   onQuickReplyMessage: (message: string) => void;
   onQuickReplyFillInput?: (message: string) => void;
   onQuickReplyWidget?: (widget: string) => void;
+}
+
+/**
+ * Translated search flight button text
+ */
+function SearchFlightButtonText() {
+  const { t } = useTranslation();
+  return <>{t("planner.search.searchFlightsNow")}</>;
 }
 
 /**
@@ -157,7 +166,7 @@ export function ChatMessage({
         {/* Date Picker Widget */}
         {m.widget === "datePicker" && (
           <DatePickerWidget
-            label="Choisir la date de départ"
+            label={undefined}
             value={memory.departureDate}
             onChange={(date) => onDateSelect(m.id, "departure", date)}
             preferredMonth={m.widgetData?.preferredMonth}
@@ -165,7 +174,7 @@ export function ChatMessage({
         )}
         {m.widget === "returnDatePicker" && (
           <DatePickerWidget
-            label="Choisir la date de retour"
+            label={undefined}
             value={memory.returnDate}
             onChange={(date) => onDateSelect(m.id, "return", date)}
             minDate={memory.departureDate || undefined}
@@ -232,7 +241,7 @@ export function ChatMessage({
           />
         )}
 
-        {/* Flight search button */}
+        {/* Flight search button - uses translated text from i18n */}
         {m.hasSearchButton && (
           <div className="mt-3">
             <button
@@ -240,7 +249,7 @@ export function ChatMessage({
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
             >
               <Plane className="h-4 w-4" />
-              Rechercher les vols maintenant
+              <SearchFlightButtonText />
             </button>
           </div>
         )}
