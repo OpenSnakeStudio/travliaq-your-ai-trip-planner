@@ -34,6 +34,7 @@ export {
   AddChip,
   TripParametersBar,
   COMMON_EDIT_CHIPS,
+  useCommonEditChips,
   type EditAction,
   type EditChip,
 } from "./QuickEditChips";
