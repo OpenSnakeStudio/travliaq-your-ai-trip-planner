@@ -211,6 +211,7 @@ function MarkerListItem({
   marker: MapMarker;
   onClick?: () => void;
 }) {
+  const { t } = useTranslation();
   const Icon = MARKER_ICONS[marker.type];
   const color = marker.color || MARKER_COLORS[marker.type];
 
@@ -249,7 +250,7 @@ function MarkerListItem({
       {/* Day badge */}
       {marker.day !== undefined && (
         <span className="px-2 py-0.5 rounded bg-muted text-xs text-muted-foreground">
-          Jour {marker.day}
+          {`${t("planner.common.day")} ${marker.day}`}
         </span>
       )}
     </button>
@@ -404,6 +405,7 @@ export function MapPreviewWidget({
   title,
   showControls = true,
 }: MapPreviewWidgetProps) {
+  const { t } = useTranslation();
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
 
   const { center, zoom } = providedCenter
@@ -428,9 +430,11 @@ export function MapPreviewWidget({
         <div className="flex items-center justify-between p-3 border-b bg-muted/30">
           <div className="flex items-center gap-2">
             <MapPin className="text-primary" size={18} />
-            <span className="font-medium">{title || "Carte"}</span>
+            <span className="font-medium">{title || t("planner.common.viewMap")}</span>
             <span className="text-sm text-muted-foreground">
-              {markers.length} lieu{markers.length > 1 ? "x" : ""}
+              {markers.length > 1 
+                ? t("planner.common.viewOnMapCountPlural", { count: markers.length })
+                : t("planner.common.viewOnMapCount", { count: markers.length })}
             </span>
           </div>
 
@@ -441,7 +445,7 @@ export function MapPreviewWidget({
                   type="button"
                   onClick={onOpenInMaps}
                   className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  title="Ouvrir dans Maps"
+                  title={t("planner.common.openInMaps")}
                 >
                   <ExternalLink size={14} />
                 </button>
@@ -451,7 +455,7 @@ export function MapPreviewWidget({
                   type="button"
                   onClick={onExpand}
                   className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  title="Agrandir"
+                  title={t("planner.common.viewOnMap")}
                 >
                   <ZoomIn size={14} />
                 </button>
@@ -475,7 +479,7 @@ export function MapPreviewWidget({
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Route size={14} />
               <span>
-                {routes.length} trajet{routes.length > 1 ? "s" : ""}
+                {routes.length} {routes.length > 1 ? t("planner.map.tripsPlural") : t("planner.map.trips")}
               </span>
             </div>
             {routes.some((r) => r.duration) && (
@@ -484,7 +488,7 @@ export function MapPreviewWidget({
                 {Math.round(
                   routes.reduce((sum, r) => sum + (r.duration || 0), 0) / 60
                 )}
-                h de trajet
+                {t("planner.map.travelTime")}
               </div>
             )}
           </div>

@@ -2083,7 +2083,6 @@ const resources = {
       "planner.common.searchActivitiesInZone": "Rechercher des activités dans la zone visible",
 
       // Planner - Conflicts
-      "planner.conflicts.noIssue": "Aucun problème détecté",
       "planner.conflicts.collapse": "Réduire",
       "planner.conflicts.viewAll": "Voir tout",
       "planner.conflicts.problem": "problème",

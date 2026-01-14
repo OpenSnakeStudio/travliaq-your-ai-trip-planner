@@ -63,7 +63,7 @@ const SEVERITY_CONFIG: Record<
     border: "border-red-200 dark:border-red-800",
     iconColor: "text-red-500",
     titleColor: "text-red-800 dark:text-red-200",
-    label: "Problème",
+    label: "planner.conflicts.problem",
   },
   warning: {
     icon: AlertTriangle,
@@ -71,7 +71,7 @@ const SEVERITY_CONFIG: Record<
     border: "border-amber-200 dark:border-amber-800",
     iconColor: "text-amber-500",
     titleColor: "text-amber-800 dark:text-amber-200",
-    label: "Attention",
+    label: "planner.conflicts.warning",
   },
   info: {
     icon: Info,
@@ -79,7 +79,7 @@ const SEVERITY_CONFIG: Record<
     border: "border-blue-200 dark:border-blue-800",
     iconColor: "text-blue-500",
     titleColor: "text-blue-800 dark:text-blue-200",
-    label: "Info",
+    label: "planner.conflicts.suggestion",
   },
 };
 
@@ -125,6 +125,7 @@ export function ConflictAlert({
   size = "md",
   showSuggestion = true,
 }: ConflictAlertProps) {
+  const { t } = useTranslation();
   const config = SEVERITY_CONFIG[conflict.severity];
   const TypeIcon = CONFLICT_ICONS[conflict.type] || AlertCircle;
   const SeverityIcon = config.icon;
@@ -155,7 +156,7 @@ export function ConflictAlert({
                 conflict.severity === "info" && "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
               )}
             >
-              {config.label}
+              {t(config.label)}
             </span>
             <TypeIcon size={14} className="text-muted-foreground" />
           </div>
@@ -277,12 +278,14 @@ export function ConflictSummaryWidget({
     onDismiss?.(conflictId);
   };
 
+  const { t } = useTranslation();
+
   if (activeConflicts.length === 0) {
     return (
       <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
         <CheckCircle className="text-green-500" size={20} />
         <span className="text-green-800 dark:text-green-200 font-medium">
-          Aucun problème détecté
+          {t("planner.conflicts.noIssue")}
         </span>
       </div>
     );
@@ -290,9 +293,9 @@ export function ConflictSummaryWidget({
 
   // Summary header
   const summaryParts: string[] = [];
-  if (errors.length > 0) summaryParts.push(`${errors.length} problème${errors.length > 1 ? "s" : ""}`);
-  if (warnings.length > 0) summaryParts.push(`${warnings.length} avertissement${warnings.length > 1 ? "s" : ""}`);
-  if (infos.length > 0) summaryParts.push(`${infos.length} suggestion${infos.length > 1 ? "s" : ""}`);
+  if (errors.length > 0) summaryParts.push(`${errors.length} ${t(errors.length > 1 ? "planner.conflicts.problems" : "planner.conflicts.problem")}`);
+  if (warnings.length > 0) summaryParts.push(`${warnings.length} ${t(warnings.length > 1 ? "planner.conflicts.warnings" : "planner.conflicts.warning")}`);
+  if (infos.length > 0) summaryParts.push(`${infos.length} ${t(infos.length > 1 ? "planner.conflicts.suggestions" : "planner.conflicts.suggestion")}`);
 
   const hasCritical = errors.length > 0;
   const visibleConflicts = expanded
@@ -340,7 +343,7 @@ export function ConflictSummaryWidget({
         {activeConflicts.length > 1 && (
           <div className="flex items-center gap-1 text-muted-foreground">
             <span className="text-sm">
-              {expanded ? "Réduire" : "Voir tout"}
+              {expanded ? t("planner.conflicts.collapse") : t("planner.conflicts.viewAll")}
             </span>
             {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </div>
@@ -400,15 +403,14 @@ export function ConflictIndicator({
       className={cn(
         "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium",
         "transition-all hover:scale-[1.02] active:scale-[0.98]",
-        severity === "error" && "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300",
+      severity === "error" && "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300",
         severity === "warning" && "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300",
         severity === "info" && "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
       )}
     >
       <Icon size={12} />
       <span>
-        {count} {config.label.toLowerCase()}
-        {count > 1 ? "s" : ""}
+        {count}
       </span>
     </button>
   );
@@ -418,6 +420,7 @@ export function ConflictIndicator({
  * No conflicts badge
  */
 export function NoConflictsBadge({ className }: { className?: string }) {
+  const { t } = useTranslation();
   return (
     <div
       className={cn(
@@ -428,7 +431,7 @@ export function NoConflictsBadge({ className }: { className?: string }) {
       )}
     >
       <CheckCircle size={12} />
-      <span>Prêt à réserver</span>
+      <span>{t("planner.conflicts.noIssue")}</span>
     </div>
   );
 }

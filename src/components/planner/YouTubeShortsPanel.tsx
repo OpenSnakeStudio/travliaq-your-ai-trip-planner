@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronDown, ChevronLeft, ChevronUp, Loader2, RefreshCw, Volume2, VolumeX, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ type PanelMode = "list" | "player";
 const WHEEL_DEBOUNCE_MS = 450;
 
 const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShortsPanelProps) => {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +61,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
 
       if (fnError) {
         console.error("[YouTubeShortsPanel] Error:", fnError);
-        setError("Impossible de charger les vidéos");
+        setError(t("planner.youtube.loadError"));
         return;
       }
 
@@ -68,7 +70,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
       setMode("list");
     } catch (err) {
       console.error("[YouTubeShortsPanel] Fetch error:", err);
-      setError("Erreur de connexion");
+      setError(t("planner.youtube.loadError"));
     } finally {
       setLoading(false);
     }
@@ -209,7 +211,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                 else onClose();
               }}
               className="h-8 w-8 rounded-full flex items-center justify-center text-foreground/80 hover:text-foreground hover:bg-muted/40 transition-colors"
-              aria-label={mode === "player" ? "Retour à la liste" : "Fermer"}
+              aria-label={mode === "player" ? t("planner.activities.back") : t("planner.activityDetail.close")}
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -227,7 +229,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
               onClick={fetchShorts}
               disabled={loading}
               className="h-8 w-8 rounded-full flex items-center justify-center text-foreground/70 hover:text-foreground hover:bg-muted/40 transition-colors disabled:opacity-50"
-              aria-label="Rafraîchir les vidéos"
+              aria-label={t("planner.youtube.refreshVideos")}
             >
               <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </button>
@@ -258,7 +260,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
             {loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background">
                 <Loader2 className="h-10 w-10 text-foreground animate-spin" />
-                <p className="text-sm text-muted-foreground">Chargement…</p>
+                <p className="text-sm text-muted-foreground">{t("planner.common.searchInProgress")}</p>
               </div>
             )}
 
@@ -272,14 +274,14 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                   onClick={fetchShorts}
                   className="px-4 py-2 rounded-full bg-muted text-foreground text-sm hover:bg-muted/70 transition-colors"
                 >
-                  Réessayer
+                  {t("planner.youtube.retry")}
                 </button>
               </div>
             )}
 
             {!loading && !error && videos.length === 0 && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-background px-6">
-                <p className="text-muted-foreground text-center">Aucune vidéo trouvée pour {subtitle}.</p>
+                <p className="text-muted-foreground text-center">{t("planner.youtube.noVideosFound", { location: subtitle })}</p>
               </div>
             )}
 
@@ -333,7 +335,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                 <button
                   onClick={() => setMode("list")}
                   className="absolute top-3 right-3 z-40 h-9 w-9 rounded-full bg-background/80 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background transition-colors"
-                  aria-label="Fermer la vidéo"
+                  aria-label={t("planner.youtube.closeVideo")}
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -355,7 +357,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                 <div 
                   className="absolute inset-0 z-10 cursor-pointer" 
                   onClick={togglePlayPause}
-                  aria-label={isPaused ? "Lecture" : "Pause"}
+                  aria-label={isPaused ? t("planner.youtube.play") : t("planner.youtube.pause")}
                 />
 
                 {/* Side controls: prev/next only */}
@@ -364,7 +366,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                     onClick={goToPrev}
                     disabled={currentVideoIndex === 0}
                     className="h-11 w-11 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background/90 transition-colors disabled:opacity-30"
-                    aria-label="Vidéo précédente"
+                    aria-label={t("planner.youtube.previousVideo")}
                   >
                     <ChevronUp className="h-6 w-6" />
                   </button>
@@ -372,7 +374,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                   <button
                     onClick={goToNext}
                     className="h-11 w-11 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background/90 transition-colors"
-                    aria-label="Vidéo suivante"
+                    aria-label={t("planner.youtube.nextVideo")}
                   >
                     <ChevronDown className="h-6 w-6" />
                   </button>
@@ -389,13 +391,13 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                     <button
                       onClick={() => setIsMuted((v) => !v)}
                       className="h-11 w-11 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 flex items-center justify-center text-foreground hover:bg-background/90 transition-colors flex-shrink-0"
-                      aria-label={isMuted ? "Activer le son" : "Couper le son"}
+                      aria-label={isMuted ? t("planner.youtube.unmute") : t("planner.youtube.mute")}
                     >
                       {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
                     </button>
                   </div>
 
-                  <p className="text-muted-foreground text-xs text-center mt-3">Scroll pour la vidéo suivante</p>
+                  <p className="text-muted-foreground text-xs text-center mt-3">{t("planner.youtube.scrollForNext")}</p>
                 </div>
               </section>
             )}
