@@ -11,6 +11,13 @@ export { ChatMessage } from "./ChatMessage";
 export { ChatMessages } from "./ChatMessages";
 export { QuickReplies, QUICK_REPLY_PRESETS } from "./QuickReplies";
 
+// Extracted components (Phase 2.1 optimization)
+export { MessageActions } from "./MessageActions";
+export { MessageBubble } from "./MessageBubble";
+export { TypingIndicator } from "./TypingIndicator";
+export { MemoizedSmartSuggestions, type InspireFlowStep } from "./MemoizedSmartSuggestions";
+export { SmartSuggestions, type DynamicSuggestion } from "./SmartSuggestions";
+
 // Widgets
 export {
   DatePickerWidget,
