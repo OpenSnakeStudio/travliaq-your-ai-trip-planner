@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Plus, X, ArrowLeftRight, MapPin, PlaneTakeoff, PlaneLanding, Globe, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
+import { useLocale } from "@/hooks/useLocale";
 import PlannerCalendar from "./PlannerCalendar";
 import { useLocationAutocomplete, LocationResult, LocationType } from "@/hooks/useLocationAutocomplete";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -47,6 +48,7 @@ function LocationTypeIcon({ type }: { type: LocationType }) {
 }
 
 function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: CityInputProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [search, setSearch] = useState(value);
@@ -139,11 +141,11 @@ function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: Ci
       >
         {isLoading ? (
           <div className="p-3 text-xs text-muted-foreground text-center">
-            Recherche...
+            {t("planner.flights.searching")}
           </div>
         ) : locations.length === 0 ? (
           <div className="p-3 text-xs text-muted-foreground text-center">
-            {search.length < 3 ? "Tapez au moins 3 caractères" : "Aucun résultat trouvé"}
+            {search.length < 3 ? t("planner.flights.minChars") : t("planner.flights.noResults")}
           </div>
         ) : (
           <div className="py-1">
@@ -166,8 +168,8 @@ function CityInput({ value, onChange, placeholder, icon, onCountrySelected }: Ci
                   </div>
                   <div className="text-[10px] text-muted-foreground truncate flex items-center gap-1">
                     <span className="capitalize">{
-                      location.type === "airport" ? "Aéroport" :
-                      location.type === "country" ? "Pays" : "Ville"
+                      location.type === "airport" ? t("planner.flights.airport") :
+                      location.type === "country" ? t("planner.flights.country") : t("planner.flights.city")
                     }</span>
                     {location.type !== "country" && (
                       <>
@@ -193,6 +195,8 @@ export default function FlightRouteBuilder({
   tripType = "roundtrip",
   onCountrySelected,
 }: FlightRouteBuilderProps) {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [activeLegCalendar, setActiveLegCalendar] = useState<string | null>(null);
   const [showPrices, setShowPrices] = useState(false);
   const [showWeather, setShowWeather] = useState(false);
@@ -299,7 +303,7 @@ export default function FlightRouteBuilder({
             <CityInput
               value={leg.from}
               onChange={(value, location) => handleFromChange(leg.id, value, location)}
-              placeholder="Départ"
+              placeholder={t("planner.flights.departure")}
               icon="from"
               onCountrySelected={(country) => onCountrySelected?.("from", country)}
             />
@@ -308,7 +312,7 @@ export default function FlightRouteBuilder({
             <button
               onClick={() => swapCities(leg.id)}
               className="p-1.5 rounded-full border border-border/40 hover:bg-muted/40 transition-colors shrink-0"
-              aria-label="Inverser départ et destination"
+              aria-label={t("planner.flights.swapCities")}
             >
               <ArrowLeftRight className="h-3 w-3 text-muted-foreground" />
             </button>
@@ -317,7 +321,7 @@ export default function FlightRouteBuilder({
             <CityInput
               value={leg.to}
               onChange={(value, location) => handleToChange(leg.id, value, location)}
-              placeholder="Destination"
+              placeholder={t("planner.flights.destination")}
               icon="to"
               onCountrySelected={(country) => onCountrySelected?.("to", country)}
             />
@@ -335,11 +339,11 @@ export default function FlightRouteBuilder({
                 )}
               >
                 <span className="whitespace-nowrap">
-                  {leg.date ? format(leg.date, "d MMM", { locale: fr }) : "Aller"}
+                  {leg.date ? format(leg.date, "d MMM", { locale: dateFnsLocale }) : t("planner.flights.outbound")}
                 </span>
                 <span className="text-muted-foreground">→</span>
                 <span className="whitespace-nowrap">
-                  {leg.returnDate ? format(leg.returnDate, "d MMM", { locale: fr }) : "Retour"}
+                  {leg.returnDate ? format(leg.returnDate, "d MMM", { locale: dateFnsLocale }) : t("planner.flights.inbound")}
                 </span>
               </button>
             ) : (
@@ -355,8 +359,8 @@ export default function FlightRouteBuilder({
               >
                 <span className="whitespace-nowrap">
                   {leg.date
-                    ? format(leg.date, "EEE d MMM", { locale: fr })
-                    : "Date"}
+                    ? format(leg.date, "EEE d MMM", { locale: dateFnsLocale })
+                    : t("planner.flights.date")}
                 </span>
               </button>
             )}
@@ -378,7 +382,7 @@ export default function FlightRouteBuilder({
               <button
                 onClick={() => setActiveLegCalendar(null)}
                 className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-muted/50 transition-colors z-10"
-                aria-label="Fermer le calendrier"
+                aria-label={t("planner.flights.closeCalendar")}
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -408,7 +412,7 @@ export default function FlightRouteBuilder({
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/20"
           >
             <Plus className="h-3.5 w-3.5" />
-            Ajouter une destination
+            {t("planner.flights.addDestination")}
           </button>
         </div>
       )}

@@ -6,6 +6,7 @@
 import { memo, useState, useCallback } from "react";
 import { ChevronDown, Sparkles, Users, Zap, Heart, PartyPopper, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { usePreferenceMemoryStore, type TravelStyle, type StyleAxes, type TripContext } from "@/stores/hooks";
 import { TravelStyleSelector, OccasionSelector, PreferenceSummary } from "../";
 import { SectionHeader, type Step } from "../widgets";
@@ -17,7 +18,7 @@ import { eventBus } from "@/lib/eventBus";
 
 interface PresetConfig {
   id: string;
-  label: string;
+  labelKey: string;
   emoji: string;
   icon: React.ElementType;
   travelStyle: TravelStyle;
@@ -30,7 +31,7 @@ interface PresetConfig {
 const QUICK_PRESETS: PresetConfig[] = [
   {
     id: "romantic",
-    label: "Escapade romantique",
+    labelKey: "planner.presets.romantic",
     emoji: "💑",
     icon: Heart,
     travelStyle: "couple",
@@ -41,7 +42,7 @@ const QUICK_PRESETS: PresetConfig[] = [
   },
   {
     id: "adventure",
-    label: "Aventure entre amis",
+    labelKey: "planner.presets.adventure",
     emoji: "🎒",
     icon: PartyPopper,
     travelStyle: "friends",
@@ -52,7 +53,7 @@ const QUICK_PRESETS: PresetConfig[] = [
   },
   {
     id: "family",
-    label: "Vacances en famille",
+    labelKey: "planner.presets.family",
     emoji: "👨‍👩‍👧‍👦",
     icon: Users,
     travelStyle: "family",
@@ -63,7 +64,7 @@ const QUICK_PRESETS: PresetConfig[] = [
   },
   {
     id: "workation",
-    label: "Workation",
+    labelKey: "planner.presets.workation",
     emoji: "💻",
     icon: Briefcase,
     travelStyle: "solo",
@@ -79,6 +80,8 @@ interface QuickPresetsProps {
 }
 
 const QuickPresets = memo(function QuickPresets({ onApply }: QuickPresetsProps) {
+  const { t } = useTranslation();
+  
   return (
     <div className="grid grid-cols-2 gap-2">
       {QUICK_PRESETS.map((preset) => {
@@ -102,8 +105,8 @@ const QuickPresets = memo(function QuickPresets({ onApply }: QuickPresetsProps) 
               {preset.emoji}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">{preset.label}</p>
-              <p className="text-[10px] text-muted-foreground">Remplir en 1 clic</p>
+              <p className="text-xs font-medium text-foreground truncate">{t(preset.labelKey)}</p>
+              <p className="text-[10px] text-muted-foreground">{t("planner.presets.oneClick")}</p>
             </div>
             <Zap className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
           </button>
@@ -122,6 +125,7 @@ interface BaseStepProps {
 }
 
 export const BaseStep = memo(function BaseStep({ onNextStep }: BaseStepProps) {
+  const { t } = useTranslation();
   const {
     memory: { preferences },
     setTravelStyle,
@@ -164,13 +168,13 @@ export const BaseStep = memo(function BaseStep({ onNextStep }: BaseStepProps) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              Demarrage rapide
+              {t("planner.presets.quickStart")}
             </span>
             <button
               onClick={() => setShowPresets(false)}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
-              Fermer
+              {t("planner.presets.close")}
             </button>
           </div>
           <QuickPresets onApply={handleApplyPreset} />
@@ -179,7 +183,7 @@ export const BaseStep = memo(function BaseStep({ onNextStep }: BaseStepProps) {
 
       {/* Travel Style */}
       <div data-tour="preferences-widget">
-        <SectionHeader icon={Users} title="Voyageurs" />
+        <SectionHeader icon={Users} title={t("planner.presets.travelers")} />
         <TravelStyleSelector
           selected={preferences.travelStyle}
           onSelect={setTravelStyle}
@@ -188,7 +192,7 @@ export const BaseStep = memo(function BaseStep({ onNextStep }: BaseStepProps) {
 
       {/* Occasion */}
       <div>
-        <SectionHeader icon={Sparkles} title="Occasion du voyage" badge="optionnel" />
+        <SectionHeader icon={Sparkles} title={t("planner.presets.occasion")} badge={t("planner.presets.optional")} />
         <OccasionSelector
           selected={preferences.tripContext.occasion}
           onSelect={setOccasion}
@@ -203,7 +207,7 @@ export const BaseStep = memo(function BaseStep({ onNextStep }: BaseStepProps) {
         onClick={onNextStep}
         className="w-full py-2.5 px-4 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
       >
-        Definir votre style
+        {t("planner.presets.defineStyle")}
         <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
       </button>
     </div>
