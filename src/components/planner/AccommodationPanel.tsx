@@ -16,7 +16,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useLocationAutocomplete, LocationResult } from "@/hooks/useLocationAutocomplete";
 import { differenceInDays, format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { useLocale } from "@/hooks/useLocale";
 import RangeCalendar from "@/components/RangeCalendar";
 import type { DateRange } from "react-day-picker";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +30,7 @@ import { searchHotelsWithRetry } from "@/services/hotels/searchHotelsWithRetry";
 import { buildHotelFilters } from "./hotels/buildHotelFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { SyncBadgeInline } from "@/components/ui/SyncBadge";
+import { useTranslation } from "react-i18next";
 interface AccommodationPanelProps {
   onMapMove?: (center: [number, number], zoom: number) => void;
   mapCenter?: [number, number];
@@ -39,7 +40,7 @@ interface AccommodationPanelProps {
 function DestinationInput({ 
   value, 
   onChange,
-  placeholder = "Ville ou destination",
+  placeholder,
   onLocationSelect,
 }: { 
   value: string; 
@@ -47,6 +48,7 @@ function DestinationInput({
   placeholder?: string;
   onLocationSelect?: (location: LocationResult) => void;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -90,7 +92,7 @@ function DestinationInput({
             value={search}
             onChange={handleInputChange}
             onFocus={() => search.length >= 3 && setIsOpen(true)}
-            placeholder={placeholder}
+            placeholder={placeholder || t("planner.accommodation.whereTo")}
             className="flex-1 min-w-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
           />
         </div>
@@ -101,10 +103,10 @@ function DestinationInput({
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         {isLoading ? (
-          <div className="p-3 text-xs text-muted-foreground text-center">Recherche...</div>
+          <div className="p-3 text-xs text-muted-foreground text-center">{t("planner.accommodation.searching")}</div>
         ) : locations.length === 0 ? (
           <div className="p-3 text-xs text-muted-foreground text-center">
-            {search.length < 3 ? "Tapez au moins 3 caractères" : "Aucun résultat"}
+            {search.length < 3 ? t("planner.accommodation.minChars") : t("planner.accommodation.noResults")}
           </div>
         ) : (
           <div className="py-1">
@@ -143,6 +145,7 @@ function TravelersSelector({
   childrenAges: number[];
   onChange: (adults: number, children: number, ages: number[]) => void;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   
   const handleAdultsChange = (delta: number) => {
@@ -168,8 +171,8 @@ function TravelersSelector({
   };
 
   const summary = children > 0 
-    ? `${adults} adulte${adults > 1 ? "s" : ""} · ${children} enfant${children > 1 ? "s" : ""}` 
-    : `${adults} adulte${adults > 1 ? "s" : ""}`;
+    ? `${adults} ${adults > 1 ? t("planner.travelers.adults") : t("planner.accommodation.adult")} · ${children} ${children > 1 ? t("planner.travelers.children") : t("planner.accommodation.child")}` 
+    : `${adults} ${adults > 1 ? t("planner.travelers.adults") : t("planner.accommodation.adult")}`;
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -188,8 +191,8 @@ function TravelersSelector({
           {/* Adults */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Adultes</p>
-              <p className="text-xs text-muted-foreground">18 ans et plus</p>
+              <p className="text-sm font-medium">{t("planner.accommodation.adults")}</p>
+              <p className="text-xs text-muted-foreground">{t("planner.accommodation.adultsDesc")}</p>
             </div>
             <div className="flex items-center gap-2">
               <button 
@@ -213,8 +216,8 @@ function TravelersSelector({
           {/* Children */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Enfants</p>
-              <p className="text-xs text-muted-foreground">0 - 17 ans</p>
+              <p className="text-sm font-medium">{t("planner.accommodation.childrenLabel")}</p>
+              <p className="text-xs text-muted-foreground">{t("planner.accommodation.childrenDesc")}</p>
             </div>
             <div className="flex items-center gap-2">
               <button 
@@ -238,7 +241,7 @@ function TravelersSelector({
           {/* Children ages */}
           {children > 0 && (
             <div className="pt-2 border-t border-border/50">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Âge des enfants</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2">{t("planner.accommodation.childrenAges")}</p>
               <div className="flex flex-wrap gap-2">
                 {childrenAges.map((age, index) => (
                   <select
@@ -248,7 +251,7 @@ function TravelersSelector({
                     className="h-8 px-2 rounded-lg border border-border bg-background text-xs"
                   >
                     {Array.from({ length: 18 }, (_, i) => (
-                      <option key={i} value={i}>{i} an{i > 1 ? "s" : ""}</option>
+                      <option key={i} value={i}>{i} {i > 1 ? t("planner.accommodation.years") : t("planner.accommodation.year")}</option>
                     ))}
                   </select>
                 ))}
@@ -275,6 +278,7 @@ function RoomsSelector({
   onChange: (rooms: RoomConfig[]) => void;
   onToggleAuto: () => void;
 }) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const addRoom = () => {
@@ -300,8 +304,8 @@ function RoomsSelector({
   const totalTravelers = travelers.adults + travelers.children;
 
   const summary = rooms.length === 1 
-    ? (rooms[0].children > 0 ? "1 chambre familiale" : rooms[0].adults === 1 ? "1 chambre simple" : "1 chambre double")
-    : `${rooms.length} chambres`;
+    ? (rooms[0].children > 0 ? t("planner.accommodation.rooms.family") : rooms[0].adults === 1 ? t("planner.accommodation.rooms.single") : t("planner.accommodation.rooms.double"))
+    : t("planner.accommodation.rooms.count", { count: rooms.length });
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -319,7 +323,7 @@ function RoomsSelector({
         <div className="space-y-3">
           {/* Auto toggle */}
           <div className="flex items-center justify-between pb-2 border-b border-border/50">
-            <span className="text-xs text-muted-foreground">Configuration auto</span>
+            <span className="text-xs text-muted-foreground">{t("planner.accommodation.rooms.autoConfig")}</span>
             <button
               onClick={onToggleAuto}
               className={cn(
@@ -327,7 +331,7 @@ function RoomsSelector({
                 useAuto ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               )}
             >
-              {useAuto ? "Activé" : "Désactivé"}
+              {useAuto ? t("planner.accommodation.rooms.enabled") : t("planner.accommodation.rooms.disabled")}
             </button>
           </div>
 
@@ -335,19 +339,19 @@ function RoomsSelector({
           {rooms.map((room, index) => (
             <div key={room.id} className="p-2 rounded-lg bg-muted/30 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">Chambre {index + 1}</span>
+                <span className="text-xs font-medium">{t("planner.accommodation.rooms.room", { num: index + 1 })}</span>
                 {rooms.length > 1 && (
                   <button 
                     onClick={() => removeRoom(room.id)}
                     className="text-xs text-muted-foreground hover:text-destructive"
                   >
-                    Supprimer
+                    {t("planner.accommodation.rooms.remove")}
                   </button>
                 )}
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Adultes</span>
+                  <span className="text-xs text-muted-foreground">{t("planner.accommodation.adults")}</span>
                   <select
                     value={room.adults}
                     onChange={(e) => updateRoom(room.id, { adults: parseInt(e.target.value) })}
@@ -360,7 +364,7 @@ function RoomsSelector({
                   </select>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-muted-foreground">Enfants</span>
+                  <span className="text-xs text-muted-foreground">{t("planner.accommodation.childrenLabel")}</span>
                   <select
                     value={room.children}
                     onChange={(e) => updateRoom(room.id, { children: parseInt(e.target.value) })}
@@ -383,14 +387,14 @@ function RoomsSelector({
               className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:bg-muted/30"
             >
               <Plus className="h-3.5 w-3.5" />
-              Ajouter une chambre
+              {t("planner.accommodation.rooms.add")}
             </button>
           )}
 
           {/* Warning if mismatch */}
           {!useAuto && totalInRooms !== totalTravelers && (
             <p className="text-xs text-amber-500 text-center">
-              {totalInRooms} personnes en chambres / {totalTravelers} voyageurs
+              {t("planner.accommodation.rooms.mismatch", { inRooms: totalInRooms, travelers: totalTravelers })}
             </p>
           )}
         </div>
@@ -411,6 +415,8 @@ function CompactDateRange({
   onChange: (checkIn: Date | null, checkOut: Date | null) => void;
   isSyncedWithFlight?: boolean;
 }) {
+  const { t } = useTranslation();
+  const { dateFnsLocale } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const nights = checkIn && checkOut ? differenceInDays(checkOut, checkIn) : 0;
 
@@ -425,13 +431,13 @@ function CompactDateRange({
   const value: DateRange | undefined = checkIn ? { from: checkIn, to: checkOut || undefined } : undefined;
 
   const formatDateCompact = (date: Date) => {
-    return format(date, "dd MMM", { locale: fr });
+    return format(date, "dd MMM", { locale: dateFnsLocale });
   };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-2 text-sm min-w-0" title={isSyncedWithFlight ? "Dates synchronisées avec les vols" : undefined}>
+        <button className="flex items-center gap-2 text-sm min-w-0" title={isSyncedWithFlight ? t("planner.accommodation.dates.syncedWithFlight") : undefined}>
           <CalendarDays className="h-4 w-4 text-primary shrink-0" />
           {checkIn && checkOut ? (
             <span className="truncate text-foreground flex items-center gap-1">
@@ -444,8 +450,8 @@ function CompactDateRange({
                       <Link2 className="h-3 w-3 text-primary/70 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      <p>Dates synchronisées avec vos vols</p>
-                      <p className="text-muted-foreground">Modifiez-les librement si nécessaire</p>
+                      <p>{t("planner.accommodation.dates.syncedWithFlight")}</p>
+                      <p className="text-muted-foreground">{t("planner.accommodation.dates.canModify")}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -453,7 +459,7 @@ function CompactDateRange({
             </span>
           ) : checkIn ? (
             <span className="truncate text-foreground flex items-center gap-1">
-              {formatDateCompact(checkIn)} → <span className="text-muted-foreground">Retour ?</span>
+              {formatDateCompact(checkIn)} → <span className="text-muted-foreground">{t("planner.accommodation.dates.return")}</span>
               {isSyncedWithFlight && (
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
@@ -461,14 +467,14 @@ function CompactDateRange({
                       <Link2 className="h-3 w-3 text-primary/70 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      <p>Date d'arrivée synchronisée avec le vol</p>
+                      <p>{t("planner.accommodation.dates.arrivalSynced")}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
             </span>
           ) : (
-            <span className="text-muted-foreground truncate">Dates du séjour</span>
+            <span className="text-muted-foreground truncate">{t("planner.accommodation.dates.stayDates")}</span>
           )}
         </button>
       </PopoverTrigger>
@@ -476,9 +482,12 @@ function CompactDateRange({
         {/* Header with close button */}
         <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/50">
           <span className="text-sm font-medium">
-            {!checkIn && "Sélectionnez vos dates"}
-            {checkIn && !checkOut && "Choisissez la date de départ"}
-            {checkIn && checkOut && `${nights} nuit${nights > 1 ? "s" : ""} sélectionnée${nights > 1 ? "s" : ""}`}
+            {!checkIn && t("planner.accommodation.dates.selectDates")}
+            {checkIn && !checkOut && t("planner.accommodation.dates.selectReturn")}
+            {checkIn && checkOut && (nights > 1 
+              ? t("planner.accommodation.dates.nightsSelectedPlural", { count: nights })
+              : t("planner.accommodation.dates.nightsSelected", { count: nights })
+            )}
           </span>
           <button
             onClick={() => setIsOpen(false)}
@@ -492,7 +501,7 @@ function CompactDateRange({
             value={value}
             onChange={handleRangeChange}
             disabled={(date) => date < new Date()}
-            locale={fr}
+            locale={dateFnsLocale}
             weekStartsOn={1}
             className="pointer-events-auto"
           />
