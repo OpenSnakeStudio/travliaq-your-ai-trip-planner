@@ -1,13 +1,17 @@
 /**
  * TravelersWidget - Counter for adults, children, infants
+ * Now syncs with Zustand store on confirmation
  */
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { usePlannerStoreV2 } from "@/stores/plannerStoreV2";
 
 interface TravelersWidgetProps {
   initialValues?: { adults: number; children: number; infants: number };
   onConfirm: (travelers: { adults: number; children: number; infants: number }) => void;
+  /** If true, skip syncing to Zustand (for isolated usage) */
+  skipStoreSync?: boolean;
 }
 
 function CounterButton({
@@ -49,7 +53,10 @@ function CounterButton({
 export function TravelersWidget({
   initialValues = { adults: 1, children: 0, infants: 0 },
   onConfirm,
+  skipStoreSync = false,
 }: TravelersWidgetProps) {
+  const updateTravelers = usePlannerStoreV2((s) => s.updateTravelers);
+  
   const [adults, setAdults] = useState(Math.max(1, initialValues.adults));
   const [children, setChildren] = useState(initialValues.children);
   const [infants, setInfants] = useState(Math.min(initialValues.infants, Math.max(1, initialValues.adults)));
@@ -66,7 +73,12 @@ export function TravelersWidget({
   const handleConfirm = () => {
     if (adults < 1) return;
     setConfirmed(true);
-    onConfirm({ adults, children, infants });
+    const travelers = { adults, children, infants };
+    // Sync to Zustand store
+    if (!skipStoreSync) {
+      updateTravelers(travelers);
+    }
+    onConfirm(travelers);
   };
 
   if (confirmed) {
@@ -128,16 +140,22 @@ export function TravelersWidget({
 
 /**
  * TravelersConfirmBeforeSearchWidget - Quick confirmation of 1 traveler before search
+ * Now syncs with Zustand store on confirmation
  */
 export function TravelersConfirmBeforeSearchWidget({
   currentTravelers,
   onConfirm,
   onEditConfirm,
+  skipStoreSync = false,
 }: {
   currentTravelers: { adults: number; children: number; infants: number };
   onConfirm: () => void;
   onEditConfirm: (travelers: { adults: number; children: number; infants: number }) => void;
+  /** If true, skip syncing to Zustand (for isolated usage) */
+  skipStoreSync?: boolean;
 }) {
+  const updateTravelers = usePlannerStoreV2((s) => s.updateTravelers);
+  
   const [confirmed, setConfirmed] = useState(false);
   const [editing, setEditing] = useState(false);
   const [adults, setAdults] = useState(currentTravelers.adults);
@@ -146,6 +164,10 @@ export function TravelersConfirmBeforeSearchWidget({
 
   const handleConfirmSolo = () => {
     setConfirmed(true);
+    // Sync solo traveler to Zustand
+    if (!skipStoreSync) {
+      updateTravelers({ adults: 1, children: 0, infants: 0 });
+    }
     onConfirm();
   };
 
@@ -155,7 +177,12 @@ export function TravelersConfirmBeforeSearchWidget({
 
   const handleConfirmEdited = () => {
     setConfirmed(true);
-    onEditConfirm({ adults, children, infants });
+    const travelers = { adults, children, infants };
+    // Sync to Zustand store
+    if (!skipStoreSync) {
+      updateTravelers(travelers);
+    }
+    onEditConfirm(travelers);
   };
 
   const handleAdultsChange = (val: number) => setAdults(Math.max(1, val));
