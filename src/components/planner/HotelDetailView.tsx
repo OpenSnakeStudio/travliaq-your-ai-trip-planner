@@ -352,6 +352,7 @@ const HotelDetailView = ({
   onBack,
   onBook,
 }: HotelDetailViewProps) => {
+  const { t } = useTranslation();
   // Use hotelDetails when available, fallback to hotel (search result)
   const images = hotelDetails?.images?.length
     ? hotelDetails.images
@@ -490,7 +491,7 @@ const HotelDetailView = ({
         {/* Loading indicator */}
         <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Chargement des détails...</span>
+          <span className="text-sm">{t("planner.common.loadingDetails")}</span>
         </div>
       </div>
     );
@@ -540,14 +541,14 @@ const HotelDetailView = ({
                 <button
                   onClick={prevImage}
                   className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-                  aria-label="Photo précédente"
+                  aria-label={t("planner.common.previousPhoto")}
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
                   onClick={nextImage}
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors"
-                  aria-label="Photo suivante"
+                  aria-label={t("planner.common.nextPhoto")}
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -701,7 +702,7 @@ const HotelDetailView = ({
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     <Bed className="h-4 w-4 text-primary" />
-                    Chambres disponibles ({rooms.length})
+                    {t("planner.common.availableRooms")} ({rooms.length})
                   </h3>
                   {rooms.length > 3 && (
                     <Button
@@ -710,7 +711,7 @@ const HotelDetailView = ({
                       className="h-auto py-1 px-2 text-xs"
                       onClick={() => setShowAllRooms(!showAllRooms)}
                     >
-                      {showAllRooms ? "Voir moins" : `Voir les ${rooms.length} chambres`}
+                      {showAllRooms ? t("planner.common.showLess") : t("planner.common.showAllRooms", { count: rooms.length })}
                     </Button>
                   )}
                 </div>
@@ -734,7 +735,7 @@ const HotelDetailView = ({
                     className="w-full"
                     onClick={() => setShowAllRooms(true)}
                   >
-                    Afficher les {rooms.length - 3} autres chambres
+                    {t("planner.common.showOtherRooms", { count: rooms.length - 3 })}
                   </Button>
                 )}
               </section>
@@ -743,7 +744,7 @@ const HotelDetailView = ({
             {/* Description - Collapsible for long text */}
             {description && (
               <section className="space-y-2">
-                <h3 className="font-semibold text-sm">À propos de cet établissement</h3>
+                <h3 className="font-semibold text-sm">{t("planner.common.aboutHotel")}</h3>
                 <p className={cn(
                   "text-sm text-muted-foreground leading-relaxed",
                   !isDescExpanded && description.length > 300 && "line-clamp-4"
@@ -757,7 +758,7 @@ const HotelDetailView = ({
                     className="h-auto p-0 text-primary"
                     onClick={() => setIsDescExpanded(!isDescExpanded)}
                   >
-                    {isDescExpanded ? "Voir moins" : "Lire la suite"}
+                    {isDescExpanded ? t("planner.common.showLess") : t("planner.common.showMore")}
                   </Button>
                 )}
               </section>
@@ -908,7 +909,7 @@ const HotelDetailView = ({
             onClick={onBook}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            Réserver
+            {t("planner.common.book")}
           </Button>
           {hotelDetails?.bookingUrl && (
             <Button
@@ -916,7 +917,7 @@ const HotelDetailView = ({
               className="h-12 px-4"
               onClick={() => window.open(hotelDetails.bookingUrl, '_blank')}
             >
-              Voir sur Booking
+              {t("planner.common.viewOnBooking")}
             </Button>
           )}
         </div>

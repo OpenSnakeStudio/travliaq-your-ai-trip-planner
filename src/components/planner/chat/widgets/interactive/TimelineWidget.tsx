@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Plane,
@@ -376,10 +377,10 @@ function TimelineItemCard({
  */
 function AddItemButton({
   onClick,
-  label = "Ajouter",
+  label,
 }: {
   onClick: () => void;
-  label?: string;
+  label: string;
 }) {
   return (
     <button
@@ -443,6 +444,7 @@ export function TimelineWidget({
   editable = false,
   defaultExpandedDays,
 }: TimelineWidgetProps) {
+  const { t } = useTranslation();
   const [expandedDays, setExpandedDays] = useState<Set<number>>(
     new Set(defaultExpandedDays || days.map((_, i) => i))
   );
@@ -551,14 +553,14 @@ export function TimelineWidget({
                 {editable && onAddItem && (
                   <AddItemButton
                     onClick={() => onAddItem(dayIndex, "afternoon")}
-                    label="Ajouter une activité"
+                    label={t("planner.common.addActivity")}
                   />
                 )}
 
                 {/* Empty state */}
                 {day.items.length === 0 && !editable && (
                   <div className="py-4 text-center text-sm text-muted-foreground">
-                    Aucune activité prévue
+                    {t("planner.common.noActivityPlanned")}
                   </div>
                 )}
               </div>
@@ -580,6 +582,7 @@ export function CompactTimeline({
   days: TimelineDay[];
   onViewFull?: () => void;
 }) {
+  const { t } = useTranslation();
   const totalItems = days.reduce((sum, d) => sum + d.items.length, 0);
 
   return (
@@ -589,8 +592,7 @@ export function CompactTimeline({
         <div className="flex items-center gap-2">
           <Calendar className="text-primary" size={18} />
           <span className="font-medium">
-            {days.length} jour{days.length > 1 ? "s" : ""} • {totalItems} activité
-            {totalItems > 1 ? "s" : ""}
+            {days.length} {days.length > 1 ? t("planner.common.days") : t("planner.common.day")} • {totalItems} {totalItems > 1 ? t("planner.common.activities") : t("planner.common.activity")}
           </span>
         </div>
         {onViewFull && (
@@ -599,7 +601,7 @@ export function CompactTimeline({
             onClick={onViewFull}
             className="text-sm text-primary hover:underline"
           >
-            Voir le planning
+            {t("planner.common.viewPlanning")}
           </button>
         )}
       </div>
