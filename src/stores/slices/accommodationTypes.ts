@@ -119,9 +119,9 @@ export const createDefaultAccommodation = (): AccommodationEntry => ({
   },
 });
 
-// Initial state
+// Initial state - start with empty accommodations to avoid UUID generation issues during SSR/hydration
 export const initialAccommodationState: AccommodationState = {
-  accommodations: [createDefaultAccommodation()],
+  accommodations: [],
   activeAccommodationIndex: 0,
   useAutoRooms: true,
   customRooms: [],
