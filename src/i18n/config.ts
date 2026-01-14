@@ -2406,6 +2406,21 @@ const resources = {
       "planner.missing.passengers": "nombre de voyageurs",
       "planner.missing.legs": "étapes du voyage",
       "planner.missing.readyToSearch": "Aucun - prêt à chercher",
+
+      // Planner - Action Buttons
+      "planner.action.added": "Ajouté",
+      "planner.action.selectFlight": "Sélectionner ce vol",
+      "planner.action.bookHotel": "Réserver cet hôtel",
+      "planner.action.addActivity": "Ajouter cette activité",
+      "planner.action.addToTrip": "Ajouter au voyage",
+      "planner.action.maxItems": "Maximum {{count}} éléments",
+      "planner.action.removeFromCompare": "Retirer de la comparaison",
+      "planner.action.compare": "Comparer",
+      "planner.action.remove": "Retirer",
+      "planner.action.removeFromFavorites": "Retirer des favoris",
+      "planner.action.save": "Sauvegarder",
+      "planner.action.saved": "Sauvegardé",
+      "planner.action.viewDetails": "Voir détails",
       
     },
   },
@@ -4798,6 +4813,21 @@ const resources = {
       "planner.missing.passengers": "number of travelers",
       "planner.missing.legs": "trip legs",
       "planner.missing.readyToSearch": "None - ready to search",
+
+      // Planner - Action Buttons
+      "planner.action.added": "Added",
+      "planner.action.selectFlight": "Select this flight",
+      "planner.action.bookHotel": "Book this hotel",
+      "planner.action.addActivity": "Add this activity",
+      "planner.action.addToTrip": "Add to trip",
+      "planner.action.maxItems": "Maximum {{count}} items",
+      "planner.action.removeFromCompare": "Remove from comparison",
+      "planner.action.compare": "Compare",
+      "planner.action.remove": "Remove",
+      "planner.action.removeFromFavorites": "Remove from favorites",
+      "planner.action.save": "Save",
+      "planner.action.saved": "Saved",
+      "planner.action.viewDetails": "View details",
       
     },
   },

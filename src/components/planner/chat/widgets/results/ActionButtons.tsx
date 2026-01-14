@@ -74,18 +74,20 @@ export function AddToTripButton({
   disabled = false,
   variant = "primary",
 }: AddToTripButtonProps) {
+  const { t } = useTranslation();
+  
   const getLabel = () => {
     if (label) return label;
-    if (isAdded) return "Ajouté";
+    if (isAdded) return t("planner.action.added");
     switch (itemType) {
       case "flight":
-        return "Sélectionner ce vol";
+        return t("planner.action.selectFlight");
       case "hotel":
-        return "Réserver cet hôtel";
+        return t("planner.action.bookHotel");
       case "activity":
-        return "Ajouter cette activité";
+        return t("planner.action.addActivity");
       default:
-        return "Ajouter au voyage";
+        return t("planner.action.addToTrip");
     }
   };
 
@@ -181,6 +183,7 @@ export function QuickCompareButton({
   compareCount = 0,
   maxCompare = 4,
 }: QuickCompareButtonProps) {
+  const { t } = useTranslation();
   const isMaxReached = compareCount >= maxCompare && !isComparing;
 
   const sizeClasses = {
@@ -200,7 +203,7 @@ export function QuickCompareButton({
       type="button"
       onClick={onClick}
       disabled={disabled || isMaxReached}
-      title={isMaxReached ? `Maximum ${maxCompare} éléments` : isComparing ? "Retirer de la comparaison" : "Comparer"}
+      title={isMaxReached ? t("planner.action.maxItems", { count: maxCompare }) : isComparing ? t("planner.action.removeFromCompare") : t("planner.action.compare")}
       className={cn(
         "inline-flex items-center justify-center rounded-full font-medium transition-all",
         "hover:scale-[1.02] active:scale-[0.98]",
@@ -212,7 +215,7 @@ export function QuickCompareButton({
       )}
     >
       {isComparing ? <X size={iconSizes[size]} /> : <GitCompare size={iconSizes[size]} />}
-      {showLabel && <span>{isComparing ? "Retirer" : "Comparer"}</span>}
+      {showLabel && <span>{isComparing ? t("planner.action.remove") : t("planner.action.compare")}</span>}
     </button>
   );
 }
@@ -235,6 +238,7 @@ export function SaveButton({
   showLabel = false,
   disabled = false,
 }: SaveButtonProps) {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: showLabel ? "px-3 py-1.5 text-xs gap-1.5" : "p-1.5",
     md: showLabel ? "px-4 py-2 text-sm gap-2" : "p-2",
@@ -252,7 +256,7 @@ export function SaveButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title={isSaved ? "Retirer des favoris" : "Sauvegarder"}
+      title={isSaved ? t("planner.action.removeFromFavorites") : t("planner.action.save")}
       className={cn(
         "inline-flex items-center justify-center rounded-full font-medium transition-all",
         "hover:scale-[1.02] active:scale-[0.98]",
@@ -268,7 +272,7 @@ export function SaveButton({
       ) : (
         <Bookmark size={iconSizes[size]} />
       )}
-      {showLabel && <span>{isSaved ? "Sauvegardé" : "Sauvegarder"}</span>}
+      {showLabel && <span>{isSaved ? t("planner.action.saved") : t("planner.action.save")}</span>}
     </button>
   );
 }
@@ -338,10 +342,12 @@ export function ViewDetailsButton({
   onClick,
   size = "md",
   showLabel = true,
-  label = "Voir détails",
+  label,
   disabled = false,
   external = false,
 }: ViewDetailsButtonProps) {
+  const { t } = useTranslation();
+  const displayLabel = label || t("planner.action.viewDetails");
   const sizeClasses = {
     sm: "px-3 py-1.5 text-xs gap-1.5",
     md: "px-4 py-2 text-sm gap-2",
