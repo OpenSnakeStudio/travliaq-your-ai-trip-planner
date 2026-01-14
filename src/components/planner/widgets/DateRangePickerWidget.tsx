@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { 
@@ -20,8 +21,9 @@ import {
   isSameMonth, 
   isBefore 
 } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS } from "date-fns/locale";
 import { parsePreferredMonth } from "./utils";
+import { useLocale } from "@/hooks/useLocale";
 
 interface DateRangePickerWidgetProps {
   onConfirm: (departure: Date, returnDate: Date) => void;
@@ -34,6 +36,9 @@ export const DateRangePickerWidget = ({
   tripDuration,
   preferredMonth
 }: DateRangePickerWidgetProps) => {
+  const { t } = useTranslation();
+  const { language, dateFnsLocale } = useLocale();
+  
   // Determine initial month from preferredMonth
   const getInitialMonth = () => {
     const parsed = parsePreferredMonth(preferredMonth);
@@ -48,7 +53,9 @@ export const DateRangePickerWidget = ({
   const [selectingReturn, setSelectingReturn] = useState(false);
 
   const weekStartsOn = 1;
-  const weekDayLabels = ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"];
+  const weekDayLabels = language === "fr" 
+    ? ["Lu", "Ma", "Me", "Je", "Ve", "Sa", "Di"]
+    : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = addDays(today, 1);
@@ -132,7 +139,7 @@ export const DateRangePickerWidget = ({
     return (
       <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium">
         <CalendarIcon className="h-4 w-4" />
-        <span>{format(departureDate, "d MMM", { locale: fr })} → {format(returnDate, "d MMM yyyy", { locale: fr })}</span>
+        <span>{format(departureDate, "d MMM", { locale: dateFnsLocale })} → {format(returnDate, "d MMM yyyy", { locale: dateFnsLocale })}</span>
       </div>
     );
   }
@@ -140,7 +147,7 @@ export const DateRangePickerWidget = ({
   return (
     <div className="mt-3 p-4 rounded-2xl bg-muted/50 border border-border/50 max-w-xs">
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-        {selectingReturn ? "Sélectionnez le retour" : "Sélectionnez le départ"}
+        {selectingReturn ? t("planner.datePicker.selectReturn") : t("planner.datePicker.selectDeparture")}
       </div>
       
       {/* Selected dates indicator */}
@@ -149,14 +156,14 @@ export const DateRangePickerWidget = ({
           "flex-1 px-3 py-1.5 rounded-lg border text-center transition-all",
           departureDate ? "border-primary bg-primary/10 text-primary font-medium" : "border-border text-muted-foreground"
         )}>
-          {departureDate ? format(departureDate, "d MMM", { locale: fr }) : "Départ"}
+          {departureDate ? format(departureDate, "d MMM", { locale: dateFnsLocale }) : t("planner.datePicker.departure")}
         </div>
         <span className="text-muted-foreground">→</span>
         <div className={cn(
           "flex-1 px-3 py-1.5 rounded-lg border text-center transition-all",
           returnDate ? "border-primary bg-primary/10 text-primary font-medium" : "border-border text-muted-foreground"
         )}>
-          {returnDate ? format(returnDate, "d MMM", { locale: fr }) : "Retour"}
+          {returnDate ? format(returnDate, "d MMM", { locale: dateFnsLocale }) : t("planner.datePicker.return")}
         </div>
       </div>
       
@@ -170,7 +177,7 @@ export const DateRangePickerWidget = ({
           ‹
         </button>
         <span className="text-sm font-medium">
-          {format(baseMonth, "MMMM yyyy", { locale: fr })}
+          {format(baseMonth, "MMMM yyyy", { locale: dateFnsLocale })}
         </span>
         <button
           type="button"
@@ -235,10 +242,13 @@ export const DateRangePickerWidget = ({
         )}
       >
         {departureDate && returnDate 
-          ? `Confirmer : ${format(departureDate, "d MMM", { locale: fr })} → ${format(returnDate, "d MMM", { locale: fr })}` 
+          ? t("planner.datePicker.confirmRange", { 
+              departure: format(departureDate, "d MMM", { locale: dateFnsLocale }), 
+              return: format(returnDate, "d MMM", { locale: dateFnsLocale }) 
+            })
           : selectingReturn 
-            ? "Sélectionnez la date de retour"
-            : "Sélectionnez la date de départ"
+            ? t("planner.datePicker.selectReturnDate")
+            : t("planner.datePicker.selectDepartureDate")
         }
       </button>
     </div>

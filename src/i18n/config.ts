@@ -1827,6 +1827,7 @@ const resources = {
       "planner.preferences.axes.luxury": "Luxe",
       "planner.preferences.axes.tourist": "Touristique",
       "planner.preferences.axes.authentic": "Authentique",
+      
     },
   },
   en: {
@@ -3639,6 +3640,7 @@ const resources = {
       "planner.preferences.axes.luxury": "Luxury",
       "planner.preferences.axes.tourist": "Touristic",
       "planner.preferences.axes.authentic": "Authentic",
+      
     },
   },
 };

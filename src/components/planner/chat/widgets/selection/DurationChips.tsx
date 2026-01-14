@@ -6,6 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Clock, Zap, Sun, Sunrise } from "lucide-react";
 
@@ -14,7 +15,7 @@ import { Clock, Zap, Sun, Sunrise } from "lucide-react";
  */
 export interface DurationOption {
   id: string;
-  label: string;
+  labelKey: string;
   /** Duration in minutes */
   minMinutes: number;
   /** Duration in minutes (null = no upper limit) */
@@ -26,12 +27,12 @@ export interface DurationOption {
  * Default duration options
  */
 export const DEFAULT_DURATION_OPTIONS: DurationOption[] = [
-  { id: "quick", label: "< 1h", minMinutes: 0, maxMinutes: 60, icon: "quick" },
-  { id: "short", label: "1-2h", minMinutes: 60, maxMinutes: 120, icon: "short" },
-  { id: "half", label: "2-4h", minMinutes: 120, maxMinutes: 240, icon: "half" },
-  { id: "halfday", label: "Demi-journée", minMinutes: 240, maxMinutes: 360, icon: "half" },
-  { id: "full", label: "Journée", minMinutes: 360, maxMinutes: 600, icon: "full" },
-  { id: "multi", label: "Multi-jours", minMinutes: 600, maxMinutes: null, icon: "multi" },
+  { id: "quick", labelKey: "planner.duration.lessThan1h", minMinutes: 0, maxMinutes: 60, icon: "quick" },
+  { id: "short", labelKey: "planner.duration.1to2h", minMinutes: 60, maxMinutes: 120, icon: "short" },
+  { id: "half", labelKey: "planner.duration.2to4h", minMinutes: 120, maxMinutes: 240, icon: "half" },
+  { id: "halfday", labelKey: "planner.duration.halfDay", minMinutes: 240, maxMinutes: 360, icon: "half" },
+  { id: "full", labelKey: "planner.duration.fullDay", minMinutes: 360, maxMinutes: 600, icon: "full" },
+  { id: "multi", labelKey: "planner.duration.multiDay", minMinutes: 600, maxMinutes: null, icon: "multi" },
 ];
 
 /**
@@ -101,6 +102,7 @@ export function DurationChips({
   label,
   showClear = false,
 }: DurationChipsProps) {
+  const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(initialSelected)
   );
@@ -158,7 +160,7 @@ export function DurationChips({
               onClick={handleClear}
               className="text-xs text-muted-foreground hover:text-foreground underline"
             >
-              Effacer
+              {t("common.clear")}
             </button>
           )}
         </div>
@@ -183,7 +185,7 @@ export function DurationChips({
               )}
             >
               <DurationIcon type={option.icon} size={size === "sm" ? 12 : 14} />
-              <span className="font-medium whitespace-nowrap">{option.label}</span>
+              <span className="font-medium whitespace-nowrap">{t(option.labelKey)}</span>
             </button>
           );
         })}
