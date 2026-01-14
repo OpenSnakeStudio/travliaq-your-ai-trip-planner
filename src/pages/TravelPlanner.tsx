@@ -14,8 +14,9 @@ import OnboardingTour from "@/components/planner/OnboardingTour";
 import { PlannerErrorBoundary } from "@/components/planner/PlannerErrorBoundary";
 import { AutoDetectDeparture } from "@/components/planner/AutoDetectDeparture";
 import type { Airport } from "@/hooks/useNearestAirports";
-import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
-import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
+// Legacy providers removed - using Zustand stores instead
+// import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
+// import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
 import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
@@ -203,15 +204,13 @@ const TravelPlanner = () => {
   }, [shouldConfirmLeave]);
 
   return (
-    <TravelMemoryProvider>
-      <PreferenceMemoryProvider>
-        <FlightMemoryProvider>
-          {/* Auto-detect departure airport from user's location */}
-          <AutoDetectDeparture />
-          <AccommodationMemoryProvider>
-            <ActivityMemoryProvider>
-              <WidgetHistoryProvider>
-                <NegativePreferencesProvider>
+    <PreferenceMemoryProvider>
+      {/* Auto-detect departure airport from user's location */}
+      <AutoDetectDeparture />
+      <AccommodationMemoryProvider>
+        <ActivityMemoryProvider>
+          <WidgetHistoryProvider>
+            <NegativePreferencesProvider>
               <Helmet>
                 <title>Planificateur | Travliaq</title>
                 <meta
@@ -391,13 +390,11 @@ const TravelPlanner = () => {
                   </>
                 )}
               </div>
-              </NegativePreferencesProvider>
-              </WidgetHistoryProvider>
-            </ActivityMemoryProvider>
-          </AccommodationMemoryProvider>
-        </FlightMemoryProvider>
-      </PreferenceMemoryProvider>
-    </TravelMemoryProvider>
+            </NegativePreferencesProvider>
+          </WidgetHistoryProvider>
+        </ActivityMemoryProvider>
+      </AccommodationMemoryProvider>
+    </PreferenceMemoryProvider>
   );
 };
 
