@@ -123,7 +123,33 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
       )}
 
       {/* Carousel Container */}
-      <div className="relative">
+      <div className="relative group">
+        {/* Navigation Arrows - Fade in on hover */}
+        {canScrollPrev && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={scrollPrev}
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/90 border border-border shadow-lg backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-background hover:scale-110"
+            aria-label="Destination précédente"
+          >
+            <ChevronLeft className="h-5 w-5 text-foreground" />
+          </motion.button>
+        )}
+        {canScrollNext && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={scrollNext}
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-background/90 border border-border shadow-lg backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-background hover:scale-110"
+            aria-label="Destination suivante"
+          >
+            <ChevronRight className="h-5 w-5 text-foreground" />
+          </motion.button>
+        )}
+
         {/* Main Carousel - Shows ~1.2 cards for peek effect */}
         <Carousel
           setApi={setApi}
@@ -151,7 +177,6 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
             ))}
           </CarouselContent>
         </Carousel>
-
       </div>
 
       {/* Pagination Dots - Enhanced visibility */}
