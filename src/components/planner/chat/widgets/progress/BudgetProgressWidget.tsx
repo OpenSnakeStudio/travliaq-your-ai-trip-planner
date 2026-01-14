@@ -260,6 +260,7 @@ function CompactVariant({
   currency: string;
   isOverBudget: boolean;
 }) {
+  const { t } = useTranslation();
   const percentage = Math.round((spent / totalBudget) * 100);
 
   return (
