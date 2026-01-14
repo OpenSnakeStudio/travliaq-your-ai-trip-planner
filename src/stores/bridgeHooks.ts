@@ -79,6 +79,22 @@ export interface FlightMemoryBridge {
 
 export function useFlightMemoryBridge(): FlightMemoryBridge {
   const store = usePlannerStoreV2();
+
+  const isReadyToSearch = (() => {
+    if (store.tripType === 'multi') {
+      return store.legs.every((leg) => leg.departure && leg.arrival && leg.date);
+    }
+    const hasBasics = Boolean(store.departure && store.arrival && store.flightDepartureDate);
+    if (store.tripType === 'roundtrip') {
+      return hasBasics && Boolean(store.flightReturnDate);
+    }
+    return hasBasics;
+  })();
+
+  const hasCompleteInfo = Boolean(
+    store.departure?.city && store.arrival?.city && store.passengers.adults >= 1
+  );
+
   return {
     memory: {
       tripType: store.tripType,
@@ -92,8 +108,8 @@ export function useFlightMemoryBridge(): FlightMemoryBridge {
       directOnly: store.directOnly,
       flexibleDates: store.flexibleDates,
     },
-    isReadyToSearch: store.isReadyToSearch,
-    hasCompleteInfo: store.hasCompleteInfo,
+    isReadyToSearch,
+    hasCompleteInfo,
     addLeg: store.addLeg,
     removeLeg: store.removeLeg,
     updateLeg: store.updateLeg,

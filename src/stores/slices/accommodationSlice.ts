@@ -43,9 +43,7 @@ export interface AccommodationActions {
   resetAccommodation: () => void;
 }
 
-export interface AccommodationSlice extends AccommodationState, AccommodationActions {
-  isAccommodationReadyToSearch: boolean;
-}
+export interface AccommodationSlice extends AccommodationState, AccommodationActions {}
 
 export const createAccommodationSlice: StateCreator<
   AccommodationSlice,
@@ -54,13 +52,6 @@ export const createAccommodationSlice: StateCreator<
   AccommodationSlice
 > = (set, get) => ({
   ...initialAccommodationState,
-
-  get isAccommodationReadyToSearch() {
-    const state = get();
-    if (state.accommodations.length === 0) return false;
-    const active = state.accommodations[state.activeAccommodationIndex];
-    return Boolean(active?.city && active?.checkIn && active?.checkOut);
-  },
 
   addAccommodation: (entry?: Partial<AccommodationEntry>) => {
     set(

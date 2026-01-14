@@ -28,11 +28,6 @@ export interface TravelSlice {
   returnDate: Date | null;
   activeDestinationIndex: number;
   
-  // Computed
-  hasDestinations: boolean;
-  hasDates: boolean;
-  hasTravelers: boolean;
-  
   // Actions
   updateTravelers: (travelers: Partial<TravelersInfo>) => void;
   getTotalTravelers: () => number;
@@ -55,18 +50,6 @@ export const createTravelSlice: StateCreator<
 > = (set, get) => ({
   // Initial state
   ...initialTravelState,
-
-  // Computed values
-  get hasDestinations() {
-    return get().destinations.length > 0;
-  },
-  get hasDates() {
-    return get().departureDate !== null;
-  },
-  get hasTravelers() {
-    return get().travelers.adults >= 1;
-  },
-
   // Actions
   updateTravelers: (travelers: Partial<TravelersInfo>) => {
     set(

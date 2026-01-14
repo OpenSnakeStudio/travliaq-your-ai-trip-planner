@@ -36,9 +36,7 @@ export interface ActivityActions {
   resetActivities: () => void;
 }
 
-export interface ActivitySlice extends ActivityState, ActivityActions {
-  totalActivitiesCount: number;
-}
+export interface ActivitySlice extends ActivityState, ActivityActions {}
 
 export const createActivitySlice: StateCreator<
   ActivitySlice,
@@ -47,10 +45,6 @@ export const createActivitySlice: StateCreator<
   ActivitySlice
 > = (set, get) => ({
   ...initialActivityState,
-
-  get totalActivitiesCount() {
-    return get().activities.length;
-  },
 
   addActivityFromSearch: (viatorActivity: ViatorActivity, destinationId: string) => {
     set(

@@ -46,11 +46,7 @@ export interface TravelActions {
   resetTravel: () => void;
 }
 
-export interface TravelSlice extends TravelState, TravelActions {
-  hasDestinations: boolean;
-  hasDates: boolean;
-  hasTravelers: boolean;
-}
+export interface TravelSlice extends TravelState, TravelActions {}
 
 // ============================================================================
 // FLIGHT SLICE TYPES
@@ -110,10 +106,7 @@ export interface FlightActions {
   resetFlight: () => void;
 }
 
-export interface FlightSlice extends FlightState, FlightActions {
-  isReadyToSearch: boolean;
-  hasCompleteInfo: boolean;
-}
+export interface FlightSlice extends FlightState, FlightActions {}
 
 // ============================================================================
 // COMBINED STORE TYPE
