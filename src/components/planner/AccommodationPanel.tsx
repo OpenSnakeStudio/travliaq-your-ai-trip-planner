@@ -8,9 +8,8 @@ import {
 import { cn } from "@/lib/utils";
 import { toastInfo, toastError } from "@/lib/toast";
 import { logger, LogCategory } from "@/utils/logger";
-import { useTravelMemoryStore } from "@/stores/hooks";
+import { useTravelMemoryStore, useFlightMemoryStore } from "@/stores/hooks";
 import { useAccommodationMemory, BUDGET_PRESETS, type BudgetPreset, type AccommodationType, type EssentialAmenity, type RoomConfig, type MealPlan } from "@/contexts/AccommodationMemoryContext";
-import { useFlightMemoryStore } from "@/stores/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
