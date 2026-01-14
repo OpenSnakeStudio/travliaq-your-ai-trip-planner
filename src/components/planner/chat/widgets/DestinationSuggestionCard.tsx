@@ -137,6 +137,7 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
     topActivities,
     bestSeasons,
     flightPriceEstimate,
+    sourceAirportIata,
     imageUrl,
     imageCredit,
   } = suggestion;
@@ -236,7 +237,14 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             <span className="text-border/60">|</span>
             <div className="flex items-center gap-1">
               <Plane className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-              <span>~{flightPriceEstimate || "—"}€</span>
+              <span>
+                ~{flightPriceEstimate || "—"}€
+                {sourceAirportIata && (
+                  <span className="text-muted-foreground/70 ml-0.5">
+                    ({sourceAirportIata})
+                  </span>
+                )}
+              </span>
             </div>
           </div>
 
