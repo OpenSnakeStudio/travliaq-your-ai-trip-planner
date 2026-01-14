@@ -3,7 +3,7 @@
  * Shared constants for all preference components
  */
 
-import type { TravelStyle, TripContext, MustHaves, StyleAxes } from '@/contexts/preferences/types';
+import type { TravelStyle, TripContext, MustHaves, StyleAxes } from '@/stores/slices/preferenceTypes';
 import { Leaf, Salad, Moon, Star, Wheat, Fish, Milk, Egg, Nut } from "lucide-react";
 
 // ============================================================================

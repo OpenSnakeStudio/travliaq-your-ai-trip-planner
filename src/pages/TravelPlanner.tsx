@@ -14,11 +14,6 @@ import OnboardingTour from "@/components/planner/OnboardingTour";
 import { PlannerErrorBoundary } from "@/components/planner/PlannerErrorBoundary";
 import { AutoDetectDeparture } from "@/components/planner/AutoDetectDeparture";
 import type { Airport } from "@/hooks/useNearestAirports";
-// Legacy providers removed - using Zustand stores instead
-// import { FlightMemoryProvider } from "@/contexts/FlightMemoryContext";
-// import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
-// import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
-// import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
 import { WidgetHistoryProvider } from "@/contexts/WidgetHistoryContext";
 import { NegativePreferencesProvider } from "@/contexts/NegativePreferencesContext";
 import { usePlannerState } from "@/hooks/usePlannerState";
