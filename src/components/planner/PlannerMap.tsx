@@ -4,8 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/mapbox-overrides.css";
 import type { TabType, MapPin } from "@/pages/TravelPlanner";
 import type { FlightRoutePoint } from "./PlannerPanel";
-import { useFlightMemoryStore, useAccommodationMemoryStore, type MemoryRoutePoint } from "@/stores/hooks";
-import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
+import { useFlightMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, type MemoryRoutePoint } from "@/stores/hooks";
 import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBounds";
 import { useMapPrices, type MapPrice } from "@/hooks/useMapPrices";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
@@ -468,7 +467,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   const { memory: accommodationMemory, getActiveAccommodation } = useAccommodationMemoryStore();
 
   // Get activity entries for markers (needed for auto-zoom on tab switch)
-  const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemory();
+  const { state: activityState, allDestinations: activityAllDestinations } = useActivityMemoryStore();
 
   // Track previous tab to detect tab switches
   const prevActiveTabRef = useRef<TabType>(activeTab);
@@ -616,8 +615,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
           lng,
           title: activity.title,
           subtitle: activity.categories?.[0] || "Activité",
-          rating: activity.rating?.average,
-          duration: activity.duration?.formatted,
+          rating: typeof activity.rating === 'object' ? activity.rating?.average : activity.rating,
+          duration: typeof activity.duration === 'object' ? activity.duration?.formatted : undefined,
           price: activity.pricing?.from_price,
           image: activity.images?.[0]?.variants?.small || activity.images?.[0]?.url,
         };
@@ -1814,7 +1813,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     attractions.forEach((attraction, idx) => {
       // Use coordinates from the activity (can be in coordinates or location.coordinates)
-      const coords = attraction.coordinates || attraction.location?.coordinates;
+      const coords = attraction.coordinates || (attraction.location as any)?.coordinates;
       if (!coords) return;
       const lat = coords.lat;
       const lng = 'lng' in coords ? coords.lng : ('lon' in coords ? (coords as any).lon : null);
@@ -1869,8 +1868,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
         className: "attraction-tooltip",
       });
 
-      const imageUrl = attraction.images?.[0]?.variants?.medium || attraction.images?.[0]?.url;
-      const rating = attraction.rating?.average || 0;
+      const imageUrl = (attraction.images as any)?.[0]?.variants?.medium || (attraction.images as any)?.[0]?.url;
+      const rating = typeof attraction.rating === 'object' ? attraction.rating?.average || 0 : attraction.rating || 0;
 
       // Hover effects + tooltip
       const pinEl = el.querySelector("div") as HTMLElement;
@@ -1886,8 +1885,8 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
               <h4 class="font-semibold text-sm line-clamp-2 mb-2">${attraction.title}</h4>
               <div class="flex items-center gap-1">
                 <span class="text-amber-400">★</span>
-                <span class="text-xs font-medium">${rating.toFixed(1)}</span>
-                <span class="text-xs text-muted-foreground ml-1">(${attraction.rating?.count || 0} avis)</span>
+                <span class="text-xs font-medium">${typeof rating === 'number' ? rating.toFixed(1) : rating}</span>
+                <span class="text-xs text-muted-foreground ml-1">(${typeof attraction.rating === 'object' ? attraction.rating?.count || 0 : attraction.reviewCount || 0} avis)</span>
               </div>
             </div>
           </div>
@@ -1906,7 +1905,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       pinEl?.addEventListener("click", (e) => {
         e.stopPropagation();
         tooltip.remove(); // Remove hover tooltip
-        eventBus.emit("attraction:click", { attraction });
+        eventBus.emit("attraction:click", { attraction: attraction as any });
       });
 
       const marker = new mapboxgl.Marker({ element: el, anchor: "bottom" })

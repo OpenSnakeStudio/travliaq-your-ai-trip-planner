@@ -19,7 +19,6 @@ import type { Airport } from "@/hooks/useNearestAirports";
 // import { TravelMemoryProvider } from "@/contexts/TravelMemoryContext";
 // import { AccommodationMemoryProvider } from "@/contexts/AccommodationMemoryContext";
 import { PreferenceMemoryProvider } from "@/contexts/PreferenceMemoryContext";
-import { ActivityMemoryProvider } from "@/contexts/ActivityMemoryContext";
 import { WidgetHistoryProvider } from "@/contexts/WidgetHistoryContext";
 import { NegativePreferencesProvider } from "@/contexts/NegativePreferencesContext";
 import { usePlannerState } from "@/hooks/usePlannerState";
@@ -207,8 +206,7 @@ const TravelPlanner = () => {
     <PreferenceMemoryProvider>
       {/* Auto-detect departure airport from user's location */}
       <AutoDetectDeparture />
-      <ActivityMemoryProvider>
-        <WidgetHistoryProvider>
+      <WidgetHistoryProvider>
             <NegativePreferencesProvider>
               <Helmet>
                 <title>Planificateur | Travliaq</title>
@@ -391,7 +389,6 @@ const TravelPlanner = () => {
               </div>
             </NegativePreferencesProvider>
           </WidgetHistoryProvider>
-        </ActivityMemoryProvider>
     </PreferenceMemoryProvider>
   );
 };

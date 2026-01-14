@@ -7,7 +7,7 @@
  * Migration: Replace `useAccommodationMemory` import with `useAccommodationMemoryStore`
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { usePlannerStoreV2 } from '../plannerStoreV2';
 import { useTravelMemoryStore } from './useTravelMemoryStore';
 import type { 
@@ -125,6 +125,13 @@ export interface AccommodationMemoryStoreValue {
 export function useAccommodationMemoryStore(): AccommodationMemoryStoreValue {
   const store = usePlannerStoreV2();
   const { memory: travelMemory } = useTravelMemoryStore();
+
+  // Ensure at least one accommodation exists on mount (after hydration)
+  useEffect(() => {
+    if (store.isHydrated && store.accommodations.length === 0) {
+      store.addAccommodation();
+    }
+  }, [store.isHydrated, store.accommodations.length, store.addAccommodation]);
 
   // Build memory object (mirrors Context structure)
   const memory = useMemo<AccommodationMemory>(() => ({

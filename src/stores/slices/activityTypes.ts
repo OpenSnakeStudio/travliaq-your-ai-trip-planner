@@ -7,13 +7,18 @@ export interface ActivityEntry {
   id: string;
   destinationId: string;
   viatorProductCode?: string;
+  // Location fields (for compatibility with old context)
+  city?: string;
+  country?: string;
+  coordinates?: { lat: number; lng: number };
   title: string;
   description?: string;
   imageUrl?: string;
-  duration?: number;
+  images?: any[]; // For compatibility
+  duration?: number | { minutes: number; formatted: string };
   price?: number;
   currency?: string;
-  rating?: number;
+  rating?: number | { average: number; count: number };
   reviewCount?: number;
   categories?: string[];
   date: Date | null;
@@ -22,6 +27,13 @@ export interface ActivityEntry {
   bookingUrl?: string;
   isManual?: boolean;
   addedAt: Date;
+  // Compatibility fields
+  pricing?: { from_price: number; currency: string; is_discounted: boolean };
+  flags?: string[];
+  source?: 'viator' | 'manual';
+  userModified?: boolean;
+  notes?: string;
+  location?: { destination: string; country: string; coordinates?: { lat: number; lng: number } };
 }
 
 // Activity destination
