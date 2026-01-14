@@ -21,6 +21,7 @@ export { TypingIndicator } from "./TypingIndicator";
 export { MemoizedSmartSuggestions, type InspireFlowStep } from "./MemoizedSmartSuggestions";
 export { SmartSuggestions, type DynamicSuggestion } from "./SmartSuggestions";
 export { ChatMessageItem } from "./ChatMessageItem";
+export { IntentDebugPanel } from "./IntentDebugPanel";
 
 // Widgets
 export {

@@ -40,7 +40,9 @@ import {
   DestinationSuggestionsGrid,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useIntentHandler } from "./chat/hooks";
+import { IntentDebugPanel } from "./chat/IntentDebugPanel";
+import { useIntentRouter } from "./chat/hooks/useIntentRouter";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
 import { getCityCoords } from "./chat/types";
@@ -129,6 +131,10 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const [destinationSuggestions, setDestinationSuggestions] = useState<DestinationSuggestion[]>([]);
   const [destinationProfileScore, setDestinationProfileScore] = useState<number>(0);
   const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
+  
+  // Intent classification debug state
+  const [lastIntentClassification, setLastIntentClassification] = useState<import("./chat/hooks/useChatStream").IntentClassification | null>(null);
+  const [lastWidgetTriggered, setLastWidgetTriggered] = useState<string | null>(null);
 
   // Prevent repeated airport fetch loops (same inputs => only fetch once)
   const airportFetchKeyRef = useRef<string | null>(null);
@@ -180,6 +186,22 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // Widget tracking for LLM context
   const widgetTracking = useWidgetTracking();
   
+  // Intent router for flow state
+  const intentRouter = useIntentRouter({ memory });
+  
+  // Intent handler for processing backend classifications
+  const intentHandler = useIntentHandler({
+    memory,
+    onShowWidget: useCallback((widgetType, data) => {
+      console.log("[PlannerChat] Intent handler triggered widget:", widgetType, data);
+      setLastWidgetTriggered(widgetType);
+      // Widget will be set by the normal flow based on flightData
+    }, []),
+    onTriggerSearch: useCallback(() => {
+      console.log("[PlannerChat] Intent handler triggered search");
+      // Could trigger search here
+    }, []),
+  });
   // Intelligent scroll management
   const {
     isUserScrolling,
@@ -781,7 +803,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         pendingWidgetsContext ? `[OPTIONS WIDGETS ACTIFS]\n${pendingWidgetsContext}` : ""
       ].filter(Boolean).join("\n\n").trim();
 
-      const { content, flightData, quickReplies, destinationSuggestionRequest } = await streamResponse(
+      const { content, flightData, quickReplies, destinationSuggestionRequest, intentClassification } = await streamResponse(
         apiMessages,
         messageId,
         {
@@ -810,6 +832,18 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           );
         }
       );
+
+      // Process intent classification for debug and potential widget triggering
+      if (intentClassification) {
+        console.log("[PlannerChat] Intent classification received:", intentClassification);
+        setLastIntentClassification(intentClassification);
+        
+        // Process through intent handler for validation and potential widget triggering
+        const intentResult = intentHandler.processIntent(intentClassification);
+        if (intentResult.widgetType) {
+          setLastWidgetTriggered(intentResult.widgetType);
+        }
+      }
 
       // Handle destination suggestion request from LLM
       if (destinationSuggestionRequest) {
@@ -1578,6 +1612,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             </div>
           </div>
       </div>
+      
+      {/* Intent Debug Panel - only visible in development */}
+      <IntentDebugPanel
+        intent={lastIntentClassification}
+        flowState={intentRouter.flowState}
+        widgetTriggered={lastWidgetTriggered}
+      />
     </aside>
   );
 });
