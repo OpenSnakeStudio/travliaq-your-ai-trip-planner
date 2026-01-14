@@ -12,7 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import type { ActivityFilters as ActivityFiltersType, CategoryWithEmoji, TimeOfDay, DurationRange } from "@/types/activity";
 import { VIATOR_CATEGORIES } from "@/constants/metaCategories";
 import { autoSelectFilters, getFiltersSummary } from "@/services/activities/filterAutoSelection";
-import { usePreferenceMemory } from "@/contexts/PreferenceMemoryContext";
+import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { toast } from "sonner";
 
 export interface ActivityFiltersProps {
@@ -61,7 +61,7 @@ export const ActivityFilters = ({
   travelers
 }: ActivityFiltersProps) => {
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
-  const { memory } = usePreferenceMemory();
+  const { memory } = usePreferenceMemoryStore();
   const preferences = memory.preferences;
 
   // Use Viator categories

@@ -57,5 +57,32 @@ export type {
   ActivitySearchState,
 } from './useActivityMemoryStore';
 
+// Preference Memory (replaces usePreferenceMemory from PreferenceMemoryContext)
+export { usePreferenceMemoryStore } from './usePreferenceMemoryStore';
+export type {
+  PreferenceMemoryStoreValue,
+  TripPreferences,
+  StyleAxes,
+  MustHaves,
+  TravelStyle,
+  TripContext,
+  WorkPreferences,
+  PreferenceMemory,
+  HotelFiltersFromPreferences,
+  ActivityFiltersFromPreferences,
+  FlightPreferencesComputed,
+  ComfortLabel,
+} from './usePreferenceMemoryStore';
+export {
+  DEFAULT_STYLE_AXES,
+  DEFAULT_MUST_HAVES,
+  DEFAULT_WORK_PREFERENCES,
+  DEFAULT_TRIP_CONTEXT,
+  DEFAULT_PREFERENCES,
+  DEFAULT_MEMORY,
+  createDefaultPreferences,
+  createDefaultMemory,
+} from './usePreferenceMemoryStore';
+
 // Re-export bridge hooks for backward compatibility during migration
 export * from '../bridgeHooks';
