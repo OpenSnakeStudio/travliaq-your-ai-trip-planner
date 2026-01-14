@@ -7,6 +7,7 @@
 
 import { Star, Clock, MapPin, Users, Calendar, ExternalLink, Plus, Trash2, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,8 @@ export const ActivityDetailModal = ({
   onRemove,
   isInTrip = false,
 }: ActivityDetailModalProps) => {
+  const { t } = useTranslation();
+  
   if (!activity) return null;
 
   const title = activity.title;
@@ -91,7 +94,7 @@ export const ActivityDetailModal = ({
   const bookingUrl = isViatorActivity(activity) ? activity.booking_url : null;
 
   const formatDuration = () => {
-    if (!duration) return "Durée non spécifiée";
+    if (!duration) return t("planner.activityDetail.durationNotSpecified");
     return duration.formatted || `${duration.minutes} min`;
   };
 
@@ -137,7 +140,7 @@ export const ActivityDetailModal = ({
             <button
               onClick={onClose}
               className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-lg z-10"
-              aria-label="Fermer"
+              aria-label={t("planner.activityDetail.close")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
@@ -153,7 +156,7 @@ export const ActivityDetailModal = ({
             <button
               onClick={onClose}
               className="absolute top-4 right-4 h-10 w-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors shadow-lg z-10"
-              aria-label="Fermer"
+              aria-label={t("planner.activityDetail.close")}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
@@ -173,12 +176,12 @@ export const ActivityDetailModal = ({
                 {renderStars(rating.average)}
                 <span className="text-lg font-semibold text-foreground">{rating.average.toFixed(1)}</span>
                 <span className="text-sm text-muted-foreground">
-                  ({rating.count.toLocaleString()} avis)
+                  ({rating.count.toLocaleString()} {t("planner.activityDetail.reviews")})
                 </span>
                 {rating.average >= 4.8 && (
                   <span className="px-2.5 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full flex items-center gap-1">
                     <Award className="h-3 w-3" />
-                    Top noté
+                    {t("planner.activityDetail.topRated")}
                   </span>
                 )}
               </div>
@@ -187,29 +190,29 @@ export const ActivityDetailModal = ({
 
           {/* Quick Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <InfoRow icon={Clock} label="Durée" value={formatDuration()} />
+            <InfoRow icon={Clock} label={t("planner.activityDetail.duration")} value={formatDuration()} />
             {location && (
               <InfoRow
                 icon={MapPin}
-                label="Lieu"
+                label={t("planner.activityDetail.location")}
                 value={`${location.city || location.destination || ""}, ${location.country || ""}`.trim()}
               />
             )}
             {pricing && (
               <InfoRow
                 icon={Users}
-                label="Prix par personne"
+                label={t("planner.activityDetail.pricePerPerson")}
                 value={`${pricing.from_price}€`}
               />
             )}
             {isViatorActivity(activity) && activity.flags && activity.flags.length > 0 && (
-              <InfoRow icon={Calendar} label="Options" value={activity.flags.join(", ")} />
+              <InfoRow icon={Calendar} label={t("planner.activityDetail.options")} value={activity.flags.join(", ")} />
             )}
           </div>
 
           {/* Description */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-foreground">Description</h3>
+            <h3 className="text-lg font-semibold text-foreground">{t("planner.activityDetail.description")}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{description}</p>
           </div>
 
@@ -218,7 +221,7 @@ export const ActivityDetailModal = ({
             <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Prix à partir de</p>
+                  <p className="text-sm text-muted-foreground mb-1">{t("planner.activityDetail.priceFrom")}</p>
                   <div className="flex items-baseline gap-2">
                     {hasDiscount && (
                       <span className="text-lg text-muted-foreground line-through">
@@ -226,12 +229,12 @@ export const ActivityDetailModal = ({
                       </span>
                     )}
                     <span className="text-3xl font-bold text-primary">{pricing.from_price}€</span>
-                    <span className="text-sm text-muted-foreground">/ personne</span>
+                    <span className="text-sm text-muted-foreground">/ {t("planner.activityDetail.person")}</span>
                   </div>
                 </div>
                 {hasDiscount && (
                   <div className="text-right">
-                    <span className="text-sm text-muted-foreground">Économisez</span>
+                    <span className="text-sm text-muted-foreground">{t("planner.activityDetail.save")}</span>
                     <p className="text-xl font-bold text-destructive">-{discountPercentage}%</p>
                   </div>
                 )}
@@ -245,7 +248,7 @@ export const ActivityDetailModal = ({
               <Button variant="outline" size="lg" className="flex-1 gap-2" asChild>
                 <a href={bookingUrl} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-4 w-4" />
-                  Voir sur Viator
+                  {t("planner.activityDetail.viewOnViator")}
                 </a>
               </Button>
             )}
@@ -263,7 +266,7 @@ export const ActivityDetailModal = ({
                 }}
               >
                 <Trash2 className="h-4 w-4" />
-                Retirer du planning
+                {t("planner.activityDetail.removeFromPlanning")}
               </Button>
             ) : (
               <Button
@@ -277,7 +280,7 @@ export const ActivityDetailModal = ({
                 }}
               >
                 <Plus className="h-4 w-4" />
-                Ajouter au planning
+                {t("planner.activityDetail.addToPlanning")}
               </Button>
             )}
           </div>
