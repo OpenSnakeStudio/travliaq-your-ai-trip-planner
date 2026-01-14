@@ -200,22 +200,19 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             ))}
           </div>
 
-          {/* Stats - Two rows for clarity */}
-          <div className="space-y-1.5 text-xs">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <Wallet className="h-3.5 w-3.5 text-amber-500" />
-                <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5 text-purple-500" />
-                <span>{bestSeasons.slice(0, 2).join(", ")}</span>
-              </div>
+          {/* Stats - Single line */}
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Wallet className="h-3.5 w-3.5 text-amber-500" />
+              <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5 text-purple-500" />
+              <span>{bestSeasons.slice(0, 2).join(", ")}</span>
             </div>
             <div className="flex items-center gap-1">
               <Plane className="h-3.5 w-3.5 text-blue-500" />
-              <span>Vol A/R : {flightPriceEstimate ? `~${flightPriceEstimate}€` : "—"}</span>
-              <span className="text-muted-foreground/70">(estimation)</span>
+              <span>Vol A/R : {flightPriceEstimate ? `~${flightPriceEstimate}€` : "—"} (estimation)</span>
             </div>
           </div>
 
