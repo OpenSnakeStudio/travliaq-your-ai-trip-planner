@@ -5,7 +5,7 @@
  * Used to propagate CITIES (not airports) from Flights → Accommodations → Activities.
  */
 
-import type { AirportInfo } from "@/contexts/FlightMemoryContext";
+import type { AirportInfo } from "@/stores/hooks";
 
 // ===== Core Types =====
 

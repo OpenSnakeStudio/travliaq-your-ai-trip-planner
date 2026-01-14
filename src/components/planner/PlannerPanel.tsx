@@ -9,7 +9,7 @@ import type { LocationResult } from "@/hooks/useLocationAutocomplete";
 import { findNearestAirports, Airport } from "@/hooks/useNearestAirports";
 import FlightResults, { FlightOffer, generateMockFlights } from "./FlightResults";
 import eventBus from "@/lib/eventBus";
-import { useFlightMemory, type AirportInfo } from "@/contexts/FlightMemoryContext";
+import { useFlightMemoryStore, type AirportInfo } from "@/stores/hooks";
 import { ActivitiesPanelSkeleton, AccommodationPanelSkeleton, PreferencesPanelSkeleton } from "./PanelSkeletons";
 
 // Lazy load panels for code splitting
@@ -190,7 +190,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
   onConfirmedMultiAirportsConsumed?: () => void;
 }) => {
   // Access flight memory for synchronization
-  const { memory, updateMemory } = useFlightMemory();
+  const { memory, updateMemory } = useFlightMemoryStore();
   
   // Initialize tripType from memory
   const [tripType, setTripTypeLocal] = useState<"roundtrip" | "oneway" | "multi">(memory.tripType);

@@ -4,7 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import "@/styles/mapbox-overrides.css";
 import type { TabType, MapPin } from "@/pages/TravelPlanner";
 import type { FlightRoutePoint } from "./PlannerPanel";
-import { useFlightMemory, type MemoryRoutePoint } from "@/contexts/FlightMemoryContext";
+import { useFlightMemoryStore, type MemoryRoutePoint } from "@/stores/hooks";
 import { useAccommodationMemory } from "@/contexts/AccommodationMemoryContext";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
 import { useAirportsInBounds, type AirportMarker } from "@/hooks/useAirportsInBounds";
@@ -331,7 +331,7 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
   });
 
   // Get route points from flight memory
-  const { getRoutePoints, memory: flightMem, updateMemory } = useFlightMemory();
+  const { getRoutePoints, memory: flightMem, updateMemory } = useFlightMemoryStore();
 
   // Get user's departure airports for map-prices API (supports multi-airport cities like Paris = CDG + ORY)
   const departureIata = flightMem?.departure?.iata;

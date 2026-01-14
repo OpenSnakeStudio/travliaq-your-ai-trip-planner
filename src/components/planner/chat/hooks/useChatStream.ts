@@ -12,7 +12,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { FlightFormData } from "@/types/flight";
-import type { MissingField } from "@/contexts/FlightMemoryContext";
+import type { MissingField } from "@/stores/hooks";
 import { getMissingFieldLabel } from "../utils/flightDataToMemory";
 
 /**

@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { eventBus } from "@/lib/eventBus";
 import { DestinationSyncService } from "@/services/destinationSyncService";
-import type { AirportInfo } from "@/contexts/FlightMemoryContext";
+import type { AirportInfo } from "@/stores/hooks";
 import type {
   NormalizedDestination,
   DestinationSyncStatus,

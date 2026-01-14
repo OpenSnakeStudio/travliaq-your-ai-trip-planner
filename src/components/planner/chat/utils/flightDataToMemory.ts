@@ -3,7 +3,7 @@
  * Converts FlightFormData from chat responses to FlightMemory updates
  */
 
-import type { AirportInfo, MissingField } from "@/contexts/FlightMemoryContext";
+import type { AirportInfo, MissingField } from "@/stores/hooks";
 import type { FlightFormData } from "@/types/flight";
 
 /**

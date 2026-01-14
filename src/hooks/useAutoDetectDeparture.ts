@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useFlightMemory, AirportInfo } from '@/contexts/FlightMemoryContext';
+import { useFlightMemoryStore, type AirportInfo } from '@/stores/hooks';
 import { findNearestAirports } from '@/hooks/useNearestAirports';
 
 const STORAGE_KEY = 'travliaq_auto_departure';
@@ -17,7 +17,7 @@ interface CachedDeparture {
  * Caches result in localStorage for 24h to avoid repeated API calls.
  */
 export function useAutoDetectDeparture() {
-  const { memory, updateMemory } = useFlightMemory();
+  const { memory, updateMemory } = useFlightMemoryStore();
   const hasRunRef = useRef(false);
 
   useEffect(() => {
