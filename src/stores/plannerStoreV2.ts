@@ -9,11 +9,12 @@ import { createTravelSlice, type TravelSlice } from './slices/travelSlice';
 import { createFlightSlice, type FlightSlice } from './slices/flightSlice';
 import { createAccommodationSlice, type AccommodationSlice } from './slices/accommodationSlice';
 import { createActivitySlice, type ActivitySlice } from './slices/activitySlice';
+import { createPreferenceSlice, type PreferenceSlice } from './slices/preferenceSlice';
 
 const STORAGE_KEY = 'travliaq_planner_store_v2';
 
 // Combined store type
-export type PlannerStoreV2 = TravelSlice & FlightSlice & AccommodationSlice & ActivitySlice & {
+export type PlannerStoreV2 = TravelSlice & FlightSlice & AccommodationSlice & ActivitySlice & PreferenceSlice & {
   isHydrated: boolean;
   _setHydrated: (hydrated: boolean) => void;
 };
@@ -43,6 +44,7 @@ export const usePlannerStoreV2 = create<PlannerStoreV2>()(
         ...createFlightSlice(...args),
         ...createAccommodationSlice(...args),
         ...createActivitySlice(...args),
+        ...createPreferenceSlice(...args),
       }),
       {
         name: STORAGE_KEY,
@@ -73,6 +75,7 @@ export const usePlannerStoreV2 = create<PlannerStoreV2>()(
           activities: state.activities,
           localDestinations: state.localDestinations,
           activeFilters: state.activeFilters,
+          preferences: state.preferences,
         }),
         onRehydrateStorage: () => (state) => state?._setHydrated(true),
       }
@@ -86,3 +89,4 @@ export type { TravelSlice } from './slices/travelSlice';
 export type { FlightSlice } from './slices/flightSlice';
 export type { AccommodationSlice } from './slices/accommodationSlice';
 export type { ActivitySlice } from './slices/activitySlice';
+export type { PreferenceSlice } from './slices/preferenceSlice';

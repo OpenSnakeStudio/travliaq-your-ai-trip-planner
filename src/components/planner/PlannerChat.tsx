@@ -55,8 +55,7 @@ import { FLIGHTS_ZOOM } from "@/constants/mapSettings";
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
-import { useFlightMemoryStore, useTravelMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, type AccommodationEntry } from "@/stores/hooks";
-import { usePreferenceMemory } from "@/contexts/PreferenceMemoryContext";
+import { useFlightMemoryStore, useTravelMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, usePreferenceMemoryStore, type AccommodationEntry } from "@/stores/hooks";
 import { eventBus, emitTabChange, emitTabAndZoom } from "@/lib/eventBus";
 
 // Re-export types for external consumers
@@ -96,7 +95,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation, resetMemory: resetAccommodationMemory } = useAccommodationMemoryStore();
   const { getSerializedState: getTravelMemory, updateTravelers, resetMemory: resetTravelMemory } = useTravelMemoryStore();
   const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory, resetMemory: resetActivityMemory } = useActivityMemoryStore();
-  const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory, getPreferences, memory: prefMemory } = usePreferenceMemory();
+  const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory, getPreferences, memory: prefMemory } = usePreferenceMemoryStore();
 
   // Chat sessions
   const {
