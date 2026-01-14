@@ -11,7 +11,7 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from "react";
 import { usePreferenceMemory } from "./PreferenceMemoryContext";
-import { useAccommodationMemory } from "./AccommodationMemoryContext";
+import { useAccommodationMemoryStore } from "@/stores/hooks";
 import { eventBus } from "@/lib/eventBus";
 import { activityService, recommendationService, activityCacheService } from "@/services/activities";
 import { travliaqClient } from "@/services/api/travliaqClient";
@@ -250,7 +250,7 @@ export function ActivityMemoryProvider({ children }: { children: ReactNode }) {
 
   // Access other contexts
   const { memory: { preferences } } = usePreferenceMemory();
-  const { memory: { accommodations } } = useAccommodationMemory();
+  const { memory: { accommodations } } = useAccommodationMemoryStore();
 
   // Mark as hydrated on mount
   useEffect(() => {
