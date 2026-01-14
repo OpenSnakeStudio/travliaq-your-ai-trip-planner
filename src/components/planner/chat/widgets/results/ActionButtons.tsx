@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Plus,
@@ -288,6 +289,7 @@ export function ShareButton({
   showLabel = false,
   disabled = false,
 }: ShareButtonProps) {
+  const { t } = useTranslation();
   const sizeClasses = {
     sm: showLabel ? "px-3 py-1.5 text-xs gap-1.5" : "p-1.5",
     md: showLabel ? "px-4 py-2 text-sm gap-2" : "p-2",
@@ -305,7 +307,7 @@ export function ShareButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title="Partager"
+      title={t("share.button")}
       className={cn(
         "inline-flex items-center justify-center rounded-full font-medium transition-all",
         "hover:scale-[1.02] active:scale-[0.98]",
@@ -315,7 +317,7 @@ export function ShareButton({
       )}
     >
       <Share2 size={iconSizes[size]} />
-      {showLabel && <span>Partager</span>}
+      {showLabel && <span>{t("share.button")}</span>}
     </button>
   );
 }

@@ -5,57 +5,60 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles, FileDown, Wand2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type Tier = {
-  name: string;
+  nameKey: string;
   priceMonthly: string;
   priceYearly: string;
   highlight?: boolean;
-  badge?: string;
+  badgeKey?: string;
   icon: React.ComponentType<{ className?: string }>;
-  features: string[];
+  featureKeys: string[];
 };
 
 const tiers: Tier[] = [
   {
-    name: "Gratuit",
+    nameKey: "landing.pricing.free.name",
     priceMonthly: "0€",
     priceYearly: "0€",
-    badge: "Par défaut",
+    badgeKey: "landing.pricing.free.badge",
     icon: Sparkles,
-    features: [
-      "X crédits / mois",
-      "Recommandations de base",
-      "Accès au blog",
+    featureKeys: [
+      "landing.pricing.free.feature1",
+      "landing.pricing.free.feature2",
+      "landing.pricing.free.feature3",
     ],
   },
   {
-    name: "Pro",
+    nameKey: "landing.pricing.pro.name",
     priceMonthly: "9€ / mois",
     priceYearly: "90€ / an",
     highlight: true,
-    badge: "Le plus choisi",
+    badgeKey: "landing.pricing.pro.badge",
     icon: FileDown,
-    features: [
-      "Tout du Gratuit",
-      "Téléchargement PDF",
-      "Plus de crédits / mois",
+    featureKeys: [
+      "landing.pricing.pro.feature1",
+      "landing.pricing.pro.feature2",
+      "landing.pricing.pro.feature3",
     ],
   },
   {
-    name: "Premium",
+    nameKey: "landing.pricing.premium.name",
     priceMonthly: "19€ / mois",
     priceYearly: "190€ / an",
     icon: Wand2,
-    features: [
-      "Tout du Pro",
-      "Personnalisation avancée (plus de temps)",
-      "Priorité sur les meilleures options",
+    featureKeys: [
+      "landing.pricing.premium.feature1",
+      "landing.pricing.premium.feature2",
+      "landing.pricing.premium.feature3",
     ],
   },
 ];
 
 export function PricingSection() {
+  const { t } = useTranslation();
+
   return (
     <section id="pricing" className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-6">
@@ -66,19 +69,20 @@ export function PricingSection() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
-            Des offres simples
+            {t("landing.pricing.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Mensuel ou annuel (remise incluse). Tu gardes la main, tu peux changer quand tu veux.
+            {t("landing.pricing.subtitle")}
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {tiers.map((tier, idx) => {
             const Icon = tier.icon;
+            const tierName = t(tier.nameKey);
             return (
               <motion.div
-                key={tier.name}
+                key={tier.nameKey}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -92,11 +96,11 @@ export function PricingSection() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-xl font-montserrat font-bold text-foreground">
-                        {tier.name}
+                        {tierName}
                       </h3>
-                      {tier.badge ? (
+                      {tier.badgeKey ? (
                         <Badge variant={tier.highlight ? "default" : "secondary"}>
-                          {tier.badge}
+                          {t(tier.badgeKey)}
                         </Badge>
                       ) : null}
                     </div>
@@ -105,7 +109,7 @@ export function PricingSection() {
                         {tier.priceMonthly}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        ou {tier.priceYearly}
+                        {t("landing.pricing.or")} {tier.priceYearly}
                       </div>
                     </div>
                   </div>
@@ -116,10 +120,10 @@ export function PricingSection() {
                 </div>
 
                 <ul className="mt-6 space-y-3 text-sm">
-                  {tier.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-muted-foreground">
+                  {tier.featureKeys.map((featureKey) => (
+                    <li key={featureKey} className="flex items-start gap-2 text-muted-foreground">
                       <Check className="h-4 w-4 mt-0.5 text-primary" />
-                      <span>{f}</span>
+                      <span>{t(featureKey)}</span>
                     </li>
                   ))}
                 </ul>
@@ -135,10 +139,10 @@ export function PricingSection() {
                     }
                     onClick={(e) => e.preventDefault()}
                   >
-                    Choisir {tier.name}
+                    {t("landing.pricing.choose")} {tierName}
                   </a>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Paiement Stripe bientôt. (Pour l’instant : vitrine.)
+                    {t("landing.pricing.comingSoon")}
                   </p>
                 </div>
               </motion.div>

@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTranslation } from "react-i18next";
 
 type ShareButtonsProps = {
   title: string;
@@ -14,6 +15,7 @@ type ShareButtonsProps = {
 };
 
 export const ShareButtons = ({ title, url }: ShareButtonsProps) => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const encodedTitle = encodeURIComponent(title);
   const encodedUrl = encodeURIComponent(url);
@@ -35,7 +37,7 @@ export const ShareButtons = ({ title, url }: ShareButtonsProps) => {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
           <Share2 className="h-4 w-4 mr-2" />
-          Partager
+          {t("share.button")}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">

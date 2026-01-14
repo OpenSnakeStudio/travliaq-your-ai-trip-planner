@@ -6,6 +6,7 @@
 import { motion } from "framer-motion";
 import { Play, Sparkles } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // Placeholder image - will be replaced with actual planner screenshot
 const PLACEHOLDER_IMAGE = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&h=675&fit=crop";
@@ -15,6 +16,7 @@ interface VideoPlaceholderProps {
 }
 
 export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
+  const { t } = useTranslation();
   const [isPlaying, setIsPlaying] = useState(false);
 
   return (
@@ -28,13 +30,13 @@ export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full text-primary text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4" />
-            <span>Découvre Travliaq en action</span>
+            <span>{t("landing.video.badge")}</span>
           </div>
           <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
-            Regarde comment ça marche
+            {t("landing.video.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            En 2 minutes, tu comprendras pourquoi des milliers de voyageurs nous font confiance
+            {t("landing.video.subtitle")}
           </p>
         </motion.div>
 
@@ -54,7 +56,7 @@ export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
                   {/* Thumbnail/Placeholder */}
                   <img
                     src={PLACEHOLDER_IMAGE}
-                    alt="Aperçu du planner Travliaq"
+                    alt={t("landing.video.altPreview")}
                     className="w-full h-full object-cover"
                     loading="lazy"
                   />
@@ -81,13 +83,13 @@ export function VideoPlaceholder({ className = "" }: VideoPlaceholderProps) {
 
                   {/* Coming soon badge */}
                   <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm rounded-full px-4 py-2 text-white/90 text-sm font-medium">
-                    Vidéo bientôt disponible
+                    {t("landing.video.comingSoon")}
                   </div>
                 </>
               ) : (
                 /* Video embed placeholder - replace with actual video */
                 <div className="w-full h-full bg-black flex items-center justify-center">
-                  <p className="text-white text-lg">Vidéo en cours de chargement...</p>
+                  <p className="text-white text-lg">{t("landing.video.loading")}</p>
                 </div>
               )}
             </div>
