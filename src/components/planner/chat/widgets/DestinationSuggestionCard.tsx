@@ -200,8 +200,8 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             ))}
           </div>
 
-          {/* Stats - Single line */}
-          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {/* Stats - Single line with background */}
+          <div className="flex items-center justify-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground bg-muted/60 rounded-lg py-2 px-3">
             <div className="flex items-center gap-1">
               <Wallet className="h-3.5 w-3.5 text-amber-500" />
               <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
