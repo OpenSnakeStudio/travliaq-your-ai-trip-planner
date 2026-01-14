@@ -1038,7 +1038,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       setMessages((prev) =>
         prev.map((m) =>
           m.id === messageId
-            ? { ...m, text: "Désolé, une erreur s'est produite. Veuillez réessayer.", isTyping: false, isStreaming: false }
+            ? { ...m, text: t("planner.chat.errorOccurred"), isTyping: false, isStreaming: false }
             : m
         )
       );
@@ -1348,7 +1348,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                             {
                               id: loadingId,
                               role: "assistant",
-                              text: `Excellent choix ! **${destination.countryName}** est une destination parfaite pour vous.\n\nJe recherche les villes principales...`,
+                              text: `${t("planner.chat.excellentChoice", { country: destination.countryName })}\n\n${t("planner.chat.searchingCities")}`,
                               isTyping: true,
                             },
                           ]);
@@ -1371,7 +1371,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                             if (data.cities && data.cities.length > 0) {
                               const cities = data.cities.map((c: { name: string; description?: string; population?: number }) => ({
                                 name: c.name,
-                                description: c.description || "Ville importante",
+                                description: c.description || t("planner.chat.importantCity"),
                                 population: c.population,
                               }));
                               
@@ -1381,7 +1381,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                                   m.id === loadingId
                                     ? {
                                         ...m,
-                                        text: `Excellent choix ! **${destination.countryName}** est une destination parfaite pour vous.\n\n${destination.description}\n\nQuelle ville souhaitez-vous visiter ?`,
+                                        text: `${t("planner.chat.excellentChoice", { country: destination.countryName })}\n\n${destination.description}\n\n${t("planner.chat.whichCityToVisit")}`,
                                         isTyping: false,
                                         widget: "citySelector" as import("@/types/flight").WidgetType,
                                         widgetData: {
@@ -1437,7 +1437,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/20"
                         >
                           <Plane className="h-4 w-4" />
-                          Rechercher les vols maintenant
+                          {t("planner.chat.searchFlightsNow")}
                         </button>
                       </div>
                     )}
@@ -1460,7 +1460,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                               {
                                 id: widgetId,
                                 role: "assistant",
-                                text: "Sélectionnez vos centres d'intérêt :",
+                                text: t("planner.chat.selectInterests"),
                                 widget: "preferenceInterests" as import("@/types/flight").WidgetType,
                               },
                             ]);
@@ -1471,7 +1471,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                               {
                                 id: widgetId,
                                 role: "assistant",
-                                text: "Ajustez votre style de voyage :",
+                                text: t("planner.chat.adjustTravelStyle"),
                                 widget: "preferenceStyle" as import("@/types/flight").WidgetType,
                               },
                             ]);
@@ -1513,20 +1513,20 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                 let normalizedMessage = message;
                 
                 if (message === "__FETCH_DESTINATIONS__") {
-                  normalizedMessage = "Rien d'autre à ajouter. Fais-moi 3 recommandations de destinations selon mon profil.";
+                  normalizedMessage = t("planner.chat.nothingElseToAdd");
                 } else if (message.startsWith("__WIDGET__")) {
                   const widgetType = message.replace("__WIDGET__", "");
                   if (widgetType === "preferenceInterests") {
-                    normalizedMessage = "J'aimerais préciser mes centres d'intérêt.";
+                    normalizedMessage = t("planner.chat.specifyInterests");
                   } else if (widgetType === "preferenceStyle") {
-                    normalizedMessage = "J'aimerais ajuster mon style de voyage.";
+                    normalizedMessage = t("planner.chat.adjustMyStyle");
                   } else if (widgetType === "mustHaves") {
-                    normalizedMessage = "J'ai des critères obligatoires à préciser.";
+                    normalizedMessage = t("planner.chat.mandatoryCriteria");
                   } else if (widgetType === "dietary") {
-                    normalizedMessage = "J'ai des restrictions alimentaires à préciser.";
+                    normalizedMessage = t("planner.chat.dietaryRestrictions");
                   }
                 } else if (message === "__CHOOSE_FOR_ME__") {
-                  normalizedMessage = "Choisis la meilleure destination pour moi parmi celles affichées et explique pourquoi.";
+                  normalizedMessage = t("planner.chat.chooseBestDestination");
                 }
                 
                 // Fill input and focus - user must click Send

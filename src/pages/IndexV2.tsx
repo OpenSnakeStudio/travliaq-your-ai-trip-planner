@@ -77,7 +77,7 @@ const IndexV2 = () => {
               transition={{ delay: 0.2 }}
               className="text-3xl sm:text-4xl md:text-6xl font-montserrat font-bold text-white mb-8 leading-tight"
             >
-              Où veux-tu partir ?
+              {t("landing.hero.title")}
             </motion.h1>
 
             {/* Hero Chat Input */}
@@ -97,7 +97,7 @@ const IndexV2 = () => {
           className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/70 hover:text-white transition-colors cursor-pointer"
         >
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm font-medium">Voir comment ça marche</span>
+            <span className="text-sm font-medium">{t("landing.hero.scrollIndicator")}</span>
             <ChevronDown className="w-6 h-6 animate-bounce" />
           </div>
         </motion.button>
@@ -131,10 +131,10 @@ const IndexV2 = () => {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
-              Questions fréquentes
+              {t("landing.faq.title")}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Tout ce que tu dois savoir avant de commencer
+              {t("landing.faq.subtitle")}
             </p>
           </motion.div>
 
@@ -145,13 +145,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  C'est quoi Travliaq exactement ?
+                  {t("landing.faq.q1")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Travliaq est ton assistant voyage IA personnel. Tu lui dis où
-                  tu veux aller, ton budget, tes dates, et il te crée un
-                  itinéraire sur-mesure avec vols, hôtels et activités. Tout ça
-                  en quelques minutes au lieu de plusieurs heures.
+                  {t("landing.faq.a1")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -160,13 +157,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  C'est gratuit ?
+                  {t("landing.faq.q2")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Oui, la planification de base est gratuite ! Tu peux créer des itinéraires 
-                  et obtenir des recommandations sans frais. Des options premium sont disponibles 
-                  pour plus de fonctionnalités comme le téléchargement PDF ou la personnalisation 
-                  avancée.
+                  {t("landing.faq.a2")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -175,13 +169,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Comment ça marche concrètement ?
+                  {t("landing.faq.q3")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Tu discutes avec moi comme avec un ami. Tu me dis tes envies
-                  (destination, dates, budget, style de voyage) et je te propose
-                  un itinéraire complet. Tu peux affiner, modifier, et quand tu
-                  es satisfait, tu reçois tout par email.
+                  {t("landing.faq.a3")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -190,12 +181,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Je peux modifier mon itinéraire après ?
+                  {t("landing.faq.q4")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Absolument ! Tu peux revenir dessus à tout moment. Change les
-                  dates, ajoute des activités, modifie l'hôtel... Je m'adapte en
-                  temps réel à tes demandes.
+                  {t("landing.faq.a4")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -204,13 +193,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Les prix sont-ils fiables ?
+                  {t("landing.faq.q5")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Je compare les prix en temps réel avec les principales
-                  plateformes de réservation. Les prix affichés sont ceux que tu
-                  retrouveras au moment de la réservation (aux variations
-                  normales près).
+                  {t("landing.faq.a5")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -219,12 +205,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Quelles destinations sont disponibles ?
+                  {t("landing.faq.q6")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Travliaq couvre le monde entier ! Que tu rêves de Tokyo, New York, 
-                  Marrakech, Bali ou d'un road trip en Patagonie, notre IA trouve les 
-                  meilleures options pour n'importe quelle destination.
+                  {t("landing.faq.a6")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -233,12 +217,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Combien de temps faut-il pour recevoir mon itinéraire ?
+                  {t("landing.faq.q7")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  En général, tu reçois ta première proposition dans les 24 heures 
-                  suivant ta demande. Pour les demandes urgentes, nous pouvons 
-                  accélérer le processus.
+                  {t("landing.faq.a7")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -247,13 +229,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Puis-je voyager en groupe ou en famille ?
+                  {t("landing.faq.q8")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Bien sûr ! Travliaq s'adapte à tous les types de voyageurs : 
-                  solo, duo, groupe d'amis ou famille avec enfants. L'itinéraire 
-                  sera personnalisé en fonction du nombre de participants et de 
-                  leurs besoins spécifiques.
+                  {t("landing.faq.a8")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -262,12 +241,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Comment mes données sont-elles protégées ?
+                  {t("landing.faq.q9")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Tes données sont sécurisées et ne sont jamais partagées avec 
-                  des tiers sans ton consentement. Nous utilisons les meilleures 
-                  pratiques de sécurité et respectons le RGPD.
+                  {t("landing.faq.a9")}
                 </AccordionContent>
               </AccordionItem>
 
@@ -276,12 +253,10 @@ const IndexV2 = () => {
                 className="bg-muted/30 rounded-xl px-6 border-0"
               >
                 <AccordionTrigger className="text-lg font-semibold text-foreground hover:no-underline py-5">
-                  Comment contacter le support ?
+                  {t("landing.faq.q10")}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-5">
-                  Tu peux nous contacter à tout moment via contact@travliaq.com. 
-                  Notre équipe répond généralement sous 24h. Tu peux aussi 
-                  utiliser le chat intégré pour des questions rapides.
+                  {t("landing.faq.a10")}
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -299,14 +274,13 @@ const IndexV2 = () => {
             <div className="md:col-span-1">
               <img src={logo} alt="Travliaq" className="w-32 mb-4" />
               <p className="text-white/70 text-sm leading-relaxed">
-                Ton assistant voyage IA personnel. De l'inspiration au départ,
-                je t'accompagne.
+                {t("landing.footer.description")}
               </p>
             </div>
 
             <div>
               <h3 className="text-lg font-montserrat font-bold mb-4">
-                Navigation
+                {t("landing.footer.navigation")}
               </h3>
               <ul className="space-y-2 text-sm">
                 <li>
@@ -314,7 +288,7 @@ const IndexV2 = () => {
                     href="/"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Accueil
+                    {t("landing.footer.home")}
                   </a>
                 </li>
                 <li>
@@ -322,7 +296,7 @@ const IndexV2 = () => {
                     href="/planner"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Planifier
+                    {t("landing.footer.planner")}
                   </a>
                 </li>
                 <li>
@@ -330,7 +304,7 @@ const IndexV2 = () => {
                     href="/blog"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Blog
+                    {t("landing.footer.blog")}
                   </a>
                 </li>
                 <li>
@@ -338,21 +312,21 @@ const IndexV2 = () => {
                     href="/discover"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Découvrir
+                    {t("landing.footer.discover")}
                   </a>
                 </li>
               </ul>
             </div>
 
             <div>
-              <h3 className="text-lg font-montserrat font-bold mb-4">Légal</h3>
+              <h3 className="text-lg font-montserrat font-bold mb-4">{t("landing.footer.legal")}</h3>
               <ul className="space-y-2 text-sm">
                 <li>
                   <a
                     href="/cgv"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Conditions Générales de Vente
+                    {t("landing.footer.cgv")}
                   </a>
                 </li>
                 <li>
@@ -360,7 +334,7 @@ const IndexV2 = () => {
                     href="/cgv"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Politique de confidentialité
+                    {t("landing.footer.privacy")}
                   </a>
                 </li>
                 <li>
@@ -368,7 +342,7 @@ const IndexV2 = () => {
                     href="/cgv"
                     className="text-white/70 hover:text-white transition-colors"
                   >
-                    Mentions légales
+                    {t("landing.footer.mentions")}
                   </a>
                 </li>
               </ul>
@@ -376,7 +350,7 @@ const IndexV2 = () => {
 
             <div>
               <h3 className="text-lg font-montserrat font-bold mb-4">
-                Contact
+                {t("landing.footer.contact")}
               </h3>
               <ul className="space-y-2 text-sm">
                 <li>
@@ -389,7 +363,7 @@ const IndexV2 = () => {
                 </li>
               </ul>
               <div className="mt-6">
-                <h4 className="text-sm font-semibold mb-3">Suivez-nous</h4>
+                <h4 className="text-sm font-semibold mb-3">{t("landing.footer.followUs")}</h4>
                 <div className="flex gap-4">
                   <a
                     href="#"
@@ -424,7 +398,7 @@ const IndexV2 = () => {
           </div>
 
           <div className="border-t border-white/10 pt-8 text-center text-sm text-white/50">
-            <p>© {new Date().getFullYear()} Travliaq. Tous droits réservés.</p>
+            <p>{t("landing.footer.copyright", { year: new Date().getFullYear() })}</p>
           </div>
         </div>
       </footer>

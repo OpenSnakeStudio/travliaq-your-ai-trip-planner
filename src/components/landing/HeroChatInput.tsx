@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Send, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import AnimatedPlaceholder from "./AnimatedPlaceholder";
 
 interface HeroChatInputProps {
@@ -19,6 +20,7 @@ export function HeroChatInput({ className, variant = "dark" }: HeroChatInputProp
   const [value, setValue] = useState("");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const handleSubmit = () => {
     if (!value.trim()) return;
@@ -61,7 +63,7 @@ export function HeroChatInput({ className, variant = "dark" }: HeroChatInputProp
                   "w-full bg-transparent text-base md:text-lg px-4 py-3 focus:outline-none placeholder-transparent",
                   variant === "light" ? "text-foreground" : "text-white"
                 )}
-                aria-label="Décris ton voyage idéal"
+                aria-label={t("landing.hero.ariaLabel")}
               />
             </div>
             
@@ -78,7 +80,7 @@ export function HeroChatInput({ className, variant = "dark" }: HeroChatInputProp
               )}
             >
               <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Planifier</span>
+              <span className="hidden sm:inline">{t("landing.hero.planButton")}</span>
               <Send className="w-4 h-4 sm:hidden" />
             </motion.button>
           </div>

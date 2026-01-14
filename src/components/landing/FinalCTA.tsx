@@ -5,6 +5,7 @@
 import { motion } from "framer-motion";
 import { HeroChatInput } from "./HeroChatInput";
 import { Plane, MapPin, Calendar } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const floatingElements = [
   { icon: Plane, delay: 0, x: "-10%", y: "20%" },
@@ -13,11 +14,13 @@ const floatingElements = [
 ];
 
 export function FinalCTA() {
+  const { t } = useTranslation();
+
   return (
     <section className="relative py-24 md:py-32 overflow-hidden">
       {/* Gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent" />
-      
+
       {/* Animated pattern overlay */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0" style={{
@@ -52,7 +55,7 @@ export function FinalCTA() {
       {/* Blur circles */}
       <div className="absolute top-20 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-10 w-64 h-64 bg-accent/30 rounded-full blur-3xl" />
-      
+
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -60,19 +63,19 @@ export function FinalCTA() {
           viewport={{ once: true }}
           className="text-center max-w-3xl mx-auto"
         >
-          
+
           <h2 className="text-3xl md:text-5xl lg:text-6xl font-montserrat font-bold text-white mb-6 leading-tight">
-            Dis-moi où tu veux aller
+            {t("landing.cta.title")}
           </h2>
           <p className="text-lg md:text-xl text-white/80 mb-10 max-w-xl mx-auto">
-            Je m'occupe du reste. Vol, hôtel, activités – tout sera prêt en quelques minutes.
+            {t("landing.cta.subtitle")}
           </p>
-          
+
           {/* Chat input with light theme override */}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20">
             <HeroChatInput variant="light" />
           </div>
-          
+
           {/* Trust indicators */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -83,15 +86,15 @@ export function FinalCTA() {
           >
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-400" />
-              100% gratuit
+              {t("landing.cta.free")}
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-400" />
-              Sans inscription
+              {t("landing.cta.noSignup")}
             </span>
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-400" />
-              Résultats en 2 min
+              {t("landing.cta.fastResults")}
             </span>
           </motion.div>
         </motion.div>

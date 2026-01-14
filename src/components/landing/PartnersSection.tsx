@@ -3,6 +3,7 @@
  */
 
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 import logoViator from "@/assets/partner-viator.png";
 import logoGetYourGuide from "@/assets/partner-getyourguide.png";
@@ -37,6 +38,8 @@ const partners = [
 ];
 
 export function PartnersSection() {
+  const { t } = useTranslation();
+
   return (
     <section className="py-16 md:py-20 bg-background border-y border-border/50 overflow-hidden">
       <div className="container mx-auto px-6">
@@ -47,7 +50,7 @@ export function PartnersSection() {
           className="text-center mb-12"
         >
           <h2 className="text-2xl md:text-3xl font-montserrat font-bold text-foreground">
-            Nos partenaires
+            {t("landing.partners.title")}
           </h2>
         </motion.div>
 

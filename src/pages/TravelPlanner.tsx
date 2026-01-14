@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import PlannerMap, { DestinationClickEvent } from "@/components/planner/PlannerMap";
@@ -53,6 +54,7 @@ export interface UserLocation {
 }
 
 const TravelPlanner = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const chatPanelRef = useRef<ImperativePanelHandle>(null);
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
@@ -204,10 +206,10 @@ const TravelPlanner = () => {
       <WidgetHistoryProvider>
             <NegativePreferencesProvider>
               <Helmet>
-                <title>Planificateur | Travliaq</title>
+                <title>{t("planner.meta.title")}</title>
                 <meta
                   name="description"
-                  content="Planifiez votre voyage avec notre assistant intelligent. Comparez vols, activités et hébergements sur une carte interactive."
+                  content={t("planner.meta.description")}
                 />
                 <link rel="canonical" href="/planner" />
               </Helmet>
@@ -288,7 +290,7 @@ const TravelPlanner = () => {
                          isChatCollapsed={isChatCollapsed}
                          onOpenChat={() => chatPanelRef.current?.expand()}
                          confirmLeave={shouldConfirmLeave}
-                         confirmLeaveMessage="Vous avez une conversation en cours. Quitter le planner ?"
+                         confirmLeaveMessage={t("planner.leaveConfirmation")}
                        />
                       {youtubePanel ? (
                         <aside className="pointer-events-none absolute top-16 left-4 bottom-4 w-[320px] sm:w-[360px] md:w-[400px] lg:w-[420px] xl:w-[480px] 2xl:w-[540px] z-10">

@@ -4,8 +4,18 @@
 
 import { motion } from "framer-motion";
 import { Sparkles, Clock, CreditCard, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export function FeatureCards() {
+  const { t } = useTranslation();
+
+  const benefits = [
+    t("landing.features.benefits.comparison"),
+    t("landing.features.benefits.spots"),
+    t("landing.features.benefits.rhythm"),
+    t("landing.features.benefits.nosurprise"),
+  ];
+
   return (
     <section className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-6">
@@ -16,10 +26,10 @@ export function FeatureCards() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-montserrat font-bold text-foreground mb-4">
-            Pourquoi Travliaq ?
+            {t("landing.features.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Simple, rapide, gratuit.
+            {t("landing.features.subtitle")}
           </p>
         </motion.div>
 
@@ -36,10 +46,10 @@ export function FeatureCards() {
               <CreditCard className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
-              100% Gratuit
+              {t("landing.features.free.title")}
             </h3>
             <p className="text-muted-foreground">
-              Pas de carte bancaire requise, pas d'inscription obligatoire.
+              {t("landing.features.free.desc")}
             </p>
           </motion.div>
 
@@ -54,10 +64,10 @@ export function FeatureCards() {
               <Clock className="w-8 h-8 text-accent-foreground" />
             </div>
             <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
-              Résultat en 2 min
+              {t("landing.features.fast.title")}
             </h3>
             <p className="text-muted-foreground">
-              Dis-nous tes envies, on s'occupe du reste.
+              {t("landing.features.fast.desc")}
             </p>
           </motion.div>
 
@@ -72,10 +82,10 @@ export function FeatureCards() {
               <Sparkles className="w-8 h-8 text-primary" />
             </div>
             <h3 className="text-xl font-montserrat font-bold text-foreground mb-3">
-              100% Sur-mesure
+              {t("landing.features.custom.title")}
             </h3>
             <p className="text-muted-foreground">
-              Un itinéraire personnalisé selon tes goûts.
+              {t("landing.features.custom.desc")}
             </p>
           </motion.div>
         </div>
@@ -88,7 +98,7 @@ export function FeatureCards() {
           transition={{ delay: 0.4 }}
           className="mt-12 flex flex-wrap justify-center gap-6 text-muted-foreground"
         >
-          {["Comparaison des prix", "Spots cachés", "Adapté à ton rythme", "Sans surprises"].map((item) => (
+          {benefits.map((item) => (
             <div key={item} className="flex items-center gap-2">
               <Check className="w-4 h-4 text-primary" />
               <span>{item}</span>

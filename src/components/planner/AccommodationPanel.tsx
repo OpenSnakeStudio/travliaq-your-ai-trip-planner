@@ -1044,8 +1044,8 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
       if (changedCount > 0) {
         toastInfo(
-          "Hébergements synchronisés",
-          `${destinationInfos.length} destination${destinationInfos.length > 1 ? 's' : ''} mise${destinationInfos.length > 1 ? 's' : ''} à jour depuis vos vols`
+          t("planner.accommodation.toast.synced"),
+          t("planner.accommodation.toast.syncedDesc", { count: destinationInfos.length })
         );
       }
     } else {
@@ -1243,8 +1243,8 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
     // Validate required params (show actionable messages)
     if (!activeAccommodation.countryCode || !activeAccommodation.lat || !activeAccommodation.lng) {
       toastError(
-        "Destination incomplète",
-        "Sélectionnez une ville dans la liste (pas seulement du texte) pour récupérer le pays et les coordonnées."
+        t("planner.accommodation.toast.incompleteDestination"),
+        t("planner.accommodation.toast.incompleteDestinationDesc")
       );
 
       logger.warn("Hotels search blocked: destination incomplete", {
@@ -1271,8 +1271,8 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
     if (!activeAccommodation.checkIn || !activeAccommodation.checkOut) {
       toastError(
-        "Dates manquantes",
-        "Choisissez une date d'arrivée et une date de départ pour lancer la recherche d'hébergements."
+        t("planner.accommodation.toast.missingDates"),
+        t("planner.accommodation.toast.missingDatesDesc")
       );
 
       logger.warn("Hotels search blocked: dates missing", {
@@ -1375,11 +1375,11 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
         setHotelSearchResults([]);
         eventBus.emit("hotels:results", { hotels: [] });
         if (response.results.hotels.length === 0) {
-          toastInfo("Aucun résultat", "Aucun hôtel trouvé pour ces critères");
+          toastInfo(t("planner.accommodation.toast.noResults"), t("planner.accommodation.toast.noResultsDesc"));
         }
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Impossible de rechercher les hôtels";
+      const message = error instanceof Error ? error.message : t("planner.accommodation.toast.searchError");
 
       logger.error("Hotels search: failed", {
         category: LogCategory.API,
@@ -1391,7 +1391,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
       });
 
       console.error("[HotelsUI] Search failed", error);
-      toastError("Erreur de recherche", message);
+      toastError(t("planner.accommodation.toast.searchErrorTitle"), message);
       setHotelSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -1410,7 +1410,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
   // Handle search in area - uses reverse geocode to get city from map center
   const handleSearchInArea = async (lat: number, lng: number) => {
     if (!activeAccommodation?.checkIn || !activeAccommodation?.checkOut) {
-      toastError("Dates manquantes", "Veuillez d'abord sélectionner des dates");
+      toastError(t("planner.accommodation.toast.missingDates"), t("planner.accommodation.toast.selectDatesFirst"));
       return;
     }
 
@@ -1424,7 +1424,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
 
       if (geoError || !geoData?.city) {
         console.warn('[AccommodationPanel] Reverse geocode failed:', geoError);
-        toastError("Localisation impossible", "Impossible de déterminer la ville à cet emplacement");
+        toastError(t("planner.accommodation.toast.locationError"), t("planner.accommodation.toast.locationErrorDesc"));
         return;
       }
 
@@ -1471,15 +1471,15 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
         const results = response.results.hotels.map(mapApiToHotelResult);
         setHotelSearchResults(results);
         eventBus.emit("hotels:results", { hotels: results });
-        toastInfo("Nouvelle zone", `${results.length} hébergements trouvés à ${city}`);
+        toastInfo(t("planner.accommodation.toast.newArea"), t("planner.accommodation.toast.newAreaFound", { count: results.length, city }));
       } else {
         setHotelSearchResults([]);
         eventBus.emit("hotels:results", { hotels: [] });
-        toastInfo("Aucun résultat", `Aucun hôtel trouvé à ${city}`);
+        toastInfo(t("planner.accommodation.toast.noResults"), t("planner.accommodation.toast.noHotelInCity", { city }));
       }
     } catch (error) {
       console.error('[AccommodationPanel] Search in area failed:', error);
-      toastError("Erreur", "Impossible de rechercher dans cette zone");
+      toastError(t("planner.accommodation.toast.error"), t("planner.accommodation.toast.areaSearchError"));
     } finally {
       setIsSearchingInArea(false);
     }
@@ -1591,7 +1591,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
       setNewCitySearch("");
       setNewCityDates({ checkIn: null, checkOut: null });
       setShowAddForm(false);
-      toastInfo("Destination ajoutée", `${location.name} a été ajouté à vos hébergements`);
+      toastInfo(t("planner.accommodation.toast.destinationAdded"), t("planner.accommodation.toast.destinationAddedDesc", { name: location.name }));
     }
   };
 
@@ -1619,7 +1619,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
           if (bookingUrl) {
             window.open(bookingUrl, '_blank');
           } else {
-            toastInfo("Réservation", "La réservation sera bientôt disponible !");
+            toastInfo(t("planner.accommodation.toast.booking"), t("planner.accommodation.toast.bookingSoon"));
           }
         }}
       />
@@ -1670,9 +1670,9 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
             <Hotel className="h-3 w-3" />
             <span
               className="max-w-24 truncate"
-              title={acc.city || `Hébergement ${index + 1}`}
+              title={acc.city || t("planner.accommodation.accommodationIndex", { index: index + 1 })}
             >
-              {acc.city || `Hébgt ${index + 1}`}
+              {acc.city || t("planner.accommodation.accommodationShort", { index: index + 1 })}
             </span>
             {acc.syncedFromFlight && (
               <SyncBadgeInline source="flight" className="ml-0.5" />
@@ -1700,7 +1700,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
           <button
             onClick={() => setShowAddForm(true)}
             className="h-7 w-7 rounded-lg flex items-center justify-center text-primary hover:bg-primary/10 transition-colors border border-dashed border-primary/30 hover:border-primary/50"
-            title="Ajouter une destination"
+            title={t("planner.accommodation.addDestination")}
           >
             <Plus className="h-3.5 w-3.5" />
           </button>
@@ -1708,7 +1708,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
         {flightMemory.tripType === "multi" && (
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-muted-foreground/70 rounded-lg border border-dashed border-border/30">
             <Link2 className="h-3 w-3" />
-            <span>Synchronisé avec vos vols</span>
+            <span>{t("planner.accommodation.syncedWithFlights")}</span>
           </div>
         )}
       </div>
@@ -1717,7 +1717,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
       {showAddForm && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-primary">Ajouter une destination</span>
+            <span className="text-xs font-medium text-primary">{t("planner.accommodation.addDestination")}</span>
             <button
               onClick={handleCancelAddCity}
               className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
@@ -1735,7 +1735,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
                   type="text"
                   value={newCitySearch}
                   onChange={(e) => setNewCitySearch(e.target.value)}
-                  placeholder="Rechercher une ville..."
+                  placeholder={t("planner.accommodation.searchCity")}
                   className="flex-1 min-w-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
                   autoFocus
                 />
@@ -1779,7 +1779,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
             <DestinationInput
               value={destinationInput}
               onChange={handleDestinationInputChange}
-              placeholder="Où allez-vous ?"
+              placeholder={t("planner.accommodation.whereTo")}
               onLocationSelect={handleLocationSelect}
             />
           </div>
@@ -1813,7 +1813,7 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
           
           {/* Budget - sur 2 lignes */}
           <div className="space-y-1.5">
-            <span className="text-xs text-muted-foreground">Budget par nuit</span>
+            <span className="text-xs text-muted-foreground">{t("planner.accommodation.budgetPerNight")}</span>
             <div className="flex gap-1.5">
               {(["eco", "comfort", "premium"] as BudgetPreset[]).map((preset) => (
                 <button
@@ -2012,12 +2012,12 @@ const AccommodationPanel = ({ onMapMove, mapCenter }: AccommodationPanelProps) =
           {isSearching ? (
             <>
               <div className="h-3.5 w-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin mr-1.5" />
-              Recherche...
+              {t("planner.accommodation.searching")}
             </>
           ) : (
             <>
               <Search className="h-3.5 w-3.5 mr-1.5" />
-              Rechercher
+              {t("planner.accommodation.search")}
             </>
           )}
         </Button>
