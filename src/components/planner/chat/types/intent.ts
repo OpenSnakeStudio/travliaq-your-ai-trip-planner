@@ -5,9 +5,7 @@
  * This module defines all possible user intents, widget mappings, and validation rules.
  */
 
-/**
- * All possible user intents that can be detected
- */
+import type { WidgetType } from "@/types/flight";
 export type IntentType =
   // Destination intents
   | "search_destination"      // User is looking for destination ideas
@@ -86,7 +84,7 @@ export interface ExtractedEntities {
  * Widget to be shown based on intent
  */
 export interface IntentWidget {
-  type: import("@/types/flight").WidgetType;
+  type: WidgetType;
   priority: number;
   reason: string;
   data?: Record<string, unknown>;
@@ -127,7 +125,7 @@ export interface FlowState {
 export interface WidgetValidation {
   valid: boolean;
   reason?: string;
-  suggestedWidget?: import("@/types/flight").WidgetType;
+  suggestedWidget?: WidgetType;
 }
 
 /**
@@ -136,7 +134,7 @@ export interface WidgetValidation {
 export interface IntentWidgetRule {
   intent: IntentType;
   widgets: Array<{
-    type: import("@/types/flight").WidgetType;
+    type: WidgetType;
     condition?: (flowState: FlowState, entities: ExtractedEntities) => boolean;
     priority: number;
     reason: string;
