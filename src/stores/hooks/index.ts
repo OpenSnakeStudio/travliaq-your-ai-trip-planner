@@ -28,5 +28,32 @@ export type {
   DestinationInfo,
 } from './useTravelMemoryStore';
 
+// Accommodation Memory (replaces useAccommodationMemory from AccommodationMemoryContext)
+export { useAccommodationMemoryStore } from './useAccommodationMemoryStore';
+export type {
+  AccommodationMemory,
+  AccommodationMemoryStoreValue,
+  AccommodationEntry,
+  BudgetPreset,
+  AccommodationType,
+  EssentialAmenity,
+  RoomConfig,
+  AdvancedFilters,
+  HotelSearchResult,
+} from './useAccommodationMemoryStore';
+export { BUDGET_PRESETS } from './useAccommodationMemoryStore';
+
+// Activity Memory (replaces useActivityMemory from ActivityMemoryContext)
+export { useActivityMemoryStore } from './useActivityMemoryStore';
+export type {
+  ActivityMemory,
+  ActivityMemoryStoreValue,
+  ActivityEntry,
+  ActivityDestination,
+  ActivityFilters,
+  ViatorActivity,
+  ActivitySearchState,
+} from './useActivityMemoryStore';
+
 // Re-export bridge hooks for backward compatibility during migration
 export * from '../bridgeHooks';
