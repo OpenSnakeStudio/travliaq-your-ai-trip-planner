@@ -179,7 +179,7 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           )}
         </div>
 
-        <CardContent className="p-4 space-y-3 flex-1">
+        <CardContent className="p-4 space-y-4 flex-1">
           {/* Headline */}
           <h3 className="font-semibold text-base leading-tight text-foreground">
             {headline}
@@ -190,50 +190,68 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             {description}
           </p>
 
-          {/* Key Factors - Simple */}
+          {/* Key Factors */}
           <div className="space-y-1.5">
             {keyFactors.slice(0, 3).map((factor, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs">
-                <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
-                <span className="text-muted-foreground leading-tight">{factor}</span>
+              <div key={i} className="flex items-start gap-2">
+                <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                <span className="text-sm text-muted-foreground">{factor}</span>
               </div>
             ))}
           </div>
 
-          {/* Stats Grid - Well aligned */}
-          <div className="grid grid-cols-2 gap-2 border-t border-border pt-3">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-amber-500 shrink-0" />
-              <span className="text-xs text-muted-foreground">
-                {estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j
-              </span>
+          {/* Stats Section */}
+          <div className="space-y-2.5 pt-3 border-t border-border">
+            {/* Budget */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-amber-500/10">
+                <Wallet className="h-4 w-4 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Budget journalier</p>
+                <p className="text-sm font-medium text-foreground">
+                  {estimatedBudgetPerPerson.min}–{estimatedBudgetPerPerson.max}€ /jour
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Plane className="h-4 w-4 text-blue-500 shrink-0" />
-              <span className="text-xs text-muted-foreground">
-                {flightPriceEstimate ? `~${flightPriceEstimate}€` : "N/A"}{" "}
-                <span className="text-[10px] opacity-70">(est.)</span>
-              </span>
+            {/* Flight */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500/10">
+                <Plane className="h-4 w-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Vol aller-retour</p>
+                <p className="text-sm font-medium text-foreground">
+                  {flightPriceEstimate ? `≈ ${flightPriceEstimate}€` : "Non disponible"}
+                  <span className="text-xs font-normal text-muted-foreground ml-1">estimation</span>
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 col-span-2">
-              <Calendar className="h-4 w-4 text-purple-500 shrink-0" />
-              <span className="text-xs text-muted-foreground">
-                {bestSeasons.slice(0, 2).join(", ")}
-              </span>
+            {/* Season */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-purple-500/10">
+                <Calendar className="h-4 w-4 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Meilleure période</p>
+                <p className="text-sm font-medium text-foreground">
+                  {bestSeasons.slice(0, 2).join(", ")}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Activities - Clean grid */}
-          <div className="grid grid-cols-2 gap-1.5">
+          {/* Activities */}
+          <div className="flex flex-wrap gap-2">
             {topActivities.slice(0, 4).map((activity, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted text-xs font-medium text-foreground"
               >
-                <span className="text-sm">{getActivityEmoji(activity.emoji)}</span>
-                <span className="truncate">{activity.name}</span>
+                <span>{getActivityEmoji(activity.emoji)}</span>
+                <span className="truncate max-w-[100px]">{activity.name}</span>
               </span>
             ))}
           </div>
