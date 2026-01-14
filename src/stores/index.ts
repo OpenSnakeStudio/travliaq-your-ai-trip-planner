@@ -25,6 +25,20 @@ export {
 // Action hooks
 export { useTravelActions, useFlightActions } from './plannerStore';
 
+// Bridge hooks (for gradual migration from React contexts)
+export {
+  useTravelMemoryBridge,
+  useFlightMemoryBridge,
+  useTravelers,
+  useDestinations,
+  useTripDates,
+  useFlightRoute,
+  usePassengers,
+  useTripType,
+  useFlightLegs,
+  useIsStoreHydrated,
+} from './bridgeHooks';
+
 // Types
 export type {
   PlannerStore,
@@ -40,3 +54,8 @@ export type {
   TripType,
   CabinClass,
 } from './types';
+
+export type {
+  TravelMemoryBridge,
+  FlightMemoryBridge,
+} from './bridgeHooks';
