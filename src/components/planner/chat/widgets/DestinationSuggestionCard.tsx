@@ -2,7 +2,7 @@
  * DestinationSuggestionCard - Premium destination suggestion card with hero image
  */
 
-import { memo, useState } from "react";
+import { memo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Check, Calendar, Wallet, Plane, Loader2, Clock, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -104,6 +104,27 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
 }: DestinationSuggestionCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showCredit, setShowCredit] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Show credit after 1.5s of hovering
+  useEffect(() => {
+    if (isHovered) {
+      hoverTimeoutRef.current = setTimeout(() => {
+        setShowCredit(true);
+      }, 1500);
+    } else {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      setShowCredit(false);
+    }
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, [isHovered]);
 
   const {
     countryName,
@@ -171,7 +192,8 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           {imageCredit && (
             <motion.span
               initial={{ opacity: 0 }}
-              animate={{ opacity: isHovered ? 1 : 0 }}
+              animate={{ opacity: showCredit ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
               className="absolute bottom-1 right-2 text-[10px] text-white/60"
             >
               {imageCredit}
