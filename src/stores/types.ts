@@ -12,8 +12,8 @@ export interface DestinationInfo {
   city: string;
   country: string;
   countryCode: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   arrivalDate?: Date;
   departureDate?: Date;
   nights?: number;
