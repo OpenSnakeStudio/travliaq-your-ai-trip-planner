@@ -1314,6 +1314,30 @@ const resources = {
       "planner.quick.whenToGo": "Quand partir?",
       "planner.quick.howMuch": "Combien ça coûte?",
       
+      // ScrollToBottomButton
+      "planner.chat.scrollToBottom": "Retour en bas",
+      "planner.chat.newMessage": "{{count}} nouveau message",
+      "planner.chat.newMessages": "{{count}} nouveaux messages",
+      
+      // Chat system messages
+      "planner.messages.tripConfigured": "Super ! Votre voyage **{{from}} → {{to}}** est configuré :",
+      "planner.messages.departureDate": "📅 Départ : {{date}}",
+      "planner.messages.returnDate": "📅 Retour : {{date}}",
+      "planner.messages.travelers": "👥 {{count}} voyageur",
+      "planner.messages.travelersPlural": "👥 {{count}} voyageurs",
+      "planner.messages.selectAirports": "Sélectionnez vos aéroports ci-dessous :",
+      "planner.messages.selectAirportsPanel": "Veuillez sélectionner vos aéroports dans le panneau de droite.",
+      "planner.messages.searchReady": "Parfait ! Votre itinéraire **{{from}} → {{to}}** est prêt !",
+      "planner.messages.clickToSearch": "Cliquez ci-dessous pour lancer la recherche. 🚀",
+      "planner.messages.destinationsFound": "Voici {{count}} destination parfaite pour vous, basée sur votre profil ({{score}}% de complétion) :",
+      "planner.messages.destinationsFoundPlural": "Voici {{count}} destinations parfaites pour vous, basées sur votre profil ({{score}}% de complétion) :",
+      "planner.messages.noDestinations": "Désolé, je n'ai pas pu trouver de destinations correspondant à vos critères. Essayez d'ajuster vos préférences.",
+      "planner.messages.noDestinationsHint": "Désolé, je n'ai pas pu trouver de destinations correspondant à vos critères. Essayez d'abord de me donner vos préférences de voyage avec 'Inspire-moi !' 🌍",
+      "planner.messages.errorDestinations": "Une erreur est survenue lors de la recherche de destinations. Veuillez réessayer.",
+      "planner.messages.searchingDestinations": "Je recherche {{count}} destinations parfaites pour vous...",
+      "planner.messages.defaultError": "Désolé, je n'ai pas pu répondre.",
+      "planner.messages.exceededLimit": "Je ne peux afficher que 5 destinations maximum, mais voici mes {{count}} meilleures recommandations pour vous...",
+      
       // FlightRouteBuilder & FlightsPanel
       "planner.flights.searching": "Recherche...",
       "planner.flights.minChars": "Tapez au moins 3 caractères",
@@ -1353,6 +1377,40 @@ const resources = {
       "planner.flights.selected": "vols sélectionnés",
       "planner.flights.bookItinerary": "Réserver l'itinéraire complet",
       "planner.flights.closePanel": "Fermer le panneau",
+      
+      // FlightResults component
+      "planner.flightResults.bestPrice": "Meilleur prix",
+      "planner.flightResults.fastest": "Plus rapide",
+      "planner.flightResults.lowestCO2": "Moins de CO₂",
+      "planner.flightResults.nightLayover": "Escale de nuit",
+      "planner.flightResults.direct": "Direct",
+      "planner.flightResults.stop": "{{count}} escale",
+      "planner.flightResults.stops": "{{count}} escales",
+      "planner.flightResults.select": "Sélectionner",
+      "planner.flightResults.perPerson": "/pers.",
+      "planner.flightResults.hideDetails": "Masquer les détails",
+      "planner.flightResults.showDetails": "Voir les détails",
+      "planner.flightResults.outboundFlight": "Vol aller",
+      "planner.flightResults.returnFlight": "Vol retour",
+      "planner.flightResults.aircraft": "Appareil",
+      "planner.flightResults.legroom": "Espace jambes",
+      "planner.flightResults.comfort": "Confort",
+      "planner.flightResults.layoverAt": "Escale à {{city}}",
+      "planner.flightResults.baggage": "Bagages",
+      "planner.flightResults.carryOn": "Cabine",
+      "planner.flightResults.checked": "Soute",
+      "planner.flightResults.emissions": "Émissions",
+      "planner.flightResults.lessThanAvg": "de moins que la moyenne",
+      "planner.flightResults.moreThanAvg": "de plus que la moyenne",
+      "planner.flightResults.selfTransfer": "Correspondance autonome",
+      "planner.flightResults.selfTransferNote": "Bagages à récupérer entre les vols",
+      "planner.flightResults.noResults": "Aucun vol trouvé",
+      "planner.flightResults.noResultsDesc": "Essayez de modifier vos critères de recherche",
+      "planner.flightResults.loading": "Recherche des vols...",
+      
+      // DestinationPopup
+      "planner.destination.close": "Fermer",
+      "planner.destination.discover": "Découvrir",
       
       // BaseStep (preferences)
       "planner.presets.quickStart": "Démarrage rapide",
@@ -2776,6 +2834,30 @@ const resources = {
       "planner.quick.whenToGo": "When to go?",
       "planner.quick.howMuch": "How much?",
       
+      // ScrollToBottomButton
+      "planner.chat.scrollToBottom": "Back to bottom",
+      "planner.chat.newMessage": "{{count}} new message",
+      "planner.chat.newMessages": "{{count}} new messages",
+      
+      // Chat system messages
+      "planner.messages.tripConfigured": "Great! Your trip **{{from}} → {{to}}** is configured:",
+      "planner.messages.departureDate": "📅 Departure: {{date}}",
+      "planner.messages.returnDate": "📅 Return: {{date}}",
+      "planner.messages.travelers": "👥 {{count}} traveler",
+      "planner.messages.travelersPlural": "👥 {{count}} travelers",
+      "planner.messages.selectAirports": "Select your airports below:",
+      "planner.messages.selectAirportsPanel": "Please select your airports in the right panel.",
+      "planner.messages.searchReady": "Perfect! Your itinerary **{{from}} → {{to}}** is ready!",
+      "planner.messages.clickToSearch": "Click below to start searching. 🚀",
+      "planner.messages.destinationsFound": "Here is {{count}} perfect destination for you, based on your profile ({{score}}% completion):",
+      "planner.messages.destinationsFoundPlural": "Here are {{count}} perfect destinations for you, based on your profile ({{score}}% completion):",
+      "planner.messages.noDestinations": "Sorry, I couldn't find destinations matching your criteria. Try adjusting your preferences.",
+      "planner.messages.noDestinationsHint": "Sorry, I couldn't find destinations matching your criteria. Try telling me your travel preferences first with 'Inspire me!' 🌍",
+      "planner.messages.errorDestinations": "An error occurred while searching for destinations. Please try again.",
+      "planner.messages.searchingDestinations": "Searching for {{count}} perfect destinations for you...",
+      "planner.messages.defaultError": "Sorry, I couldn't respond.",
+      "planner.messages.exceededLimit": "I can only show 5 destinations maximum, but here are my {{count}} best recommendations for you...",
+      
       // FlightRouteBuilder & FlightsPanel
       "planner.flights.searching": "Searching...",
       "planner.flights.minChars": "Type at least 3 characters",
@@ -2815,6 +2897,40 @@ const resources = {
       "planner.flights.selected": "flights selected",
       "planner.flights.bookItinerary": "Book full itinerary",
       "planner.flights.closePanel": "Close panel",
+      
+      // FlightResults component
+      "planner.flightResults.bestPrice": "Best price",
+      "planner.flightResults.fastest": "Fastest",
+      "planner.flightResults.lowestCO2": "Lowest CO₂",
+      "planner.flightResults.nightLayover": "Night layover",
+      "planner.flightResults.direct": "Direct",
+      "planner.flightResults.stop": "{{count}} stop",
+      "planner.flightResults.stops": "{{count}} stops",
+      "planner.flightResults.select": "Select",
+      "planner.flightResults.perPerson": "/person",
+      "planner.flightResults.hideDetails": "Hide details",
+      "planner.flightResults.showDetails": "Show details",
+      "planner.flightResults.outboundFlight": "Outbound flight",
+      "planner.flightResults.returnFlight": "Return flight",
+      "planner.flightResults.aircraft": "Aircraft",
+      "planner.flightResults.legroom": "Legroom",
+      "planner.flightResults.comfort": "Comfort",
+      "planner.flightResults.layoverAt": "Layover at {{city}}",
+      "planner.flightResults.baggage": "Baggage",
+      "planner.flightResults.carryOn": "Carry-on",
+      "planner.flightResults.checked": "Checked",
+      "planner.flightResults.emissions": "Emissions",
+      "planner.flightResults.lessThanAvg": "less than average",
+      "planner.flightResults.moreThanAvg": "more than average",
+      "planner.flightResults.selfTransfer": "Self-transfer",
+      "planner.flightResults.selfTransferNote": "Collect baggage between flights",
+      "planner.flightResults.noResults": "No flights found",
+      "planner.flightResults.noResultsDesc": "Try modifying your search criteria",
+      "planner.flightResults.loading": "Searching flights...",
+      
+      // DestinationPopup
+      "planner.destination.close": "Close",
+      "planner.destination.discover": "Discover",
       
       // BaseStep (preferences)
       "planner.presets.quickStart": "Quick start",

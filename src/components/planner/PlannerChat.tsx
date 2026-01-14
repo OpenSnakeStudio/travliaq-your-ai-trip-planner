@@ -323,13 +323,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         setDestinationSuggestions(response.suggestions);
         setDestinationProfileScore(response.basedOnProfile?.completionScore || 0);
         
-        // Update loading message with results widget
         setMessages((prev) =>
           prev.map((m) =>
             m.id === loadingMessageId
               ? {
                   ...m,
-                  text: `Voici ${response.suggestions.length} destinations parfaites pour vous, basées sur votre profil (${response.basedOnProfile?.completionScore || 0}% de complétion) :`,
+                  text: t(response.suggestions.length > 1 ? "planner.messages.destinationsFoundPlural" : "planner.messages.destinationsFound", { count: response.suggestions.length, score: response.basedOnProfile?.completionScore || 0 }),
                   isTyping: false,
                   widget: "destinationSuggestions" as import("@/types/flight").WidgetType,
                   widgetData: {
@@ -347,7 +346,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
             m.id === loadingMessageId
               ? {
                   ...m,
-                  text: "Désolé, je n'ai pas pu trouver de destinations correspondant à vos critères. Essayez d'ajuster vos préférences.",
+                  text: t("planner.messages.noDestinations"),
                   isTyping: false,
                 }
               : m
@@ -362,7 +361,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           m.id === loadingMessageId
             ? {
                 ...m,
-                text: "Une erreur est survenue lors de la recherche de destinations. Veuillez réessayer.",
+                text: t("planner.messages.errorDestinations"),
                 isTyping: false,
               }
             : m
@@ -588,7 +587,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               m.id === messageId
                 ? {
                     ...m,
-                    text: `Super ! Votre voyage **${departure} → ${arrival}** est configuré :\n\n📅 Départ : ${depDate}${retDate ? `\n📅 Retour : ${retDate}` : ""}\n👥 ${travelers} voyageur${travelers > 1 ? "s" : ""}\n\nSélectionnez vos aéroports ci-dessous :`,
+                    text: `${t("planner.messages.tripConfigured", { from: departure, to: arrival })}\n\n${t("planner.messages.departureDate", { date: depDate })}${retDate ? `\n${t("planner.messages.returnDate", { date: retDate })}` : ""}\n${t(travelers > 1 ? "planner.messages.travelersPlural" : "planner.messages.travelers", { count: travelers })}\n\n${t("planner.messages.selectAirports")}`,
                     isTyping: false,
                     dualAirportChoices: dualChoices,
                   }
@@ -602,7 +601,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               m.id === messageId
                 ? {
                     ...m,
-                    text: `Super ! Votre voyage **${departure} → ${arrival}** est configuré.\n\nVeuillez sélectionner vos aéroports dans le panneau de droite.`,
+                    text: `${t("planner.messages.tripConfigured", { from: departure, to: arrival })}\n\n${t("planner.messages.selectAirportsPanel")}`,
                     isTyping: false,
                   }
                 : m
@@ -619,7 +618,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         {
           id: `search-ready-auto-${Date.now()}`,
           role: "assistant",
-          text: `Parfait ! Votre itinéraire **${departure}${depCode} → ${arrival}${arrCode}** est prêt !\n\n📅 Départ : ${depDate}${retDate ? `\n📅 Retour : ${retDate}` : ""}\n👥 ${travelers} voyageur${travelers > 1 ? "s" : ""}\n\nCliquez ci-dessous pour lancer la recherche. 🚀`,
+          text: `${t("planner.messages.searchReady", { from: `${departure}${depCode}`, to: `${arrival}${arrCode}` })}\n\n${t("planner.messages.departureDate", { date: depDate })}${retDate ? `\n${t("planner.messages.returnDate", { date: retDate })}` : ""}\n${t(travelers > 1 ? "planner.messages.travelersPlural" : "planner.messages.travelers", { count: travelers })}\n\n${t("planner.messages.clickToSearch")}`,
           hasSearchButton: true,
         },
       ]);
@@ -851,8 +850,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         
         // Update the message with loading state for destinations
         const loadingText = destinationSuggestionRequest.exceededLimit
-          ? `Je ne peux afficher que 5 destinations maximum, mais voici mes ${Math.min(destinationSuggestionRequest.requestedCount, 5)} meilleures recommandations pour vous...`
-          : content || `Je recherche ${destinationSuggestionRequest.requestedCount} destinations parfaites pour vous...`;
+          ? t("planner.messages.exceededLimit", { count: Math.min(destinationSuggestionRequest.requestedCount, 5) })
+          : content || t("planner.messages.searchingDestinations", { count: destinationSuggestionRequest.requestedCount });
         
         setMessages((prev) =>
           prev.map((m) =>
@@ -904,7 +903,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                 m.id === messageId
                   ? {
                       ...m,
-                      text: `Voici ${response.suggestions.length} destination${response.suggestions.length > 1 ? 's' : ''} parfaite${response.suggestions.length > 1 ? 's' : ''} pour vous, basées sur votre profil (${response.basedOnProfile?.completionScore || 0}% de complétion) :`,
+                      text: t(response.suggestions.length > 1 ? "planner.messages.destinationsFoundPlural" : "planner.messages.destinationsFound", { count: response.suggestions.length, score: response.basedOnProfile?.completionScore || 0 }),
                       isTyping: false,
                       isStreaming: false,
                       widget: "destinationSuggestions" as import("@/types/flight").WidgetType,
@@ -923,7 +922,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
                 m.id === messageId
                   ? {
                       ...m,
-                      text: "Désolé, je n'ai pas pu trouver de destinations correspondant à vos critères. Essayez d'abord de me donner vos préférences de voyage avec 'Inspire-moi !' 🌍",
+                      text: t("planner.messages.noDestinationsHint"),
                       isTyping: false,
                       isStreaming: false,
                     }
@@ -938,7 +937,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               m.id === messageId
                 ? {
                     ...m,
-                    text: "Une erreur est survenue lors de la recherche de destinations. Veuillez réessayer.",
+                    text: t("planner.messages.errorDestinations"),
                     isTyping: false,
                     isStreaming: false,
                   }
@@ -963,7 +962,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         setDynamicSuggestions([]);
       }
 
-      const { cleanContent, action } = parseAction(content || "Désolé, je n'ai pas pu répondre.");
+      const { cleanContent, action } = parseAction(content || t("planner.messages.defaultError"));
 
       // Process flight data
       let nextMem = { ...memory, passengers: { ...memory.passengers } };
