@@ -1,5 +1,6 @@
 /**
  * DateRangePickerWidget - Inline calendar for departure + return date selection
+ * Now syncs with Zustand store on confirmation
  */
 
 import { useState } from "react";
@@ -8,18 +9,23 @@ import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, ad
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { parsePreferredMonth } from "../types";
+import { usePlannerStoreV2 } from "@/stores/plannerStoreV2";
 
 interface DateRangePickerWidgetProps {
   onConfirm: (departure: Date, returnDate: Date) => void;
   tripDuration?: string; // e.g. "une semaine", "3 jours"
   preferredMonth?: string; // e.g. "février", "summer"
+  /** If true, skip syncing to Zustand */
+  skipStoreSync?: boolean;
 }
 
 export function DateRangePickerWidget({
   onConfirm,
   tripDuration,
   preferredMonth,
+  skipStoreSync = false,
 }: DateRangePickerWidgetProps) {
+  const setDates = usePlannerStoreV2((s) => s.setDates);
   // Determine initial month from preferredMonth
   const getInitialMonth = () => {
     const parsed = parsePreferredMonth(preferredMonth);
@@ -105,6 +111,10 @@ export function DateRangePickerWidget({
   const handleConfirm = () => {
     if (departureDate && returnDate) {
       setConfirmed(true);
+      // Sync to Zustand store
+      if (!skipStoreSync) {
+        setDates(departureDate, returnDate);
+      }
       onConfirm(departureDate, returnDate);
     }
   };

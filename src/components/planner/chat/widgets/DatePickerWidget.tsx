@@ -1,5 +1,6 @@
 /**
  * DatePickerWidget - Inline calendar for date selection
+ * Now syncs with Zustand store on confirmation
  */
 
 import { useState } from "react";
@@ -8,6 +9,7 @@ import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, ad
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { parsePreferredMonth } from "../types";
+import { usePlannerStoreV2 } from "@/stores/plannerStoreV2";
 
 interface DatePickerWidgetProps {
   label: string;
@@ -15,6 +17,10 @@ interface DatePickerWidgetProps {
   onChange: (date: Date) => void;
   minDate?: Date;
   preferredMonth?: string;
+  /** Which date field to sync: 'departure' or 'return' */
+  dateField?: "departure" | "return";
+  /** If true, skip syncing to Zustand */
+  skipStoreSync?: boolean;
 }
 
 export function DatePickerWidget({
@@ -23,7 +29,11 @@ export function DatePickerWidget({
   onChange,
   minDate,
   preferredMonth,
+  dateField,
+  skipStoreSync = false,
 }: DatePickerWidgetProps) {
+  const setDepartureDate = usePlannerStoreV2((s) => s.setDepartureDate);
+  const setReturnDate = usePlannerStoreV2((s) => s.setReturnDate);
   // Determine initial month: preferredMonth > value > minDate > today
   const getInitialMonth = () => {
     const parsed = parsePreferredMonth(preferredMonth);
@@ -67,6 +77,14 @@ export function DatePickerWidget({
   const handleConfirm = () => {
     if (selectedDate) {
       setConfirmed(true);
+      // Sync to Zustand store
+      if (!skipStoreSync && dateField) {
+        if (dateField === "departure") {
+          setDepartureDate(selectedDate);
+        } else if (dateField === "return") {
+          setReturnDate(selectedDate);
+        }
+      }
       onChange(selectedDate);
     }
   };
