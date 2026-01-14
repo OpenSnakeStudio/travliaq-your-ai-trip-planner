@@ -1,5 +1,6 @@
 import { memo, useRef, useEffect, useState } from "react";
 import { ArrowLeft, Star, MapPin, Wifi, Car, Coffee, Waves, Eye, Search, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ const HotelCard = memo(({
   onViewDetails,
   onHover,
   cardRef,
+  t,
 }: {
   hotel: HotelResult;
   isSelected: boolean;
@@ -67,6 +69,7 @@ const HotelCard = memo(({
   onViewDetails: () => void;
   onHover: (hovering: boolean) => void;
   cardRef?: React.RefObject<HTMLDivElement>;
+  t: (key: string, opts?: Record<string, unknown>) => string;
 }) => {
   return (
     <div
@@ -99,7 +102,7 @@ const HotelCard = memo(({
         />
         {/* Price badge */}
         <div className="absolute top-2 right-2 bg-primary text-primary-foreground px-2 py-1 rounded-lg text-sm font-bold shadow-lg">
-          {hotel.pricePerNight}€<span className="text-xs font-normal opacity-80">/nuit</span>
+          {hotel.pricePerNight}€<span className="text-xs font-normal opacity-80">/{t("planner.hotels.perNight")}</span>
         </div>
         {/* Stars */}
         {!!hotel.stars && hotel.stars > 0 && (
@@ -154,7 +157,7 @@ const HotelCard = memo(({
           {hotel.totalPrice ? (
             <>
               <div>
-                <span className="text-xs text-muted-foreground">Total </span>
+                <span className="text-xs text-muted-foreground">{t("planner.hotels.total")} </span>
                 <span className="font-bold text-primary">{hotel.totalPrice}€</span>
               </div>
             </>
@@ -171,7 +174,7 @@ const HotelCard = memo(({
             }}
           >
             <Eye className="h-3 w-3" />
-            Voir détails
+            {t("planner.hotels.viewDetails")}
           </Button>
         </div>
       </div>
@@ -212,6 +215,7 @@ const HotelSearchResults = ({
   highlightedHotelId,
   onMapMove,
 }: HotelSearchResultsProps) => {
+  const { t } = useTranslation();
   const headerRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
@@ -284,10 +288,10 @@ const HotelSearchResults = ({
           </Button>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-sm truncate">
-              Hébergements à {destination}
+              {t("planner.hotels.inDestination", { destination })}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {isLoading ? "Recherche en cours..." : `${results.length} résultats · ${nights} nuit${nights > 1 ? "s" : ""}`}
+              {isLoading ? t("planner.hotels.searching") : t("planner.hotels.resultsCount", { count: results.length, nights })}
             </p>
           </div>
         </div>
@@ -306,7 +310,7 @@ const HotelSearchResults = ({
             <div className="text-center py-12">
               <div className="text-4xl mb-3">🏨</div>
               <p className="text-muted-foreground text-sm">
-                Aucun hébergement trouvé pour ces critères
+                {t("planner.hotels.noResults")}
               </p>
               <Button
                 variant="outline"
@@ -314,7 +318,7 @@ const HotelSearchResults = ({
                 onClick={onBack}
                 className="mt-4"
               >
-                Modifier la recherche
+                {t("planner.hotels.modifySearch")}
               </Button>
             </div>
           ) : (
@@ -328,9 +332,9 @@ const HotelSearchResults = ({
                 onSelect={() => handleCardClick(hotel)}
                 onViewDetails={() => handleViewDetails(hotel)}
                 onHover={(hovering) => onHotelHover(hovering ? hotel : null)}
+                t={t}
                 cardRef={{
                   current: null,
-                  // Store ref in our map
                 } as React.RefObject<HTMLDivElement>}
               />
             ))
@@ -410,6 +414,7 @@ const HotelSearchResultsInner = memo(({
   cardRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
   mapHoveredHotelId: string | null;
 }) => {
+  const { t } = useTranslation();
   const headerRef = useRef<HTMLDivElement>(null);
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
 
@@ -482,7 +487,7 @@ const HotelSearchResultsInner = memo(({
             <div className="text-center py-12">
               <div className="text-4xl mb-3">🏨</div>
               <p className="text-muted-foreground text-sm">
-                Aucun hébergement trouvé pour ces critères
+                {t("planner.hotels.noResults")}
               </p>
               <Button
                 variant="outline"
@@ -490,7 +495,7 @@ const HotelSearchResultsInner = memo(({
                 onClick={onBack}
                 className="mt-4"
               >
-                Modifier la recherche
+                {t("planner.hotels.modifySearch")}
               </Button>
             </div>
           ) : (
@@ -507,6 +512,7 @@ const HotelSearchResultsInner = memo(({
                   onSelect={() => handleCardClick(hotel)}
                   onViewDetails={() => handleViewDetails(hotel)}
                   onHover={(hovering) => onHotelHover(hovering ? hotel : null)}
+                  t={t}
                 />
               </div>
             ))

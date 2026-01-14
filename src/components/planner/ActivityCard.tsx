@@ -7,6 +7,7 @@
  */
 
 import { Star, Clock, MapPin, Plus, Trash2, Eye, Users, Award, Percent } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import type { ViatorActivity, ActivityEntry } from "@/types/activity";
 
@@ -44,11 +45,11 @@ function isTopRated(activity: ViatorActivity | ActivityEntry): boolean {
   return activity.rating.average >= 4.8;
 }
 
-function formatDuration(activity: ViatorActivity | ActivityEntry): string {
+function formatDuration(activity: ViatorActivity | ActivityEntry, t: (key: string) => string): string {
   if (activity.duration) {
     return activity.duration.formatted || `${activity.duration.minutes}min`;
   }
-  return "Durée non spécifiée";
+  return t("planner.activities.durationUnspecified");
 }
 
 // Always use large images to avoid pixelation
@@ -93,6 +94,7 @@ function renderStars(rating: number) {
 }
 
 export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, className, compact = false }: ActivityCardProps) => {
+  const { t } = useTranslation();
   const imageUrl = getImageUrl(activity);
   const discountPercentage = getDiscountPercentage(activity);
   const popular = isPopular(activity);
@@ -194,13 +196,13 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
           {popular && (
             <span className="px-2.5 py-1 bg-accent text-accent-foreground text-xs font-medium rounded-lg flex items-center gap-1 shadow-sm">
               <Users className="h-3 w-3" />
-              Populaire
+              {t("planner.activities.popular")}
             </span>
           )}
           {topRated && !popular && (
             <span className="px-2.5 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-lg flex items-center gap-1 shadow-sm">
               <Award className="h-3 w-3" />
-              Top noté
+              {t("planner.activities.topRated")}
             </span>
           )}
         </div>
@@ -214,7 +216,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                 ? "bg-blue-500 text-white"
                 : "bg-purple-500 text-white"
             )}>
-              {activity.type === "activity" ? "Activité" : "Attraction"}
+              {activity.type === "activity" ? t("planner.activities.activity") : t("planner.activities.attraction")}
             </span>
           </div>
         )}
@@ -234,7 +236,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
               {renderStars(rating.average)}
               <span className="text-sm font-semibold text-foreground">{rating.average.toFixed(1)}</span>
               <span className="text-xs text-muted-foreground">
-                ({rating.count.toLocaleString()} avis)
+                ({rating.count.toLocaleString()} {t("planner.activities.reviews")})
               </span>
             </div>
           )}
@@ -243,7 +245,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
         {/* Duration */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <Clock className="h-3.5 w-3.5" />
-          <span>{formatDuration(activity)}</span>
+          <span>{formatDuration(activity, t)}</span>
         </div>
 
         {/* Pricing & Actions */}
@@ -260,7 +262,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                   <span className="text-xl font-bold text-primary">
                     {pricing.from_price}€
                   </span>
-                  <span className="text-xs text-muted-foreground">/ pers</span>
+                  <span className="text-xs text-muted-foreground">/ {t("planner.activities.perPerson")}</span>
                 </div>
               </>
             )}
@@ -277,7 +279,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                 className="px-4 py-2 bg-primary text-primary-foreground hover:opacity-90 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5"
               >
                 <Plus className="h-4 w-4" />
-                Ajouter
+                {t("planner.activities.add")}
               </button>
             )}
 
@@ -292,7 +294,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                     className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5"
                   >
                     <Eye className="h-3.5 w-3.5" />
-                    Détails
+                    {t("planner.activities.details")}
                   </button>
                 )}
                 {onRemove && (
@@ -302,7 +304,7 @@ export const ActivityCard = ({ activity, mode, onAdd, onClick, onRemove, classNa
                       onRemove();
                     }}
                     className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all"
-                    title="Supprimer"
+                    title={t("planner.activities.remove")}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
