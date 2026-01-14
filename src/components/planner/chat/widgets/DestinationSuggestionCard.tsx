@@ -190,7 +190,7 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             {description}
           </p>
 
-          {/* Key Factors - 2 lines max with inline layout */}
+          {/* Key Factors - Inline compact */}
           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             {keyFactors.slice(0, 3).map((factor, i) => (
               <div key={i} className="flex items-center gap-1 text-xs">
@@ -200,22 +200,16 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             ))}
           </div>
 
-          {/* Stats - Single line with background and separators */}
-          <div className="flex items-center justify-center flex-wrap gap-y-1 text-xs text-muted-foreground bg-muted/60 rounded-lg py-2 px-3">
-            <div className="flex items-center gap-1">
-              <Wallet className="h-3.5 w-3.5 text-amber-500" />
-              <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
-            </div>
-            <div className="w-px h-3.5 bg-border mx-2.5" />
-            <div className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5 text-purple-500" />
-              <span>{bestSeasons.slice(0, 2).join(", ")}</span>
-            </div>
-            <div className="w-px h-3.5 bg-border mx-2.5" />
-            <div className="flex items-center gap-1">
-              <Plane className="h-3.5 w-3.5 text-blue-500" />
-              <span>Vol A/R : {flightPriceEstimate ? `~${flightPriceEstimate}€` : "—"} (estimation)</span>
-            </div>
+          {/* Stats - Single compact line */}
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground bg-muted/60 rounded-lg py-2 px-3">
+            <Wallet className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span className="whitespace-nowrap">{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
+            <span className="text-border">|</span>
+            <Calendar className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+            <span className="whitespace-nowrap">{bestSeasons.slice(0, 2).join(", ")}</span>
+            <span className="text-border">|</span>
+            <Plane className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+            <span className="whitespace-nowrap">Vol A/R : {flightPriceEstimate ? `~${flightPriceEstimate}€` : "—"} (estimation)</span>
           </div>
 
           {/* Activities - Full names visible */}
