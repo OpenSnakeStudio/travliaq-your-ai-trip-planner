@@ -5,6 +5,7 @@
  * metrics like amenities, location, rating, and room types.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   Hotel,
@@ -124,13 +125,13 @@ function getAmenityIcon(amenity: string): React.ElementType | null {
 }
 
 /**
- * Best badge mapping
+ * Best badge config (without labels - those come from i18n)
  */
-const BEST_FOR_BADGES: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  price: { label: "Meilleur prix", icon: Trophy, color: "text-green-600 bg-green-100 dark:bg-green-900/40" },
-  rating: { label: "Mieux noté", icon: Star, color: "text-amber-600 bg-amber-100 dark:bg-amber-900/40" },
-  location: { label: "Meilleur emplacement", icon: MapPin, color: "text-blue-600 bg-blue-100 dark:bg-blue-900/40" },
-  value: { label: "Meilleur rapport Q/P", icon: Heart, color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40" },
+const BEST_FOR_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+  price: { icon: Trophy, color: "text-green-600 bg-green-100 dark:bg-green-900/40" },
+  rating: { icon: Star, color: "text-amber-600 bg-amber-100 dark:bg-amber-900/40" },
+  location: { icon: MapPin, color: "text-blue-600 bg-blue-100 dark:bg-blue-900/40" },
+  value: { icon: Heart, color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40" },
 };
 
 /**
@@ -191,6 +192,8 @@ export function HotelComparisonCard({
   currency = "€",
   nights,
 }: HotelComparisonCardProps) {
+  const { t } = useTranslation();
+  
   // Find best values
   const cheapest = Math.min(...hotels.map((h) => h.pricePerNight));
   const bestRated = Math.max(...hotels.filter((h) => h.rating).map((h) => h.rating!));
@@ -200,6 +203,14 @@ export function HotelComparisonCard({
   const allAmenities = [...new Set(hotels.flatMap((h) => h.amenities || []))];
 
   const itemWidth = `${100 / hotels.length}%`;
+  
+  // i18n labels for best badges
+  const BEST_FOR_LABELS: Record<string, string> = {
+    price: t("planner.comparison.bestPrice"),
+    rating: t("planner.comparison.bestRated"),
+    location: t("planner.comparison.bestLocation"),
+    value: t("planner.comparison.bestValue"),
+  };
 
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
@@ -223,17 +234,17 @@ export function HotelComparisonCard({
               {hotel.bestFor && (
                 <div className="mb-3">
                   {(() => {
-                    const badge = BEST_FOR_BADGES[hotel.bestFor];
-                    const Icon = badge.icon;
+                    const config = BEST_FOR_CONFIG[hotel.bestFor];
+                    const Icon = config.icon;
                     return (
                       <div
                         className={cn(
                           "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-                          badge.color
+                          config.color
                         )}
                       >
                         <Icon size={12} />
-                        {badge.label}
+                        {BEST_FOR_LABELS[hotel.bestFor]}
                       </div>
                     );
                   })()}
@@ -245,7 +256,7 @@ export function HotelComparisonCard({
                 <div className="mb-3">
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                     <ThumbsUp size={12} />
-                    Recommandé
+                    {t("planner.comparison.recommended")}
                   </div>
                 </div>
               )}
@@ -306,7 +317,7 @@ export function HotelComparisonCard({
                     </span>
                     {hotel.reviewCount && (
                       <span className="text-xs text-muted-foreground">
-                        {hotel.reviewCount} avis
+                        {t("planner.comparison.reviews", { count: hotel.reviewCount })}
                       </span>
                     )}
                   </div>
@@ -321,12 +332,12 @@ export function HotelComparisonCard({
                 <div className="flex flex-wrap gap-1 mt-2">
                   {hotel.breakfastIncluded && (
                     <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-                      Petit-déj inclus
+                      {t("planner.comparison.breakfastIncluded")}
                     </span>
                   )}
                   {hotel.freeCancellation && (
                     <span className="px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                      Annulation gratuite
+                      {t("planner.comparison.freeCancellation")}
                     </span>
                   )}
                 </div>
@@ -344,15 +355,15 @@ export function HotelComparisonCard({
                       {hotel.pricePerNight}
                       {currency}
                     </span>
-                    <span className="text-xs text-muted-foreground">/nuit</span>
+                    <span className="text-xs text-muted-foreground">/{t("planner.comparison.night")}</span>
                   </div>
 
                   {/* Total price */}
                   {(hotel.totalPrice || (nights && hotel.pricePerNight)) && (
                     <div className="text-sm text-muted-foreground">
-                      Total: {hotel.totalPrice || hotel.pricePerNight * nights!}
+                      {t("common.total")}: {hotel.totalPrice || hotel.pricePerNight * nights!}
                       {currency}
-                      {nights && ` (${nights} nuits)`}
+                      {nights && ` (${t("planner.comparison.nights", { count: nights })})`}
                     </div>
                   )}
 
@@ -360,12 +371,12 @@ export function HotelComparisonCard({
                   <div className="flex flex-wrap gap-1 mt-2">
                     {isCheapest && (
                       <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-                        Moins cher
+                        {t("planner.comparison.cheapest")}
                       </span>
                     )}
                     {isBestRated && (
                       <span className="px-1.5 py-0.5 rounded text-xs bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
-                        Mieux noté
+                        {t("planner.comparison.bestRated")}
                       </span>
                     )}
                   </div>
@@ -384,7 +395,7 @@ export function HotelComparisonCard({
                     size === "sm" ? "text-xs" : "text-sm"
                   )}
                 >
-                  Réserver
+                  {t("planner.comparison.book")}
                 </button>
               )}
             </div>
@@ -396,7 +407,7 @@ export function HotelComparisonCard({
       {showDetails && allAmenities.length > 0 && (
         <div className="border-t">
           <div className="px-3 py-2 bg-muted/30 text-sm font-medium text-muted-foreground">
-            Équipements
+            {t("planner.comparison.amenities")}
           </div>
           <div className="divide-y divide-border">
             {allAmenities.slice(0, 6).map((amenity) => {
@@ -440,7 +451,7 @@ export function HotelComparisonCard({
           {/* Cancellation policy */}
           <div className="flex">
             <div className="w-1/4 min-w-[100px] flex items-center px-3 py-2 bg-muted/20 text-sm text-muted-foreground">
-              Annulation
+              {t("planner.comparison.cancellation")}
             </div>
             <div className="flex-1 flex">
               {hotels.map((hotel, index) => (
@@ -454,10 +465,10 @@ export function HotelComparisonCard({
                   {hotel.freeCancellation ? (
                     <span className="text-green-600 flex items-center gap-1">
                       <Check size={14} />
-                      Gratuite
+                      {t("planner.comparison.free")}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">Non remb.</span>
+                    <span className="text-muted-foreground">{t("planner.comparison.nonRefundable")}</span>
                   )}
                 </div>
               ))}
@@ -467,7 +478,7 @@ export function HotelComparisonCard({
           {/* Payment */}
           <div className="flex">
             <div className="w-1/4 min-w-[100px] flex items-center px-3 py-2 bg-muted/20 text-sm text-muted-foreground">
-              Paiement
+              {t("planner.comparison.payment")}
             </div>
             <div className="flex-1 flex">
               {hotels.map((hotel, index) => (
@@ -479,9 +490,9 @@ export function HotelComparisonCard({
                   )}
                 >
                   {hotel.payAtProperty ? (
-                    <span className="text-green-600">Sur place</span>
+                    <span className="text-green-600">{t("planner.comparison.payOnSite")}</span>
                   ) : (
-                    <span className="text-muted-foreground">Maintenant</span>
+                    <span className="text-muted-foreground">{t("planner.comparison.payNow")}</span>
                   )}
                 </div>
               ))}

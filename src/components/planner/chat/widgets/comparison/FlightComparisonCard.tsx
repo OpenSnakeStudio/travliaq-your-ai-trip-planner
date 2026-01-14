@@ -93,11 +93,16 @@ function formatDuration(minutes: number): string {
 /**
  * Best badge mapping
  */
-const BEST_FOR_BADGES: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  price: { label: "Meilleur prix", icon: Trophy, color: "text-green-600 bg-green-100 dark:bg-green-900/40" },
-  duration: { label: "Plus rapide", icon: Zap, color: "text-blue-600 bg-blue-100 dark:bg-blue-900/40" },
-  comfort: { label: "Plus confortable", icon: Check, color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40" },
-  schedule: { label: "Meilleurs horaires", icon: Clock, color: "text-amber-600 bg-amber-100 dark:bg-amber-900/40" },
+// Best badge labels are now retrieved via i18n in component
+
+/**
+ * Best badge config (without labels - those come from i18n)
+ */
+const BEST_FOR_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
+  price: { icon: Trophy, color: "text-green-600 bg-green-100 dark:bg-green-900/40" },
+  duration: { icon: Zap, color: "text-blue-600 bg-blue-100 dark:bg-blue-900/40" },
+  comfort: { icon: Check, color: "text-purple-600 bg-purple-100 dark:bg-purple-900/40" },
+  schedule: { icon: Clock, color: "text-amber-600 bg-amber-100 dark:bg-amber-900/40" },
 };
 
 /**
@@ -107,10 +112,12 @@ function FlightLegDisplay({
   leg,
   label,
   size,
+  t,
 }: {
   leg: FlightLegComparison;
   label: string;
   size: "sm" | "md";
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   return (
     <div className="space-y-1">
@@ -138,7 +145,7 @@ function FlightLegDisplay({
         <span>{leg.duration}</span>
         <span>·</span>
         <span className={leg.stops === 0 ? "text-green-600" : ""}>
-          {leg.stops === 0 ? "Direct" : `${leg.stops} escale${leg.stops > 1 ? "s" : ""}`}
+          {leg.stops === 0 ? t("planner.comparison.direct") : t("planner.comparison.stops", { count: leg.stops })}
         </span>
       </div>
 
@@ -183,12 +190,22 @@ export function FlightComparisonCard({
   showDetails = true,
   currency = "€",
 }: FlightComparisonCardProps) {
+  const { t } = useTranslation();
+  
   // Find best values
   const cheapest = Math.min(...flights.map((f) => f.price));
   const fastestOutbound = Math.min(...flights.map((f) => f.outbound.durationMinutes));
   const fewestStops = Math.min(...flights.map((f) => f.outbound.stops + (f.return?.stops || 0)));
 
   const itemWidth = `${100 / flights.length}%`;
+  
+  // i18n labels for best badges
+  const BEST_FOR_LABELS: Record<string, string> = {
+    price: t("planner.comparison.bestPrice"),
+    duration: t("planner.comparison.fastest"),
+    comfort: t("planner.comparison.mostComfortable"),
+    schedule: t("planner.comparison.bestSchedule"),
+  };
 
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
@@ -213,17 +230,17 @@ export function FlightComparisonCard({
               {flight.bestFor && (
                 <div className="mb-3">
                   {(() => {
-                    const badge = BEST_FOR_BADGES[flight.bestFor];
-                    const Icon = badge.icon;
+                    const config = BEST_FOR_CONFIG[flight.bestFor];
+                    const Icon = config.icon;
                     return (
                       <div
                         className={cn(
                           "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-                          badge.color
+                          config.color
                         )}
                       >
                         <Icon size={12} />
-                        {badge.label}
+                        {BEST_FOR_LABELS[flight.bestFor]}
                       </div>
                     );
                   })()}
@@ -247,12 +264,12 @@ export function FlightComparisonCard({
               </div>
 
               {/* Outbound */}
-              <FlightLegDisplay leg={flight.outbound} label="Aller" size={size} />
+              <FlightLegDisplay leg={flight.outbound} label={t("planner.comparison.outbound")} size={size} t={t} />
 
               {/* Return */}
               {flight.return && (
                 <div className="mt-3 pt-3 border-t border-border">
-                  <FlightLegDisplay leg={flight.return} label="Retour" size={size} />
+                  <FlightLegDisplay leg={flight.return} label={t("planner.comparison.return")} size={size} t={t} />
                 </div>
               )}
 
@@ -278,17 +295,17 @@ export function FlightComparisonCard({
                 <div className="flex flex-wrap gap-1 mt-2">
                   {isCheapest && (
                     <span className="px-1.5 py-0.5 rounded text-xs bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
-                      Moins cher
+                      {t("planner.comparison.cheapest")}
                     </span>
                   )}
                   {isFastest && (
                     <span className="px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                      Plus rapide
+                      {t("planner.comparison.fastest")}
                     </span>
                   )}
                   {hasFewestStops && fewestStops === 0 && (
                     <span className="px-1.5 py-0.5 rounded text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
-                      Direct
+                      {t("planner.comparison.direct")}
                     </span>
                   )}
                 </div>
@@ -306,7 +323,7 @@ export function FlightComparisonCard({
                     size === "sm" ? "text-xs" : "text-sm"
                   )}
                 >
-                  Sélectionner
+                  {t("planner.comparison.select")}
                 </button>
               )}
             </div>
@@ -321,7 +338,7 @@ export function FlightComparisonCard({
           <div className="flex">
             <div className="w-1/4 min-w-[100px] flex items-center px-3 py-2 bg-muted/20 text-sm text-muted-foreground">
               <Clock size={14} className="mr-2" />
-              Durée totale
+              {t("planner.comparison.totalDuration")}
             </div>
             <div className="flex-1 flex">
               {flights.map((flight, index) => {
@@ -351,7 +368,7 @@ export function FlightComparisonCard({
           <div className="flex">
             <div className="w-1/4 min-w-[100px] flex items-center px-3 py-2 bg-muted/20 text-sm text-muted-foreground">
               <Plane size={14} className="mr-2" />
-              Escales
+              {t("planner.comparison.stopovers")}
             </div>
             <div className="flex-1 flex">
               {flights.map((flight, index) => {
@@ -367,7 +384,7 @@ export function FlightComparisonCard({
                     )}
                   >
                     {isBest && <Check size={14} className="mr-1" />}
-                    {totalStops === 0 ? "Direct" : totalStops}
+                    {totalStops === 0 ? t("planner.comparison.direct") : totalStops}
                   </div>
                 );
               })}
@@ -378,7 +395,7 @@ export function FlightComparisonCard({
           <div className="flex">
             <div className="w-1/4 min-w-[100px] flex items-center px-3 py-2 bg-muted/20 text-sm text-muted-foreground">
               <Luggage size={14} className="mr-2" />
-              Bagages
+              {t("planner.comparison.baggage")}
             </div>
             <div className="flex-1 flex">
               {flights.map((flight, index) => (
@@ -394,12 +411,12 @@ export function FlightComparisonCard({
                       <Check size={14} />
                       {flight.baggageIncluded.checkedKg
                         ? `${flight.baggageIncluded.checkedKg}kg`
-                        : "Inclus"}
+                        : t("planner.comparison.included")}
                     </span>
                   ) : flight.baggageIncluded?.cabin ? (
-                    <span className="text-muted-foreground">Cabine seul.</span>
+                    <span className="text-muted-foreground">{t("planner.comparison.cabinOnly")}</span>
                   ) : (
-                    <span className="text-muted-foreground">Non inclus</span>
+                    <span className="text-muted-foreground">{t("planner.comparison.notIncluded")}</span>
                   )}
                 </div>
               ))}
@@ -409,7 +426,7 @@ export function FlightComparisonCard({
           {/* Flexibility row */}
           <div className="flex">
             <div className="w-1/4 min-w-[100px] flex items-center px-3 py-2 bg-muted/20 text-sm text-muted-foreground">
-              Flexibilité
+              {t("planner.comparison.flexibility")}
             </div>
             <div className="flex-1 flex">
               {flights.map((flight, index) => (
@@ -423,12 +440,12 @@ export function FlightComparisonCard({
                   {flight.refundable ? (
                     <span className="text-green-600 flex items-center gap-1">
                       <Check size={14} />
-                      Remboursable
+                      {t("planner.comparison.refundable")}
                     </span>
                   ) : flight.flexibleChange ? (
-                    <span className="text-amber-600">Modifiable</span>
+                    <span className="text-amber-600">{t("planner.comparison.modifiable")}</span>
                   ) : (
-                    <span className="text-muted-foreground">Non flex.</span>
+                    <span className="text-muted-foreground">{t("planner.comparison.notFlexible")}</span>
                   )}
                 </div>
               ))}
