@@ -190,26 +190,28 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
             {description}
           </p>
 
-          {/* Key Factors - No truncation */}
-          <div className="space-y-1">
+          {/* Key Factors - 2 lines max with inline layout */}
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             {keyFactors.slice(0, 3).map((factor, i) => (
-              <div key={i} className="flex items-start gap-1.5 text-xs">
-                <Check className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
+              <div key={i} className="flex items-center gap-1 text-xs">
+                <Check className="h-3 w-3 text-green-500 shrink-0" />
                 <span className="text-muted-foreground">{factor}</span>
               </div>
             ))}
           </div>
 
-          {/* Stats - Single line with background */}
-          <div className="flex items-center justify-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground bg-muted/60 rounded-lg py-2 px-3">
+          {/* Stats - Single line with background and separators */}
+          <div className="flex items-center justify-center flex-wrap gap-y-1 text-xs text-muted-foreground bg-muted/60 rounded-lg py-2 px-3">
             <div className="flex items-center gap-1">
               <Wallet className="h-3.5 w-3.5 text-amber-500" />
               <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
             </div>
+            <div className="w-px h-3.5 bg-border mx-2.5" />
             <div className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5 text-purple-500" />
               <span>{bestSeasons.slice(0, 2).join(", ")}</span>
             </div>
+            <div className="w-px h-3.5 bg-border mx-2.5" />
             <div className="flex items-center gap-1">
               <Plane className="h-3.5 w-3.5 text-blue-500" />
               <span>Vol A/R : {flightPriceEstimate ? `~${flightPriceEstimate}€` : "—"} (estimation)</span>
