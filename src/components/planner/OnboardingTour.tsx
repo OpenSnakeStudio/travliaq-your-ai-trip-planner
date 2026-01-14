@@ -3,6 +3,7 @@ import { driver, type DriveStep, type Config } from "driver.js";
 import "driver.js/dist/driver.css";
 import { eventBus } from "@/lib/eventBus";
 import type { TabType } from "@/pages/TravelPlanner";
+import { useTranslation } from "react-i18next";
 
 interface OnboardingTourProps {
   forceShow?: boolean;
@@ -718,6 +719,7 @@ export default function OnboardingTour({
   onPanelVisibilityChange,
   onRequestAnimation,
 }: OnboardingTourProps) {
+  const { t } = useTranslation();
   const [isRunning, setIsRunning] = useState(false);
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
 
@@ -782,8 +784,8 @@ export default function OnboardingTour({
     }
   }, []);
 
-  // Step labels for progress indicator
-  const stepLabels = ["Intro", "Chat", "Outils", "Carte", "Vols", "Séjours", "Activités", "Préfs", "Fin"];
+  // Step labels for progress indicator - now translated
+  const stepLabels = t("planner.onboarding.stepLabels").split(",");
 
   const renderProgressHeader = useCallback(
     (popoverEl: HTMLElement, currentIndex: number, total: number, driverInstance: ReturnType<typeof driver>) => {
@@ -834,7 +836,7 @@ export default function OnboardingTour({
       const closeBtn = document.createElement("button");
       closeBtn.className = "travliaq-close-btn";
       closeBtn.innerHTML = "×";
-      closeBtn.title = "Passer le guide";
+      closeBtn.title = t("planner.onboarding.skipGuide");
       closeBtn.onclick = () => {
         driverInstance.destroy();
       };
@@ -846,20 +848,21 @@ export default function OnboardingTour({
     []
   );
 
-  const steps: DriveStep[] = [
+  // Create steps dynamically with translations
+  const getSteps = useCallback((): DriveStep[] => [
     // Step 0: Welcome - centered intro modal, no element highlighted
     {
       element: "#onboarding-anchor",
       popover: {
-        title: "✨ Bienvenue sur Travliaq !",
+        title: t("planner.onboarding.step0.title"),
         description: `
-          <p style="font-size: 1rem; margin-bottom: 16px;">Planifiez votre voyage idéal en quelques minutes grâce à notre assistant intelligent.</p>
+          <p style="font-size: 1rem; margin-bottom: 16px;">${t("planner.onboarding.step0.desc")}</p>
           <div style="background: hsl(var(--muted) / 0.5); border-radius: 12px; padding: 14px; margin-bottom: 12px;">
             <p style="font-size: 0.875rem; margin: 0; color: hsl(var(--foreground));">
-              <strong>Ce guide rapide</strong> vous présente les fonctionnalités principales en <strong>30 secondes</strong>.
+              <strong>${t("planner.onboarding.step0.info")}</strong>
             </p>
           </div>
-          <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">Vous pouvez passer ce guide à tout moment avec le bouton ×</p>
+          <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground));">${t("planner.onboarding.step0.skip")}</p>
         `,
         side: "over",
         align: "center",
@@ -870,54 +873,54 @@ export default function OnboardingTour({
     {
       element: '[data-tour="chat-panel"]',
       popover: {
-        title: "💬 Assistant IA",
+        title: t("planner.onboarding.step1.title"),
         description: `
-          <span class="highlight-badge">Chat intelligent</span>
-          <p>Parlez naturellement pour planifier votre voyage.</p>
+          <span class="highlight-badge">${t("planner.onboarding.step1.badge")}</span>
+          <p>${t("planner.onboarding.step1.desc")}</p>
           <ul>
-            <li><strong>Demandez</strong> des recommandations personnalisées</li>
-            <li><strong>Configurez</strong> vos vols, hébergements, activités</li>
-            <li><strong>L'IA synchronise</strong> tout automatiquement dans les widgets</li>
+            <li><strong>${t("planner.onboarding.step1.item1")}</strong></li>
+            <li><strong>${t("planner.onboarding.step1.item2")}</strong></li>
+            <li><strong>${t("planner.onboarding.step1.item3")}</strong></li>
           </ul>
-          <div class="tip-box">💡 Exemple : "Je veux partir à Bali en avril pour 2 semaines"</div>
+          <div class="tip-box">💡 ${t("planner.onboarding.step1.tip")}</div>
         `,
         side: "right",
         align: "center",
       },
     },
-    // Step 2: Tabs bar - tooltip BELOW the tabs bar (not above)
+    // Step 2: Tabs bar
     {
       element: '[data-tour="tabs-nav"]',
       popover: {
-        title: "🛠️ Barre d'Outils",
+        title: t("planner.onboarding.step2.title"),
         description: `
-          <span class="highlight-badge">Accès instantané</span>
-          <p>Utilisez ces boutons pour passer d'un widget à l'autre, sans perdre le fil de votre conversation.</p>
+          <span class="highlight-badge">${t("planner.onboarding.step2.badge")}</span>
+          <p>${t("planner.onboarding.step2.desc")}</p>
           <ul>
-            <li><strong>✈️ Vols</strong> — configurer itinéraire, dates, passagers</li>
-            <li><strong>🏨 Hébergements</strong> — choisir une zone + filtrer selon vos critères</li>
-            <li><strong>🎭 Activités</strong> — explorer, filtrer et ajouter à l'itinéraire</li>
-            <li><strong>⚙️ Préférences</strong> — affiner le style de voyage pour guider l'IA</li>
+            <li><strong>${t("planner.onboarding.step2.flights")}</strong></li>
+            <li><strong>${t("planner.onboarding.step2.stays")}</strong></li>
+            <li><strong>${t("planner.onboarding.step2.activities")}</strong></li>
+            <li><strong>${t("planner.onboarding.step2.preferences")}</strong></li>
           </ul>
-          <div class="tip-box">💡 Astuce : cliquez sur un onglet, puis dites à l'IA ce que vous voulez — tout se remplit automatiquement.</div>
+          <div class="tip-box">💡 ${t("planner.onboarding.step2.tip")}</div>
         `,
         side: "right",
         align: "start",
         popoverClass: "travliaq-toolbar-popover travliaq-popover-large travliaq-popover-right",
       },
     },
-    // Step 3: Map - tooltip on LEFT side (not overlapping the map)
+    // Step 3: Map
     {
       element: '[data-tour="map-area"]',
       popover: {
-        title: "🗺️ Carte Interactive",
+        title: t("planner.onboarding.step3.title"),
         description: `
-          <span class="highlight-badge">Visualisation en temps réel</span>
-          <p>Explorez votre voyage sur la carte :</p>
+          <span class="highlight-badge">${t("planner.onboarding.step3.badge")}</span>
+          <p>${t("planner.onboarding.step3.desc")}</p>
           <ul>
-            <li><strong>Prix en direct</strong> — cliquez sur une destination pour voir les tarifs</li>
-            <li><strong>Itinéraires</strong> — vos trajets s'affichent automatiquement</li>
-            <li><strong>Zoom</strong> — découvrez plus de destinations en zoomant</li>
+            <li><strong>${t("planner.onboarding.step3.item1")}</strong></li>
+            <li><strong>${t("planner.onboarding.step3.item2")}</strong></li>
+            <li><strong>${t("planner.onboarding.step3.item3")}</strong></li>
           </ul>
         `,
         side: "left",
@@ -925,21 +928,21 @@ export default function OnboardingTour({
         popoverClass: "travliaq-popover-left",
       },
     },
-    // Step 4: Flights widget - target full planner panel (header + content)
+    // Step 4: Flights widget
     {
       element: '[data-tour="widgets-panel"]',
       popover: {
-        title: "✈️ Widget Vols",
+        title: t("planner.onboarding.step4.title"),
         description: `
-          <span class="highlight-badge">Recherchez et comparez</span>
-          <p style="margin-bottom: 10px;">Ce panneau complet vous permet de configurer tous les détails de vos vols.</p>
+          <span class="highlight-badge">${t("planner.onboarding.step4.badge")}</span>
+          <p style="margin-bottom: 10px;">${t("planner.onboarding.step4.desc")}</p>
           <ul>
-            <li><strong>Type de voyage</strong> — aller-retour, aller simple, multi-destinations</li>
-            <li><strong>Origine & destination</strong> — aéroports ou villes</li>
-            <li><strong>Dates & voyageurs</strong> — flexible ou fixe</li>
-            <li><strong>Options avancées</strong> — vols directs, bagages, classe…</li>
+            <li><strong>${t("planner.onboarding.step4.item1")}</strong></li>
+            <li><strong>${t("planner.onboarding.step4.item2")}</strong></li>
+            <li><strong>${t("planner.onboarding.step4.item3")}</strong></li>
+            <li><strong>${t("planner.onboarding.step4.item4")}</strong></li>
           </ul>
-          <div class="tip-box">💡 Les résultats apparaissent ici même après la recherche</div>
+          <div class="tip-box">💡 ${t("planner.onboarding.step4.tip")}</div>
         `,
         side: "right",
         align: "center",
@@ -950,17 +953,17 @@ export default function OnboardingTour({
     {
       element: '[data-tour="widgets-panel"]',
       popover: {
-        title: "🏨 Widget Hébergements",
+        title: t("planner.onboarding.step5.title"),
         description: `
-          <span class="highlight-badge">Trouvez votre logement idéal</span>
-          <p style="margin-bottom: 10px;">Recherchez parmi des milliers d'options d'hébergement.</p>
+          <span class="highlight-badge">${t("planner.onboarding.step5.badge")}</span>
+          <p style="margin-bottom: 10px;">${t("planner.onboarding.step5.desc")}</p>
           <ul>
-            <li><strong>Destination</strong> — synchronisée avec vos vols automatiquement</li>
-            <li><strong>Budget & confort</strong> — définissez votre fourchette de prix</li>
-            <li><strong>Type</strong> — hôtel, appartement, villa, auberge…</li>
-            <li><strong>Équipements</strong> — piscine, WiFi, parking, petit-déj…</li>
+            <li><strong>${t("planner.onboarding.step5.item1")}</strong></li>
+            <li><strong>${t("planner.onboarding.step5.item2")}</strong></li>
+            <li><strong>${t("planner.onboarding.step5.item3")}</strong></li>
+            <li><strong>${t("planner.onboarding.step5.item4")}</strong></li>
           </ul>
-          <div class="tip-box">💡 Les prix s'affichent aussi sur la carte</div>
+          <div class="tip-box">💡 ${t("planner.onboarding.step5.tip")}</div>
         `,
         side: "right",
         align: "center",
@@ -971,17 +974,17 @@ export default function OnboardingTour({
     {
       element: '[data-tour="widgets-panel"]',
       popover: {
-        title: "🎭 Widget Activités",
+        title: t("planner.onboarding.step6.title"),
         description: `
-          <span class="highlight-badge">Découvrez quoi faire</span>
-          <p style="margin-bottom: 10px;">Explorez les meilleures activités de votre destination.</p>
+          <span class="highlight-badge">${t("planner.onboarding.step6.badge")}</span>
+          <p style="margin-bottom: 10px;">${t("planner.onboarding.step6.desc")}</p>
           <ul>
-            <li><strong>Catégories</strong> — culture, nature, gastronomie, aventure…</li>
-            <li><strong>Filtres</strong> — prix, durée, popularité, accessibilité</li>
-            <li><strong>Localisation</strong> — visualisez les activités sur la carte</li>
-            <li><strong>Détails</strong> — photos, avis, horaires, réservation</li>
+            <li><strong>${t("planner.onboarding.step6.item1")}</strong></li>
+            <li><strong>${t("planner.onboarding.step6.item2")}</strong></li>
+            <li><strong>${t("planner.onboarding.step6.item3")}</strong></li>
+            <li><strong>${t("planner.onboarding.step6.item4")}</strong></li>
           </ul>
-          <div class="tip-box">💡 Ajoutez des activités à votre itinéraire d'un clic</div>
+          <div class="tip-box">💡 ${t("planner.onboarding.step6.tip")}</div>
         `,
         side: "right",
         align: "center",
@@ -992,38 +995,38 @@ export default function OnboardingTour({
     {
       element: '[data-tour="widgets-panel"]',
       popover: {
-        title: "⚙️ Widget Préférences",
+        title: t("planner.onboarding.step7.title"),
         description: `
-          <span class="highlight-badge">Personnalisez l'expérience</span>
-          <p style="margin-bottom: 10px;">Vos préférences guident l'IA pour des recommandations sur-mesure.</p>
+          <span class="highlight-badge">${t("planner.onboarding.step7.badge")}</span>
+          <p style="margin-bottom: 10px;">${t("planner.onboarding.step7.desc")}</p>
           <ul>
-            <li><strong>Rythme</strong> — détente, modéré ou intensif</li>
-            <li><strong>Budget</strong> — économique, confort ou premium</li>
-            <li><strong>Intérêts</strong> — culture, plage, montagne, vie nocturne…</li>
-            <li><strong>Style</strong> — solo, couple, famille, groupe d'amis</li>
+            <li><strong>${t("planner.onboarding.step7.item1")}</strong></li>
+            <li><strong>${t("planner.onboarding.step7.item2")}</strong></li>
+            <li><strong>${t("planner.onboarding.step7.item3")}</strong></li>
+            <li><strong>${t("planner.onboarding.step7.item4")}</strong></li>
           </ul>
-          <div class="tip-box">💡 Plus vos préférences sont précises, meilleures sont les suggestions</div>
+          <div class="tip-box">💡 ${t("planner.onboarding.step7.tip")}</div>
         `,
         side: "right",
         align: "center",
         popoverClass: "travliaq-popover-right",
       },
     },
-    // Step 8: Final - centered outro modal
+    // Step 8: Final
     {
       element: "#onboarding-anchor",
       popover: {
-        title: "🚀 Vous êtes prêt !",
+        title: t("planner.onboarding.step8.title"),
         description: `
           <p style="font-size: 1rem; font-weight: 600; color: hsl(var(--foreground)); margin-bottom: 16px;">
-            Votre assistant de voyage vous attend.
+            ${t("planner.onboarding.step8.desc")}
           </p>
           <div class="tip-box" style="background: hsl(var(--primary) / 0.15); margin-bottom: 14px;">
-            🎯 <span><strong>Pour commencer :</strong> dites bonjour à l'assistant ou configurez directement vos vols !</span>
+            🎯 <span><strong>${t("planner.onboarding.step8.tip")}</strong></span>
           </div>
           <div style="background: hsl(var(--muted) / 0.4); border-radius: 10px; padding: 12px;">
             <p style="font-size: 0.8125rem; margin: 0; color: hsl(var(--muted-foreground));">
-              ✨ Vous pouvez relancer ce guide depuis les paramètres à tout moment.
+              ✨ ${t("planner.onboarding.step8.info")}
             </p>
           </div>
         `,
@@ -1032,7 +1035,7 @@ export default function OnboardingTour({
         popoverClass: "outro-modal",
       },
     },
-  ];
+  ], [t]);
 
   // Initialize driver - always run when component mounts (component is only rendered when onboarding should show)
   useEffect(() => {
@@ -1071,12 +1074,12 @@ export default function OnboardingTour({
           smoothScroll: false,
           disableActiveInteraction: false,
           popoverClass: "travliaq-popover",
-          nextBtnText: "Suivant →",
-          prevBtnText: "← Précédent",
-          doneBtnText: "C'est parti ! ✨",
+          nextBtnText: t("planner.onboarding.next"),
+          prevBtnText: t("planner.onboarding.prev"),
+          doneBtnText: t("planner.onboarding.done"),
           onPopoverRender: (popover, opts) => {
             const idx = opts.state.activeIndex ?? 0;
-            const total = opts.config.steps?.length ?? steps.length;
+            const total = opts.config.steps?.length ?? 9;
             renderProgressHeader(popover.wrapper, idx, total, opts.driver);
 
             // CRITICAL FIX: For steps 0 and 8 (intro/outro), manually position the popover
@@ -1129,7 +1132,7 @@ export default function OnboardingTour({
               const skipBtn = document.createElement("button");
               skipBtn.className = "travliaq-skip-btn";
               skipBtn.type = "button";
-              skipBtn.textContent = "Arrêter le guide";
+              skipBtn.textContent = t("planner.onboarding.skipGuide");
               skipBtn.onclick = () => {
                 opts.driver.destroy();
               };
@@ -1146,8 +1149,8 @@ export default function OnboardingTour({
           onNextClick: (_el, _step, opts) => {
             const idx = opts.state.activeIndex ?? 0;
 
-            // Last step: "C'est parti !" should end the tour
-            if (idx >= steps.length - 1) {
+            // Last step: "Let's go!" should end the tour
+            if (idx >= 8) {
               opts.driver.destroy();
               return;
             }
@@ -1171,7 +1174,7 @@ export default function OnboardingTour({
           onCloseClick: (_el, _step, opts) => {
             opts.driver.destroy();
           },
-          steps,
+          steps: getSteps(),
           onDestroyed: () => {
             handleComplete();
           },
