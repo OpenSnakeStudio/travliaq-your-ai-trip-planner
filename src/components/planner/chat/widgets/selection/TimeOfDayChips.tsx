@@ -6,6 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Sunrise, Sun, Sunset, Moon } from "lucide-react";
 
@@ -14,8 +15,8 @@ import { Sunrise, Sun, Sunset, Moon } from "lucide-react";
  */
 export interface TimeOfDayOption {
   id: string;
-  label: string;
-  labelShort: string;
+  labelKey: string;
+  labelShortKey: string;
   /** Start hour (0-23) */
   startHour: number;
   /** End hour (0-23) */
@@ -27,19 +28,19 @@ export interface TimeOfDayOption {
  * Default time of day options
  */
 export const DEFAULT_TIME_OPTIONS: TimeOfDayOption[] = [
-  { id: "morning", label: "Matin", labelShort: "Matin", startHour: 6, endHour: 12, icon: "morning" },
-  { id: "afternoon", label: "Après-midi", labelShort: "Après-midi", startHour: 12, endHour: 17, icon: "afternoon" },
-  { id: "evening", label: "Soir", labelShort: "Soir", startHour: 17, endHour: 21, icon: "evening" },
-  { id: "night", label: "Nuit", labelShort: "Nuit", startHour: 21, endHour: 6, icon: "night" },
+  { id: "morning", labelKey: "planner.timeOfDay.morning", labelShortKey: "planner.timeOfDay.morningShort", startHour: 6, endHour: 12, icon: "morning" },
+  { id: "afternoon", labelKey: "planner.timeOfDay.afternoon", labelShortKey: "planner.timeOfDay.afternoonShort", startHour: 12, endHour: 17, icon: "afternoon" },
+  { id: "evening", labelKey: "planner.timeOfDay.evening", labelShortKey: "planner.timeOfDay.eveningShort", startHour: 17, endHour: 21, icon: "evening" },
+  { id: "night", labelKey: "planner.timeOfDay.night", labelShortKey: "planner.timeOfDay.nightShort", startHour: 21, endHour: 6, icon: "night" },
 ];
 
 /**
  * Simplified options (without night)
  */
 export const SIMPLE_TIME_OPTIONS: TimeOfDayOption[] = [
-  { id: "morning", label: "Matin", labelShort: "Matin", startHour: 6, endHour: 12, icon: "morning" },
-  { id: "afternoon", label: "Après-midi", labelShort: "A-M", startHour: 12, endHour: 18, icon: "afternoon" },
-  { id: "evening", label: "Soir", labelShort: "Soir", startHour: 18, endHour: 22, icon: "evening" },
+  { id: "morning", labelKey: "planner.timeOfDay.morning", labelShortKey: "planner.timeOfDay.morningShort", startHour: 6, endHour: 12, icon: "morning" },
+  { id: "afternoon", labelKey: "planner.timeOfDay.afternoon", labelShortKey: "planner.timeOfDay.afternoonShort", startHour: 12, endHour: 18, icon: "afternoon" },
+  { id: "evening", labelKey: "planner.timeOfDay.evening", labelShortKey: "planner.timeOfDay.eveningShort", startHour: 18, endHour: 22, icon: "evening" },
 ];
 
 /**
@@ -112,6 +113,7 @@ export function TimeOfDayChips({
   shortLabels = false,
   layout = "wrap",
 }: TimeOfDayChipsProps) {
+  const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(initialSelected)
   );
@@ -187,7 +189,7 @@ export function TimeOfDayChips({
                 isSelected={isSelected}
               />
               <span className="font-medium whitespace-nowrap">
-                {shortLabels ? option.labelShort : option.label}
+                {shortLabels ? t(option.labelShortKey) : t(option.labelKey)}
               </span>
             </button>
           );

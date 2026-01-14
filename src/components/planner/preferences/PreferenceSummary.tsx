@@ -97,16 +97,12 @@ export const PreferenceSummary = memo(function PreferenceSummary({ className, co
     setIsLoading(true);
 
     try {
-      // Build human-readable profile description
-      const styleLabel = prefs.travelStyle === "solo" ? "solo" : prefs.travelStyle === "couple" ? "en duo" : prefs.travelStyle === "family" ? "en famille" : "entre amis";
-      const interestsList = prefs.interests.length > 0 ? prefs.interests.slice(0, 4).join(", ") : "polyvalent";
-      const occasionLabel = prefs.tripContext.occasion ? {
-        honeymoon: "lune de miel",
-        anniversary: "anniversaire de couple",
-        birthday: "célébration d'anniversaire",
-        vacation: "vacances",
-        workation: "télétravail + voyage"
-      }[prefs.tripContext.occasion] || "" : "";
+      // Build human-readable profile description using i18n
+      const styleLabel = t(`planner.summary.travelStyle.${prefs.travelStyle}`) || t("planner.summary.travelStyle.solo");
+      const interestsList = prefs.interests.length > 0 ? prefs.interests.slice(0, 4).join(", ") : t("planner.summary.polyvalent");
+      const occasionLabel = prefs.tripContext.occasion 
+        ? t(`planner.summary.occasion.${prefs.tripContext.occasion}`) 
+        : "";
 
       // Use the current language for the prompt
       const isEnglish = i18n.language?.startsWith("en");

@@ -6,6 +6,7 @@
  */
 
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   Sun,
   Cloud,
@@ -103,19 +104,12 @@ function WeatherIcon({ weather, size = 16 }: { weather: SeasonalData["weather"];
 /**
  * Get crowd level indicator
  */
-function CrowdIndicator({ level }: { level: CrowdLevel }) {
+function CrowdIndicator({ level, t }: { level: CrowdLevel; t: (key: string) => string }) {
   const colors = {
     low: "bg-green-500",
     medium: "bg-yellow-500",
     high: "bg-orange-500",
     peak: "bg-red-500",
-  };
-
-  const labels = {
-    low: "Peu fréquenté",
-    medium: "Fréquentation moyenne",
-    high: "Très fréquenté",
-    peak: "Affluence maximale",
   };
 
   return (
@@ -134,7 +128,7 @@ function CrowdIndicator({ level }: { level: CrowdLevel }) {
           />
         ))}
       </div>
-      <span className="text-xs text-muted-foreground">{labels[level]}</span>
+      <span className="text-xs text-muted-foreground">{t(`planner.seasonal.crowdLevel.${level}`)}</span>
     </div>
   );
 }
@@ -142,15 +136,16 @@ function CrowdIndicator({ level }: { level: CrowdLevel }) {
 /**
  * Get price trend indicator
  */
-function PriceTrendIndicator({ trend }: { trend: PriceTrend }) {
+function PriceTrendIndicator({ trend, t }: { trend: PriceTrend; t: (key: string) => string }) {
   const config = {
-    low: { icon: TrendingDown, color: "text-green-600", label: "Prix bas" },
-    average: { icon: TrendingUp, color: "text-slate-500", label: "Prix moyens" },
-    high: { icon: TrendingUp, color: "text-orange-500", label: "Prix élevés" },
-    peak: { icon: TrendingUp, color: "text-red-500", label: "Prix au plus haut" },
+    low: { icon: TrendingDown, color: "text-green-600" },
+    average: { icon: TrendingUp, color: "text-slate-500" },
+    high: { icon: TrendingUp, color: "text-orange-500" },
+    peak: { icon: TrendingUp, color: "text-red-500" },
   };
 
-  const { icon: Icon, color, label } = config[trend];
+  const { icon: Icon, color } = config[trend];
+  const label = t(`planner.seasonal.priceTrend.${trend}`);
 
   return (
     <div className="flex items-center gap-1.5">
@@ -186,6 +181,7 @@ export function SeasonalTip({
   size = "md",
   action,
 }: SeasonalTipProps) {
+  const { t } = useTranslation();
   const {
     destination,
     period,
@@ -268,8 +264,8 @@ export function SeasonalTip({
       {/* Indicators */}
       {(crowdLevel || priceTrend) && (
         <div className="flex items-center gap-4 mt-3">
-          {crowdLevel && <CrowdIndicator level={crowdLevel} />}
-          {priceTrend && <PriceTrendIndicator trend={priceTrend} />}
+          {crowdLevel && <CrowdIndicator level={crowdLevel} t={t} />}
+          {priceTrend && <PriceTrendIndicator trend={priceTrend} t={t} />}
         </div>
       )}
 
@@ -278,7 +274,7 @@ export function SeasonalTip({
         <div className="mt-3">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
             <PartyPopper size={12} />
-            <span>Événements</span>
+            <span>{t("planner.seasonal.events")}</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {events.map((event, i) => (

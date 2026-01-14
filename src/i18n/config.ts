@@ -1709,6 +1709,31 @@ const resources = {
       "planner.hotels.ratingBreakdown.comfort": "Confort",
       "planner.hotels.ratingBreakdown.valueForMoney": "Rapport qualité/prix",
       
+      // AIConflictBadge
+      "planner.ai.conflict.travelStyle": "Style de voyage",
+      "planner.ai.conflict.comfortLevel": "Niveau de confort",
+      "planner.ai.conflict.pace": "Rythme",
+      "planner.ai.conflict.interests": "Centres d'intérêt",
+      "planner.ai.conflict.occasion": "Occasion",
+      "planner.ai.conflict.energy": "Énergie",
+      "planner.ai.conflict.budget": "Budget",
+      "planner.ai.conflict.environment": "Environnement",
+      "planner.ai.conflict.authenticity": "Authenticité",
+      
+      // PreferenceSummary - Travel style labels for LLM prompt
+      "planner.summary.travelStyle.solo": "solo",
+      "planner.summary.travelStyle.couple": "en duo",
+      "planner.summary.travelStyle.family": "en famille",
+      "planner.summary.travelStyle.friends": "entre amis",
+      "planner.summary.travelStyle.pet": "avec animal",
+      "planner.summary.occasion.honeymoon": "lune de miel",
+      "planner.summary.occasion.anniversary": "anniversaire de couple",
+      "planner.summary.occasion.birthday": "célébration d'anniversaire",
+      "planner.summary.occasion.vacation": "vacances",
+      "planner.summary.occasion.workation": "télétravail + voyage",
+      "planner.summary.occasion.other": "découverte",
+      "planner.summary.polyvalent": "polyvalent",
+      
       // MapPreviewWidget
       "planner.map.viewOnMap": "Voir sur la carte",
       "planner.map.viewMap": "Voir la carte",
@@ -2016,6 +2041,47 @@ const resources = {
       "planner.preferences.axes.luxury": "Luxe",
       "planner.preferences.axes.tourist": "Touristique",
       "planner.preferences.axes.authentic": "Authentique",
+      
+      // TimeOfDayChips
+      "planner.timeOfDay.morning": "Matin",
+      "planner.timeOfDay.morningShort": "Matin",
+      "planner.timeOfDay.afternoon": "Après-midi",
+      "planner.timeOfDay.afternoonShort": "A-M",
+      "planner.timeOfDay.evening": "Soir",
+      "planner.timeOfDay.eveningShort": "Soir",
+      "planner.timeOfDay.night": "Nuit",
+      "planner.timeOfDay.nightShort": "Nuit",
+      
+      // SeasonalTip
+      "planner.seasonal.crowdLevel.low": "Peu fréquenté",
+      "planner.seasonal.crowdLevel.medium": "Fréquentation moyenne",
+      "planner.seasonal.crowdLevel.high": "Très fréquenté",
+      "planner.seasonal.crowdLevel.peak": "Affluence maximale",
+      "planner.seasonal.priceTrend.low": "Prix bas",
+      "planner.seasonal.priceTrend.average": "Prix moyens",
+      "planner.seasonal.priceTrend.high": "Prix élevés",
+      "planner.seasonal.priceTrend.peak": "Prix au plus haut",
+      "planner.seasonal.events": "Événements",
+      
+      // TipCard
+      "planner.tips.type.savings": "Économisez",
+      "planner.tips.type.timing": "Timing",
+      "planner.tips.type.seasonal": "Conseil saisonnier",
+      "planner.tips.type.location": "Localisation",
+      "planner.tips.type.warning": "Attention",
+      "planner.tips.type.insight": "Notre analyse",
+      "planner.tips.type.pro": "Astuce",
+      "planner.tips.type.info": "Info",
+      "planner.tips.midweekFlights.title": "Économisez sur les vols",
+      "planner.tips.midweekFlights.message": "Les vols en milieu de semaine (mardi-mercredi) sont souvent 20-30% moins chers.",
+      "planner.tips.earlyBooking.title": "Réservez tôt",
+      "planner.tips.earlyBooking.message": "Pour les meilleures offres, réservez 2-3 mois à l'avance pour les vols internationaux.",
+      "planner.tips.flexibleDates.title": "Dates flexibles?",
+      "planner.tips.flexibleDates.message": "Décaler votre voyage de quelques jours peut vous faire économiser significativement.",
+      "planner.tips.highSeason.title": "Haute saison",
+      "planner.tips.highSeason.message": "Cette période est très demandée. Réservez rapidement pour avoir les meilleurs choix.",
+      "planner.tips.directFlight.title": "Vols directs",
+      "planner.tips.directFlight.message": "Un vol direct peut coûter un peu plus mais vous fait gagner des heures précieuses.",
 
       // Landing - Video
       "landing.video.badge": "Découvre Travliaq en action",
@@ -4248,6 +4314,31 @@ const resources = {
       "planner.hotels.ratingBreakdown.comfort": "Comfort",
       "planner.hotels.ratingBreakdown.valueForMoney": "Value for money",
       
+      // AIConflictBadge
+      "planner.ai.conflict.travelStyle": "Travel style",
+      "planner.ai.conflict.comfortLevel": "Comfort level",
+      "planner.ai.conflict.pace": "Pace",
+      "planner.ai.conflict.interests": "Interests",
+      "planner.ai.conflict.occasion": "Occasion",
+      "planner.ai.conflict.energy": "Energy",
+      "planner.ai.conflict.budget": "Budget",
+      "planner.ai.conflict.environment": "Environment",
+      "planner.ai.conflict.authenticity": "Authenticity",
+      
+      // PreferenceSummary - Travel style labels for LLM prompt
+      "planner.summary.travelStyle.solo": "solo",
+      "planner.summary.travelStyle.couple": "as a couple",
+      "planner.summary.travelStyle.family": "as a family",
+      "planner.summary.travelStyle.friends": "with friends",
+      "planner.summary.travelStyle.pet": "with pet",
+      "planner.summary.occasion.honeymoon": "honeymoon",
+      "planner.summary.occasion.anniversary": "couple anniversary",
+      "planner.summary.occasion.birthday": "birthday celebration",
+      "planner.summary.occasion.vacation": "vacation",
+      "planner.summary.occasion.workation": "workation",
+      "planner.summary.occasion.other": "discovery",
+      "planner.summary.polyvalent": "versatile",
+      
       // MapPreviewWidget
       "planner.map.viewOnMap": "View on map",
       "planner.map.viewMap": "View map",
@@ -4553,8 +4644,49 @@ const resources = {
       "planner.preferences.axes.nature": "Nature",
       "planner.preferences.axes.budget": "Budget",
       "planner.preferences.axes.luxury": "Luxury",
-      "planner.preferences.axes.tourist": "Touristic",
+      "planner.preferences.axes.tourist": "Touristy",
       "planner.preferences.axes.authentic": "Authentic",
+      
+      // TimeOfDayChips
+      "planner.timeOfDay.morning": "Morning",
+      "planner.timeOfDay.morningShort": "Morning",
+      "planner.timeOfDay.afternoon": "Afternoon",
+      "planner.timeOfDay.afternoonShort": "PM",
+      "planner.timeOfDay.evening": "Evening",
+      "planner.timeOfDay.eveningShort": "Evening",
+      "planner.timeOfDay.night": "Night",
+      "planner.timeOfDay.nightShort": "Night",
+      
+      // SeasonalTip
+      "planner.seasonal.crowdLevel.low": "Not crowded",
+      "planner.seasonal.crowdLevel.medium": "Moderate crowds",
+      "planner.seasonal.crowdLevel.high": "Very crowded",
+      "planner.seasonal.crowdLevel.peak": "Peak crowds",
+      "planner.seasonal.priceTrend.low": "Low prices",
+      "planner.seasonal.priceTrend.average": "Average prices",
+      "planner.seasonal.priceTrend.high": "High prices",
+      "planner.seasonal.priceTrend.peak": "Peak prices",
+      "planner.seasonal.events": "Events",
+      
+      // TipCard
+      "planner.tips.type.savings": "Save money",
+      "planner.tips.type.timing": "Timing",
+      "planner.tips.type.seasonal": "Seasonal tip",
+      "planner.tips.type.location": "Location",
+      "planner.tips.type.warning": "Warning",
+      "planner.tips.type.insight": "Our insight",
+      "planner.tips.type.pro": "Pro tip",
+      "planner.tips.type.info": "Info",
+      "planner.tips.midweekFlights.title": "Save on flights",
+      "planner.tips.midweekFlights.message": "Midweek flights (Tuesday-Wednesday) are often 20-30% cheaper.",
+      "planner.tips.earlyBooking.title": "Book early",
+      "planner.tips.earlyBooking.message": "For best deals, book international flights 2-3 months in advance.",
+      "planner.tips.flexibleDates.title": "Flexible dates?",
+      "planner.tips.flexibleDates.message": "Shifting your trip by a few days can save you significantly.",
+      "planner.tips.highSeason.title": "High season",
+      "planner.tips.highSeason.message": "This period is in high demand. Book quickly for the best options.",
+      "planner.tips.directFlight.title": "Direct flights",
+      "planner.tips.directFlight.message": "A direct flight may cost a bit more but saves you precious hours.",
 
       // Landing - Video
       "landing.video.badge": "See Travliaq in action",
