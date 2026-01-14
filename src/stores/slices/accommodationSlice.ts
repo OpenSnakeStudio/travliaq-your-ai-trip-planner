@@ -56,7 +56,9 @@ export const createAccommodationSlice: StateCreator<
   ...initialAccommodationState,
 
   get isAccommodationReadyToSearch() {
-    const active = get().accommodations[get().activeAccommodationIndex];
+    const state = get();
+    if (state.accommodations.length === 0) return false;
+    const active = state.accommodations[state.activeAccommodationIndex];
     return Boolean(active?.city && active?.checkIn && active?.checkOut);
   },
 
