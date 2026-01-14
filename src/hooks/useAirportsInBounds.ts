@@ -55,7 +55,8 @@ function getBoundsCacheKey(bounds: MapBounds, includeMedium: boolean, zoom: numb
 export function useAirportsInBounds(options: UseAirportsInBoundsOptions = {}): UseAirportsInBoundsResult {
   const {
     enabled = true,
-    debounceMs = 400,
+    // Increased debounce from 400ms to 600ms for smoother map interactions
+    debounceMs = 600,
     includeMediumAirports = false,
     limit = 100,
     zoom = 5,

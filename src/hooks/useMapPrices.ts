@@ -134,7 +134,8 @@ function debouncedSave(): void {
 }
 
 export function useMapPrices(options: UseMapPricesOptions = {}): UseMapPricesResult {
-  const { enabled = true, debounceMs = 800 } = options;
+  // Increased debounce from 800ms to 1200ms for better performance during map movements
+  const { enabled = true, debounceMs = 1200 } = options;
   
   // Load cache on first mount
   useEffect(() => {
