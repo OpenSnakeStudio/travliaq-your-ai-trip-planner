@@ -2,10 +2,12 @@
  * ScrollToBottomButton - Floating button to scroll back to bottom
  * 
  * Appears when user scrolls up, shows new message count badge
+ * Fully i18n-enabled
  */
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface ScrollToBottomButtonProps {
@@ -19,6 +21,8 @@ export function ScrollToBottomButton({
   newMessageCount,
   onClick,
 }: ScrollToBottomButtonProps) {
+  const { t } = useTranslation();
+  
   return (
     <AnimatePresence>
       {show && (
@@ -39,10 +43,10 @@ export function ScrollToBottomButton({
           <ArrowDown className="h-4 w-4" />
           {newMessageCount > 0 ? (
             <span className="text-sm font-medium">
-              {newMessageCount} nouveau{newMessageCount > 1 ? "x" : ""} message{newMessageCount > 1 ? "s" : ""}
+              {t(newMessageCount > 1 ? "planner.chat.newMessages" : "planner.chat.newMessage", { count: newMessageCount })}
             </span>
           ) : (
-            <span className="text-sm font-medium">Retour en bas</span>
+            <span className="text-sm font-medium">{t("planner.chat.scrollToBottom")}</span>
           )}
           
           {/* Pulse animation for new messages */}

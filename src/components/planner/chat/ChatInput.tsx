@@ -1,9 +1,11 @@
 /**
  * ChatInput - Text input area for chat messages
+ * Fully i18n-enabled
  */
 
-import { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useRef, forwardRef, useImperativeHandle } from "react";
 import { Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
@@ -21,7 +23,8 @@ export interface ChatInputRef {
 }
 
 export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
-  ({ value, onChange, onSend, isLoading = false, placeholder = "Envoyer un message...", helperText }, ref) => {
+  ({ value, onChange, onSend, isLoading = false, placeholder, helperText }, ref) => {
+    const { t } = useTranslation();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     useImperativeHandle(ref, () => ({
@@ -60,7 +63,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
               ref={textareaRef}
               value={value}
               onChange={handleChange}
-              placeholder={placeholder}
+              placeholder={placeholder || t("planner.chat.inputPlaceholder")}
               rows={1}
               disabled={isLoading}
               className="flex-1 resize-none bg-transparent px-2 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
@@ -77,7 +80,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(
                   ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
                   : "bg-muted text-muted-foreground cursor-not-allowed"
               )}
-              aria-label="Envoyer"
+              aria-label={t("planner.chat.send")}
             >
               <Send className="h-4 w-4" />
             </button>
