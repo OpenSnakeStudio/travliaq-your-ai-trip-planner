@@ -1598,6 +1598,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
       (acc) => acc.lat && acc.lng
     );
     
+    // Debug log to understand why markers might not appear
+    console.log('[PlannerMap] Accommodation markers debug:', {
+      totalAccommodations: accommodationMemory.accommodations.length,
+      withCoordinates: accommodations.length,
+      accommodations: accommodationMemory.accommodations.map(a => ({ city: a.city, lat: a.lat, lng: a.lng })),
+    });
+    
     if (accommodations.length === 0) return;
     
     accommodations.forEach((acc, index) => {
@@ -1703,6 +1710,13 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
     const destinations = activityAllDestinations.filter(
       (dest) => dest.lat && dest.lng
     );
+    
+    // Debug log to understand why markers might not appear
+    console.log('[PlannerMap] Activity destinations markers debug:', {
+      totalDestinations: activityAllDestinations.length,
+      withCoordinates: destinations.length,
+      destinations: activityAllDestinations.map(d => ({ city: d.city, lat: d.lat, lng: d.lng })),
+    });
     
     if (destinations.length === 0) return;
     
