@@ -179,60 +179,54 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
           )}
         </div>
 
-        <CardContent className="p-4 space-y-3 flex-1">
+        <CardContent className="px-3 py-3 space-y-2 flex-1">
           {/* Headline */}
-          <h3 className="font-semibold text-base leading-tight text-foreground">
+          <h3 className="font-semibold text-sm leading-snug text-foreground">
             {headline}
           </h3>
 
           {/* Description */}
-          <p className="text-sm text-muted-foreground line-clamp-2">
+          <p className="text-xs text-muted-foreground line-clamp-2">
             {description}
           </p>
 
-          {/* Key Factors */}
-          <div className="space-y-1">
+          {/* Key Factors - Ultra compact */}
+          <div className="space-y-0.5">
             {keyFactors.slice(0, 3).map((factor, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-green-500 shrink-0" />
-                <span className="text-sm text-muted-foreground">{factor}</span>
+              <div key={i} className="flex items-center gap-1.5 text-xs">
+                <Check className="h-3 w-3 text-green-500 shrink-0" />
+                <span className="text-muted-foreground truncate">{factor}</span>
               </div>
             ))}
           </div>
 
-          {/* Stats Row - Compact horizontal */}
-          <div className="flex items-center gap-4 text-sm pt-2 border-t border-border">
-            <div className="flex items-center gap-1.5">
-              <Wallet className="h-4 w-4 text-amber-500" />
-              <span className="text-foreground font-medium">
-                {estimatedBudgetPerPerson.min}–{estimatedBudgetPerPerson.max}€
-              </span>
-              <span className="text-muted-foreground text-xs">/j</span>
+          {/* Stats - Single compact row */}
+          <div className="flex items-center justify-between text-xs py-2 px-2 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-1">
+              <Wallet className="h-3.5 w-3.5 text-amber-500" />
+              <span>{estimatedBudgetPerPerson.min}-{estimatedBudgetPerPerson.max}€/j</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-purple-500" />
-              <span className="text-foreground">{bestSeasons.slice(0, 2).join(", ")}</span>
+            <div className="w-px h-3 bg-border" />
+            <div className="flex items-center gap-1">
+              <Plane className="h-3.5 w-3.5 text-blue-500" />
+              <span>{flightPriceEstimate ? `~${flightPriceEstimate}€` : "—"}</span>
+            </div>
+            <div className="w-px h-3 bg-border" />
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5 text-purple-500" />
+              <span>{bestSeasons[0]}</span>
             </div>
           </div>
 
-          {/* Flight estimate - separate line */}
-          <div className="flex items-center gap-1.5 text-sm">
-            <Plane className="h-4 w-4 text-blue-500" />
-            <span className="text-foreground">
-              Vol A/R : {flightPriceEstimate ? `≈${flightPriceEstimate}€` : "—"}
-            </span>
-            <span className="text-xs text-muted-foreground">(estimation)</span>
-          </div>
-
-          {/* Activities */}
-          <div className="flex flex-wrap gap-1.5">
+          {/* Activities - Compact pills */}
+          <div className="flex flex-wrap gap-1">
             {topActivities.slice(0, 4).map((activity, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-foreground"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-muted text-[11px] text-muted-foreground"
               >
                 <span>{getActivityEmoji(activity.emoji)}</span>
-                <span className="truncate max-w-[90px]">{activity.name}</span>
+                <span className="truncate max-w-[70px]">{activity.name}</span>
               </span>
             ))}
           </div>
@@ -240,21 +234,18 @@ export const DestinationSuggestionCard = memo(function DestinationSuggestionCard
 
         {/* CTA */}
         {onSelect && (
-          <CardFooter className="p-4 pt-0">
+          <CardFooter className="px-3 pb-3 pt-0">
             <button
               onClick={onSelect}
               disabled={isLoading}
               className={cn(
-                "w-full py-3 rounded-xl text-sm font-semibold transition-colors",
+                "w-full py-2.5 rounded-lg text-sm font-medium",
                 "bg-primary text-primary-foreground hover:bg-primary/90",
-                "disabled:opacity-50 disabled:cursor-not-allowed"
+                "disabled:opacity-50"
               )}
             >
               {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Chargement...
-                </span>
+                <Loader2 className="h-4 w-4 animate-spin mx-auto" />
               ) : (
                 "Choisir cette destination"
               )}
