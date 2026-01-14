@@ -38,3 +38,10 @@ export {
   type WidgetControllerState,
   type WidgetControllerSnapshot,
 } from "./widgetControllerMachine";
+
+// Widget Controller Hook - React integration
+export {
+  useWidgetController,
+  type UseWidgetControllerReturn,
+  type UseWidgetControllerOptions,
+} from "./useWidgetController";
