@@ -96,6 +96,7 @@ export interface DestinationSuggestion {
   bestSeasons: string[];
   flightDurationFromOrigin?: string | null;
   flightPriceEstimate?: number | null;
+  sourceAirportIata?: string | null;
   // New API fields
   imageUrl?: string;
   imageCredit?: string;
