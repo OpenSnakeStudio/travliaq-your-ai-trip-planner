@@ -139,7 +139,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
             {suggestions.map((suggestion, index) => (
               <CarouselItem
                 key={`${suggestion.countryCode}-${index}`}
-                className="pl-3 basis-[85%] sm:basis-[75%] md:basis-[65%] lg:basis-[48%]"
+                className="pl-3 basis-[92%] sm:basis-[88%] md:basis-[85%] lg:basis-[80%]"
               >
                 <DestinationSuggestionCard
                   suggestion={suggestion}
