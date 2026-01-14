@@ -21,6 +21,7 @@ import {
   Heart,
 } from "lucide-react";
 import { ResultBadge, type BadgeType } from "../advice/ResultBadges";
+import { useTranslation } from "react-i18next";
 
 /**
  * Activity category
@@ -194,28 +195,6 @@ function InlineActivityDisplay({
 
 /**
  * CompactActivityCard Component
- *
- * @example
- * ```tsx
- * <CompactActivityCard
- *   activity={{
- *     id: "activity-1",
- *     name: "Sagrada Familia Skip-the-Line Tour",
- *     category: "tour",
- *     rating: 4.8,
- *     reviewCount: 2543,
- *     location: "Barcelona",
- *     duration: 90,
- *     price: 45,
- *     originalPrice: 55,
- *     image: "/sagrada.jpg",
- *     badges: ["popular", "bestDeal"],
- *     instantConfirmation: true,
- *     freeCancellation: true,
- *   }}
- *   onSelect={() => addActivityToTrip(activity)}
- * />
- * ```
  */
 export function CompactActivityCard({
   activity,
@@ -226,6 +205,7 @@ export function CompactActivityCard({
   size = "md",
   inline = false,
 }: CompactActivityCardProps) {
+  const { t } = useTranslation();
   const {
     name,
     rating,
@@ -380,12 +360,12 @@ export function CompactActivityCard({
             {instantConfirmation && (
               <span className="flex items-center gap-0.5 text-[10px] text-green-600">
                 <Zap size={10} />
-                Confirmation instantanée
+                {t("planner.activity.instantConfirmation")}
               </span>
             )}
             {freeCancellation && (
               <span className="text-[10px] text-green-600">
-                Annulation gratuite
+                {t("planner.activity.freeCancellation")}
               </span>
             )}
           </div>
@@ -401,7 +381,7 @@ export function CompactActivityCard({
       >
         {/* Next available */}
         <div className="text-xs text-muted-foreground">
-          {nextAvailable && `Dispo: ${nextAvailable}`}
+          {nextAvailable && `${t("planner.activity.availableFrom")}: ${nextAvailable}`}
         </div>
 
         {/* Price and actions */}
@@ -418,7 +398,7 @@ export function CompactActivityCard({
               {currency}
             </div>
             {perPerson && (
-              <div className="text-[10px] text-muted-foreground">/personne</div>
+              <div className="text-[10px] text-muted-foreground">{t("planner.common.perPerson")}</div>
             )}
           </div>
 
@@ -429,7 +409,7 @@ export function CompactActivityCard({
                 type="button"
                 onClick={onCompare}
                 className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Comparer"
+                title={t("planner.action.compare")}
               >
                 <GitCompare size={16} />
               </button>

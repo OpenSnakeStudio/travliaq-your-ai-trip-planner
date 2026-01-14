@@ -17,6 +17,7 @@ import {
   GitCompare,
 } from "lucide-react";
 import { ResultBadge, type BadgeType } from "../advice/ResultBadges";
+import { useTranslation } from "react-i18next";
 
 /**
  * Flight segment data
@@ -167,7 +168,14 @@ function InlineFlightDisplay({
   onSelect?: () => void;
   onViewDetails?: () => void;
 }) {
+  const { t } = useTranslation();
   const { outbound, price, currency = "€", stops, selected } = flight;
+
+  const getStopsLabel = (stops: number) => {
+    if (stops === 0) return t("planner.flight.direct");
+    if (stops === 1) return t("planner.flight.stopover", { count: stops });
+    return t("planner.flight.stopovers", { count: stops });
+  };
 
   return (
     <div
@@ -188,7 +196,7 @@ function InlineFlightDisplay({
         <span className="text-muted-foreground">{outbound.arrivalAirport}</span>
         {stops !== undefined && (
           <span className="text-xs text-muted-foreground">
-            · {stops === 0 ? "Direct" : `${stops} escale${stops > 1 ? "s" : ""}`}
+            · {getStopsLabel(stops)}
           </span>
         )}
       </div>
@@ -228,36 +236,6 @@ function InlineFlightDisplay({
 
 /**
  * CompactFlightCard Component
- *
- * @example
- * ```tsx
- * <CompactFlightCard
- *   flight={{
- *     id: "flight-1",
- *     outbound: {
- *       departureTime: "08:30",
- *       arrivalTime: "10:45",
- *       departureAirport: "CDG",
- *       arrivalAirport: "BCN",
- *       duration: "2h15",
- *       airline: "Vueling",
- *     },
- *     return: {
- *       departureTime: "18:00",
- *       arrivalTime: "20:15",
- *       departureAirport: "BCN",
- *       arrivalAirport: "CDG",
- *       duration: "2h15",
- *       airline: "Vueling",
- *     },
- *     price: 156,
- *     stops: 0,
- *     badges: ["bestDeal"],
- *   }}
- *   onSelect={() => addFlightToTrip(flight)}
- *   onViewDetails={() => showFlightDetails(flight)}
- * />
- * ```
  */
 export function CompactFlightCard({
   flight,
@@ -268,6 +246,7 @@ export function CompactFlightCard({
   showReturn = true,
   inline = false,
 }: CompactFlightCardProps) {
+  const { t } = useTranslation();
   const {
     outbound,
     return: returnFlight,
@@ -280,6 +259,12 @@ export function CompactFlightCard({
     badges,
     selected,
   } = flight;
+
+  const getStopsLabel = (stops: number) => {
+    if (stops === 0) return t("planner.flight.direct");
+    if (stops === 1) return t("planner.flight.stopover", { count: stops });
+    return t("planner.flight.stopovers", { count: stops });
+  };
 
   if (inline) {
     return (
@@ -313,14 +298,14 @@ export function CompactFlightCard({
       <div className={cn("space-y-3", size === "sm" ? "p-2" : "p-3")}>
         <FlightSegmentDisplay
           segment={outbound}
-          label={returnFlight ? "Aller" : undefined}
+          label={returnFlight ? t("planner.flight.outbound") : undefined}
           size={size}
         />
 
         {showReturn && returnFlight && (
           <>
             <div className="border-t border-dashed border-border" />
-            <FlightSegmentDisplay segment={returnFlight} label="Retour" size={size} />
+            <FlightSegmentDisplay segment={returnFlight} label={t("planner.flight.return")} size={size} />
           </>
         )}
       </div>
@@ -336,7 +321,7 @@ export function CompactFlightCard({
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {stops !== undefined && (
             <span className={stops === 0 ? "text-green-600 font-medium" : ""}>
-              {stops === 0 ? "Direct" : `${stops} escale${stops > 1 ? "s" : ""}`}
+              {getStopsLabel(stops)}
             </span>
           )}
           {cabinClass && (
@@ -361,7 +346,7 @@ export function CompactFlightCard({
               {currency}
             </div>
             {pricePerPerson && (
-              <div className="text-[10px] text-muted-foreground">/personne</div>
+              <div className="text-[10px] text-muted-foreground">{t("planner.common.perPerson")}</div>
             )}
           </div>
 
@@ -372,7 +357,7 @@ export function CompactFlightCard({
                 type="button"
                 onClick={onCompare}
                 className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                title="Comparer"
+                title={t("planner.action.compare")}
               >
                 <GitCompare size={16} />
               </button>
