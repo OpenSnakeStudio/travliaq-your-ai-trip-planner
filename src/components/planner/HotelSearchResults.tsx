@@ -465,10 +465,10 @@ const HotelSearchResultsInner = memo(({
           </Button>
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-sm truncate">
-              Hébergements à {destination}
+              {t("planner.hotels.inDestination", { destination })}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {isLoading ? "Recherche en cours..." : `${results.length} résultats · ${nights} nuit${nights > 1 ? "s" : ""}`}
+              {isLoading ? t("planner.hotels.searching") : t("planner.hotels.resultsCount", { count: results.length, nights })}
             </p>
           </div>
         </div>
