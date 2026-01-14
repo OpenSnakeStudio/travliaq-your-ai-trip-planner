@@ -49,24 +49,32 @@ export interface ActivityFilters {
   durationRange: string[];
 }
 
-// Viator activity from API
+// Viator activity from API (unified type compatible with both API and slice)
 export interface ViatorActivity {
-  productCode: string;
+  id: string;
+  productCode?: string; // Optional for backward compatibility
   title: string;
   description?: string;
+  type?: 'activity' | 'attraction';
   primaryImage?: string;
-  images?: string[];
-  duration?: number;
+  images?: any[]; // Can be string[] or ActivityImage[]
+  duration?: number | { minutes: number; formatted: string };
   durationUnit?: string;
   price?: number;
   originalPrice?: number;
   currency?: string;
-  rating?: number;
+  rating?: number | { average: number; count: number };
   reviewCount?: number;
   categories?: string[];
   bookingUrl?: string;
+  booking_url?: string;
   lat?: number;
   lng?: number;
+  coordinates?: { lat: number; lng: number };
+  pricing?: { from_price: number; currency: string; is_discounted: boolean };
+  flags?: string[];
+  location?: { destination: string; country: string };
+  availability?: string;
 }
 
 // Activity search state

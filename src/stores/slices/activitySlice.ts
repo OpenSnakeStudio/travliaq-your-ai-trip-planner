@@ -49,21 +49,47 @@ export const createActivitySlice: StateCreator<
   addActivityFromSearch: (viatorActivity: ViatorActivity, destinationId: string) => {
     set(
       (state) => {
+        // Extract duration (can be number or object)
+        const duration = typeof viatorActivity.duration === 'object' 
+          ? viatorActivity.duration?.minutes 
+          : viatorActivity.duration;
+        
+        // Extract rating (can be number or object)
+        const rating = typeof viatorActivity.rating === 'object'
+          ? viatorActivity.rating?.average
+          : viatorActivity.rating;
+        
+        // Extract review count
+        const reviewCount = typeof viatorActivity.rating === 'object'
+          ? viatorActivity.rating?.count
+          : viatorActivity.reviewCount;
+        
+        // Extract price (can be direct or from pricing object)
+        const price = viatorActivity.price ?? viatorActivity.pricing?.from_price;
+        const currency = viatorActivity.currency ?? viatorActivity.pricing?.currency;
+        
+        // Extract image (can be primaryImage or first from images array)
+        let imageUrl = viatorActivity.primaryImage;
+        if (!imageUrl && viatorActivity.images?.length) {
+          const firstImage = viatorActivity.images[0];
+          imageUrl = typeof firstImage === 'string' ? firstImage : firstImage?.url;
+        }
+        
         const newActivity: ActivityEntry = {
           id: crypto.randomUUID(),
           destinationId,
-          viatorProductCode: viatorActivity.productCode,
+          viatorProductCode: viatorActivity.productCode || viatorActivity.id,
           title: viatorActivity.title,
           description: viatorActivity.description,
-          imageUrl: viatorActivity.primaryImage,
-          duration: viatorActivity.duration,
-          price: viatorActivity.price,
-          currency: viatorActivity.currency,
-          rating: viatorActivity.rating,
-          reviewCount: viatorActivity.reviewCount,
+          imageUrl,
+          duration,
+          price,
+          currency,
+          rating,
+          reviewCount,
           categories: viatorActivity.categories,
           date: null,
-          bookingUrl: viatorActivity.bookingUrl,
+          bookingUrl: viatorActivity.bookingUrl || viatorActivity.booking_url,
           isManual: false,
           addedAt: new Date(),
         };
