@@ -55,8 +55,8 @@ import { FLIGHTS_ZOOM } from "@/constants/mapSettings";
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
-import { useFlightMemory } from "@/contexts/FlightMemoryContext";
-import { useTravelMemory } from "@/contexts/TravelMemoryContext";
+import { useFlightMemoryStore } from "@/stores/hooks";
+import { useTravelMemoryStore } from "@/stores/hooks";
 import { useAccommodationMemory, type AccommodationEntry } from "@/contexts/AccommodationMemoryContext";
 import { useActivityMemory } from "@/contexts/ActivityMemoryContext";
 import { usePreferenceMemory } from "@/contexts/PreferenceMemoryContext";
@@ -95,9 +95,9 @@ export interface PlannerChatRef {
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
   // Memory contexts
-  const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory: resetFlightMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemory();
+  const { getSerializedState: getFlightMemory, memory, updateMemory, resetMemory: resetFlightMemory, hasCompleteInfo, needsAirportSelection, missingFields, getMemorySummary } = useFlightMemoryStore();
   const { getSerializedState: getAccommodationMemory, memory: accomMemory, updateAccommodation, resetMemory: resetAccommodationMemory } = useAccommodationMemory();
-  const { getSerializedState: getTravelMemory, updateTravelers, resetMemory: resetTravelMemory } = useTravelMemory();
+  const { getSerializedState: getTravelMemory, updateTravelers, resetMemory: resetTravelMemory } = useTravelMemoryStore();
   const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory, resetMemory: resetActivityMemory } = useActivityMemory();
   const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory, getPreferences, memory: prefMemory } = usePreferenceMemory();
 
