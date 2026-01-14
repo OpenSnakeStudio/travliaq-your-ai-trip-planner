@@ -2421,6 +2421,115 @@ const resources = {
       "planner.action.saved": "Sauvegardé",
       "planner.action.viewDetails": "Voir détails",
       
+      // Planner - Travelers Widget (additional keys)
+      "planner.travelers.travelingAlone": "Vous partez <strong>seul(e)</strong> ?",
+      "planner.travelers.adultSingular": "{{count}} adulte",
+      "planner.travelers.adultPlural": "{{count}} adultes",
+      "planner.travelers.childSingular": "{{count}} enfant",
+      "planner.travelers.childPlural": "{{count}} enfants",
+      "planner.travelers.infantSingular": "{{count}} bébé",
+      "planner.travelers.infantPlural": "{{count}} bébés",
+      
+      // Planner - Missing Fields Card
+      "planner.missingFields.infoMissing": "Informations manquantes",
+      "planner.missingFields.readyToSearch": "Prêt à rechercher",
+      "planner.missingFields.required": "requis",
+      "planner.missingFields.optional": "Optionnel",
+      "planner.missingFields.fieldRequired": "{{label}} requis",
+      "planner.missingFields.destination": "Destination",
+      "planner.missingFields.departureDate": "Date de départ",
+      "planner.missingFields.returnDate": "Date de retour",
+      "planner.missingFields.travelersLabel": "Voyageurs",
+      
+      // Planner - Trip Summary
+      "planner.tripSummary.tripTo": "Voyage à {{city}}",
+      "planner.tripSummary.yourTrip": "Votre voyage",
+      "planner.tripSummary.nights": "nuits",
+      "planner.tripSummary.flight": "Vol",
+      "planner.tripSummary.hotel": "Hôtel",
+      "planner.tripSummary.activitiesCount": "{{count}} activité",
+      "planner.tripSummary.activitiesCountPlural": "{{count}} activités",
+      "planner.tripSummary.total": "Total",
+      
+      // Planner - Map Preview (additional keys)
+      "planner.map.itinerary": "Itinéraire",
+      "planner.map.yourItinerary": "Votre itinéraire",
+      "planner.map.searchInArea": "Rechercher dans cette zone",
+      "planner.map.searchingInArea": "Recherche...",
+      "planner.map.searchInAreaTitle": "Rechercher des activités dans la zone visible",
+      "planner.map.searchingTitle": "Recherche en cours...",
+      
+      // Planner - Destination Suggestions
+      "planner.suggestions.analyzingPreferences": "Analyse de vos préférences...",
+      "planner.suggestions.searchingDestinations": "Recherche des meilleures destinations",
+      "planner.suggestions.noSuggestions": "Aucune suggestion disponible",
+      "planner.suggestions.basedOnProfile": "Recommandations basées sur votre profil",
+      "planner.suggestions.profileComplete": "({{score}}% complété)",
+      "planner.suggestions.previousDestination": "Destination précédente",
+      "planner.suggestions.nextDestination": "Destination suivante",
+      "planner.suggestions.goToDestination": "Aller à la destination {{index}}",
+      "planner.suggestions.swipeHint": "← Glissez pour voir plus de destinations →",
+      
+      // Planner - Airport Widgets
+      "planner.airport.departure": "Départ",
+      "planner.airport.arrival": "Arrivée",
+      "planner.airport.recommended": "recommandé",
+      "planner.airport.bestChoice": "Meilleur choix",
+      "planner.airport.kmFromCenter": "{{km}} km du centre",
+      "planner.airport.accept": "Accepter",
+      "planner.airport.seeOthers": "Voir les autres",
+      "planner.airport.confirmedAirports": "Aéroports confirmés",
+      "planner.airport.airportSelection": "Sélection des aéroports",
+      "planner.airport.availableDeparture": "Aéroports de départ disponibles",
+      "planner.airport.availableArrival": "Aéroports d'arrivée disponibles",
+      "planner.airport.closest": "Le plus proche",
+      "planner.airport.farthest": "Plus éloigné",
+      "planner.airport.majorInternational": "Aéroport international majeur",
+      "planner.airport.moreFlights": "Plus de vols disponibles",
+      "planner.airport.betterConnection": "Meilleure connexion",
+      "planner.airport.quickAccess": "Accès rapide depuis le centre",
+      "planner.airport.lessFlightChoice": "Moins de choix de vols",
+      "planner.airport.searchingFlights": "Recherche en cours...",
+      "planner.airport.searchFlights": "Rechercher {{count}} vol",
+      "planner.airport.searchFlightsPlural": "Rechercher {{count}} vols",
+      
+      // Planner - Cabin Class
+      "planner.cabin.economy": "Économique",
+      "planner.cabin.economyShort": "Éco",
+      "planner.cabin.economyDesc": "Prix avantageux",
+      "planner.cabin.premiumEconomy": "Premium Éco",
+      "planner.cabin.premiumShort": "Premium",
+      "planner.cabin.premiumDesc": "Plus d'espace",
+      "planner.cabin.business": "Business",
+      "planner.cabin.businessDesc": "Confort supérieur",
+      "planner.cabin.first": "Première",
+      "planner.cabin.firstShort": "1ère",
+      "planner.cabin.firstDesc": "Luxe & exclusivité",
+      
+      // Planner - Budget
+      "planner.budget.label": "Budget",
+      
+      // Planner - Hotel Search
+      "planner.hotelSearch.accommodationsIn": "Hébergements à {{destination}}",
+      "planner.hotelSearch.searchingInProgress": "Recherche en cours...",
+      "planner.hotelSearch.resultsCount": "{{count}} résultats · {{nights}} nuit",
+      "planner.hotelSearch.resultsCountPlural": "{{count}} résultats · {{nights}} nuits",
+      
+      // Planner - Search Buttons
+      "planner.search.searchFlightsNow": "Rechercher les vols maintenant",
+      "planner.search.search": "Rechercher",
+      "planner.search.searching": "Recherche...",
+      
+      // Planner - Inspire Flow
+      "planner.inspire.excellentChoice": "Excellent choix ! **{{country}}** est une destination parfaite pour vous.",
+      "planner.inspire.searchingCities": "Je recherche les villes principales...",
+      "planner.inspire.whichCity": "Quelle ville souhaitez-vous visiter ?",
+      "planner.inspire.typeCity": "Quelle ville souhaitez-vous visiter ? Tapez le nom dans le chat.",
+      "planner.inspire.importantCity": "Ville importante",
+      
+      // Planner - Navigation
+      "planner.nav.tabNavigation": "Navigation des onglets",
+      
     },
   },
   en: {
@@ -4826,6 +4935,115 @@ const resources = {
       "planner.action.save": "Save",
       "planner.action.saved": "Saved",
       "planner.action.viewDetails": "View details",
+      
+      // Planner - Travelers Widget (additional keys)
+      "planner.travelers.travelingAlone": "Are you traveling <strong>alone</strong>?",
+      "planner.travelers.adultSingular": "{{count}} adult",
+      "planner.travelers.adultPlural": "{{count}} adults",
+      "planner.travelers.childSingular": "{{count}} child",
+      "planner.travelers.childPlural": "{{count}} children",
+      "planner.travelers.infantSingular": "{{count}} infant",
+      "planner.travelers.infantPlural": "{{count}} infants",
+      
+      // Planner - Missing Fields Card
+      "planner.missingFields.infoMissing": "Missing information",
+      "planner.missingFields.readyToSearch": "Ready to search",
+      "planner.missingFields.required": "required",
+      "planner.missingFields.optional": "Optional",
+      "planner.missingFields.fieldRequired": "{{label}} required",
+      "planner.missingFields.destination": "Destination",
+      "planner.missingFields.departureDate": "Departure date",
+      "planner.missingFields.returnDate": "Return date",
+      "planner.missingFields.travelersLabel": "Travelers",
+      
+      // Planner - Trip Summary
+      "planner.tripSummary.tripTo": "Trip to {{city}}",
+      "planner.tripSummary.yourTrip": "Your trip",
+      "planner.tripSummary.nights": "nights",
+      "planner.tripSummary.flight": "Flight",
+      "planner.tripSummary.hotel": "Hotel",
+      "planner.tripSummary.activitiesCount": "{{count}} activity",
+      "planner.tripSummary.activitiesCountPlural": "{{count}} activities",
+      "planner.tripSummary.total": "Total",
+      
+      // Planner - Map Preview (additional keys)
+      "planner.map.itinerary": "Itinerary",
+      "planner.map.yourItinerary": "Your itinerary",
+      "planner.map.searchInArea": "Search in this area",
+      "planner.map.searchingInArea": "Searching...",
+      "planner.map.searchInAreaTitle": "Search for activities in the visible area",
+      "planner.map.searchingTitle": "Searching...",
+      
+      // Planner - Destination Suggestions
+      "planner.suggestions.analyzingPreferences": "Analyzing your preferences...",
+      "planner.suggestions.searchingDestinations": "Searching for the best destinations",
+      "planner.suggestions.noSuggestions": "No suggestions available",
+      "planner.suggestions.basedOnProfile": "Recommendations based on your profile",
+      "planner.suggestions.profileComplete": "({{score}}% complete)",
+      "planner.suggestions.previousDestination": "Previous destination",
+      "planner.suggestions.nextDestination": "Next destination",
+      "planner.suggestions.goToDestination": "Go to destination {{index}}",
+      "planner.suggestions.swipeHint": "← Swipe to see more destinations →",
+      
+      // Planner - Airport Widgets
+      "planner.airport.departure": "Departure",
+      "planner.airport.arrival": "Arrival",
+      "planner.airport.recommended": "recommended",
+      "planner.airport.bestChoice": "Best choice",
+      "planner.airport.kmFromCenter": "{{km}} km from center",
+      "planner.airport.accept": "Accept",
+      "planner.airport.seeOthers": "See others",
+      "planner.airport.confirmedAirports": "Confirmed airports",
+      "planner.airport.airportSelection": "Airport selection",
+      "planner.airport.availableDeparture": "Available departure airports",
+      "planner.airport.availableArrival": "Available arrival airports",
+      "planner.airport.closest": "Closest",
+      "planner.airport.farthest": "Farthest",
+      "planner.airport.majorInternational": "Major international airport",
+      "planner.airport.moreFlights": "More flights available",
+      "planner.airport.betterConnection": "Better connection",
+      "planner.airport.quickAccess": "Quick access from center",
+      "planner.airport.lessFlightChoice": "Less flight choice",
+      "planner.airport.searchingFlights": "Searching...",
+      "planner.airport.searchFlights": "Search {{count}} flight",
+      "planner.airport.searchFlightsPlural": "Search {{count}} flights",
+      
+      // Planner - Cabin Class
+      "planner.cabin.economy": "Economy",
+      "planner.cabin.economyShort": "Eco",
+      "planner.cabin.economyDesc": "Best price",
+      "planner.cabin.premiumEconomy": "Premium Economy",
+      "planner.cabin.premiumShort": "Premium",
+      "planner.cabin.premiumDesc": "More space",
+      "planner.cabin.business": "Business",
+      "planner.cabin.businessDesc": "Superior comfort",
+      "planner.cabin.first": "First",
+      "planner.cabin.firstShort": "1st",
+      "planner.cabin.firstDesc": "Luxury & exclusivity",
+      
+      // Planner - Budget
+      "planner.budget.label": "Budget",
+      
+      // Planner - Hotel Search
+      "planner.hotelSearch.accommodationsIn": "Accommodations in {{destination}}",
+      "planner.hotelSearch.searchingInProgress": "Searching...",
+      "planner.hotelSearch.resultsCount": "{{count}} results · {{nights}} night",
+      "planner.hotelSearch.resultsCountPlural": "{{count}} results · {{nights}} nights",
+      
+      // Planner - Search Buttons
+      "planner.search.searchFlightsNow": "Search flights now",
+      "planner.search.search": "Search",
+      "planner.search.searching": "Searching...",
+      
+      // Planner - Inspire Flow
+      "planner.inspire.excellentChoice": "Excellent choice! **{{country}}** is a perfect destination for you.",
+      "planner.inspire.searchingCities": "Searching for main cities...",
+      "planner.inspire.whichCity": "Which city would you like to visit?",
+      "planner.inspire.typeCity": "Which city would you like to visit? Type the name in the chat.",
+      "planner.inspire.importantCity": "Major city",
+      
+      // Planner - Navigation
+      "planner.nav.tabNavigation": "Tab navigation",
       
     },
   },

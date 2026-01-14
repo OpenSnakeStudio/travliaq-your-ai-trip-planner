@@ -267,7 +267,7 @@ function CompactVariant({
       <Wallet size={16} className="text-muted-foreground" />
       <div className="flex-1">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Budget</span>
+          <span className="text-muted-foreground">{t("planner.budget.label")}</span>
           <span className="font-medium">
             {formatAmount(spent, currency)} / {formatAmount(totalBudget, currency)}
           </span>
