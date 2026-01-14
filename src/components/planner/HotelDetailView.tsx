@@ -101,41 +101,41 @@ const getBadgeIcon = (iconHint?: string) => {
   }
 };
 
-// Category configuration for amenities
-const CATEGORY_CONFIG: Record<AmenityCategory, { icon: typeof Wifi; label: string; color: string }> = {
-  connectivity: { icon: Wifi, label: "Connectivité", color: "text-blue-600" },
-  food: { icon: Utensils, label: "Restauration", color: "text-orange-600" },
-  wellness: { icon: Bath, label: "Bien-être", color: "text-teal-600" },
-  room: { icon: Bed, label: "Chambre", color: "text-purple-600" },
-  services: { icon: Phone, label: "Services", color: "text-green-600" },
-  general: { icon: Check, label: "Autres", color: "text-gray-600" },
+// Category configuration for amenities - using i18n keys
+const CATEGORY_CONFIG_KEYS: Record<AmenityCategory, { icon: typeof Wifi; labelKey: string; color: string }> = {
+  connectivity: { icon: Wifi, labelKey: "planner.hotels.amenities.connectivity", color: "text-blue-600" },
+  food: { icon: Utensils, labelKey: "planner.hotels.amenities.food", color: "text-orange-600" },
+  wellness: { icon: Bath, labelKey: "planner.hotels.amenities.wellness", color: "text-teal-600" },
+  room: { icon: Bed, labelKey: "planner.hotels.amenities.room", color: "text-purple-600" },
+  services: { icon: Phone, labelKey: "planner.hotels.amenities.services", color: "text-green-600" },
+  general: { icon: Check, labelKey: "planner.hotels.amenities.general", color: "text-gray-600" },
 };
 
 const CATEGORY_ORDER: AmenityCategory[] = ['connectivity', 'food', 'wellness', 'room', 'services', 'general'];
 
 // Free/Paid status badge component
-const FreeStatusBadge = ({ isFree }: { isFree?: boolean | null }) => {
+const FreeStatusBadge = ({ isFree, t }: { isFree?: boolean | null; t: (key: string) => string }) => {
   if (isFree === null || isFree === undefined) return null;
   return isFree ? (
-    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/30">Gratuit</Badge>
+    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-green-500/10 text-green-600 border-green-500/30">{t("planner.hotels.free")}</Badge>
   ) : (
-    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">Payant</Badge>
+    <Badge className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/30">{t("planner.hotels.paid")}</Badge>
   );
 };
 
 // Top amenities for quick scan
 const TOP_AMENITIES = ['wifi', 'parking', 'breakfast', 'pool', 'spa', 'gym', 'restaurant', 'ac'];
 
-// Amenity labels for quick scan display
-const AMENITY_LABELS: Record<string, string> = {
-  wifi: 'WiFi',
-  parking: 'Parking',
-  breakfast: 'Petit-déj',
-  pool: 'Piscine',
-  spa: 'Spa',
-  gym: 'Fitness',
-  restaurant: 'Restaurant',
-  ac: 'Climatisation',
+// Amenity label keys for quick scan display
+const AMENITY_LABEL_KEYS: Record<string, string> = {
+  wifi: 'planner.hotels.amenities.wifi',
+  parking: 'planner.hotels.amenities.parking',
+  breakfast: 'planner.hotels.amenities.breakfast',
+  pool: 'planner.hotels.pool',
+  spa: 'planner.hotels.spa',
+  gym: 'planner.hotels.amenities.fitness',
+  restaurant: 'planner.hotels.amenities.restaurant',
+  ac: 'planner.hotels.amenities.ac',
 };
 
 // RoomCard component with expandable details
@@ -216,14 +216,16 @@ const RoomCard = ({
 const AmenityCategorySection = ({
   category,
   amenities,
-  defaultOpen = false
+  defaultOpen = false,
+  t
 }: {
   category: AmenityCategory;
   amenities: AmenityDetail[];
   defaultOpen?: boolean;
+  t: (key: string) => string;
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const config = CATEGORY_CONFIG[category];
+  const config = CATEGORY_CONFIG_KEYS[category];
 
   if (amenities.length === 0) return null;
 
@@ -238,7 +240,7 @@ const AmenityCategorySection = ({
       >
         <div className="flex items-center gap-2">
           <Icon className={cn("h-4 w-4", config.color)} />
-          <span className="font-medium text-sm">{config.label}</span>
+          <span className="font-medium text-sm">{t(config.labelKey)}</span>
           <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">{amenities.length}</Badge>
         </div>
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
@@ -256,7 +258,7 @@ const AmenityCategorySection = ({
                   <AmenityIcon className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-sm">{amenity.label}</span>
                 </div>
-                <FreeStatusBadge isFree={amenity.isFree} />
+                <FreeStatusBadge isFree={amenity.isFree} t={t} />
               </div>
             );
           })}
@@ -277,24 +279,24 @@ const getHotelDescription = (hotel: HotelResult): string => {
   return "";
 };
 
-// Get rating label based on score
-const getRatingLabel = (rating: number): { label: string; color: string } => {
-  if (rating >= 9) return { label: "Exceptionnel", color: "text-green-600 bg-green-500/10 border-green-500/30" };
-  if (rating >= 8) return { label: "Très bien", color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" };
-  if (rating >= 7) return { label: "Bien", color: "text-blue-600 bg-blue-500/10 border-blue-500/30" };
-  if (rating >= 6) return { label: "Correct", color: "text-amber-600 bg-amber-500/10 border-amber-500/30" };
-  return { label: "Passable", color: "text-muted-foreground bg-muted border-border" };
+// Get rating label based on score - using i18n keys
+const getRatingLabel = (rating: number, t: (key: string) => string): { label: string; color: string } => {
+  if (rating >= 9) return { label: t("planner.hotels.rating.exceptional"), color: "text-green-600 bg-green-500/10 border-green-500/30" };
+  if (rating >= 8) return { label: t("planner.hotels.rating.veryGood"), color: "text-emerald-600 bg-emerald-500/10 border-emerald-500/30" };
+  if (rating >= 7) return { label: t("planner.hotels.rating.good"), color: "text-blue-600 bg-blue-500/10 border-blue-500/30" };
+  if (rating >= 6) return { label: t("planner.hotels.rating.correct"), color: "text-amber-600 bg-amber-500/10 border-amber-500/30" };
+  return { label: t("planner.hotels.rating.fair"), color: "text-muted-foreground bg-muted border-border" };
 };
 
 // Get key selling points based on hotel features
-const getKeyBadges = (hotel: HotelResult, hotelDetails?: HotelDetails | null): { icon: typeof Wifi; label: string; variant: "highlight" | "feature" | "location" }[] => {
+const getKeyBadges = (hotel: HotelResult, hotelDetails: HotelDetails | null | undefined, t: (key: string) => string): { icon: typeof Wifi; label: string; variant: "highlight" | "feature" | "location" }[] => {
   const badges: { icon: typeof Wifi; label: string; variant: "highlight" | "feature" | "location" }[] = [];
   
   // Rating based badge
   if (hotel.rating && hotel.rating >= 9) {
-    badges.push({ icon: Award, label: "Excellent choix", variant: "highlight" });
+    badges.push({ icon: Award, label: t("planner.hotels.excellentChoice"), variant: "highlight" });
   } else if (hotel.rating && hotel.rating >= 8.5) {
-    badges.push({ icon: ThumbsUp, label: "Très apprécié", variant: "highlight" });
+    badges.push({ icon: ThumbsUp, label: t("planner.hotels.veryAppreciated"), variant: "highlight" });
   }
   
   // Location badge
@@ -303,9 +305,9 @@ const getKeyBadges = (hotel: HotelResult, hotelDetails?: HotelDetails | null): {
       ? parseFloat(hotel.distanceFromCenter) 
       : hotel.distanceFromCenter;
     if (distance < 0.5) {
-      badges.push({ icon: MapPinned, label: "Centre-ville", variant: "location" });
+      badges.push({ icon: MapPinned, label: t("planner.hotels.cityCenter"), variant: "location" });
     } else if (distance < 1.5) {
-      badges.push({ icon: MapPin, label: "Proche centre", variant: "location" });
+      badges.push({ icon: MapPin, label: t("planner.hotels.nearCenter"), variant: "location" });
     }
   }
   
@@ -313,32 +315,32 @@ const getKeyBadges = (hotel: HotelResult, hotelDetails?: HotelDetails | null): {
   const hasBreakfast = hotel.amenities.some(a => a.toLowerCase().includes("breakfast")) ||
     hotelDetails?.amenities?.some(a => a.code?.toLowerCase().includes("breakfast"));
   if (hasBreakfast) {
-    badges.push({ icon: Coffee, label: "Petit-déj inclus", variant: "feature" });
+    badges.push({ icon: Coffee, label: t("planner.hotels.breakfastIncluded"), variant: "feature" });
   }
   
   // Pool
   const hasPool = hotel.amenities.some(a => a.toLowerCase().includes("pool")) ||
     hotelDetails?.amenities?.some(a => a.code?.toLowerCase().includes("pool"));
   if (hasPool) {
-    badges.push({ icon: Waves, label: "Piscine", variant: "feature" });
+    badges.push({ icon: Waves, label: t("planner.hotels.pool"), variant: "feature" });
   }
   
   // Spa
   const hasSpa = hotel.amenities.some(a => a.toLowerCase().includes("spa")) ||
     hotelDetails?.amenities?.some(a => a.code?.toLowerCase().includes("spa"));
   if (hasSpa) {
-    badges.push({ icon: Bath, label: "Spa", variant: "feature" });
+    badges.push({ icon: Bath, label: t("planner.hotels.spa"), variant: "feature" });
   }
   
   // Free cancellation from rooms
   const hasFreeCancellation = hotelDetails?.rooms?.some(r => r.cancellationFree);
   if (hasFreeCancellation) {
-    badges.push({ icon: Shield, label: "Annulation gratuite", variant: "highlight" });
+    badges.push({ icon: Shield, label: t("planner.hotels.freeCancellation"), variant: "highlight" });
   }
   
   // Popular/trending
   if (hotel.reviewCount && hotel.reviewCount > 500) {
-    badges.push({ icon: Flame, label: "Populaire", variant: "highlight" });
+    badges.push({ icon: Flame, label: t("planner.hotels.popular"), variant: "highlight" });
   }
   
   return badges.slice(0, 5);
@@ -370,8 +372,8 @@ const HotelDetailView = ({
   const description = hotelDetails?.description || getHotelDescription(hotel);
 
   // Get smart badges based on real data
-  const keyBadges = getKeyBadges(hotel, hotelDetails);
-  const ratingInfo = hotel.rating ? getRatingLabel(hotel.rating) : null;
+  const keyBadges = getKeyBadges(hotel, hotelDetails, t);
+  const ratingInfo = hotel.rating ? getRatingLabel(hotel.rating, t) : null;
 
   // Get rooms from details API
   const rooms = hotelDetails?.rooms || [];
@@ -572,7 +574,7 @@ const HotelDetailView = ({
                       ? "bg-white scale-110"
                       : "bg-white/50 hover:bg-white/75"
                   )}
-                  aria-label={`Aller à la photo ${idx + 1}`}
+                  aria-label={t("planner.hotels.goToPhoto", { index: idx + 1 })}
                 />
               ))}
             </div>
@@ -592,12 +594,12 @@ const HotelDetailView = ({
                     <span className="text-xs text-muted-foreground">({hotel.reviewCount.toLocaleString()})</span>
                   </div>
                 ) : (
-                  <div className="text-sm text-muted-foreground">Pas encore noté</div>
+                  <div className="text-sm text-muted-foreground">{t("planner.hotels.notYetRated")}</div>
                 )}
                 {/* Prix */}
                 <div className="text-right">
                   <span className="text-2xl font-bold text-primary">{hotel.pricePerNight}€</span>
-                  <span className="text-xs text-muted-foreground">/nuit</span>
+                  <span className="text-xs text-muted-foreground">/{t("planner.hotels.perNight")}</span>
                 </div>
               </div>
 
@@ -606,18 +608,18 @@ const HotelDetailView = ({
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-green-600" />
-                    <span className="text-muted-foreground">Arrivée:</span>
+                    <span className="text-muted-foreground">{t("planner.hotels.checkIn")}:</span>
                     <span className="font-medium">{checkInTime}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-4 w-4 text-amber-600" />
-                    <span className="text-muted-foreground">Départ:</span>
+                    <span className="text-muted-foreground">{t("planner.hotels.checkOut")}:</span>
                     <span className="font-medium">{checkOutTime}</span>
                   </div>
                 </div>
                 {/* Prix total */}
                 <div className="text-right">
-                  <span className="text-sm text-muted-foreground">{nights} nuit{nights > 1 ? "s" : ""}: </span>
+                  <span className="text-sm text-muted-foreground">{nights > 1 ? t("planner.hotels.nightsPlural", { count: nights }) : t("planner.hotels.nights", { count: nights })}: </span>
                   <span className="font-semibold">{totalPrice}€</span>
                 </div>
               </div>
@@ -668,7 +670,7 @@ const HotelDetailView = ({
                   return (
                     <div key={code} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Icon className="h-4 w-4 text-primary" />
-                      <span>{AMENITY_LABELS[code] || code}</span>
+                      <span>{AMENITY_LABEL_KEYS[code] ? t(AMENITY_LABEL_KEYS[code]) : code}</span>
                     </div>
                   );
                 })}
@@ -680,7 +682,7 @@ const HotelDetailView = ({
               <section className="rounded-xl border bg-card p-4 space-y-2">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  Localisation
+                  {t("planner.hotels.location")}
                 </h3>
                 {hotelDetails?.address && (
                   <p className="text-sm text-muted-foreground">{hotelDetails.address}</p>
@@ -689,7 +691,7 @@ const HotelDetailView = ({
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className="text-xs gap-1">
                       <MapPinned className="h-3 w-3" />
-                      {hotel.distanceFromCenter} du centre-ville
+                      {hotel.distanceFromCenter} {t("planner.hotels.fromCenter")}
                     </Badge>
                   </div>
                 )}
@@ -774,22 +776,22 @@ const HotelDetailView = ({
                 >
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     <Star className="h-4 w-4 text-primary fill-primary" />
-                    Notes détaillées
+                    {t("planner.hotels.detailedRatings")}
                   </h3>
                   <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", isRatingBreakdownOpen && "rotate-180")} />
                 </button>
                 {isRatingBreakdownOpen && (
                   <div className="px-4 pb-4 grid gap-2">
                     {[
-                      { key: 'cleanliness', label: 'Propreté', value: hotelDetails.ratingBreakdown.cleanliness },
-                      { key: 'staff', label: 'Personnel', value: hotelDetails.ratingBreakdown.staff },
-                      { key: 'location', label: 'Emplacement', value: hotelDetails.ratingBreakdown.location },
-                      { key: 'facilities', label: 'Équipements', value: hotelDetails.ratingBreakdown.facilities },
-                      { key: 'comfort', label: 'Confort', value: hotelDetails.ratingBreakdown.comfort },
-                      { key: 'valueForMoney', label: 'Rapport qualité/prix', value: hotelDetails.ratingBreakdown.valueForMoney },
+                      { key: 'cleanliness', labelKey: 'planner.hotels.ratingBreakdown.cleanliness', value: hotelDetails.ratingBreakdown.cleanliness },
+                      { key: 'staff', labelKey: 'planner.hotels.ratingBreakdown.staff', value: hotelDetails.ratingBreakdown.staff },
+                      { key: 'location', labelKey: 'planner.hotels.ratingBreakdown.location', value: hotelDetails.ratingBreakdown.location },
+                      { key: 'facilities', labelKey: 'planner.hotels.ratingBreakdown.facilities', value: hotelDetails.ratingBreakdown.facilities },
+                      { key: 'comfort', labelKey: 'planner.hotels.ratingBreakdown.comfort', value: hotelDetails.ratingBreakdown.comfort },
+                      { key: 'valueForMoney', labelKey: 'planner.hotels.ratingBreakdown.valueForMoney', value: hotelDetails.ratingBreakdown.valueForMoney },
                     ].filter(item => item.value != null).map((item) => (
                       <div key={item.key} className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground w-32 shrink-0">{item.label}</span>
+                        <span className="text-sm text-muted-foreground w-32 shrink-0">{t(item.labelKey)}</span>
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-primary rounded-full transition-all"
@@ -814,7 +816,7 @@ const HotelDetailView = ({
                 >
                   <h3 className="font-semibold text-sm flex items-center gap-2">
                     <Check className="h-4 w-4 text-primary" />
-                    Ce que propose cet établissement
+                    {t("planner.hotels.whatThisOffers")}
                     <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 ml-1">
                       {amenitiesForDisplay.length}
                     </Badge>
@@ -833,6 +835,7 @@ const HotelDetailView = ({
                             category={category}
                             amenities={hotelDetails.amenitiesByCategory![category]}
                             defaultOpen={category === 'connectivity' || category === 'food'}
+                            t={t}
                           />
                         ))}
                       </div>
@@ -863,7 +866,7 @@ const HotelDetailView = ({
               <section className="rounded-lg bg-muted/50 p-4 space-y-2">
                 <h3 className="font-semibold text-sm flex items-center gap-2">
                   <Shield className="h-4 w-4 text-primary" />
-                  Politique d'annulation
+                  {t("planner.hotels.cancellationPolicy")}
                 </h3>
                 <p className="text-sm text-muted-foreground">{policies.cancellation}</p>
               </section>
@@ -873,20 +876,20 @@ const HotelDetailView = ({
             <section className="rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20 p-4 space-y-2">
               <h3 className="font-semibold text-sm flex items-center gap-2 text-green-700 dark:text-green-400">
                 <Heart className="h-4 w-4" />
-                Pourquoi réserver ici ?
+                {t("planner.hotels.whyBookHere")}
               </h3>
               <ul className="space-y-1.5 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-                  <span>Meilleur prix garanti - on vous rembourse la différence</span>
+                  <span>{t("planner.hotels.bestPriceGuarantee")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-                  <span>Confirmation immédiate par email</span>
+                  <span>{t("planner.hotels.instantConfirmation")}</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-                  <span>Service client disponible 24h/24</span>
+                  <span>{t("planner.hotels.support24h")}</span>
                 </li>
               </ul>
             </section>
@@ -900,7 +903,7 @@ const HotelDetailView = ({
       {/* Sticky booking footer with 2 buttons */}
       <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground text-sm">{nights} nuit{nights > 1 ? "s" : ""}</span>
+          <span className="text-muted-foreground text-sm">{nights > 1 ? t("planner.hotels.nightsPlural", { count: nights }) : t("planner.hotels.nights", { count: nights })}</span>
           <span className="text-xl font-bold text-primary">{totalPrice}€</span>
         </div>
         <div className="flex gap-2">
