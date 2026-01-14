@@ -103,7 +103,32 @@ Sentry.init({
 
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Sentry.ErrorBoundary fallback={<div className="flex min-h-screen items-center justify-center"><p>Une erreur est survenue. Veuillez rafraîchir la page.</p></div>}>
+    <Sentry.ErrorBoundary
+      fallback={({ error, resetError }) => {
+        // Always log the real error so we can debug infinite loading / blank screens.
+        // eslint-disable-next-line no-console
+        console.error("[Sentry.ErrorBoundary] Uncaught error:", error);
+        return (
+          <div className="flex min-h-screen items-center justify-center p-6">
+            <div className="max-w-xl text-center space-y-3">
+              <p className="text-foreground font-medium">
+                Une erreur est survenue. Veuillez rafraîchir la page.
+              </p>
+              <pre className="text-left text-xs overflow-auto max-h-64 rounded-lg border border-border bg-muted/40 p-3">
+                {String((error instanceof Error ? error.message : error) ?? "Unknown error")}
+              </pre>
+              <button
+                type="button"
+                onClick={() => resetError()}
+                className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              >
+                Réessayer
+              </button>
+            </div>
+          </div>
+        );
+      }}
+    >
       <App />
     </Sentry.ErrorBoundary>
   </React.StrictMode>
