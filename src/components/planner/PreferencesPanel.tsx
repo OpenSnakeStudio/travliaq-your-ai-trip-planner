@@ -6,6 +6,7 @@
 import { useState, lazy, Suspense, memo, useEffect, useMemo } from "react";
 import { Sparkles, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { usePreferenceMemoryStore } from "@/stores/hooks";
 import { AIConflictBadge } from "./preferences";
 import { StepIndicator, StepErrorBoundary, type Step } from "./preferences/widgets";
@@ -54,6 +55,7 @@ const stepTransition = {
 // ============================================================================
 
 const PreferencesPanel = memo(function PreferencesPanel() {
+  const { t } = useTranslation();
   const {
     memory: { preferences },
     getProfileCompletion,
@@ -91,7 +93,7 @@ const PreferencesPanel = memo(function PreferencesPanel() {
           >
             <Sparkles className="w-4 h-4 text-blue-500" />
             <span className="text-xs text-blue-700 dark:text-blue-400">
-              Preferences detectees par l'IA
+              {t("planner.preferences.detectedByAI")}
             </span>
           </motion.div>
         )}

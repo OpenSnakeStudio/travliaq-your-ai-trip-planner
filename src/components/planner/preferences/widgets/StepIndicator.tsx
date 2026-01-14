@@ -5,20 +5,21 @@
 
 import { memo } from "react";
 import { User, Sliders, Shield } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 export type Step = "base" | "style" | "musts";
 
 interface StepConfig {
   id: Step;
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
 }
 
 const STEPS: StepConfig[] = [
-  { id: "base", label: "Base", icon: User },
-  { id: "style", label: "Style", icon: Sliders },
-  { id: "musts", label: "Criteres", icon: Shield },
+  { id: "base", labelKey: "planner.preferences.steps.base", icon: User },
+  { id: "style", labelKey: "planner.preferences.steps.style", icon: Sliders },
+  { id: "musts", labelKey: "planner.preferences.steps.criteria", icon: Shield },
 ];
 
 interface StepIndicatorProps {
@@ -32,6 +33,7 @@ export const StepIndicator = memo(function StepIndicator({
   onStepChange,
   completion
 }: StepIndicatorProps) {
+  const { t } = useTranslation();
   const currentIndex = STEPS.findIndex(s => s.id === currentStep);
 
   return (
@@ -55,7 +57,7 @@ export const StepIndicator = memo(function StepIndicator({
             )}
           >
             <Icon className="w-3.5 h-3.5" />
-            <span>{step.label}</span>
+            <span>{t(step.labelKey)}</span>
           </button>
         );
       })}

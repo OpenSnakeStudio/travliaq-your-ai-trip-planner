@@ -8,6 +8,7 @@
 import { useState } from "react";
 import { Filter, X, Star, DollarSign, Sparkles, Clock, Sun, SlidersHorizontal, Users, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ActivityFilters as ActivityFiltersType, CategoryWithEmoji, TimeOfDay, DurationRange } from "@/types/activity";
 import { VIATOR_CATEGORIES } from "@/constants/metaCategories";
@@ -23,8 +24,9 @@ export interface ActivityFiltersProps {
   travelers?: { adults: number; children: number }; // From accommodation
 }
 
+// These will be translated dynamically
 const RATING_OPTIONS = [
-  { value: 0, label: "Tous" },
+  { value: 0, labelKey: "planner.activityFilters.all" },
   { value: 3.5, label: "3.5+" },
   { value: 4.0, label: "4.0+" },
   { value: 4.5, label: "4.5+" },
@@ -38,19 +40,19 @@ const BUDGET_RANGES = [
 ];
 
 // Time of day options
-const TIME_OF_DAY_OPTIONS: { id: TimeOfDay; label: string; hours: string }[] = [
-  { id: "morning", label: "Matin", hours: "8h-12h" },
-  { id: "afternoon", label: "Après-midi", hours: "12h-17h" },
-  { id: "evening", label: "Soirée", hours: "17h-00h" },
+const TIME_OF_DAY_OPTIONS: { id: TimeOfDay; labelKey: string; hours: string }[] = [
+  { id: "morning", labelKey: "planner.activityFilters.morning", hours: "8h-12h" },
+  { id: "afternoon", labelKey: "planner.activityFilters.afternoon", hours: "12h-17h" },
+  { id: "evening", labelKey: "planner.activityFilters.evening", hours: "17h-00h" },
 ];
 
 // Duration range options
-const DURATION_RANGE_OPTIONS: { id: DurationRange; label: string }[] = [
-  { id: "under1h", label: "< 1h" },
-  { id: "1to4h", label: "1-4h" },
-  { id: "over4h", label: "> 4h" },
-  { id: "fullDay", label: "1 journée" },
-  { id: "multiDay", label: "Plusieurs jours" },
+const DURATION_RANGE_OPTIONS: { id: DurationRange; labelKey: string }[] = [
+  { id: "under1h", labelKey: "planner.activityFilters.under1h" },
+  { id: "1to4h", labelKey: "planner.activityFilters.1to4h" },
+  { id: "over4h", labelKey: "planner.activityFilters.over4h" },
+  { id: "fullDay", labelKey: "planner.activityFilters.fullDay" },
+  { id: "multiDay", labelKey: "planner.activityFilters.multiDay" },
 ];
 
 export const ActivityFilters = ({
@@ -60,6 +62,7 @@ export const ActivityFilters = ({
   compact = false,
   travelers
 }: ActivityFiltersProps) => {
+  const { t } = useTranslation();
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const { memory } = usePreferenceMemoryStore();
   const preferences = memory.preferences;
@@ -70,7 +73,7 @@ export const ActivityFilters = ({
   // AUTO-SELECT: Intelligent filter selection based on user preferences
   const handleAutoSelect = () => {
     if (!preferences) {
-      toast.error("Vos préférences de voyage ne sont pas disponibles");
+      toast.error(t("planner.activityFilters.preferencesUnavailable"));
       return;
     }
 
@@ -83,7 +86,7 @@ export const ActivityFilters = ({
     });
 
     const summary = getFiltersSummary(smartFilters);
-    toast.success(`Filtres appliqués : ${summary}`);
+    toast.success(t("planner.activityFilters.filtersApplied", { summary }));
   };
 
   const handleCategoryToggle = (categoryId: string) => {
@@ -156,7 +159,7 @@ export const ActivityFilters = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">Filtres</span>
+          <span className="text-sm font-medium text-foreground">{t("planner.activityFilters.filters")}</span>
           {activeCount > 0 && (
             <span className="px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-[18px] text-center">
               {activeCount}
@@ -170,7 +173,7 @@ export const ActivityFilters = ({
             className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
           >
             <X className="h-3 w-3" />
-            Effacer
+            {t("planner.activityFilters.clear")}
           </button>
         )}
       </div>
@@ -180,10 +183,10 @@ export const ActivityFilters = ({
         <div className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-muted/30 border border-border/30">
           <Users className="h-4 w-4 text-primary" />
           <span className="text-sm text-foreground">
-            <span className="font-medium">{totalTravelers}</span> voyageur{totalTravelers > 1 ? "s" : ""}
+            <span className="font-medium">{totalTravelers}</span> {t("planner.activityFilters.travelers", { count: totalTravelers })}
           </span>
           <span className="text-xs text-muted-foreground">
-            ({travelers!.adults} adulte{travelers!.adults > 1 ? "s" : ""}{travelers!.children > 0 ? `, ${travelers!.children} enfant${travelers!.children > 1 ? "s" : ""}` : ""})
+            ({t("planner.activityFilters.adultsCount", { count: travelers!.adults })}{travelers!.children > 0 ? `, ${t("planner.activityFilters.childrenCount", { count: travelers!.children })}` : ""})
           </span>
         </div>
       )}
@@ -196,7 +199,7 @@ export const ActivityFilters = ({
         >
           <Wand2 className="h-4 w-4 text-primary group-hover:rotate-12 transition-transform" />
           <span className="text-sm font-medium text-primary">
-            Sélection automatique selon mes préférences
+            {t("planner.activityFilters.autoSelect")}
           </span>
           <Sparkles className="h-3.5 w-3.5 text-primary/60" />
         </button>
@@ -207,7 +210,7 @@ export const ActivityFilters = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium text-foreground">Catégories</span>
+            <span className="text-xs font-medium text-foreground">{t("planner.activityFilters.categories")}</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {categories.map((category) => {
@@ -236,7 +239,7 @@ export const ActivityFilters = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <DollarSign className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-medium text-foreground">Budget / activité</span>
+          <span className="text-xs font-medium text-foreground">{t("planner.activityFilters.budgetPerActivity")}</span>
         </div>
         <div className="grid grid-cols-4 gap-1">
           {BUDGET_RANGES.map((range) => {
@@ -263,7 +266,7 @@ export const ActivityFilters = ({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Star className="h-3.5 w-3.5 text-primary" />
-          <span className="text-xs font-medium text-foreground">Note minimum</span>
+          <span className="text-xs font-medium text-foreground">{t("planner.activityFilters.minRating")}</span>
         </div>
         <div className="grid grid-cols-4 gap-1">
           {RATING_OPTIONS.map((option) => {
@@ -280,7 +283,7 @@ export const ActivityFilters = ({
                 )}
               >
                 {option.value > 0 && <Star className="h-3 w-3 fill-current" />}
-                {option.label}
+                {option.labelKey ? t(option.labelKey) : option.label}
               </button>
             );
           })}
@@ -292,7 +295,7 @@ export const ActivityFilters = ({
         <CollapsibleTrigger asChild>
           <button className="flex items-center gap-2 w-full py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
             <SlidersHorizontal className="h-3.5 w-3.5" />
-            <span>Filtres avancés</span>
+            <span>{t("planner.activityFilters.advancedFilters")}</span>
             <span className={cn(
               "ml-auto transition-transform",
               isAdvancedOpen && "rotate-180"
@@ -311,7 +314,7 @@ export const ActivityFilters = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Sun className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium text-foreground">Moment de la journée</span>
+              <span className="text-xs font-medium text-foreground">{t("planner.activityFilters.timeOfDay")}</span>
             </div>
             <div className="grid grid-cols-3 gap-1">
               {TIME_OF_DAY_OPTIONS.map((option) => {
@@ -327,7 +330,7 @@ export const ActivityFilters = ({
                         : "bg-muted/30 text-muted-foreground border-border/30 hover:bg-muted/50"
                     )}
                   >
-                    <span>{option.label}</span>
+                    <span>{t(option.labelKey)}</span>
                     <span className="text-[9px] opacity-70">{option.hours}</span>
                   </button>
                 );
@@ -339,7 +342,7 @@ export const ActivityFilters = ({
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs font-medium text-foreground">Durée de l'activité</span>
+              <span className="text-xs font-medium text-foreground">{t("planner.activityFilters.activityDuration")}</span>
             </div>
             <div className="flex flex-wrap gap-1">
               {DURATION_RANGE_OPTIONS.map((option) => {
@@ -355,7 +358,7 @@ export const ActivityFilters = ({
                         : "bg-muted/30 text-muted-foreground border-border/30 hover:bg-muted/50"
                     )}
                   >
-                    {option.label}
+                    {t(option.labelKey)}
                   </button>
                 );
               })}
