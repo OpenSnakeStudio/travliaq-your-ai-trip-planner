@@ -1,9 +1,11 @@
 /**
  * CitySelectionWidget - Select a city from a country with recommendations
  * Now syncs with Zustand store on selection
+ * Fully i18n-enabled
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Star, MapPin, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CitySelectionData } from "@/types/flight";
@@ -26,6 +28,7 @@ export function CitySelectionWidget({
   isDeparture = false,
   skipStoreSync = false,
 }: CitySelectionWidgetProps) {
+  const { t } = useTranslation();
   const addDestination = usePlannerStoreV2((s) => s.addDestination);
   const setDeparture = usePlannerStoreV2((s) => s.setDeparture);
   const setArrival = usePlannerStoreV2((s) => s.setArrival);
@@ -74,7 +77,7 @@ export function CitySelectionWidget({
       <div className="mt-3 p-4 rounded-2xl bg-muted/50 border border-border/50 max-w-md">
         <div className="flex items-center gap-2 text-muted-foreground">
           <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm">Chargement des villes...</span>
+          <span className="text-sm">{t("planner.city.loadingCities")}</span>
         </div>
       </div>
     );
@@ -83,7 +86,7 @@ export function CitySelectionWidget({
   return (
     <div className="mt-3 p-4 rounded-2xl bg-muted/50 border border-border/50 max-w-lg">
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-        Choisir une ville en {citySelection.countryName}
+        {t("planner.city.chooseIn", { country: citySelection.countryName })}
       </div>
 
       {/* Recommended City - Highlighted */}
@@ -92,7 +95,7 @@ export function CitySelectionWidget({
           <div className="flex items-center gap-1.5 mb-2">
             <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
             <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide">
-              Recommandée
+              {t("planner.city.recommendedLabel")}
             </span>
           </div>
           <button
@@ -107,7 +110,7 @@ export function CitySelectionWidget({
             {/* Highlight badge */}
             <div className="absolute top-2 right-2">
               <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-medium">
-                Meilleur choix
+                {t("planner.city.bestChoice")}
               </span>
             </div>
             
@@ -125,7 +128,7 @@ export function CitySelectionWidget({
                 {/* Why recommended */}
                 <div className="mt-2 text-xs text-primary/80 font-medium flex items-center gap-1">
                   <Check className="w-3 h-3" />
-                  Destination la plus populaire et mieux desservie
+                  {t("planner.city.popularDestination")}
                 </div>
               </div>
             </div>
@@ -137,7 +140,7 @@ export function CitySelectionWidget({
       {otherCities.length > 0 && (
         <div>
           <div className="text-xs font-medium text-muted-foreground mb-2">
-            Autres destinations
+            {t("planner.city.otherDestinations")}
           </div>
           <div className="space-y-2">
             {otherCities.map((city, idx) => (

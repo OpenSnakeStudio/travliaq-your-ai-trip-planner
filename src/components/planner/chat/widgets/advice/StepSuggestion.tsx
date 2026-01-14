@@ -3,9 +3,11 @@
  *
  * Suggests the next action to the user with a prominent call-to-action button.
  * Used to guide users through the planning workflow.
+ * Fully i18n-enabled.
  */
 
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   Plane,
   Hotel,
@@ -89,20 +91,6 @@ function getStepIcon(step: StepType, size: number) {
 
 /**
  * StepSuggestion Component
- *
- * @example
- * ```tsx
- * <StepSuggestion
- *   step="dates"
- *   message="Maintenant, choisissons vos dates de voyage"
- *   buttonLabel="Sélectionner les dates"
- *   onAction={() => showDatePicker()}
- *   skipAction={{
- *     label: "Je suis flexible",
- *     onClick: () => setFlexibleDates(true)
- *   }}
- * />
- * ```
  */
 export function StepSuggestion({
   step,
@@ -249,43 +237,89 @@ export function InlineStepSuggestion({
 }
 
 /**
+ * Hook to get localized step suggestions
+ */
+export function useStepSuggestions() {
+  const { t } = useTranslation();
+  
+  return {
+    selectDestination: {
+      step: "destination" as StepType,
+      message: t("planner.step.selectDestination"),
+      buttonLabel: t("planner.step.buttonDestination"),
+    },
+    selectDates: {
+      step: "dates" as StepType,
+      message: t("planner.step.selectDates"),
+      buttonLabel: t("planner.step.buttonDates"),
+    },
+    selectTravelers: {
+      step: "travelers" as StepType,
+      message: t("planner.step.selectTravelers"),
+      buttonLabel: t("planner.step.buttonTravelers"),
+    },
+    searchFlights: {
+      step: "search" as StepType,
+      message: t("planner.step.searchFlights"),
+      buttonLabel: t("planner.step.buttonSearch"),
+    },
+    selectHotel: {
+      step: "hotels" as StepType,
+      message: t("planner.step.selectHotel"),
+      buttonLabel: t("planner.step.buttonHotel"),
+    },
+    selectActivities: {
+      step: "activities" as StepType,
+      message: t("planner.step.selectActivities"),
+      buttonLabel: t("planner.step.buttonActivities"),
+    },
+    tripComplete: {
+      step: "complete" as StepType,
+      message: t("planner.step.tripComplete"),
+      buttonLabel: t("planner.step.buttonSummary"),
+    },
+  };
+}
+
+/**
  * Preset step suggestions for common workflow points
+ * @deprecated Use useStepSuggestions() hook instead for i18n support
  */
 export const STEP_SUGGESTIONS = {
   selectDestination: {
     step: "destination" as StepType,
-    message: "Commençons par choisir votre destination",
-    buttonLabel: "Choisir une destination",
+    message: "Let's start by choosing your destination",
+    buttonLabel: "Choose a destination",
   },
   selectDates: {
     step: "dates" as StepType,
-    message: "Parfait ! Maintenant, sélectionnons vos dates de voyage",
-    buttonLabel: "Choisir les dates",
+    message: "Perfect! Now let's select your travel dates",
+    buttonLabel: "Choose dates",
   },
   selectTravelers: {
     step: "travelers" as StepType,
-    message: "Combien de voyageurs serez-vous ?",
-    buttonLabel: "Indiquer les voyageurs",
+    message: "How many travelers will you be?",
+    buttonLabel: "Specify travelers",
   },
   searchFlights: {
     step: "search" as StepType,
-    message: "Tout est prêt ! Recherchons les meilleurs vols",
-    buttonLabel: "Rechercher les vols",
+    message: "All set! Let's search for the best flights",
+    buttonLabel: "Search flights",
   },
   selectHotel: {
     step: "hotels" as StepType,
-    message: "Vol sélectionné ! Trouvons maintenant un hébergement",
-    buttonLabel: "Voir les hôtels",
+    message: "Flight selected! Now let's find accommodation",
+    buttonLabel: "See hotels",
   },
   selectActivities: {
     step: "activities" as StepType,
-    message: "Excellent choix ! Ajoutons des activités à votre séjour",
-    buttonLabel: "Découvrir les activités",
+    message: "Excellent choice! Let's add activities to your stay",
+    buttonLabel: "Discover activities",
   },
   tripComplete: {
     step: "complete" as StepType,
-    message: "Votre voyage est prêt ! Voici le récapitulatif",
-    buttonLabel: "Voir le récapitulatif",
+    message: "Your trip is ready! Here's the summary",
+    buttonLabel: "See summary",
   },
 };
 
