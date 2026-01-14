@@ -84,5 +84,3 @@ export {
   createDefaultMemory,
 } from './usePreferenceMemoryStore';
 
-// Re-export bridge hooks for backward compatibility during migration
-export * from '../bridgeHooks';

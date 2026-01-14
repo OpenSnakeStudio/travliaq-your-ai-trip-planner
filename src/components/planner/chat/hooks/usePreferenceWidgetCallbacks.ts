@@ -7,7 +7,7 @@ import { useCallback } from "react";
 import type { ChatMessage } from "../types";
 import type { InspireFlowStep } from "../MemoizedSmartSuggestions";
 import type { WidgetType } from "@/types/flight";
-import type { StyleAxes, MustHaves } from "@/contexts/preferences/types";
+import type { StyleAxes, MustHaves } from "@/stores/slices/preferenceTypes";
 
 interface PreferenceMemoryShape {
   preferences: {
