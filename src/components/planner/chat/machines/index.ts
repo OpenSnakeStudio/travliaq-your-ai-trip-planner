@@ -26,3 +26,15 @@ export {
   type WorkflowMachineState,
   type WorkflowSnapshot,
 } from "./workflowMachine";
+
+// Widget Controller Machine - Centralized widget state management
+export {
+  widgetControllerMachine,
+  type WidgetControllerContext,
+  type WidgetControllerEvent,
+  type TravelerConfig,
+  type CollectedFlightData,
+  type ActiveWidget,
+  type WidgetControllerState,
+  type WidgetControllerSnapshot,
+} from "./widgetControllerMachine";

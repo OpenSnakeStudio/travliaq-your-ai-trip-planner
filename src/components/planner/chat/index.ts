@@ -2,8 +2,8 @@
  * Chat Components - Barrel export
  */
 
-// Types
-export * from "./types";
+// Types (from types folder)
+export * from "./types/index";
 
 // Core components
 export { ChatInput, type ChatInputRef } from "./ChatInput";
