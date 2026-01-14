@@ -4,6 +4,7 @@
  */
 
 import { memo, useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -29,6 +30,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
   onSelect,
   isLoading = false,
 }: DestinationSuggestionsGridProps) {
+  const { t } = useTranslation();
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
@@ -72,8 +74,8 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
             <Loader2 className="relative h-10 w-10 text-primary animate-spin" />
           </div>
           <div className="text-center space-y-1">
-            <p className="text-sm font-medium text-foreground">Analyse de vos préférences...</p>
-            <p className="text-xs text-muted-foreground">Recherche des meilleures destinations</p>
+            <p className="text-sm font-medium text-foreground">{t("planner.suggestions.analyzingPreferences")}</p>
+            <p className="text-xs text-muted-foreground">{t("planner.suggestions.searchingDestinations")}</p>
           </div>
         </div>
       </motion.div>
@@ -89,7 +91,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
       >
         <div className="flex flex-col items-center justify-center gap-3 py-6">
           <Sparkles className="h-10 w-10 text-muted-foreground/50" />
-          <p className="text-sm text-muted-foreground">Aucune suggestion disponible</p>
+          <p className="text-sm text-muted-foreground">{t("planner.suggestions.noSuggestions")}</p>
         </div>
       </motion.div>
     );
@@ -114,9 +116,9 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
             <Sparkles className="h-4 w-4 text-primary" />
           </div>
           <span className="text-sm text-foreground/80">
-            Recommandations basées sur votre profil{" "}
+            {t("planner.suggestions.basedOnProfile")}{" "}
             <span className="font-semibold text-primary">
-              ({basedOnProfile.completionScore}% complété)
+              {t("planner.suggestions.profileComplete", { score: basedOnProfile.completionScore })}
             </span>
           </span>
         </motion.div>
@@ -166,7 +168,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
                 ? "hover:bg-muted hover:scale-105 text-foreground" 
                 : "opacity-30 cursor-not-allowed text-muted-foreground"
             )}
-            aria-label="Destination précédente"
+            aria-label={t("planner.suggestions.previousDestination")}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -181,7 +183,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
                 <button
                   key={index}
                   onClick={() => api?.scrollTo(index)}
-                  aria-label={`Aller à la destination ${index + 1}`}
+                  aria-label={t("planner.suggestions.goToDestination", { index: index + 1 })}
                   className={cn(
                     "h-2 rounded-full transition-all duration-300",
                     current === index
@@ -203,7 +205,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
                 ? "hover:bg-muted hover:scale-105 text-foreground" 
                 : "opacity-30 cursor-not-allowed text-muted-foreground"
             )}
-            aria-label="Destination suivante"
+            aria-label={t("planner.suggestions.nextDestination")}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -218,7 +220,7 @@ export const DestinationSuggestionsGrid = memo(function DestinationSuggestionsGr
           transition={{ delay: 0.5 }}
           className="text-center text-xs text-muted-foreground/60 sm:hidden"
         >
-          ← Glissez pour voir plus de destinations →
+          {t("planner.suggestions.swipeHint")}
         </motion.p>
       )}
     </motion.div>

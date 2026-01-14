@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   MapPin,
@@ -184,6 +185,7 @@ export function TripSummaryCard({
   defaultExpanded = true,
   showTotal = true,
 }: TripSummaryCardProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const {
@@ -340,7 +342,7 @@ export function TripSummaryCard({
       {/* Total price */}
       {showTotal && totalPrice !== undefined && (
         <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-          <span className={cn("font-medium", size === "sm" ? "text-sm" : "text-base")}>Total</span>
+          <span className={cn("font-medium", size === "sm" ? "text-sm" : "text-base")}>{t("planner.tripSummary.total")}</span>
           <span className={cn("font-bold text-primary", size === "sm" ? "text-lg" : "text-xl")}>
             {totalPrice}
             {currency}

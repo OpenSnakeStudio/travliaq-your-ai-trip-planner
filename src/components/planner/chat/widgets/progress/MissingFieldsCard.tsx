@@ -5,6 +5,7 @@
  * to fill them in. Used before triggering a search.
  */
 
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   AlertCircle,
@@ -86,11 +87,13 @@ function FieldIcon({ type, filled, size = 16 }: { type: MissingField["type"]; fi
 export function MissingFieldsCard({
   fields,
   onFieldClick,
-  title = "Informations manquantes",
+  title,
   showFilledFields = true,
   size = "md",
   compact = false,
 }: MissingFieldsCardProps) {
+  const { t } = useTranslation();
+  const defaultTitle = t("planner.missingFields.infoMissing");
   const missingFields = fields.filter((f) => !f.filled && f.required);
   const filledFields = fields.filter((f) => f.filled);
   const optionalMissing = fields.filter((f) => !f.filled && !f.required);
@@ -147,11 +150,11 @@ export function MissingFieldsCard({
             size === "sm" ? "text-sm" : "text-base"
           )}
         >
-          {allFieldsFilled ? "Prêt à rechercher" : title}
+          {allFieldsFilled ? t("planner.missingFields.readyToSearch") : (title || defaultTitle)}
         </span>
         {!allFieldsFilled && (
           <span className="text-xs text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/50 px-1.5 py-0.5 rounded">
-            {missingFields.length} requis
+            {missingFields.length} {t("planner.missingFields.required")}
           </span>
         )}
       </div>
@@ -205,7 +208,7 @@ export function MissingFieldsCard({
       {/* Optional missing fields */}
       {optionalMissing.length > 0 && (
         <div className="mt-3 pt-3 border-t border-border/50">
-          <p className="text-xs text-muted-foreground mb-2">Optionnel</p>
+          <p className="text-xs text-muted-foreground mb-2">{t("planner.missingFields.optional")}</p>
           <div className="flex flex-wrap gap-1.5">
             {optionalMissing.map((field) => (
               <button
@@ -234,6 +237,7 @@ export function MissingFieldIndicator({
   label: string;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
@@ -241,7 +245,7 @@ export function MissingFieldIndicator({
       className="inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700 text-sm transition-colors"
     >
       <AlertCircle size={14} />
-      <span className="underline underline-offset-2">{label} requis</span>
+      <span className="underline underline-offset-2">{t("planner.missingFields.fieldRequired", { label })}</span>
     </button>
   );
 }
@@ -249,37 +253,40 @@ export function MissingFieldIndicator({
 /**
  * Helper: Create field list from form data
  */
-export function createFieldsFromFormData(formData: {
-  destination?: string;
-  departureDate?: Date | string;
-  returnDate?: Date | string;
-  travelers?: number;
-}): MissingField[] {
+export function createFieldsFromFormData(
+  formData: {
+    destination?: string;
+    departureDate?: Date | string;
+    returnDate?: Date | string;
+    travelers?: number;
+  },
+  t: (key: string) => string
+): MissingField[] {
   return [
     {
       id: "destination",
-      label: "Destination",
+      label: t("planner.missingFields.destination"),
       type: "destination",
       required: true,
       filled: !!formData.destination,
     },
     {
       id: "departureDate",
-      label: "Date de départ",
+      label: t("planner.missingFields.departureDate"),
       type: "departure",
       required: true,
       filled: !!formData.departureDate,
     },
     {
       id: "returnDate",
-      label: "Date de retour",
+      label: t("planner.missingFields.returnDate"),
       type: "return",
       required: false,
       filled: !!formData.returnDate,
     },
     {
       id: "travelers",
-      label: "Voyageurs",
+      label: t("planner.missingFields.travelersLabel"),
       type: "travelers",
       required: true,
       filled: !!formData.travelers && formData.travelers > 0,
