@@ -1793,6 +1793,40 @@ const resources = {
       "planner.preferences.smartTags.recalculate": "Recalculer",
       "planner.preferences.smartTags.add": "Ajouter",
       "planner.preferences.smartTags.placeholder": "#MonHashtag",
+      
+      // PreferencesPanel - Interests
+      "planner.preferences.interests.selectUpTo": "Sélectionnez jusqu'à {{count}}",
+      "planner.preferences.interests.culture": "Culture",
+      "planner.preferences.interests.food": "Gastronomie",
+      "planner.preferences.interests.nature": "Nature",
+      "planner.preferences.interests.beach": "Plage",
+      "planner.preferences.interests.wellness": "Bien-être",
+      "planner.preferences.interests.sport": "Sport",
+      "planner.preferences.interests.adventure": "Aventure",
+      "planner.preferences.interests.nightlife": "Sorties",
+      "planner.preferences.interests.shopping": "Shopping",
+      "planner.preferences.interests.history": "Histoire",
+      
+      // PreferencesPanel - Dietary
+      "planner.preferences.dietary.vegetarian": "Végétarien",
+      "planner.preferences.dietary.vegan": "Végan",
+      "planner.preferences.dietary.halal": "Halal",
+      "planner.preferences.dietary.kosher": "Casher",
+      "planner.preferences.dietary.glutenFree": "Sans gluten",
+      "planner.preferences.dietary.pescatarian": "Pescétarien",
+      "planner.preferences.dietary.lactoseFree": "Sans lactose",
+      "planner.preferences.dietary.noEggs": "Sans œufs",
+      "planner.preferences.dietary.noNuts": "Fruits à coque",
+      
+      // PreferencesPanel - Style Axes
+      "planner.preferences.axes.chill": "Détente",
+      "planner.preferences.axes.intense": "Intense",
+      "planner.preferences.axes.urban": "Urbain",
+      "planner.preferences.axes.nature": "Nature",
+      "planner.preferences.axes.budget": "Économique",
+      "planner.preferences.axes.luxury": "Luxe",
+      "planner.preferences.axes.tourist": "Touristique",
+      "planner.preferences.axes.authentic": "Authentique",
     },
   },
   en: {
@@ -3571,6 +3605,40 @@ const resources = {
       "planner.preferences.smartTags.recalculate": "Recalculate",
       "planner.preferences.smartTags.add": "Add",
       "planner.preferences.smartTags.placeholder": "#MyHashtag",
+      
+      // PreferencesPanel - Interests
+      "planner.preferences.interests.selectUpTo": "Select up to {{count}}",
+      "planner.preferences.interests.culture": "Culture",
+      "planner.preferences.interests.food": "Gastronomy",
+      "planner.preferences.interests.nature": "Nature",
+      "planner.preferences.interests.beach": "Beach",
+      "planner.preferences.interests.wellness": "Wellness",
+      "planner.preferences.interests.sport": "Sport",
+      "planner.preferences.interests.adventure": "Adventure",
+      "planner.preferences.interests.nightlife": "Nightlife",
+      "planner.preferences.interests.shopping": "Shopping",
+      "planner.preferences.interests.history": "History",
+      
+      // PreferencesPanel - Dietary
+      "planner.preferences.dietary.vegetarian": "Vegetarian",
+      "planner.preferences.dietary.vegan": "Vegan",
+      "planner.preferences.dietary.halal": "Halal",
+      "planner.preferences.dietary.kosher": "Kosher",
+      "planner.preferences.dietary.glutenFree": "Gluten-free",
+      "planner.preferences.dietary.pescatarian": "Pescatarian",
+      "planner.preferences.dietary.lactoseFree": "Lactose-free",
+      "planner.preferences.dietary.noEggs": "No eggs",
+      "planner.preferences.dietary.noNuts": "No nuts",
+      
+      // PreferencesPanel - Style Axes
+      "planner.preferences.axes.chill": "Relaxed",
+      "planner.preferences.axes.intense": "Intense",
+      "planner.preferences.axes.urban": "Urban",
+      "planner.preferences.axes.nature": "Nature",
+      "planner.preferences.axes.budget": "Budget",
+      "planner.preferences.axes.luxury": "Luxury",
+      "planner.preferences.axes.tourist": "Touristic",
+      "planner.preferences.axes.authentic": "Authentic",
     },
   },
 };

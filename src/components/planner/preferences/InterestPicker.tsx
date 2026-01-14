@@ -4,25 +4,26 @@
  */
 
 import { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 interface Interest {
   id: string;
-  label: string;
+  labelKey: string;
   emoji: string;
 }
 
 const INTERESTS: Interest[] = [
-  { id: "culture", label: "Culture", emoji: "🏛️" },
-  { id: "food", label: "Gastronomie", emoji: "🍽️" },
-  { id: "nature", label: "Nature", emoji: "🌲" },
-  { id: "beach", label: "Plage", emoji: "🏖️" },
-  { id: "wellness", label: "Bien-être", emoji: "🧘" },
-  { id: "sport", label: "Sport", emoji: "⚽" },
-  { id: "adventure", label: "Aventure", emoji: "🎢" },
-  { id: "nightlife", label: "Sorties", emoji: "🍸" },
-  { id: "shopping", label: "Shopping", emoji: "🛍️" },
-  { id: "history", label: "Histoire", emoji: "📜" },
+  { id: "culture", labelKey: "planner.preferences.interests.culture", emoji: "🏛️" },
+  { id: "food", labelKey: "planner.preferences.interests.food", emoji: "🍽️" },
+  { id: "nature", labelKey: "planner.preferences.interests.nature", emoji: "🌲" },
+  { id: "beach", labelKey: "planner.preferences.interests.beach", emoji: "🏖️" },
+  { id: "wellness", labelKey: "planner.preferences.interests.wellness", emoji: "🧘" },
+  { id: "sport", labelKey: "planner.preferences.interests.sport", emoji: "⚽" },
+  { id: "adventure", labelKey: "planner.preferences.interests.adventure", emoji: "🎢" },
+  { id: "nightlife", labelKey: "planner.preferences.interests.nightlife", emoji: "🍸" },
+  { id: "shopping", labelKey: "planner.preferences.interests.shopping", emoji: "🛍️" },
+  { id: "history", labelKey: "planner.preferences.interests.history", emoji: "📜" },
 ];
 
 interface InterestPickerProps {
@@ -38,6 +39,7 @@ export const InterestPicker = memo(function InterestPicker({
   maxSelections = 5,
   compact = false
 }: InterestPickerProps) {
+  const { t } = useTranslation();
   const isMaxReached = selected.length >= maxSelections;
 
   // Stable handler to prevent re-renders from breaking memo
@@ -51,7 +53,7 @@ export const InterestPicker = memo(function InterestPicker({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-          Sélectionnez jusqu'à {maxSelections}
+          {t("planner.preferences.interests.selectUpTo", { count: maxSelections })}
         </span>
         <span className={cn(
           "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
@@ -87,7 +89,7 @@ export const InterestPicker = memo(function InterestPicker({
               )}
             >
               <span className="text-base">{interest.emoji}</span>
-              <span className="text-[9px] font-medium leading-tight">{interest.label}</span>
+              <span className="text-[9px] font-medium leading-tight">{t(interest.labelKey)}</span>
             </button>
           );
         })}

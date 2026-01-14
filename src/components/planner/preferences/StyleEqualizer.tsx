@@ -4,6 +4,7 @@
  */
 
 import { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { DualSlider } from "@/components/ui/dual-slider";
 import { cn } from "@/lib/utils";
 import type { StyleAxes } from "@/stores/hooks";
@@ -16,18 +17,20 @@ interface StyleEqualizerProps {
 
 const AXES_CONFIG: Array<{
   key: keyof StyleAxes;
-  leftLabel: string;
-  rightLabel: string;
+  leftLabelKey: string;
+  rightLabelKey: string;
   leftEmoji: string;
   rightEmoji: string;
 }> = [
-  { key: "chillVsIntense", leftLabel: "Détente", rightLabel: "Intense", leftEmoji: "🧘", rightEmoji: "🏃" },
-  { key: "cityVsNature", leftLabel: "Urbain", rightLabel: "Nature", leftEmoji: "🏙️", rightEmoji: "🌲" },
-  { key: "ecoVsLuxury", leftLabel: "Économique", rightLabel: "Luxe", leftEmoji: "💰", rightEmoji: "✨" },
-  { key: "touristVsLocal", leftLabel: "Touristique", rightLabel: "Authentique", leftEmoji: "📸", rightEmoji: "🏠" },
+  { key: "chillVsIntense", leftLabelKey: "planner.preferences.axes.chill", rightLabelKey: "planner.preferences.axes.intense", leftEmoji: "🧘", rightEmoji: "🏃" },
+  { key: "cityVsNature", leftLabelKey: "planner.preferences.axes.urban", rightLabelKey: "planner.preferences.axes.nature", leftEmoji: "🏙️", rightEmoji: "🌲" },
+  { key: "ecoVsLuxury", leftLabelKey: "planner.preferences.axes.budget", rightLabelKey: "planner.preferences.axes.luxury", leftEmoji: "💰", rightEmoji: "✨" },
+  { key: "touristVsLocal", leftLabelKey: "planner.preferences.axes.tourist", rightLabelKey: "planner.preferences.axes.authentic", leftEmoji: "📸", rightEmoji: "🏠" },
 ];
 
 export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange, compact = false }: StyleEqualizerProps) {
+  const { t } = useTranslation();
+  
   // Stable handler to prevent re-renders from breaking memo
   const handleAxisChange = useCallback((key: keyof StyleAxes, value: number) => {
     onAxisChange(key, value);
@@ -35,7 +38,7 @@ export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange,
 
   return (
     <div className={cn("space-y-3", compact && "space-y-2")}>
-      {AXES_CONFIG.map(({ key, leftLabel, rightLabel, leftEmoji, rightEmoji }) => (
+      {AXES_CONFIG.map(({ key, leftLabelKey, rightLabelKey, leftEmoji, rightEmoji }) => (
         <div key={key} className="group">
           <div className="flex items-center gap-2">
             <div className={cn(
@@ -47,7 +50,7 @@ export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange,
                 "text-[11px] font-medium transition-colors whitespace-nowrap",
                 axes[key] < 40 ? "text-foreground" : "text-muted-foreground"
               )}>
-                {leftLabel}
+                {t(leftLabelKey)}
               </span>
             </div>
 
@@ -68,7 +71,7 @@ export const StyleEqualizer = memo(function StyleEqualizer({ axes, onAxisChange,
                 "text-[11px] font-medium transition-colors whitespace-nowrap",
                 axes[key] > 60 ? "text-foreground" : "text-muted-foreground"
               )}>
-                {rightLabel}
+                {t(rightLabelKey)}
               </span>
               <span className="text-sm">{rightEmoji}</span>
             </div>

@@ -4,26 +4,27 @@
  */
 
 import { memo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Leaf, Salad, Moon, Star, Wheat, Fish, Milk, Egg, Nut, Check } from "lucide-react";
 
 interface DietaryOption {
   id: string;
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
   color: string;
 }
 
 const DIETARY_OPTIONS: DietaryOption[] = [
-  { id: "vegetarian", label: "Végétarien", icon: Salad, color: "hsl(140, 60%, 45%)" },
-  { id: "vegan", label: "Végan", icon: Leaf, color: "hsl(120, 50%, 40%)" },
-  { id: "halal", label: "Halal", icon: Moon, color: "hsl(200, 70%, 50%)" },
-  { id: "kosher", label: "Casher", icon: Star, color: "hsl(45, 80%, 50%)" },
-  { id: "gluten-free", label: "Sans gluten", icon: Wheat, color: "hsl(30, 70%, 50%)" },
-  { id: "pescatarian", label: "Pescétarien", icon: Fish, color: "hsl(190, 70%, 50%)" },
-  { id: "lactose-free", label: "Sans lactose", icon: Milk, color: "hsl(210, 50%, 60%)" },
-  { id: "no-eggs", label: "Sans œufs", icon: Egg, color: "hsl(50, 60%, 55%)" },
-  { id: "no-nuts", label: "Fruits à coque", icon: Nut, color: "hsl(25, 60%, 45%)" },
+  { id: "vegetarian", labelKey: "planner.preferences.dietary.vegetarian", icon: Salad, color: "hsl(140, 60%, 45%)" },
+  { id: "vegan", labelKey: "planner.preferences.dietary.vegan", icon: Leaf, color: "hsl(120, 50%, 40%)" },
+  { id: "halal", labelKey: "planner.preferences.dietary.halal", icon: Moon, color: "hsl(200, 70%, 50%)" },
+  { id: "kosher", labelKey: "planner.preferences.dietary.kosher", icon: Star, color: "hsl(45, 80%, 50%)" },
+  { id: "gluten-free", labelKey: "planner.preferences.dietary.glutenFree", icon: Wheat, color: "hsl(30, 70%, 50%)" },
+  { id: "pescatarian", labelKey: "planner.preferences.dietary.pescatarian", icon: Fish, color: "hsl(190, 70%, 50%)" },
+  { id: "lactose-free", labelKey: "planner.preferences.dietary.lactoseFree", icon: Milk, color: "hsl(210, 50%, 60%)" },
+  { id: "no-eggs", labelKey: "planner.preferences.dietary.noEggs", icon: Egg, color: "hsl(50, 60%, 55%)" },
+  { id: "no-nuts", labelKey: "planner.preferences.dietary.noNuts", icon: Nut, color: "hsl(25, 60%, 45%)" },
 ];
 
 interface DietaryPickerProps {
@@ -32,6 +33,8 @@ interface DietaryPickerProps {
 }
 
 export const DietaryPicker = memo(function DietaryPicker({ selected, onToggle }: DietaryPickerProps) {
+  const { t } = useTranslation();
+  
   // Stable handler to prevent re-renders from breaking memo
   const handleToggle = useCallback((id: string) => {
     onToggle(id);
@@ -72,7 +75,7 @@ export const DietaryPicker = memo(function DietaryPicker({ selected, onToggle }:
               "text-[9px] font-medium text-center leading-tight",
               isSelected ? "text-foreground" : "text-muted-foreground"
             )}>
-              {option.label}
+              {t(option.labelKey)}
             </span>
           </button>
         );
