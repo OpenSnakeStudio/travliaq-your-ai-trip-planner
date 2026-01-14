@@ -1594,7 +1594,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 {/* Cabin bags */}
                 <div className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <span className="text-xs">🧳</span>
-                  <span className="text-[10px] text-muted-foreground">{t("planner.flights.cabin")}</span>
+                  <span className="text-[10px] text-muted-foreground">{t("planner.flights.cabinBag")}</span>
                   <button
                     onClick={() => updatePassenger(passenger.id, { cabinBags: Math.max(0, passenger.cabinBags - 1) })}
                     className="w-5 h-5 rounded bg-background/50 hover:bg-primary/20 hover:text-primary text-foreground flex items-center justify-center text-xs font-medium transition-colors ml-1"
@@ -1613,7 +1613,7 @@ const FlightsPanel = ({ onMapMove, onFlightRoutesChange, flightFormData, onFligh
                 {/* Checked bags */}
                 <div className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                   <span className="text-xs">🛄</span>
-                  <span className="text-[10px] text-muted-foreground">{t("planner.flights.hold")}</span>
+                  <span className="text-[10px] text-muted-foreground">{t("planner.flights.checkedBag")}</span>
                   <button
                     onClick={() => updatePassenger(passenger.id, { checkedBags: Math.max(0, passenger.checkedBags - 1) })}
                     className="w-5 h-5 rounded bg-background/50 hover:bg-primary/20 hover:text-primary text-foreground flex items-center justify-center text-xs font-medium transition-colors ml-1"
