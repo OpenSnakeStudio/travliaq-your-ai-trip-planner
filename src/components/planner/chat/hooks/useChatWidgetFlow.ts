@@ -16,7 +16,7 @@ import { useCallback, useRef } from "react";
 import { format, addDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import { eventBus } from "@/lib/eventBus";
-import type { FlightMemory, AirportInfo, MissingField } from "@/contexts/FlightMemoryContext";
+import type { FlightMemory, AirportInfo, MissingField } from "@/stores/hooks";
 import type { Airport } from "@/hooks/useNearestAirports";
 import type { WidgetType, CitySelectionData } from "@/types/flight";
 import type { ChatMessage } from "../types";

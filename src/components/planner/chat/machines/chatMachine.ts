@@ -6,7 +6,7 @@
  */
 
 import { createMachine, assign } from "xstate";
-import type { FlightMemory, AirportInfo, MissingField } from "@/contexts/FlightMemoryContext";
+import type { FlightMemory, AirportInfo, MissingField } from "@/stores/hooks";
 import type { WidgetType, CitySelectionData } from "@/types/flight";
 
 /**

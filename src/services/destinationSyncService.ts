@@ -10,7 +10,7 @@
  * - Track sync metadata
  */
 
-import type { AirportInfo } from "@/contexts/FlightMemoryContext";
+import type { AirportInfo } from "@/stores/hooks";
 import {
   type NormalizedDestination,
   type PropagationResult,

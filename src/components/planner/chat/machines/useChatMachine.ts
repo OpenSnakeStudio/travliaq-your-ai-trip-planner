@@ -2,14 +2,14 @@
  * useChatMachine - React hook for the chat state machine
  *
  * This hook provides the integration between XState and React,
- * connecting the machine to the FlightMemoryContext and providing
+ * connecting the machine to Zustand store and providing
  * convenient methods for UI components.
  */
 
 import { useCallback, useMemo } from "react";
 import { useMachine } from "@xstate/react";
 import { chatMachine, type ChatMachineEvent, type TravelerCounts } from "./chatMachine";
-import { useFlightMemory } from "@/contexts/FlightMemoryContext";
+import { useFlightMemoryStore } from "@/stores/hooks";
 import type { WidgetType } from "@/types/flight";
 
 /**
@@ -53,7 +53,7 @@ export interface UseChatMachineReturn {
  * React hook for the chat state machine
  */
 export function useChatMachine(): UseChatMachineReturn {
-  const flightMemory = useFlightMemory();
+  const flightMemory = useFlightMemoryStore();
 
   // Create machine with initial context from flight memory
   const [snapshot, send] = useMachine(chatMachine, {
