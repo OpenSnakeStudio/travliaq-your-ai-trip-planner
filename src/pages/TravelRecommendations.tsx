@@ -291,7 +291,7 @@ const TravelRecommendations = () => {
   const code = rawCode ? decodeURIComponent(rawCode).replace(/^=+/, '').trim() : null;
   const { trip, steps, loading } = useTripData(code);
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isEnglish = i18n.language === 'en';
   
   const [activeDay, setActiveDay] = useState(0);
@@ -494,7 +494,7 @@ const TravelRecommendations = () => {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-travliaq-turquoise mx-auto mb-4"></div>
-          <p className="text-white font-montserrat">Chargement du voyage...</p>
+          <p className="text-white font-montserrat">{t("travel.loading")}</p>
         </div>
       </div>
     );
@@ -504,11 +504,11 @@ const TravelRecommendations = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center max-w-md px-4">
-          <h1 className="text-2xl font-montserrat font-bold text-white mb-4">Voyage introuvable</h1>
+          <h1 className="text-2xl font-montserrat font-bold text-white mb-4">{t("travel.notFound")}</h1>
           <p className="text-white/80 font-inter mb-6">
             Le code "{code}" ne correspond à aucun voyage.
           </p>
-          <Button onClick={() => window.location.href = '/'}>Retour à l'accueil</Button>
+          <Button onClick={() => window.location.href = '/'}>{t("common.backToHome")}</Button>
         </div>
       </div>
     );
@@ -519,7 +519,7 @@ const TravelRecommendations = () => {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-travliaq-turquoise mx-auto mb-4"></div>
-          <p className="text-white font-montserrat">Chargement du voyage...</p>
+          <p className="text-white font-montserrat">{t("travel.loading")}</p>
         </div>
       </div>
     );

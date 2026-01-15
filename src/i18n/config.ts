@@ -2,6 +2,31 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 
+// Import JSON locale files
+import commonFR from "./locales/fr/common.json";
+import navFR from "./locales/fr/nav.json";
+import landingFR from "./locales/fr/landing.json";
+import blogFR from "./locales/fr/blog.json";
+import bookingFR from "./locales/fr/booking.json";
+import travelFR from "./locales/fr/travel.json";
+import questionnaireFR from "./locales/fr/questionnaire.json";
+import adminFR from "./locales/fr/admin.json";
+import cgvFR from "./locales/fr/cgv.json";
+import authFR from "./locales/fr/auth.json";
+import plannerFR from "./locales/fr/planner.json";
+
+import commonEN from "./locales/en/common.json";
+import navEN from "./locales/en/nav.json";
+import landingEN from "./locales/en/landing.json";
+import blogEN from "./locales/en/blog.json";
+import bookingEN from "./locales/en/booking.json";
+import travelEN from "./locales/en/travel.json";
+import questionnaireEN from "./locales/en/questionnaire.json";
+import adminEN from "./locales/en/admin.json";
+import cgvEN from "./locales/en/cgv.json";
+import authEN from "./locales/en/auth.json";
+import plannerEN from "./locales/en/planner.json";
+
 const resources = {
   fr: {
     translation: {
@@ -2821,6 +2846,23 @@ const resources = {
       "planner.chat.mandatoryCriteria": "J'ai des critères obligatoires à préciser.",
       "planner.chat.dietaryRestrictions": "J'ai des restrictions alimentaires à préciser.",
       "planner.chat.chooseBestDestination": "Choisis la meilleure destination pour moi parmi celles affichées et explique pourquoi.",
+      "planner.chat.typeInChat": "Tapez le nom dans le chat.",
+
+      // Planner - Widget Confirmed States
+      "planner.widget.dateSelected": "Date sélectionnée",
+      "planner.widget.datesSelected": "Dates sélectionnées",
+      "planner.widget.travelersSelected": "Voyageurs configurés",
+      "planner.widget.travelersConfirmed": "Voyageurs confirmés",
+      "planner.widget.tripTypeSelected": "Type de voyage sélectionné",
+      "planner.widget.citySelected": "Ville sélectionnée",
+      "planner.widget.airportsConfirmed": "Aéroports confirmés",
+      "planner.widget.styleConfigured": "Style configuré",
+      "planner.widget.interestsSelected": "Intérêts sélectionnés",
+      "planner.widget.mustHavesConfigured": "Critères configurés",
+      "planner.widget.dietaryConfigured": "Régime configuré",
+      "planner.widget.destinationSelected": "Destination sélectionnée",
+      "planner.widget.selectDepartureDate": "Sélectionnez votre date de départ",
+      "planner.widget.selectReturnDate": "Sélectionnez votre date de retour",
 
       // Planner - YouTubeShortsPanel
       "planner.youtube.thingsToDo": "À faire à {{city}}",
@@ -2856,6 +2898,49 @@ const resources = {
       "planner.smartTags.luxury": "#Luxe",
       "planner.smartTags.generatePrompt": "Génère les 3 hashtags qui me décrivent le mieux.",
 
+      // Planner - QuickReplies Messages
+      "planner.quickReplies.budgetQuestion": "Quel est le budget moyen pour un voyage à {{city}} ?",
+      "planner.quickReplies.cheapestFlight": "Montre-moi le vol le moins cher",
+      "planner.quickReplies.fastestFlight": "Montre-moi le vol le plus rapide",
+      "planner.quickReplies.flexibleDates": "Je suis flexible sur les dates, +/- quelques jours",
+      "planner.quickReplies.moreAccommodations": "Montre-moi d'autres options d'hébergement",
+      "planner.quickReplies.tripSummary": "Fais-moi un récapitulatif de mon voyage",
+      "planner.quickReplies.howToPlan": "Comment puis-je planifier mon voyage ?",
+      "planner.quickReplies.suggestDestination": "Suggère-moi une destination pour mes prochaines vacances",
+      "planner.quickReplies.compareDestinations": "Comparer ces destinations",
+      "planner.quickReplies.compareMessage": "Peux-tu comparer ces destinations ?",
+      "planner.quickReplies.defineBudget": "Définir mon budget",
+      "planner.quickReplies.budgetMessage": "Je voudrais définir un budget",
+      "planner.quickReplies.whatToDo": "Que faire sur place ?",
+      "planner.quickReplies.suggestForMe": "Suggère-moi des destinations",
+      "planner.quickReplies.suggestMessage": "Donne-moi 3 recommandations selon mon profil",
+      "planner.quickReplies.launchSearch": "Lancer la recherche",
+      "planner.quickReplies.searchFlights": "Recherche les vols maintenant",
+      "planner.quickReplies.inspireMe": "Inspirez-moi",
+      "planner.quickReplies.inspireMessage": "Je ne sais pas où partir, inspirez-moi !",
+      "planner.quickReplies.whenToGo": "Quand partir ?",
+      "planner.quickReplies.howMany": "Nombre de voyageurs",
+
+      // Planner - HotelDetailView (RoomCard)
+      "planner.hotels.persons": "pers.",
+      "planner.hotels.freeCancellation": "Annulation gratuite",
+      "planner.hotels.perNightShort": "/nuit",
+
+      // Common
+      "common.ok": "OK",
+
+      // Spread JSON locale files (these will override inline definitions with same keys)
+      ...commonFR,
+      ...navFR,
+      ...landingFR,
+      ...blogFR,
+      ...bookingFR,
+      ...travelFR,
+      ...questionnaireFR,
+      ...adminFR,
+      ...cgvFR,
+      ...authFR,
+      ...plannerFR,
     },
   },
   en: {
@@ -5662,6 +5747,23 @@ const resources = {
       "planner.chat.mandatoryCriteria": "I have mandatory criteria to specify.",
       "planner.chat.dietaryRestrictions": "I have dietary restrictions to specify.",
       "planner.chat.chooseBestDestination": "Choose the best destination for me from those displayed and explain why.",
+      "planner.chat.typeInChat": "Type the name in the chat.",
+
+      // Planner - Widget Confirmed States
+      "planner.widget.dateSelected": "Date selected",
+      "planner.widget.datesSelected": "Dates selected",
+      "planner.widget.travelersSelected": "Travelers configured",
+      "planner.widget.travelersConfirmed": "Travelers confirmed",
+      "planner.widget.tripTypeSelected": "Trip type selected",
+      "planner.widget.citySelected": "City selected",
+      "planner.widget.airportsConfirmed": "Airports confirmed",
+      "planner.widget.styleConfigured": "Style configured",
+      "planner.widget.interestsSelected": "Interests selected",
+      "planner.widget.mustHavesConfigured": "Criteria configured",
+      "planner.widget.dietaryConfigured": "Dietary configured",
+      "planner.widget.destinationSelected": "Destination selected",
+      "planner.widget.selectDepartureDate": "Select your departure date",
+      "planner.widget.selectReturnDate": "Select your return date",
 
       // Planner - YouTubeShortsPanel
       "planner.youtube.thingsToDo": "Things to do in {{city}}",
@@ -5697,6 +5799,49 @@ const resources = {
       "planner.smartTags.luxury": "#Luxury",
       "planner.smartTags.generatePrompt": "Generate the 3 hashtags that best describe me.",
 
+      // Planner - QuickReplies Messages
+      "planner.quickReplies.budgetQuestion": "What is the average budget for a trip to {{city}}?",
+      "planner.quickReplies.cheapestFlight": "Show me the cheapest flight",
+      "planner.quickReplies.fastestFlight": "Show me the fastest flight",
+      "planner.quickReplies.flexibleDates": "I'm flexible on dates, +/- a few days",
+      "planner.quickReplies.moreAccommodations": "Show me other accommodation options",
+      "planner.quickReplies.tripSummary": "Give me a summary of my trip",
+      "planner.quickReplies.howToPlan": "How can I plan my trip?",
+      "planner.quickReplies.suggestDestination": "Suggest a destination for my next vacation",
+      "planner.quickReplies.compareDestinations": "Compare these destinations",
+      "planner.quickReplies.compareMessage": "Can you compare these destinations?",
+      "planner.quickReplies.defineBudget": "Set my budget",
+      "planner.quickReplies.budgetMessage": "I'd like to set a budget",
+      "planner.quickReplies.whatToDo": "What to do there?",
+      "planner.quickReplies.suggestForMe": "Suggest destinations",
+      "planner.quickReplies.suggestMessage": "Give me 3 recommendations based on my profile",
+      "planner.quickReplies.launchSearch": "Launch search",
+      "planner.quickReplies.searchFlights": "Search flights now",
+      "planner.quickReplies.inspireMe": "Inspire me",
+      "planner.quickReplies.inspireMessage": "I don't know where to go, inspire me!",
+      "planner.quickReplies.whenToGo": "When to go?",
+      "planner.quickReplies.howMany": "Number of travelers",
+
+      // Planner - HotelDetailView (RoomCard)
+      "planner.hotels.persons": "pers.",
+      "planner.hotels.freeCancellation": "Free cancellation",
+      "planner.hotels.perNightShort": "/night",
+
+      // Common
+      "common.ok": "OK",
+
+      // Spread JSON locale files (these will override inline definitions with same keys)
+      ...commonEN,
+      ...navEN,
+      ...landingEN,
+      ...blogEN,
+      ...bookingEN,
+      ...travelEN,
+      ...questionnaireEN,
+      ...adminEN,
+      ...cgvEN,
+      ...authEN,
+      ...plannerEN,
     },
   },
 };

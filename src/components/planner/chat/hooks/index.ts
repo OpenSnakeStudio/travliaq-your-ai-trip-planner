@@ -50,7 +50,11 @@ export {
   type FlowState,
   type WidgetValidation,
   type IntentProcessResult,
+  type UserBehavior,
 } from "./useUnifiedIntentRouter";
+
+// Session Context for enriched LLM context (Phase 3)
+export { useSessionContext } from "./useSessionContext";
 
 // Performance optimization hooks
 export {

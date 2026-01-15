@@ -218,7 +218,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
 
             <div className="min-w-0 flex-1">
               <p className="text-base font-semibold text-foreground truncate">
-                À faire à {city}
+                {t("planner.youtube.thingsToDo", { city })}
               </p>
               {countryName && (
                 <p className="text-xs text-muted-foreground truncate">{countryName}</p>
@@ -301,7 +301,7 @@ const YouTubeShortsPanel = ({ city, countryName, isOpen, onClose }: YouTubeShort
                           <div className="relative h-20 w-14 rounded-lg bg-muted overflow-hidden flex-shrink-0">
                             <img
                               src={v.thumbnail}
-                              alt={`Aperçu vidéo ${city}`}
+                              alt={t("planner.youtube.videoPreview", { city })}
                               loading="lazy"
                               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />

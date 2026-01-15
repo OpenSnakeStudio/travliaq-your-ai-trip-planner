@@ -3,6 +3,7 @@ import * as Icons from "lucide-react";
 import { LucideIcon } from "lucide-react";
 import { TripShareButtons } from "./TripShareButtons";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export interface SummaryStat {
   type: 'days' | 'budget' | 'weather' | 'style' | 'cities' | 'people' | 'activities' | 'custom';
@@ -33,17 +34,18 @@ interface FooterSummaryProps {
   tripCode?: string | null;
 }
 
-const FooterSummary = ({ 
-  stats, 
-  summary, 
-  travelers = 2, 
-  activities = 0, 
-  cities = 0, 
+const FooterSummary = ({
+  stats,
+  summary,
+  travelers = 2,
+  activities = 0,
+  cities = 0,
   stopovers = 0,
   destination = "votre destination",
   tripTitle = "Votre voyage",
   tripCode
 }: FooterSummaryProps) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleBooking = () => {
@@ -54,13 +56,13 @@ const FooterSummary = ({
 
   // Type mapping configuration
   const typeConfig: Record<string, { icon: LucideIcon; label: string; color: 'turquoise' | 'golden' }> = {
-    days: { icon: Icons.Calendar, label: "JOURS", color: 'turquoise' },
-    budget: { icon: Icons.DollarSign, label: "BUDGET", color: 'golden' },
-    weather: { icon: Icons.CloudSun, label: "MÉTÉO", color: 'turquoise' },
-    style: { icon: Icons.Sparkles, label: "STYLE", color: 'golden' },
-    cities: { icon: Icons.MapPin, label: "VILLES", color: 'turquoise' },
-    people: { icon: Icons.Users, label: "VOYAGEURS", color: 'turquoise' },
-    activities: { icon: Icons.Activity, label: "ACTIVITÉS", color: 'golden' },
+    days: { icon: Icons.Calendar, label: t("travel.summary.stats.days"), color: 'turquoise' },
+    budget: { icon: Icons.DollarSign, label: t("travel.summary.stats.budget"), color: 'golden' },
+    weather: { icon: Icons.CloudSun, label: t("travel.summary.stats.weather"), color: 'turquoise' },
+    style: { icon: Icons.Sparkles, label: t("travel.summary.stats.style"), color: 'golden' },
+    cities: { icon: Icons.MapPin, label: t("travel.summary.stats.cities"), color: 'turquoise' },
+    people: { icon: Icons.Users, label: t("travel.summary.stats.travelers"), color: 'turquoise' },
+    activities: { icon: Icons.Activity, label: t("travel.summary.stats.activities"), color: 'golden' },
     custom: { icon: Icons.Info, label: "INFO", color: 'turquoise' } // Default for custom
   };
 
@@ -73,7 +75,7 @@ const FooterSummary = ({
     { type: 'people' as const, value: travelers },
     { type: 'activities' as const, value: activities > 0 ? activities : summary.totalDays * 2 },
     { type: 'cities' as const, value: cities > 0 ? cities : 3 },
-    { type: 'custom' as const, value: stopovers === 0 ? "Direct" : `${stopovers}`, icon: "Plane", label: "ESCALES", color: 'golden' as const },
+    { type: 'custom' as const, value: stopovers === 0 ? t("travel.summary.stats.direct") : `${stopovers}`, icon: "Plane", label: t("travel.summary.stats.stopovers"), color: 'golden' as const },
   ] : [])).map(stat => {
     const config = typeConfig[stat.type];
     let IconComponent: LucideIcon = config.icon;
@@ -98,7 +100,7 @@ const FooterSummary = ({
         <div className="max-w-6xl mx-auto">
           {/* Titre */}
           <h2 className="font-montserrat text-3xl md:text-5xl font-bold text-center mb-6 md:mb-12">
-            Récapitulatif de votre voyage
+            {t("travel.summary.title")}
           </h2>
 
           {/* Statistiques - 8 cards en 4 colonnes */}
@@ -144,7 +146,7 @@ const FooterSummary = ({
               onClick={handleBooking}
               className="w-full sm:w-auto shadow-glow"
             >
-              Réserver ce voyage en un clic
+              {t("travel.summary.bookTrip")}
             </Button>
 
             <TripShareButtons
@@ -157,7 +159,7 @@ const FooterSummary = ({
           {/* Signature */}
           <div className="text-center mt-12">
             <p className="font-montserrat text-lg italic text-white/70">
-              L'aventure à portée de clic.
+              {t("travel.summary.tagline")}
             </p>
           </div>
         </div>

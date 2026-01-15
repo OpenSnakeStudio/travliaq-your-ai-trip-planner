@@ -66,6 +66,23 @@ export function usePreferenceWidgetCallbacks({
     const styleAxes = prefMemory.preferences.styleAxes;
     widgetTracking.trackStyleConfig({ ...styleAxes });
 
+    // Build style summary for display
+    const styleLabels: string[] = [];
+    if (styleAxes.chillVsIntense > 60) styleLabels.push(t("planner.style.intense"));
+    else if (styleAxes.chillVsIntense < 40) styleLabels.push(t("planner.style.chill"));
+    if (styleAxes.ecoVsLuxury > 60) styleLabels.push(t("planner.style.luxury"));
+    else if (styleAxes.ecoVsLuxury < 40) styleLabels.push(t("planner.style.eco"));
+    const styleLabel = styleLabels.length > 0 ? styleLabels.join(", ") : t("planner.style.balanced");
+
+    // Mark current style widget as confirmed
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.widget === "preferenceStyle" && !m.widgetConfirmed
+          ? { ...m, widgetConfirmed: true, widgetSelectedValue: styleAxes, widgetDisplayLabel: styleLabel }
+          : m
+      )
+    );
+
     // After style, show interests widget
     setInspireFlowStep("interests");
     const interestsId = `pref-interests-${Date.now()}`;
@@ -87,6 +104,20 @@ export function usePreferenceWidgetCallbacks({
     // Track interests selection
     const interests = prefMemory.preferences.interests;
     widgetTracking.trackInterestsSelect(interests);
+
+    // Build interests label for display
+    const interestsLabel = interests.length > 0
+      ? interests.slice(0, 3).join(", ") + (interests.length > 3 ? ` +${interests.length - 3}` : "")
+      : t("planner.preference.noInterests");
+
+    // Mark current interests widget as confirmed
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.widget === "preferenceInterests" && !m.widgetConfirmed
+          ? { ...m, widgetConfirmed: true, widgetSelectedValue: interests, widgetDisplayLabel: interestsLabel }
+          : m
+      )
+    );
 
     // After interests, show "Autre chose?" question with suggestions
     setInspireFlowStep("extra");
@@ -136,6 +167,23 @@ export function usePreferenceWidgetCallbacks({
       t("planner.preference.mustHavesConfigured")
     );
 
+    // Build must-haves label for display
+    const activeHaves: string[] = [];
+    if (mustHaves.accessibilityRequired) activeHaves.push(t("planner.mustHaves.accessibility"));
+    if (mustHaves.petFriendly) activeHaves.push(t("planner.mustHaves.petFriendly"));
+    if (mustHaves.familyFriendly) activeHaves.push(t("planner.mustHaves.familyFriendly"));
+    if (mustHaves.highSpeedWifi) activeHaves.push(t("planner.mustHaves.wifi"));
+    const mustHavesLabel = activeHaves.length > 0 ? activeHaves.join(", ") : t("planner.mustHaves.none");
+
+    // Mark current must-haves widget as confirmed
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.widget === "mustHaves" && !m.widgetConfirmed
+          ? { ...m, widgetConfirmed: true, widgetSelectedValue: mustHaves, widgetDisplayLabel: mustHavesLabel }
+          : m
+      )
+    );
+
     // After must-haves, offer dietary or fetch destinations
     const questionId = `after-musthaves-${Date.now()}`;
     setMessages((prev) => [
@@ -177,6 +225,18 @@ export function usePreferenceWidgetCallbacks({
         t("planner.preference.dietaryConfigured", { restrictions: dietary.join(", ") })
       );
     }
+
+    // Build dietary label for display
+    const dietaryLabel = dietary.length > 0 ? dietary.join(", ") : t("planner.dietary.none");
+
+    // Mark current dietary widget as confirmed
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.widget === "dietary" && !m.widgetConfirmed
+          ? { ...m, widgetConfirmed: true, widgetSelectedValue: dietary, widgetDisplayLabel: dietaryLabel }
+          : m
+      )
+    );
 
     // After dietary, fetch destinations directly
     const loadingId = `fetching-destinations-${Date.now()}`;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ type BlogPost = {
 };
 
 const Blog = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([]);
@@ -93,19 +95,19 @@ const Blog = () => {
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 animate-fade-in">
                 <span className="w-2 h-2 bg-travliaq-turquoise rounded-full animate-pulse" />
-                <span className="text-sm font-medium tracking-wide">Découvertes & Aventures</span>
+                <span className="text-sm font-medium tracking-wide">{t("blog.hero.discoveries")}</span>
               </div>
 
               {/* Main title */}
               <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 <span className="bg-gradient-to-r from-white via-white to-travliaq-turquoise bg-clip-text text-transparent">
-                  Histoires du Monde
+                  {t("blog.hero.stories")}
                 </span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                Récits immersifs, guides inspirants et secrets de destinations pour voyageurs curieux
+                {t("blog.hero.subtitle")}
               </p>
 
               {/* Decorative divider */}
@@ -135,7 +137,7 @@ const Blog = () => {
               <div className="relative bg-background rounded-2xl shadow-2xl border border-border overflow-hidden">
                 <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5 transition-colors group-hover:text-travliaq-turquoise" />
                 <Input
-                  placeholder="Rechercher un article..."
+                  placeholder={t("blog.search.placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-14 pr-6 h-16 text-lg border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -164,8 +166,8 @@ const Blog = () => {
           <Card className="p-12 text-center">
             <p className="text-muted-foreground text-lg">
               {searchQuery
-                ? "Aucun article trouvé pour votre recherche"
-                : "Aucun article publié pour le moment"}
+                ? t("blog.empty.searchResults")
+                : t("blog.empty.noArticles")}
             </p>
           </Card>
         ) : (
@@ -208,7 +210,7 @@ const Blog = () => {
                       <Calendar className="h-4 w-4 text-travliaq-turquoise" />
                       <span>
                         {new Date(post.published_at).toLocaleDateString(
-                          "fr-FR",
+                          i18n.language === "en" ? "en-US" : "fr-FR",
                           {
                             day: "numeric",
                             month: "short",
@@ -227,7 +229,7 @@ const Blog = () => {
                     variant="ghost"
                     className="w-full mt-2 bg-transparent hover:bg-travliaq-turquoise hover:text-white transition-all border border-border/50 group-hover:border-travliaq-turquoise"
                   >
-                    Lire l'article
+                    {t("blog.card.readMore")}
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>

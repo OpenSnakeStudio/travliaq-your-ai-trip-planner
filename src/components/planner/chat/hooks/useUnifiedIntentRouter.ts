@@ -1,17 +1,19 @@
 /**
  * Unified Intent Router Hook (Phase 2 - Intent Unification)
- * 
+ *
  * This hook combines the functionality of useIntentHandler and useIntentRouter
  * into a single source of truth for widget triggering based on:
  * 1. Backend intent classification (primary source of truth)
  * 2. Flow state validation (prerequisites check)
  * 3. Fallback logic when backend classification fails
+ * 4. Detection of already-provided information to avoid redundant widgets
  */
 
 import { useCallback, useMemo, useRef } from "react";
 import type { FlightMemory } from "@/stores/hooks";
 import type { WidgetType } from "@/types/flight";
 import type { IntentClassification } from "./useChatStream";
+import type { WidgetInteraction } from "@/contexts/WidgetHistoryContext";
 
 /**
  * Flow state computed from memory
@@ -53,6 +55,8 @@ export interface IntentProcessResult {
  */
 export interface UseUnifiedIntentRouterOptions {
   memory: FlightMemory;
+  /** Widget interaction history from useWidgetTracking */
+  widgetInteractions?: WidgetInteraction[];
   onWidgetTriggered?: (widgetType: WidgetType, data?: Record<string, unknown>) => void;
   onSearchTriggered?: () => void;
   onDelegateChoice?: (intent: IntentClassification) => void;
@@ -64,16 +68,25 @@ export interface UseUnifiedIntentRouterOptions {
 export interface UseUnifiedIntentRouterReturn {
   /** Process a backend intent classification */
   processIntent: (intent: IntentClassification | null) => IntentProcessResult;
-  
+
   /** Validate if a widget can be shown */
   canShowWidget: (widgetType: WidgetType) => WidgetValidation;
-  
+
+  /** Check if user already provided data for this widget type */
+  hasAlreadyProvided: (widgetType: WidgetType) => boolean;
+
+  /** Adaptive check: should we show this widget based on user behavior? */
+  shouldShowWidgetAdaptive: (widgetType: WidgetType) => boolean;
+
   /** Get the next required widget based on flow state */
   getNextRequiredWidget: () => WidgetType | null;
-  
+
   /** Get current flow state */
   flowState: FlowState;
-  
+
+  /** Get detected user behavior */
+  userBehavior: UserBehavior;
+
   /** Get the last processed intent */
   lastIntent: IntentClassification | null;
 }
@@ -86,6 +99,29 @@ const CONFIDENCE_THRESHOLDS = {
   MEDIUM: 60,
   LOW: 40,
 } as const;
+
+/**
+ * User behavior detection for adaptive widget triggering
+ */
+export interface UserBehavior {
+  /** User prefers using widgets vs typing directly */
+  prefersWidgets: boolean;
+  /** Completion rate of shown widgets (0-1) */
+  completionRate: number;
+  /** User interaction style: "guided" needs more widgets, "expert" fewer */
+  style: "guided" | "expert";
+}
+
+/**
+ * Critical widgets that should always be shown regardless of user behavior
+ * These collect essential information for flight search
+ */
+const CRITICAL_WIDGETS: WidgetType[] = [
+  "citySelector",
+  "dateRangePicker",
+  "datePicker",
+  "travelersSelector",
+];
 
 /**
  * Widget prerequisites - defines what's needed before showing each widget
@@ -143,15 +179,35 @@ const WIDGET_PREREQUISITES: Record<WidgetType, (flow: FlowState) => WidgetValida
 };
 
 /**
+ * Widget type to interaction type mapping
+ * Used to check if user already provided data for a widget type
+ */
+const WIDGET_TO_INTERACTION_MAP: Record<string, string[]> = {
+  travelersSelector: ["travelers_selected"],
+  travelersConfirmBeforeSearch: ["travelers_selected"],
+  dateRangePicker: ["date_range_selected"],
+  datePicker: ["date_selected"],
+  returnDatePicker: ["date_selected"],
+  citySelector: ["city_selected", "destination_selected"],
+  destinationSuggestions: ["destination_selected"],
+  tripTypeConfirm: ["trip_type_selected"],
+  airportConfirmation: ["airport_selected"],
+  preferenceStyle: ["style_configured"],
+  preferenceInterests: ["interests_selected"],
+  mustHaves: ["must_haves_configured"],
+  dietary: ["dietary_configured"],
+};
+
+/**
  * Unified Intent Router Hook
  */
 export function useUnifiedIntentRouter({
   memory,
+  widgetInteractions = [],
   onWidgetTriggered,
   onSearchTriggered,
   onDelegateChoice,
 }: UseUnifiedIntentRouterOptions): UseUnifiedIntentRouterReturn {
-  
   const lastIntentRef = useRef<IntentClassification | null>(null);
 
   /**
@@ -187,42 +243,149 @@ export function useUnifiedIntentRouter({
   }, [memory]);
 
   /**
+   * Detect user behavior based on widget interaction history
+   * This helps adapt the widget triggering strategy
+   */
+  const userBehavior = useMemo<UserBehavior>(() => {
+    // Count completed vs dismissed/ignored interactions
+    const completedTypes = [
+      "date_selected",
+      "date_range_selected",
+      "travelers_selected",
+      "trip_type_selected",
+      "city_selected",
+      "destination_selected",
+      "style_configured",
+      "interests_selected",
+    ];
+
+    const completed = widgetInteractions.filter((i) =>
+      completedTypes.includes(i.interactionType)
+    ).length;
+
+    // If no interactions yet, default to guided mode
+    if (widgetInteractions.length === 0) {
+      return {
+        prefersWidgets: true,
+        completionRate: 1,
+        style: "guided" as const,
+      };
+    }
+
+    // Calculate completion rate (completed / total relevant interactions)
+    const totalRelevant = widgetInteractions.length;
+    const completionRate = totalRelevant > 0 ? completed / totalRelevant : 1;
+
+    // Determine style based on completion rate
+    // High completion rate = user likes widgets (guided)
+    // Low completion rate = user prefers typing (expert)
+    const style = completionRate >= 0.5 ? "guided" : "expert";
+    const prefersWidgets = completionRate >= 0.5;
+
+    return {
+      prefersWidgets,
+      completionRate,
+      style: style as "guided" | "expert",
+    };
+  }, [widgetInteractions]);
+
+  /**
    * Validate if a widget can be shown
    */
-  const canShowWidget = useCallback((widgetType: WidgetType): WidgetValidation => {
-    const validator = WIDGET_PREREQUISITES[widgetType];
-    if (!validator) {
-      return { valid: true };
-    }
-    return validator(flowState);
-  }, [flowState]);
+  const canShowWidget = useCallback(
+    (widgetType: WidgetType): WidgetValidation => {
+      const validator = WIDGET_PREREQUISITES[widgetType];
+      if (!validator) {
+        return { valid: true };
+      }
+      return validator(flowState);
+    },
+    [flowState]
+  );
+
+  /**
+   * Check if user already provided data for this widget type via a previous widget interaction
+   * This prevents showing redundant widgets for already-provided information
+   */
+  const hasAlreadyProvided = useCallback(
+    (widgetType: WidgetType): boolean => {
+      const interactionTypes = WIDGET_TO_INTERACTION_MAP[widgetType];
+      if (!interactionTypes || interactionTypes.length === 0) {
+        return false;
+      }
+
+      // Check if any interaction matches the widget's expected types
+      return widgetInteractions.some((interaction) =>
+        interactionTypes.includes(interaction.interactionType)
+      );
+    },
+    [widgetInteractions]
+  );
+
+  /**
+   * Adaptive widget display based on user behavior
+   * Critical widgets are always shown, non-critical only for guided users
+   */
+  const shouldShowWidgetAdaptive = useCallback(
+    (widgetType: WidgetType): boolean => {
+      // Critical widgets are always shown
+      if (CRITICAL_WIDGETS.includes(widgetType)) {
+        return true;
+      }
+
+      // For expert users, skip non-critical widgets
+      if (userBehavior.style === "expert") {
+        console.log(
+          `[UnifiedIntentRouter] Skipping non-critical widget "${widgetType}" for expert user`
+        );
+        return false;
+      }
+
+      // Guided users get all widgets
+      return true;
+    },
+    [userBehavior.style]
+  );
 
   /**
    * Get the next required widget based on flow state
+   * Now checks hasAlreadyProvided to avoid redundant widgets
    */
   const getNextRequiredWidget = useCallback((): WidgetType | null => {
     // Priority order for collecting data
-    if (!flowState.hasDestinationCity) {
+    // Each check now also verifies the user hasn't already provided this via widget
+
+    if (!flowState.hasDestinationCity && !hasAlreadyProvided("citySelector")) {
       return "citySelector";
     }
+
     if (!flowState.hasDepartureDate) {
-      return flowState.tripType === "roundtrip" ? "dateRangePicker" : "datePicker";
+      const dateWidget = flowState.tripType === "roundtrip" ? "dateRangePicker" : "datePicker";
+      if (!hasAlreadyProvided(dateWidget)) {
+        return dateWidget;
+      }
     }
+
     if (flowState.tripType === "roundtrip" && !flowState.hasReturnDate) {
-      return "dateRangePicker";
+      if (!hasAlreadyProvided("dateRangePicker")) {
+        return "dateRangePicker";
+      }
     }
-    if (!flowState.hasTravelers) {
+
+    if (!flowState.hasTravelers && !hasAlreadyProvided("travelersSelector")) {
       return "travelersSelector";
     }
-    if (!flowState.hasTripType) {
+
+    if (!flowState.hasTripType && !hasAlreadyProvided("tripTypeConfirm")) {
       return "tripTypeConfirm";
     }
-    if (flowState.isReadyToSearch) {
+
+    if (flowState.isReadyToSearch && !hasAlreadyProvided("travelersConfirmBeforeSearch")) {
       return "travelersConfirmBeforeSearch";
     }
-    
+
     return null;
-  }, [flowState]);
+  }, [flowState, hasAlreadyProvided]);
 
   /**
    * Process a backend intent classification
@@ -341,8 +504,11 @@ export function useUnifiedIntentRouter({
   return {
     processIntent,
     canShowWidget,
+    hasAlreadyProvided,
+    shouldShowWidgetAdaptive,
     getNextRequiredWidget,
     flowState,
+    userBehavior,
     lastIntent: lastIntentRef.current,
   };
 }

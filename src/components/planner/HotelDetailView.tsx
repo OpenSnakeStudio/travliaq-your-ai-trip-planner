@@ -143,12 +143,14 @@ const RoomCard = ({
   room,
   nights,
   isExpanded,
-  onToggle
+  onToggle,
+  t
 }: {
   room: RoomOption;
   nights: number;
   isExpanded: boolean;
   onToggle: () => void;
+  t: (key: string) => string;
 }) => (
   <div className="rounded-xl border bg-card overflow-hidden">
     <button
@@ -161,7 +163,7 @@ const RoomCard = ({
         <div className="flex flex-wrap items-center gap-2 mt-1">
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Users className="h-3 w-3" />
-            {room.maxOccupancy} pers.
+            {room.maxOccupancy} {t("planner.hotels.persons")}
           </span>
           {room.bedType && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -172,7 +174,7 @@ const RoomCard = ({
           {room.cancellationFree && (
             <Badge className="bg-green-500/10 text-green-600 text-[10px] px-1.5 py-0 h-4 border-green-500/30">
               <Shield className="h-2.5 w-2.5 mr-0.5" />
-              Annulation gratuite
+              {t("planner.hotels.freeCancellation")}
             </Badge>
           )}
         </div>
@@ -180,7 +182,7 @@ const RoomCard = ({
       <div className="text-right shrink-0 ml-3">
         <div className="text-primary font-bold">
           {room.pricePerNight}€
-          <span className="text-xs font-normal text-muted-foreground">/nuit</span>
+          <span className="text-xs font-normal text-muted-foreground">{t("planner.hotels.perNightShort")}</span>
         </div>
         <div className="text-xs text-muted-foreground">
           {room.totalPrice || Math.round(room.pricePerNight * nights)}€ total
@@ -727,6 +729,7 @@ const HotelDetailView = ({
                       onToggle={() => setExpandedRoomId(
                         expandedRoomId === (room.id || String(index)) ? null : (room.id || String(index))
                       )}
+                      t={t}
                     />
                   ))}
                 </div>

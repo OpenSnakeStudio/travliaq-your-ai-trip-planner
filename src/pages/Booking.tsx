@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -54,6 +55,7 @@ const travelerSchema = z.object({
 });
 
 const Booking = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const code = searchParams.get("code");
@@ -156,8 +158,8 @@ const Booking = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-travliaq-deep-blue to-travliaq-deep-blue/80">
         <div className="text-center text-white">
-          <h1 className="text-2xl font-bold mb-4">Voyage introuvable</h1>
-          <Button onClick={() => navigate("/")}>Retour à l'accueil</Button>
+          <h1 className="text-2xl font-bold mb-4">{t("booking.notFound")}</h1>
+          <Button onClick={() => navigate("/")}>{t("common.backToHome")}</Button>
         </div>
       </div>
     );

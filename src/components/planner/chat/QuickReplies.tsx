@@ -3,10 +3,13 @@
  * Fully i18n-enabled
  */
 
+import { useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { eventBus, emitTabChange } from "@/lib/eventBus";
 import type { QuickReply, QuickReplyAction } from "./types";
+import type { WidgetInteraction } from "@/contexts/WidgetHistoryContext";
+import type { SessionEntities } from "./hooks/useChatStream";
 
 interface QuickRepliesProps {
   replies: QuickReply[];
@@ -125,7 +128,7 @@ export function useQuickReplyPresets() {
         id: "budget",
         label: t("planner.quick.howMuch"),
         icon: "💰",
-        action: { type: "fillInput", message: `Quel est le budget moyen pour un voyage à ${city}?` },
+        action: { type: "fillInput", message: t("planner.quickReplies.budgetQuestion", { city }) },
       },
       {
         id: "activities",
@@ -140,14 +143,14 @@ export function useQuickReplyPresets() {
         id: "cheapest",
         label: t("planner.quick.cheapestFlight"),
         icon: "💵",
-        action: { type: "fillInput", message: "Montre-moi le vol le moins cher" },
+        action: { type: "fillInput", message: t("planner.quickReplies.cheapestFlight") },
         variant: "primary",
       },
       {
         id: "fastest",
         label: t("planner.quick.fastestFlight"),
         icon: "⚡",
-        action: { type: "fillInput", message: "Montre-moi le vol le plus rapide" },
+        action: { type: "fillInput", message: t("planner.quickReplies.fastestFlight") },
       },
       {
         id: "hotels",
@@ -168,7 +171,7 @@ export function useQuickReplyPresets() {
         id: "flexible",
         label: t("planner.quick.flexible"),
         icon: "🔄",
-        action: { type: "fillInput", message: "Je suis flexible sur les dates, +/- quelques jours" },
+        action: { type: "fillInput", message: t("planner.quickReplies.flexibleDates") },
       },
     ],
 
@@ -184,13 +187,13 @@ export function useQuickReplyPresets() {
         id: "other-hotels",
         label: t("planner.quick.otherHotels"),
         icon: "🏨",
-        action: { type: "fillInput", message: "Montre-moi d'autres options d'hébergement" },
+        action: { type: "fillInput", message: t("planner.quickReplies.moreAccommodations") },
       },
       {
         id: "summary",
         label: t("planner.quick.summary"),
         icon: "📋",
-        action: { type: "fillInput", message: "Fais-moi un récapitulatif de mon voyage" },
+        action: { type: "fillInput", message: t("planner.quickReplies.tripSummary") },
       },
     ],
 
@@ -199,13 +202,13 @@ export function useQuickReplyPresets() {
         id: "help",
         label: t("planner.quick.help"),
         icon: "❓",
-        action: { type: "fillInput", message: "Comment puis-je planifier mon voyage?" },
+        action: { type: "fillInput", message: t("planner.quickReplies.howToPlan") },
       },
       {
         id: "inspire",
         label: t("planner.quick.inspireMe"),
         icon: "✨",
-        action: { type: "fillInput", message: "Suggère-moi une destination pour mes prochaines vacances" },
+        action: { type: "fillInput", message: t("planner.quickReplies.suggestDestination") },
       },
     ],
   };
@@ -311,3 +314,147 @@ export const QUICK_REPLY_PRESETS = {
     },
   ],
 } as const;
+
+/**
+ * Hook to generate dynamic quick replies based on widget interactions and session context
+ * Phase 3: Intelligent, context-aware quick replies
+ */
+export function useDynamicQuickReplies(
+  widgetInteractions: WidgetInteraction[],
+  sessionEntities?: SessionEntities,
+  flowState?: {
+    hasDestinationCity: boolean;
+    hasDepartureDate: boolean;
+    hasTravelers: boolean;
+    isReadyToSearch: boolean;
+  }
+) {
+  const { t } = useTranslation();
+
+  const generateContextualReplies = useCallback((): QuickReply[] => {
+    const replies: QuickReply[] = [];
+
+    // Get recent interaction types
+    const recentInteractions = widgetInteractions.slice(-5);
+    const recentTypes = new Set(recentInteractions.map((i) => i.interactionType));
+
+    // If user selected multiple destinations, offer comparison
+    const destinations = widgetInteractions
+      .filter((w) => w.interactionType === "destination_selected" || w.interactionType === "city_selected")
+      .map((w) => (w.data?.destinationName || w.data?.cityName) as string)
+      .filter(Boolean);
+
+    if (destinations.length > 1) {
+      replies.push({
+        id: "compare-destinations",
+        label: t("planner.quickReplies.compareDestinations", "Comparer ces destinations"),
+        icon: "⚖️",
+        action: {
+          type: "fillInput",
+          message: t("planner.quickReplies.compareMessage", "Peux-tu comparer ces destinations?"),
+        },
+      });
+    }
+
+    // If user completed dates but not budget, suggest budget
+    const hasCompletedDates = recentTypes.has("date_range_selected") || recentTypes.has("date_selected");
+    const hasMentionedBudget = sessionEntities?.budgets && sessionEntities.budgets.length > 0;
+
+    if (hasCompletedDates && !hasMentionedBudget) {
+      replies.push({
+        id: "define-budget",
+        label: t("planner.quickReplies.defineBudget", "Définir mon budget"),
+        icon: "💰",
+        action: {
+          type: "fillInput",
+          message: t("planner.quickReplies.budgetMessage", "Je voudrais définir un budget"),
+        },
+      });
+    }
+
+    // If user completed travelers, suggest activities
+    if (recentTypes.has("travelers_selected")) {
+      replies.push({
+        id: "activities-suggestion",
+        label: t("planner.quickReplies.whatToDo", "Que faire sur place?"),
+        icon: "🎭",
+        action: {
+          type: "navigate",
+          tab: "activities",
+        },
+        variant: "outline",
+      });
+    }
+
+    // If user configured style/interests, offer destination suggestions
+    if (recentTypes.has("style_configured") || recentTypes.has("interests_selected")) {
+      replies.push({
+        id: "suggest-destinations",
+        label: t("planner.quickReplies.suggestForMe", "Suggère-moi des destinations"),
+        icon: "✨",
+        action: {
+          type: "fillInput",
+          message: t("planner.quickReplies.suggestMessage", "Donne-moi 3 recommandations selon mon profil"),
+        },
+        variant: "primary",
+      });
+    }
+
+    // If ready to search, always show search button
+    if (flowState?.isReadyToSearch) {
+      replies.push({
+        id: "launch-search",
+        label: t("planner.quickReplies.launchSearch", "Lancer la recherche"),
+        icon: "🚀",
+        action: {
+          type: "fillInput",
+          message: t("planner.quickReplies.searchFlights", "Recherche les vols maintenant"),
+        },
+        variant: "primary",
+      });
+    }
+
+    // If nothing specific, return general helpful suggestions
+    if (replies.length === 0) {
+      // Based on what's missing in flow state
+      if (flowState && !flowState.hasDestinationCity) {
+        replies.push({
+          id: "inspire-me",
+          label: t("planner.quickReplies.inspireMe", "Inspirez-moi"),
+          icon: "✨",
+          action: {
+            type: "fillInput",
+            message: t("planner.quickReplies.inspireMessage", "Je ne sais pas où partir, inspirez-moi!"),
+          },
+        });
+      } else if (flowState && !flowState.hasDepartureDate) {
+        replies.push({
+          id: "when-to-go",
+          label: t("planner.quickReplies.whenToGo", "Quand partir?"),
+          icon: "📅",
+          action: {
+            type: "triggerWidget",
+            widget: "dateRangePicker",
+          },
+        });
+      } else if (flowState && !flowState.hasTravelers) {
+        replies.push({
+          id: "how-many",
+          label: t("planner.quickReplies.howMany", "Nombre de voyageurs"),
+          icon: "👥",
+          action: {
+            type: "triggerWidget",
+            widget: "travelersSelector",
+          },
+        });
+      }
+    }
+
+    // Limit to 4 max
+    return replies.slice(0, 4);
+  }, [widgetInteractions, sessionEntities, flowState, t]);
+
+  return {
+    generateContextualReplies,
+  };
+}

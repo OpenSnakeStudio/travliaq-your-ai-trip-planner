@@ -1,0 +1,236 @@
+/**
+ * useSessionContext - Hook for building enriched session context for LLM
+ *
+ * Provides:
+ * - Conversation summary from recent messages
+ * - Cumulative session entities (destinations, dates, budgets)
+ * - Widget decisions history
+ */
+
+import { useMemo, useCallback } from "react";
+import type { ChatMessage } from "../types";
+import type { WidgetInteraction } from "@/contexts/WidgetHistoryContext";
+import type { SessionEntities, WidgetDecision } from "./useChatStream";
+
+interface UseSessionContextOptions {
+  messages: ChatMessage[];
+  widgetInteractions: WidgetInteraction[];
+}
+
+interface UseSessionContextReturn {
+  /** Build conversation summary from last N messages */
+  buildConversationSummary: (maxMessages?: number) => string;
+  /** Extract session entities from messages and interactions */
+  sessionEntities: SessionEntities;
+  /** Get widget decisions from interactions */
+  widgetDecisions: WidgetDecision[];
+  /** Get full enriched context string */
+  getEnrichedContext: () => string;
+}
+
+/**
+ * Regex patterns for entity extraction
+ */
+const ENTITY_PATTERNS = {
+  // Destinations: cities, countries
+  destinations: [
+    /(?:aller|partir|voyager|visiter)\s+(?:à|en|au|aux)?\s+([A-ZÀ-Ü][a-zà-ü]+(?:\s+[A-ZÀ-Ü][a-zà-ü]+)*)/gi,
+    /([A-ZÀ-Ü][a-zà-ü]+(?:\s+[A-ZÀ-Ü][a-zà-ü]+)*)\s+(?:comme destination|m'intéresse)/gi,
+  ],
+  // Dates: months, specific dates
+  dates: [
+    /(?:en|au mois de|pour)\s+(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/gi,
+    /(?:du|le)?\s*(\d{1,2})\s*(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/gi,
+    /(printemps|été|automne|hiver)/gi,
+  ],
+  // Budgets: amounts, ranges
+  budgets: [
+    /(\d+(?:\s*[–-]\s*\d+)?)\s*(?:€|euros?|EUR)/gi,
+    /budget\s+(?:de\s+)?(\d+(?:\s*[–-]\s*\d+)?)/gi,
+    /(petit budget|budget moyen|budget élevé|luxe|économique)/gi,
+  ],
+  // Constraints: requirements
+  constraints: [
+    /(?:je veux|il me faut|j'ai besoin de|obligatoire|impératif)\s*:?\s*([^.!?]+)/gi,
+    /(?:accessibilité|PMR|animaux|enfants|wifi)/gi,
+  ],
+};
+
+/**
+ * Extract unique matches from text using patterns
+ */
+function extractEntities(text: string, patterns: RegExp[]): string[] {
+  const matches = new Set<string>();
+  for (const pattern of patterns) {
+    // Reset regex state
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      // Get the first capture group or full match
+      const value = match[1] || match[0];
+      if (value && value.trim().length > 2) {
+        matches.add(value.trim());
+      }
+    }
+  }
+  return Array.from(matches);
+}
+
+export function useSessionContext({
+  messages,
+  widgetInteractions,
+}: UseSessionContextOptions): UseSessionContextReturn {
+  /**
+   * Build conversation summary from last N messages
+   */
+  const buildConversationSummary = useCallback(
+    (maxMessages = 10): string => {
+      const recentMessages = messages
+        .filter((m) => !m.isTyping && m.text && m.text.trim().length > 0)
+        .slice(-maxMessages);
+
+      if (recentMessages.length === 0) {
+        return "";
+      }
+
+      const summaryParts: string[] = [];
+
+      // Group by user/assistant for better readability
+      for (const msg of recentMessages) {
+        const prefix = msg.role === "user" ? "Utilisateur" : "Assistant";
+        // Truncate long messages
+        const text =
+          msg.text.length > 150
+            ? msg.text.slice(0, 147) + "..."
+            : msg.text;
+        summaryParts.push(`${prefix}: ${text}`);
+      }
+
+      return `[RÉSUMÉ CONVERSATION]\n${summaryParts.join("\n")}`;
+    },
+    [messages]
+  );
+
+  /**
+   * Extract session entities from all messages
+   */
+  const sessionEntities = useMemo<SessionEntities>(() => {
+    // Combine all user message text
+    const userText = messages
+      .filter((m) => m.role === "user" && m.text)
+      .map((m) => m.text)
+      .join(" ");
+
+    // Extract entities
+    const destinations = extractEntities(userText, ENTITY_PATTERNS.destinations);
+    const dates = extractEntities(userText, ENTITY_PATTERNS.dates);
+    const budgets = extractEntities(userText, ENTITY_PATTERNS.budgets);
+    const constraints = extractEntities(userText, ENTITY_PATTERNS.constraints);
+
+    // Also extract from widget interactions
+    for (const interaction of widgetInteractions) {
+      if (interaction.interactionType === "destination_selected") {
+        const dest = interaction.data?.destinationName as string;
+        if (dest && !destinations.includes(dest)) {
+          destinations.push(dest);
+        }
+      }
+      if (interaction.interactionType === "city_selected") {
+        const city = interaction.data?.cityName as string;
+        if (city && !destinations.includes(city)) {
+          destinations.push(city);
+        }
+      }
+      if (
+        interaction.interactionType === "date_selected" ||
+        interaction.interactionType === "date_range_selected"
+      ) {
+        const dateStr = interaction.summary;
+        if (dateStr && !dates.includes(dateStr)) {
+          dates.push(dateStr);
+        }
+      }
+    }
+
+    return {
+      destinations: destinations.slice(0, 10), // Limit to 10
+      dates: dates.slice(0, 5),
+      budgets: budgets.slice(0, 3),
+      constraints: constraints.slice(0, 5),
+    };
+  }, [messages, widgetInteractions]);
+
+  /**
+   * Convert widget interactions to decisions
+   */
+  const widgetDecisions = useMemo<WidgetDecision[]>(() => {
+    return widgetInteractions
+      .filter((i) =>
+        [
+          "date_selected",
+          "date_range_selected",
+          "travelers_selected",
+          "trip_type_selected",
+          "city_selected",
+          "destination_selected",
+          "style_configured",
+          "interests_selected",
+        ].includes(i.interactionType)
+      )
+      .map((i) => ({
+        widgetType: i.widgetType,
+        chosen: i.summary,
+        timestamp: i.timestamp,
+      }))
+      .slice(-10); // Last 10 decisions
+  }, [widgetInteractions]);
+
+  /**
+   * Get full enriched context string
+   */
+  const getEnrichedContext = useCallback((): string => {
+    const parts: string[] = [];
+
+    // Conversation summary (last 5 messages for brevity)
+    const summary = buildConversationSummary(5);
+    if (summary) {
+      parts.push(summary);
+    }
+
+    // Session entities
+    const { destinations, dates, budgets, constraints } = sessionEntities;
+    if (destinations.length > 0 || dates.length > 0 || budgets.length > 0) {
+      const entityLines: string[] = [];
+      if (destinations.length > 0) {
+        entityLines.push(`- Destinations mentionnées: ${destinations.join(", ")}`);
+      }
+      if (dates.length > 0) {
+        entityLines.push(`- Dates mentionnées: ${dates.join(", ")}`);
+      }
+      if (budgets.length > 0) {
+        entityLines.push(`- Budgets mentionnés: ${budgets.join(", ")}`);
+      }
+      if (constraints.length > 0) {
+        entityLines.push(`- Contraintes: ${constraints.join(", ")}`);
+      }
+      parts.push(`[ENTITÉS SESSION]\n${entityLines.join("\n")}`);
+    }
+
+    // Widget decisions
+    if (widgetDecisions.length > 0) {
+      const decisionLines = widgetDecisions.map((d) => `- ${d.chosen}`);
+      parts.push(`[CHOIX VIA WIDGETS]\n${decisionLines.join("\n")}`);
+    }
+
+    return parts.join("\n\n");
+  }, [buildConversationSummary, sessionEntities, widgetDecisions]);
+
+  return {
+    buildConversationSummary,
+    sessionEntities,
+    widgetDecisions,
+    getEnrichedContext,
+  };
+}
+
+export default useSessionContext;

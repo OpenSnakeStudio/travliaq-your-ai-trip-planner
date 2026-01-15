@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,14 +9,8 @@ import { toast } from 'sonner';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 
-const passwordSchema = z
-  .string()
-  .min(8, 'Le mot de passe doit contenir au moins 8 caractères')
-  .regex(/[a-z]/, 'Le mot de passe doit contenir au moins une minuscule')
-  .regex(/[A-Z]/, 'Le mot de passe doit contenir au moins une majuscule')
-  .regex(/[0-9]/, 'Le mot de passe doit contenir au moins un chiffre');
-
 const ResetPassword = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
@@ -24,21 +19,29 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
 
+  // Create password schema inside component to use translations
+  const createPasswordSchema = () => z
+    .string()
+    .min(8, t('auth.validation.minLength'))
+    .regex(/[a-z]/, t('auth.validation.lowercase'))
+    .regex(/[A-Z]/, t('auth.validation.uppercase'))
+    .regex(/[0-9]/, t('auth.validation.digit'));
+
   useEffect(() => {
-    // Vérifier si nous avons un token de récupération
+    // Check if we have a recovery token
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const accessToken = hashParams.get('access_token');
-    
+
     if (!accessToken) {
-      toast.error('Lien de réinitialisation invalide ou expiré');
+      toast.error(t('auth.resetPassword.error.invalidLink'));
       navigate('/auth');
     }
-  }, [navigate]);
+  }, [navigate, t]);
 
   const validatePassword = (pwd: string) => {
     const errors: string[] = [];
     try {
-      passwordSchema.parse(pwd);
+      createPasswordSchema().parse(pwd);
       setPasswordErrors([]);
       return true;
     } catch (error) {
@@ -53,19 +56,19 @@ const ResetPassword = () => {
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!password || !confirmPassword) {
-      toast.error('Veuillez remplir tous les champs');
+      toast.error(t('auth.resetPassword.error.emptyFields'));
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error('Les mots de passe ne correspondent pas');
+      toast.error(t('auth.resetPassword.error.mismatch'));
       return;
     }
 
     if (!validatePassword(password)) {
-      toast.error('Le mot de passe ne respecte pas les critères de sécurité');
+      toast.error(t('auth.resetPassword.error.weak'));
       return;
     }
 
@@ -74,13 +77,13 @@ const ResetPassword = () => {
       const { error } = await supabase.auth.updateUser({
         password: password,
       });
-      
+
       if (error) throw error;
-      
-      toast.success('Mot de passe réinitialisé avec succès !');
+
+      toast.success(t('auth.resetPassword.success'));
       navigate('/auth');
     } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la réinitialisation du mot de passe');
+      toast.error(error.message || t('auth.resetPassword.error.generic'));
     } finally {
       setLoading(false);
     }
@@ -92,17 +95,17 @@ const ResetPassword = () => {
         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
-              Nouveau mot de passe
+              {t('auth.resetPassword.title')}
             </h1>
             <p className="text-white/80">
-              Choisissez un nouveau mot de passe sécurisé
+              {t('auth.resetPassword.subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleResetPassword} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password" className="text-white">
-                Nouveau mot de passe
+                {t('auth.resetPassword.passwordLabel')}
               </Label>
               <div className="relative">
                 <Input
@@ -135,13 +138,13 @@ const ResetPassword = () => {
               )}
               
               {password && passwordErrors.length === 0 && (
-                <p className="text-xs text-green-300 mt-2">✓ Mot de passe sécurisé</p>
+                <p className="text-xs text-green-300 mt-2">✓ {t('auth.validation.passwordSecure')}</p>
               )}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-white">
-                Confirmer le mot de passe
+                {t('auth.resetPassword.confirmLabel')}
               </Label>
               <div className="relative">
                 <Input
@@ -163,11 +166,11 @@ const ResetPassword = () => {
               </div>
               
               {confirmPassword && password !== confirmPassword && (
-                <p className="text-xs text-red-300 mt-2">• Les mots de passe ne correspondent pas</p>
+                <p className="text-xs text-red-300 mt-2">• {t('auth.resetPassword.error.mismatch')}</p>
               )}
-              
+
               {confirmPassword && password === confirmPassword && (
-                <p className="text-xs text-green-300 mt-2">✓ Les mots de passe correspondent</p>
+                <p className="text-xs text-green-300 mt-2">✓ {t('auth.validation.passwordsMatch')}</p>
               )}
             </div>
 
@@ -179,7 +182,7 @@ const ResetPassword = () => {
               {loading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Réinitialiser le mot de passe
+              {t('auth.resetPassword.submitButton')}
             </Button>
           </form>
         </div>

@@ -1,0 +1,21 @@
+{
+  "common.ok": "OK",
+  "common.cancel": "Cancel",
+  "common.save": "Save",
+  "common.edit": "Edit",
+  "common.delete": "Delete",
+  "common.search": "Search",
+  "common.loading": "Loading...",
+  "common.error": "Error",
+  "common.success": "Success",
+  "common.back": "Back",
+  "common.backToTop": "Back to top",
+  "common.backToHome": "Back to home",
+  "common.notFound": "Not found",
+  "common.email.placeholder": "your@email.com",
+  "common.pagination.previous": "Previous page",
+  "common.pagination.next": "Next page",
+  "common.pagination.aria": "pagination",
+  "common.sidebar.toggle": "Toggle sidebar",
+  "common.breadcrumb.aria": "breadcrumb"
+}

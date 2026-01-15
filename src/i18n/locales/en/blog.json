@@ -1,0 +1,12 @@
+{
+  "blog.hero.discoveries": "Discoveries & Adventures",
+  "blog.hero.stories": "World Stories",
+  "blog.hero.subtitle": "Immersive stories, inspiring guides and destination secrets for curious travelers",
+  "blog.search.placeholder": "Search for an article...",
+  "blog.empty.searchResults": "No articles found for your search",
+  "blog.empty.noArticles": "No articles published yet",
+  "blog.card.readMore": "Read article",
+  "blog.backToBlog": "Back to blog",
+  "blog.readingTime": "{{time}} min read",
+  "blog.views": "{{count}} views"
+}

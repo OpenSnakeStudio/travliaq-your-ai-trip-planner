@@ -19,10 +19,12 @@ import {
 } from "@/contexts/WidgetHistoryContext";
 
 export function useWidgetTracking() {
-  const { 
-    recordInteraction, 
-    registerWidget, 
+  const {
+    interactions, // Expose for hasAlreadyProvided check
+    recordInteraction,
+    registerWidget,
     completeWidget,
+    dismissWidget, // Expose for cleanup of ignored widgets
     getContextForLLM,
     getActiveWidgetsContext, // Expose for LLM "choose for me" functionality
     getRecentInteractionsSummary,
@@ -166,7 +168,10 @@ export function useWidgetTracking() {
     // Raw functions for custom tracking
     registerWidget,
     completeWidget,
+    dismissWidget, // For cleanup of ignored widgets
     recordInteraction,
+    // Interaction history for hasAlreadyProvided check
+    interactions,
     // Active widgets for executor
     activeWidgets,
   };

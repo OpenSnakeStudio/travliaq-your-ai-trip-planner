@@ -5,6 +5,7 @@ import "@/styles/mapbox-overrides.css";
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from "react-i18next";
 
 interface MapViewProps {
   days: Array<{
@@ -27,6 +28,7 @@ interface MapViewProps {
 }
 
 const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps) => {
+  const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<{ [key: number]: mapboxgl.Marker }>({});
@@ -291,7 +293,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
             size="icon"
             className="absolute top-4 right-4 z-10 bg-background/90 backdrop-blur-sm hover:bg-background"
             onClick={toggleFullscreen}
-            title="Agrandir"
+            title={t("travel.map.expand")}
           >
             <Maximize2 className="h-4 w-4" />
           </Button>
@@ -299,7 +301,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
             <p className="font-montserrat text-white text-xs font-semibold truncate">
               {days.find((d) => d.id === activeDay)?.title || ""}
             </p>
-            <p className="font-inter text-travliaq-turquoise/80 text-[10px]">Étape {activeDay}</p>
+            <p className="font-inter text-travliaq-turquoise/80 text-[10px]">{t("travel.map.step", { day: activeDay })}</p>
           </div>
         </>
       )}
@@ -312,7 +314,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
             size="icon"
             className="fixed top-3 right-3 z-[110] bg-background/90 backdrop-blur-sm hover:bg-background shadow-xl"
             onClick={toggleFullscreen}
-            title="Réduire"
+            title={t("travel.map.reduce")}
           >
             <Minimize2 className="h-4 w-4" />
           </Button>
@@ -370,7 +372,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">✨</span>
                     <h4 className="font-montserrat text-white font-semibold text-lg">
-                      Pourquoi cette étape
+                      {t("travel.day.whyThisStep")}
                     </h4>
                   </div>
                   <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
@@ -384,7 +386,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">💡</span>
                     <h4 className="font-montserrat text-white font-semibold text-lg">
-                      Tips IA
+                      {t("travel.day.tipsAI")}
                     </h4>
                   </div>
                   <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
@@ -398,7 +400,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">🚇</span>
                     <h4 className="font-montserrat text-white font-semibold text-lg">
-                      Transfert
+                      {t("travel.day.transfer")}
                     </h4>
                   </div>
                   <p className="font-inter text-gray-300 text-base leading-relaxed pl-7">
@@ -409,7 +411,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
 
               <div className="space-y-3 border-t border-travliaq-turquoise/20 pt-5 mt-5">
                 <h4 className="font-montserrat text-white font-semibold text-base">
-                  Toutes les étapes
+                  {t("travel.map.allSteps")}
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   {days
@@ -428,7 +430,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                           {day.title}
                         </p>
                         <p className="font-inter text-travliaq-turquoise/70 text-xs">
-                          Jour {day.id}
+                          {t("travel.map.day", { id: day.id })}
                         </p>
                       </button>
                     ))}
@@ -444,13 +446,13 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
         <>
           <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
           <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between p-4 border-b border-travliaq-turquoise/20 bg-gradient-to-r from-travliaq-deep-blue/90 to-travliaq-deep-blue/80">
-            <h2 className="font-montserrat text-white text-lg font-bold">Étape {activeDay}</h2>
+            <h2 className="font-montserrat text-white text-lg font-bold">{t("travel.map.step", { day: activeDay })}</h2>
             <Button
               variant="outline"
               size="icon"
               className="bg-background/90 backdrop-blur-sm hover:bg-background"
               onClick={toggleFullscreen}
-              title="Réduire"
+              title={t("travel.map.reduce")}
             >
               <Minimize2 className="h-4 w-4" />
             </Button>
@@ -506,7 +508,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                   <div className="flex items-center gap-2">
                     <span className="text-xl">✨</span>
                     <h4 className="font-montserrat text-white font-semibold">
-                      Pourquoi cette étape
+                      {t("travel.day.whyThisStep")}
                     </h4>
                   </div>
                   <p className="font-inter text-gray-300 text-sm leading-relaxed pl-7">
@@ -520,7 +522,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                   <div className="flex items-center gap-2">
                     <span className="text-xl">💡</span>
                     <h4 className="font-montserrat text-white font-semibold">
-                      Tips IA
+                      {t("travel.day.tipsAI")}
                     </h4>
                   </div>
                   <p className="font-inter text-gray-300 text-sm leading-relaxed pl-7">
@@ -534,7 +536,7 @@ const MapView = ({ days, activeDay, onScrollToDay, activeDayData }: MapViewProps
                   <div className="flex items-center gap-2">
                     <span className="text-xl">🚇</span>
                     <h4 className="font-montserrat text-white font-semibold">
-                      Transfert
+                      {t("travel.day.transfer")}
                     </h4>
                   </div>
                   <p className="font-inter text-gray-300 text-sm leading-relaxed pl-7">

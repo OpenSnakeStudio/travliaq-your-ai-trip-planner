@@ -332,7 +332,7 @@ ${recentMessages}`;
               className="h-7 px-2 text-xs"
               onClick={handleAddTag}
             >
-              OK
+              {t("common.ok")}
             </Button>
             <Button
               size="sm"

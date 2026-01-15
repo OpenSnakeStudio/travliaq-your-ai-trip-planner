@@ -7,6 +7,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { useTranslation } from "react-i18next";
 
 interface DaySectionProps {
   day: {
@@ -34,6 +35,7 @@ interface DaySectionProps {
 }
 
 const DaySection = ({ day, index, isActive }: DaySectionProps) => {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [parallaxOffset, setParallaxOffset] = useState(0);
   const [isInView, setIsInView] = useState(false);
@@ -111,7 +113,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
                     </div>
                   ) : (
                     <div className="inline-block bg-travliaq-turquoise text-white px-2 py-0.5 rounded-full font-montserrat font-semibold text-[10px]">
-                      Étape {day.id}
+                      {t("travel.day.step", { id: day.id })}
                     </div>
                   )}
                   {day.step_type && (
@@ -129,7 +131,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
                   {day.price !== undefined && (
                     <div className="flex items-center gap-0.5 bg-travliaq-golden-sand/80 backdrop-blur-md rounded px-1.5 py-0.5 text-white">
                       <Euro className="h-2.5 w-2.5" />
-                      <span className="font-inter text-[10px] font-semibold">{day.price > 0 ? `${day.price}€` : 'Gratuit'}</span>
+                      <span className="font-inter text-[10px] font-semibold">{day.price > 0 ? `${day.price}€` : t("travel.day.free")}</span>
                     </div>
                   )}
                 </div>
@@ -198,7 +200,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
               <div className="flex gap-2">
                 <MapPin className="h-3.5 w-3.5 text-travliaq-turquoise flex-shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">Pourquoi cette étape</h3>
+                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">{t("travel.day.whyThisStep")}</h3>
                   <p className="font-inter text-white/90 text-xs leading-relaxed">{day.why}</p>
                 </div>
               </div>
@@ -209,7 +211,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
               <div className="flex gap-2">
                 <Lightbulb className="h-3.5 w-3.5 text-travliaq-golden-sand flex-shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">Tips IA</h3>
+                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">{t("travel.day.tipsAI")}</h3>
                   <p className="font-inter text-white/90 text-xs leading-relaxed">{day.tips}</p>
                 </div>
               </div>
@@ -220,7 +222,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
               <div className="flex gap-2">
                 <Car className="h-3.5 w-3.5 text-travliaq-turquoise flex-shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">Transfert</h3>
+                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">{t("travel.day.transfer")}</h3>
                   <p className="font-inter text-white/90 text-xs leading-relaxed">{day.transfer}</p>
                 </div>
               </div>
@@ -231,7 +233,7 @@ const DaySection = ({ day, index, isActive }: DaySectionProps) => {
               <div className="flex gap-2">
                 <Utensils className="h-3.5 w-3.5 text-travliaq-golden-sand flex-shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">Suggestion</h3>
+                  <h3 className="font-montserrat font-semibold text-white text-xs mb-0.5">{t("travel.day.suggestion")}</h3>
                   <p className="font-inter text-white/90 text-xs leading-relaxed">{day.suggestion}</p>
                 </div>
               </div>

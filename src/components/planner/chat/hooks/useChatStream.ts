@@ -87,6 +87,25 @@ export interface NegativePreference {
 }
 
 /**
+ * Session entities - cumulative mentions in this session
+ */
+export interface SessionEntities {
+  destinations: string[];
+  dates: string[];
+  budgets: string[];
+  constraints: string[];
+}
+
+/**
+ * Widget decision record for LLM context
+ */
+export interface WidgetDecision {
+  widgetType: string;
+  chosen: string;
+  timestamp: number;
+}
+
+/**
  * Memory context for building API requests
  */
 export interface MemoryContext {
@@ -94,14 +113,20 @@ export interface MemoryContext {
   activityContext: string;
   preferenceContext: string;
   missingFields: MissingField[];
-  // NEW: Widget interaction history for better LLM context
+  // Widget interaction history for better LLM context
   widgetHistory?: string;
-  // NEW: Current travel phase for adaptive behavior
+  // Current travel phase for adaptive behavior
   currentPhase?: TravelPhase;
-  // NEW: Negative preferences to avoid
+  // Negative preferences to avoid
   negativePreferences?: NegativePreference[];
-  // NEW: Active widgets context for "choose for me" functionality
+  // Active widgets context for "choose for me" functionality
   activeWidgetsContext?: string;
+  // NEW Phase 3: Conversation summary for context continuity
+  conversationSummary?: string;
+  // NEW Phase 3: Cumulative session entities
+  sessionEntities?: SessionEntities;
+  // NEW Phase 3: Widget decisions history
+  widgetDecisions?: WidgetDecision[];
 }
 
 /**
@@ -215,7 +240,17 @@ function sleep(ms: number): Promise<void> {
  * Build the context message for the API
  */
 function buildContextMessage(memoryContext: MemoryContext): string {
-  const { flightSummary, activityContext, preferenceContext, missingFields, widgetHistory, activeWidgetsContext } = memoryContext;
+  const {
+    flightSummary,
+    activityContext,
+    preferenceContext,
+    missingFields,
+    widgetHistory,
+    activeWidgetsContext,
+    conversationSummary,
+    sessionEntities,
+    widgetDecisions,
+  } = memoryContext;
 
   if (!flightSummary && !activeWidgetsContext) return widgetHistory || "";
 
@@ -224,20 +259,52 @@ function buildContextMessage(memoryContext: MemoryContext): string {
       ? missingFields.map(getMissingFieldLabel).join(", ")
       : "Aucun - prêt à chercher";
 
-  let context = flightSummary 
+  let context = flightSummary
     ? `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`
     : "";
-  
+
+  // Add conversation summary (Phase 3)
+  if (conversationSummary) {
+    context += `\n${conversationSummary}`;
+  }
+
+  // Add session entities (Phase 3)
+  if (sessionEntities) {
+    const { destinations, dates, budgets, constraints } = sessionEntities;
+    const entityParts: string[] = [];
+    if (destinations.length > 0) {
+      entityParts.push(`Destinations mentionnées: ${destinations.join(", ")}`);
+    }
+    if (dates.length > 0) {
+      entityParts.push(`Dates: ${dates.join(", ")}`);
+    }
+    if (budgets.length > 0) {
+      entityParts.push(`Budgets: ${budgets.join(", ")}`);
+    }
+    if (constraints.length > 0) {
+      entityParts.push(`Contraintes: ${constraints.join(", ")}`);
+    }
+    if (entityParts.length > 0) {
+      context += `\n[ENTITÉS SESSION] ${entityParts.join(" | ")}`;
+    }
+  }
+
+  // Add widget decisions (Phase 3)
+  if (widgetDecisions && widgetDecisions.length > 0) {
+    const decisionStr = widgetDecisions.map((d) => d.chosen).join(" → ");
+    context += `\n[CHOIX VIA WIDGETS] ${decisionStr}`;
+  }
+
   // Add widget history if available
   if (widgetHistory) {
     context += `\n${widgetHistory}`;
   }
-  
+
   // Add active widgets context for "choose for me" functionality
   if (activeWidgetsContext) {
     context += `\n${activeWidgetsContext}`;
   }
-  
+
   return context;
 }
 

@@ -1,0 +1,19 @@
+{
+  "admin.blog.title": "Administration du Blog",
+  "admin.blog.newArticle": "Nouvel article",
+  "admin.blog.editArticle": "Modifier l'article",
+  "admin.blog.tabs.edit": "Édition",
+  "admin.blog.tabs.preview": "Aperçu",
+  "admin.blog.fields.title": "Titre de l'article",
+  "admin.blog.fields.slug": "URL de l'article",
+  "admin.blog.fields.excerpt": "Résumé court de l'article",
+  "admin.blog.fields.coverImage": "Image de couverture",
+  "admin.blog.fields.content": "Contenu",
+  "admin.blog.placeholders.title": "Titre de l'article",
+  "admin.blog.placeholders.slug": "url-de-larticle",
+  "admin.blog.placeholders.excerpt": "Résumé court de l'article",
+  "admin.blog.placeholders.coverImage": "https://exemple.com/image.jpg",
+  "admin.blog.placeholders.content": "Écrivez votre article en Markdown...\n\n# Titre principal\n## Sous-titre...",
+  "admin.blog.empty": "Aucun article pour le moment",
+  "admin.blog.backToHome": "Retour à l'accueil"
+}

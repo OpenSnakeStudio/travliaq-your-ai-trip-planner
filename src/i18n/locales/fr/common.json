@@ -1,0 +1,21 @@
+{
+  "common.ok": "OK",
+  "common.cancel": "Annuler",
+  "common.save": "Enregistrer",
+  "common.edit": "Modifier",
+  "common.delete": "Supprimer",
+  "common.search": "Rechercher",
+  "common.loading": "Chargement...",
+  "common.error": "Erreur",
+  "common.success": "Succès",
+  "common.back": "Retour",
+  "common.backToTop": "Retour en haut",
+  "common.backToHome": "Retour à l'accueil",
+  "common.notFound": "Introuvable",
+  "common.email.placeholder": "votre@email.com",
+  "common.pagination.previous": "Page précédente",
+  "common.pagination.next": "Page suivante",
+  "common.pagination.aria": "pagination",
+  "common.sidebar.toggle": "Basculer la barre latérale",
+  "common.breadcrumb.aria": "fil d'Ariane"
+}

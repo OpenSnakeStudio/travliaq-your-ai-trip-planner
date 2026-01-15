@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +41,7 @@ type BlogPost = {
 };
 
 const AdminBlog = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -204,7 +206,7 @@ const AdminBlog = () => {
         <Card className="max-w-md w-full p-8 text-center space-y-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-travliaq-deep-blue">
-              Administration du Blog
+              {t("admin.blog.title")}
             </h1>
             <p className="text-muted-foreground">
               Connectez-vous pour accéder au panneau d'administration
@@ -315,22 +317,22 @@ const AdminBlog = () => {
           <div className="mb-6 flex items-center justify-between">
             <Button variant="outline" onClick={handleCancel}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour
+              {t("common.back")}
             </Button>
             <h1 className="text-3xl font-bold text-travliaq-deep-blue">
-              {currentPost.id ? "Modifier l'article" : "Nouvel article"}
+              {currentPost.id ? t("admin.blog.editArticle") : t("admin.blog.newArticle")}
             </h1>
             <div className="w-24" />
           </div>
 
           <Card className="p-6 space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="title">Titre</Label>
+              <Label htmlFor="title">{t("admin.blog.fields.title")}</Label>
               <Input
                 id="title"
                 value={currentPost.title || ""}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="Titre de l'article"
+                placeholder={t("admin.blog.placeholders.title")}
               />
             </div>
 
@@ -375,11 +377,11 @@ const AdminBlog = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="content">Contenu (Markdown)</Label>
+              <Label htmlFor="content">{t("admin.blog.fields.content")}</Label>
               <Tabs defaultValue="edit" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="edit">Édition</TabsTrigger>
-                  <TabsTrigger value="preview">Aperçu</TabsTrigger>
+                  <TabsTrigger value="edit">{t("admin.blog.tabs.edit")}</TabsTrigger>
+                  <TabsTrigger value="preview">{t("admin.blog.tabs.preview")}</TabsTrigger>
                 </TabsList>
                 <TabsContent value="edit">
                   <Textarea
@@ -434,7 +436,7 @@ const AdminBlog = () => {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-travliaq-deep-blue mb-2">
-              Administration du Blog
+              {t("admin.blog.title")}
             </h1>
             <p className="text-muted-foreground">
               Gérez vos articles de blog
@@ -442,7 +444,7 @@ const AdminBlog = () => {
           </div>
           <Button onClick={handleNew} variant="hero">
             <Plus className="mr-2 h-4 w-4" />
-            Nouvel article
+            {t("admin.blog.newArticle")}
           </Button>
         </div>
 
@@ -450,11 +452,11 @@ const AdminBlog = () => {
           {posts.length === 0 ? (
             <Card className="p-12 text-center">
               <p className="text-muted-foreground mb-4">
-                Aucun article pour le moment
+                {t("admin.blog.empty")}
               </p>
               <Button onClick={handleNew}>
                 <Plus className="mr-2 h-4 w-4" />
-                Créer le premier article
+                {t("admin.blog.newArticle")}
               </Button>
             </Card>
           ) : (
