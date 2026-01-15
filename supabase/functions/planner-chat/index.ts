@@ -262,6 +262,47 @@ RÈGLES IMPORTANTES :
   }
 };
 
+// Tool definition for triggering flight search
+const flightSearchTriggerTool = {
+  type: "function",
+  function: {
+    name: "trigger_flight_search",
+    description: `À utiliser quand l'utilisateur confirme vouloir lancer la recherche de vols.
+
+DÉCLENCHEURS (appeler cet outil si l'utilisateur dit) :
+- "oui" (en réponse à "Souhaitez-vous que je lance la recherche des vols ?")
+- "lance la recherche"
+- "cherche les vols"
+- "ok, recherche"
+- "vas-y"
+- "go"
+- "c'est bon, lance"
+- "trouve-moi des vols"
+- "recherche maintenant"
+
+NE PAS UTILISER SI:
+- Il manque des informations (dates, destination, nombre de voyageurs, ville de départ)
+- L'utilisateur pose une question
+- L'utilisateur veut modifier quelque chose
+
+Cet outil déclenche la recherche de vols côté client et affiche les résultats.`,
+    parameters: {
+      type: "object",
+      properties: {
+        confirmed: {
+          type: "boolean",
+          description: "TRUE si l'utilisateur a confirmé vouloir lancer la recherche"
+        },
+        message: {
+          type: "string",
+          description: "Message d'accompagnement pendant la recherche (ex: 'Je lance la recherche...')"
+        }
+      },
+      required: ["confirmed"]
+    }
+  }
+};
+
 // Tool definition for extracting travel preferences from user message
 const preferenceExtractionTool = {
   type: "function",
@@ -549,7 +590,7 @@ ${phasePrompt}`;
         ],
         temperature: 0.7,
         max_tokens: 600, // Increased for reasoning
-        tools: [reasoningTool, intentClassifierTool, flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool],
+        tools: [reasoningTool, intentClassifierTool, flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool, flightSearchTriggerTool],
         tool_choice: "auto",
         stream: false, // First call is never streamed to handle tools
       }),
@@ -723,8 +764,25 @@ ${phasePrompt}`;
             console.error("Failed to parse destination suggestion request:", e);
           }
         }
+        
+        if (toolCall.function?.name === "trigger_flight_search") {
+          try {
+            const searchTrigger = JSON.parse(toolCall.function.arguments);
+            console.log("Flight search trigger:", searchTrigger);
+            
+            if (searchTrigger.confirmed) {
+              // Add to a new variable to be sent in stream
+              (choice.message as any)._flightSearchTrigger = true;
+            }
+          } catch (e) {
+            console.error("Failed to parse flight search trigger:", e);
+          }
+        }
       }
     }
+
+    // Check if flight search should be triggered
+    const flightSearchTrigger = (choice?.message as any)?._flightSearchTrigger || false;
 
     // If we got a tool call but no content, we need a follow-up call
     if (!content && choice?.message?.tool_calls) {
@@ -828,6 +886,10 @@ ${phasePrompt}`;
             // Send quickRepliesData as a special event
             if (quickRepliesData) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "quickReplies", quickReplies: quickRepliesData })}\n\n`));
+            }
+            // Send flightSearchTrigger as a special event to trigger search on frontend
+            if (flightSearchTrigger) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "flightSearchTrigger", trigger: true })}\n\n`));
             }
 
             const reader = followUpResponse.body!.getReader();

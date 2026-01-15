@@ -69,6 +69,7 @@ export interface StreamResult {
   destinationSuggestionRequest: DestinationSuggestionRequest | null;
   intentClassification: IntentClassification | null;
   reasoning: ReasoningData | null;
+  flightSearchTrigger: boolean;
 }
 
 /**
@@ -468,6 +469,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
       let intentClassification: IntentClassification | null = null;
       let reasoning: ReasoningData | null = null;
       let preferencesData: any | null = null;
+      let flightSearchTrigger = false;
       
       // Throttle UI updates to reduce re-renders (max every 50ms)
           let lastUpdateTime = 0;
@@ -535,6 +537,9 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                     quickReplies = parsed.quickReplies;
                   } else if (parsed.type === "destinationSuggestionRequest" && parsed.destinationSuggestionRequest) {
                     destinationSuggestionRequest = parsed.destinationSuggestionRequest;
+                  } else if (parsed.type === "flightSearchTrigger" && parsed.trigger) {
+                    flightSearchTrigger = true;
+                    console.log("[Stream] Flight search trigger received");
                   } else if (parsed.type === "content" && parsed.content) {
                     fullContent += parsed.content;
                     // Throttled content update to reduce flickering
@@ -552,7 +557,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
             onContentUpdate(messageId, fullContent, true);
           }
 
-          return { content: fullContent, flightData, accommodationData, preferencesData, quickReplies, destinationSuggestionRequest, intentClassification, reasoning };
+          return { content: fullContent, flightData, accommodationData, preferencesData, quickReplies, destinationSuggestionRequest, intentClassification, reasoning, flightSearchTrigger };
 
         } catch (err) {
           lastError = err instanceof Error && "type" in err
