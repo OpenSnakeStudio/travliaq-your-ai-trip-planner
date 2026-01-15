@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildPhaseSystemPrompt, type TravelPhase } from "./prompts/phasePrompts.ts";
 import { buildBaseSystemPrompt, buildChooseForMeInstructions, detectLanguage, type SupportedLanguage } from "./prompts/systemPrompts.ts";
 import { intentClassifierTool, parseIntentClassification, type IntentClassificationResult } from "./tools/intentClassifier.ts";
+import { reasoningTool, parseReasoningResult, CHAIN_OF_THOUGHT_INSTRUCTIONS, type ReasoningResult } from "./tools/reasoningEngine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -531,7 +532,10 @@ ${phasePrompt}`;
     // Combine base prompt with phase-specific prompt
     const systemPrompt = baseSystemPrompt;
 
-    // Non-streaming request (for tool calls)
+    // Add Chain of Thought instructions to system prompt
+    const enhancedSystemPrompt = `${systemPrompt}\n\n${CHAIN_OF_THOUGHT_INSTRUCTIONS}`;
+
+    // Non-streaming request (for tool calls including reasoning)
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -540,12 +544,12 @@ ${phasePrompt}`;
       },
       body: JSON.stringify({
         messages: [
-          { role: "system", content: systemPrompt },
+          { role: "system", content: enhancedSystemPrompt },
           ...messages,
         ],
         temperature: 0.7,
-        max_tokens: 500,
-        tools: [intentClassifierTool, flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool],
+        max_tokens: 600, // Increased for reasoning
+        tools: [reasoningTool, intentClassifierTool, flightExtractionTool, accommodationExtractionTool, preferenceExtractionTool, destinationSuggestionTool, quickRepliesExtractionTool],
         tool_choice: "auto",
         stream: false, // First call is never streamed to handle tools
       }),
@@ -571,10 +575,29 @@ ${phasePrompt}`;
     let quickRepliesData = null;
     let destinationSuggestionRequest = null;
     let intentClassification: IntentClassificationResult | null = null;
+    let reasoningData: ReasoningResult | null = null;
 
     // Check if the model called any extraction tools
     if (choice?.message?.tool_calls) {
       for (const toolCall of choice.message.tool_calls) {
+        // Handle Chain of Thought reasoning (should be called first)
+        if (toolCall.function?.name === "plan_response") {
+          reasoningData = parseReasoningResult(toolCall.function.arguments);
+          if (reasoningData) {
+            console.log("🧠 Chain of Thought reasoning:", {
+              understanding: reasoningData.understanding.substring(0, 100) + "...",
+              confidence: reasoningData.confidence,
+              keyInsights: reasoningData.keyInsights,
+            });
+            
+            // Use reasoning data to enhance subsequent processing
+            // If confidence is low, we might want to ask for clarification
+            if (reasoningData.confidence < 70) {
+              console.log("⚠️ Low confidence reasoning - may need clarification");
+            }
+          }
+        }
+        
         // Handle intent classification (new primary tool)
         if (toolCall.function?.name === "classify_intent") {
           intentClassification = parseIntentClassification(toolCall.function.arguments);
@@ -750,7 +773,11 @@ ${phasePrompt}`;
         const encoder = new TextEncoder();
         const readableStream = new ReadableStream({
           async start(controller) {
-            // Send intent classification first for frontend routing
+            // Send reasoning data first for ThinkingIndicator
+            if (reasoningData) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "reasoning", reasoning: reasoningData })}\n\n`));
+            }
+            // Send intent classification for frontend routing
             if (intentClassification) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "intentClassification", intentClassification })}\n\n`));
             }
@@ -848,7 +875,11 @@ ${phasePrompt}`;
       const encoder = new TextEncoder();
       const readableStream = new ReadableStream({
         async start(controller) {
-          // Send intent classification first
+          // Send reasoning data first
+          if (reasoningData) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "reasoning", reasoning: reasoningData })}\n\n`));
+          }
+          // Send intent classification
           if (intentClassification) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "intentClassification", intentClassification })}\n\n`));
           }
@@ -891,7 +922,7 @@ ${phasePrompt}`;
       content = "Désolé, je n'ai pas pu générer de réponse.";
     }
 
-    console.log("Final response - content:", content, "flightData:", flightData, "intentClassification:", intentClassification?.primaryIntent);
+    console.log("Final response - content:", content, "flightData:", flightData, "intentClassification:", intentClassification?.primaryIntent, "reasoning confidence:", reasoningData?.confidence);
 
     return new Response(JSON.stringify({ 
       content, 
@@ -900,7 +931,8 @@ ${phasePrompt}`;
       preferencesData, 
       destinationSuggestionRequest, 
       quickReplies: quickRepliesData,
-      intentClassification 
+      intentClassification,
+      reasoning: reasoningData
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

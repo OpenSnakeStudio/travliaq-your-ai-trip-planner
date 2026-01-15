@@ -41,6 +41,23 @@ export interface IntentClassification {
 }
 
 /**
+ * Reasoning data from Chain of Thought
+ */
+export interface ReasoningData {
+  understanding: string;
+  contextAnalysis: string;
+  responseStrategy: string;
+  keyInsights?: string[];
+  anticipatedNextSteps?: string[];
+  widgetDecision?: {
+    shouldShow: boolean;
+    widgetType?: string;
+    reason?: string;
+  };
+  confidence: number;
+}
+
+/**
  * Stream response result
  */
 export interface StreamResult {
@@ -50,6 +67,7 @@ export interface StreamResult {
   quickReplies: QuickReplyData | null;
   destinationSuggestionRequest: DestinationSuggestionRequest | null;
   intentClassification: IntentClassification | null;
+  reasoning: ReasoningData | null;
 }
 
 /**
@@ -447,6 +465,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
       let quickReplies: QuickReplyData | null = null;
       let destinationSuggestionRequest: DestinationSuggestionRequest | null = null;
       let intentClassification: IntentClassification | null = null;
+      let reasoning: ReasoningData | null = null;
       
       // Throttle UI updates to reduce re-renders (max every 50ms)
           let lastUpdateTime = 0;
@@ -494,7 +513,13 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                 try {
                   const parsed = JSON.parse(jsonStr);
 
-                  if (parsed.type === "intentClassification" && parsed.intentClassification) {
+                  if (parsed.type === "reasoning" && parsed.reasoning) {
+                    reasoning = parsed.reasoning;
+                    console.log("[Stream] 🧠 Chain of Thought reasoning received:", {
+                      confidence: reasoning.confidence,
+                      keyInsights: reasoning.keyInsights,
+                    });
+                  } else if (parsed.type === "intentClassification" && parsed.intentClassification) {
                     intentClassification = parsed.intentClassification;
                     console.log("[Stream] Intent classified:", intentClassification.primaryIntent, "confidence:", intentClassification.confidence);
                   } else if (parsed.type === "flightData" && parsed.flightData) {
@@ -522,7 +547,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
             onContentUpdate(messageId, fullContent, true);
           }
 
-          return { content: fullContent, flightData, accommodationData, quickReplies, destinationSuggestionRequest, intentClassification };
+          return { content: fullContent, flightData, accommodationData, quickReplies, destinationSuggestionRequest, intentClassification, reasoning };
 
         } catch (err) {
           lastError = err instanceof Error && "type" in err

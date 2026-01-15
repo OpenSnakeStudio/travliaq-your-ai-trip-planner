@@ -42,7 +42,8 @@ import {
   ConfirmedWidget,
 } from "./chat/widgets";
 import { QuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useUnifiedIntentRouter, useSessionContext } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useUnifiedIntentRouter, useSessionContext, useThinkingState } from "./chat/hooks";
+import { ThinkingIndicator } from "./chat/ThinkingIndicator";
 import { IntentDebugPanel } from "./chat/IntentDebugPanel";
 import { parseAction, flightDataToMemory } from "./chat/utils";
 import type { ChatMessage } from "./chat/types";
@@ -188,6 +189,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // Custom hooks
   const { streamResponse, isStreaming } = useChatStream();
   const mapContext = useChatMapContext();
+  
+  // Chain of Thought thinking state
+  const thinkingState = useThinkingState();
   
   // Widget tracking for LLM context
   const widgetTracking = useWidgetTracking();
