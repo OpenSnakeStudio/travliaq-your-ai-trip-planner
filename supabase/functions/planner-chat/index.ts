@@ -670,6 +670,47 @@ ${phasePrompt}`;
                 Object.entries(flightData).filter(([_, v]) => v !== null && v !== undefined && v !== "")
               );
             }
+            
+            // Map intent entities to preferencesData for dietary/accessibility preferences
+            const hasPreferenceEntities = 
+              (entities.dietaryRestrictions && entities.dietaryRestrictions.length > 0) ||
+              entities.accessibilityRequired !== undefined ||
+              entities.petFriendly !== undefined ||
+              entities.familyFriendly !== undefined ||
+              entities.travelStyle !== undefined ||
+              (entities.interests && entities.interests.length > 0);
+            
+            if (hasPreferenceEntities) {
+              const prefData: Record<string, unknown> = {};
+              
+              if (entities.dietaryRestrictions && entities.dietaryRestrictions.length > 0) {
+                prefData.dietaryRestrictions = entities.dietaryRestrictions;
+                console.log("Dietary restrictions detected from intent:", entities.dietaryRestrictions);
+              }
+              if (entities.accessibilityRequired !== undefined) {
+                prefData.accessibilityRequired = entities.accessibilityRequired;
+              }
+              if (entities.petFriendly !== undefined) {
+                prefData.petFriendly = entities.petFriendly;
+              }
+              if (entities.familyFriendly !== undefined) {
+                prefData.familyFriendly = entities.familyFriendly;
+              }
+              if (entities.travelStyle) {
+                prefData.travelStyle = entities.travelStyle;
+              }
+              if (entities.interests && entities.interests.length > 0) {
+                prefData.interests = entities.interests;
+              }
+              
+              // Merge with existing preferencesData or create new
+              if (preferencesData) {
+                preferencesData = { ...preferencesData, ...prefData };
+              } else {
+                preferencesData = prefData;
+              }
+              console.log("Preferences data from intent classification:", preferencesData);
+            }
           }
         }
         
