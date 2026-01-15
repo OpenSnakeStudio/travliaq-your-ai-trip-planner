@@ -2861,8 +2861,6 @@ const resources = {
       "planner.widget.mustHavesConfigured": "Critères configurés",
       "planner.widget.dietaryConfigured": "Régime configuré",
       "planner.widget.destinationSelected": "Destination sélectionnée",
-      "planner.widget.selectDepartureDate": "Sélectionnez votre date de départ",
-      "planner.widget.selectReturnDate": "Sélectionnez votre date de retour",
 
       // Planner - YouTubeShortsPanel
       "planner.youtube.thingsToDo": "À faire à {{city}}",
@@ -2920,11 +2918,6 @@ const resources = {
       "planner.quickReplies.inspireMessage": "Je ne sais pas où partir, inspirez-moi !",
       "planner.quickReplies.whenToGo": "Quand partir ?",
       "planner.quickReplies.howMany": "Nombre de voyageurs",
-
-      // Planner - HotelDetailView (RoomCard)
-      "planner.hotels.persons": "pers.",
-      "planner.hotels.freeCancellation": "Annulation gratuite",
-      "planner.hotels.perNightShort": "/nuit",
 
       // Common
       "common.ok": "OK",
@@ -5762,8 +5755,6 @@ const resources = {
       "planner.widget.mustHavesConfigured": "Criteria configured",
       "planner.widget.dietaryConfigured": "Dietary configured",
       "planner.widget.destinationSelected": "Destination selected",
-      "planner.widget.selectDepartureDate": "Select your departure date",
-      "planner.widget.selectReturnDate": "Select your return date",
 
       // Planner - YouTubeShortsPanel
       "planner.youtube.thingsToDo": "Things to do in {{city}}",
@@ -5821,11 +5812,6 @@ const resources = {
       "planner.quickReplies.inspireMessage": "I don't know where to go, inspire me!",
       "planner.quickReplies.whenToGo": "When to go?",
       "planner.quickReplies.howMany": "Number of travelers",
-
-      // Planner - HotelDetailView (RoomCard)
-      "planner.hotels.persons": "pers.",
-      "planner.hotels.freeCancellation": "Free cancellation",
-      "planner.hotels.perNightShort": "/night",
 
       // Common
       "common.ok": "OK",
