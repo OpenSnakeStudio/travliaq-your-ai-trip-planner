@@ -384,45 +384,120 @@ export function useChatImperativeHandlers(options: UseChatImperativeHandlersOpti
   };
 
   /**
+   * Map flat AI-extracted preferences to store structure
+   */
+  interface AIPreferencesData {
+    // Flat fields from AI extraction
+    travelStyle?: string;
+    pace?: string;
+    interests?: string[];
+    occasion?: string;
+    dietaryRestrictions?: string[];
+    // MustHaves (flat from AI)
+    accessibilityRequired?: boolean;
+    petFriendly?: boolean;
+    familyFriendly?: boolean;
+    needsWifi?: boolean;
+    // StyleAxes (flat from AI)
+    chillVsIntense?: number;
+    cityVsNature?: number;
+    ecoVsLuxury?: number;
+    touristVsLocal?: number;
+  }
+
+  /**
    * Handle detected preferences from chat
    */
   const handlePreferencesDetection = useCallback(
-    (detectedPrefs: Partial<TripPreferences & { dietaryRestrictions?: string[] }>): void => {
-      // Normalize dietary restrictions to match picker IDs
-      const normalizedPrefs = { ...detectedPrefs };
-      if (detectedPrefs.dietaryRestrictions && detectedPrefs.dietaryRestrictions.length > 0) {
-        normalizedPrefs.dietaryRestrictions = normalizeDietaryRestrictions(detectedPrefs.dietaryRestrictions);
+    (detectedPrefs: AIPreferencesData): void => {
+      // Build properly structured preferences for the store
+      const storeUpdates: Partial<TripPreferences> = {};
+
+      // Direct mappings
+      if (detectedPrefs.travelStyle) {
+        storeUpdates.travelStyle = detectedPrefs.travelStyle as TripPreferences['travelStyle'];
+      }
+      if (detectedPrefs.pace) {
+        storeUpdates.pace = detectedPrefs.pace as TripPreferences['pace'];
+      }
+      if (detectedPrefs.interests && detectedPrefs.interests.length > 0) {
+        storeUpdates.interests = detectedPrefs.interests;
       }
 
+      // Normalize and set dietary restrictions
+      if (detectedPrefs.dietaryRestrictions && detectedPrefs.dietaryRestrictions.length > 0) {
+        storeUpdates.dietaryRestrictions = normalizeDietaryRestrictions(detectedPrefs.dietaryRestrictions);
+      }
+
+      // Map flat mustHaves to nested structure
+      const hasMustHaves = 
+        detectedPrefs.accessibilityRequired !== undefined ||
+        detectedPrefs.petFriendly !== undefined ||
+        detectedPrefs.familyFriendly !== undefined ||
+        detectedPrefs.needsWifi !== undefined;
+
+      if (hasMustHaves) {
+        storeUpdates.mustHaves = {
+          accessibilityRequired: detectedPrefs.accessibilityRequired ?? false,
+          petFriendly: detectedPrefs.petFriendly ?? false,
+          familyFriendly: detectedPrefs.familyFriendly ?? false,
+          highSpeedWifi: detectedPrefs.needsWifi ?? false, // Map needsWifi → highSpeedWifi
+        };
+      }
+
+      // Map flat styleAxes to nested structure
+      const hasStyleAxes =
+        detectedPrefs.chillVsIntense !== undefined ||
+        detectedPrefs.cityVsNature !== undefined ||
+        detectedPrefs.ecoVsLuxury !== undefined ||
+        detectedPrefs.touristVsLocal !== undefined;
+
+      if (hasStyleAxes) {
+        storeUpdates.styleAxes = {
+          chillVsIntense: detectedPrefs.chillVsIntense ?? 50,
+          cityVsNature: detectedPrefs.cityVsNature ?? 50,
+          ecoVsLuxury: detectedPrefs.ecoVsLuxury ?? 50,
+          touristVsLocal: detectedPrefs.touristVsLocal ?? 50,
+        };
+      }
+
+      // Map occasion to tripContext
+      if (detectedPrefs.occasion) {
+        storeUpdates.tripContext = {
+          occasion: detectedPrefs.occasion as TripPreferences['tripContext']['occasion'],
+          flexibility: 'flexible',
+        };
+      }
+
+      // Apply to store
       updatePreferences({
-        ...normalizedPrefs,
+        ...storeUpdates,
         detectedFromChat: true,
       });
 
-      // Build summary
+      // Build summary for toast
       const summary: string[] = [];
-      if (normalizedPrefs.pace) summary.push(`rythme ${normalizedPrefs.pace}`);
-      if (normalizedPrefs.interests && normalizedPrefs.interests.length > 0) {
-        summary.push(`centres d'intérêt: ${normalizedPrefs.interests.join(", ")}`);
+      if (storeUpdates.pace) summary.push(`rythme ${storeUpdates.pace}`);
+      if (storeUpdates.interests && storeUpdates.interests.length > 0) {
+        summary.push(`centres d'intérêt: ${storeUpdates.interests.join(", ")}`);
       }
-      if (normalizedPrefs.travelStyle) summary.push(`style ${normalizedPrefs.travelStyle}`);
-      if (normalizedPrefs.comfortLevel !== undefined) {
-        const comfortLabel =
-          normalizedPrefs.comfortLevel < 25
-            ? "économique"
-            : normalizedPrefs.comfortLevel < 50
-            ? "confort"
-            : normalizedPrefs.comfortLevel < 75
-            ? "premium"
-            : "luxe";
-        summary.push(`niveau ${comfortLabel}`);
+      if (storeUpdates.travelStyle) summary.push(`style ${storeUpdates.travelStyle}`);
+      if (storeUpdates.dietaryRestrictions && storeUpdates.dietaryRestrictions.length > 0) {
+        summary.push(`alimentation: ${storeUpdates.dietaryRestrictions.join(", ")}`);
       }
-      if (normalizedPrefs.dietaryRestrictions && normalizedPrefs.dietaryRestrictions.length > 0) {
-        summary.push(`alimentation: ${normalizedPrefs.dietaryRestrictions.join(", ")}`);
+      if (hasMustHaves) {
+        const mustHavesLabels: string[] = [];
+        if (detectedPrefs.accessibilityRequired) mustHavesLabels.push("accessibilité");
+        if (detectedPrefs.petFriendly) mustHavesLabels.push("animaux");
+        if (detectedPrefs.familyFriendly) mustHavesLabels.push("famille");
+        if (detectedPrefs.needsWifi) mustHavesLabels.push("WiFi");
+        if (mustHavesLabels.length > 0) {
+          summary.push(`critères: ${mustHavesLabels.join(", ")}`);
+        }
       }
 
       if (summary.length > 0) {
-        console.log(`[Chat] Detected preferences:`, normalizedPrefs);
+        console.log(`[Chat] Detected preferences:`, storeUpdates);
         toastSuccess(
           "Préférences détectées",
           `L'IA a détecté: ${summary.join(", ")}. Modifiez-les dans l'onglet Préférences.`
