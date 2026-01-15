@@ -96,6 +96,30 @@ export type PlannerEvents = {
   "hotels:clearSelection": void;
   "hotels:fitToPrices": void; // Zoom map to fit all hotel price markers
   "hotels:openPanel": void;
+  "hotels:starRating": { min: number; max: number };
+  
+  // Budget events
+  "budget:selected": { range: { min: number; max: number }; perPerson: boolean };
+  
+  // Filter events  
+  "filters:changed": { filterId: string; selected: boolean };
+  "filters:cleared": void;
+  
+  // Flight preference events
+  "flights:directOnly": { directOnly: boolean };
+  
+  // Activity preference events
+  "activities:duration": { duration: string };
+  "activities:timeOfDay": { timeSlot: string };
+  
+  // Comparison events
+  "comparison:selected": { itemId: string; itemType: string };
+  
+  // Conflict events
+  "conflict:resolved": { conflictId: string };
+  
+  // Price alert events
+  "priceAlert:action": { alertId: string };
   
   // Activities-related
   "activities:search": {

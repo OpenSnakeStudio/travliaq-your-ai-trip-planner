@@ -181,6 +181,11 @@ const WIDGET_PREREQUISITES: Record<WidgetType, (flow: FlowState) => WidgetValida
   cabinClassSelector: () => ({ valid: true }),
   directFlightToggle: () => ({ valid: true }),
   budgetRangeSlider: () => ({ valid: true }),
+  
+  // Phase 4/5 widgets - pending implementation
+  comparisonWidget: () => ({ valid: true }),
+  conflictAlert: () => ({ valid: true }),
+  priceAlert: () => ({ valid: true }),
 };
 
 /**

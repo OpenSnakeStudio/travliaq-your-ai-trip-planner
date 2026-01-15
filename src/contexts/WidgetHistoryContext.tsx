@@ -23,7 +23,18 @@ export type WidgetInteractionType =
   | "destination_selected"
   | "destinations_proposed"
   | "destinations_rejected"
-  | "quick_filter_applied";
+  | "quick_filter_applied"
+  // New widget interactions
+  | "budget_selected"
+  | "filter_selected"
+  | "rating_selected"
+  | "cabin_class_selected"
+  | "direct_flight_toggled"
+  | "duration_selected"
+  | "time_of_day_selected"
+  | "comparison_item_selected"
+  | "conflict_resolved"
+  | "price_alert_action";
 
 export interface WidgetInteraction {
   id: string;
