@@ -815,7 +815,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         pendingWidgetsContext ? `[OPTIONS WIDGETS ACTIFS]\n${pendingWidgetsContext}` : ""
       ].filter(Boolean).join("\n\n").trim();
 
-      const { content, flightData, preferencesData, quickReplies, destinationSuggestionRequest, intentClassification } = await streamResponse(
+      const { content, flightData, preferencesData, quickReplies, destinationSuggestionRequest, intentClassification, flightSearchTrigger } = await streamResponse(
         apiMessages,
         messageId,
         {
@@ -865,6 +865,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       if (preferencesData && Object.keys(preferencesData).length > 0) {
         console.log("[PlannerChat] Preferences detected from chat:", preferencesData);
         imperativeHandlers.handlePreferencesDetection(preferencesData);
+      }
+
+      // Handle flight search trigger from AI
+      if (flightSearchTrigger) {
+        console.log("[PlannerChat] AI triggered flight search");
+        eventBus.emit("flight:triggerSearch");
       }
 
       if (destinationSuggestionRequest) {
