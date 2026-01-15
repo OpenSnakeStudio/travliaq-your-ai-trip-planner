@@ -348,36 +348,81 @@ export function useChatImperativeHandlers(options: UseChatImperativeHandlersOpti
   );
 
   /**
+   * Normalize dietary restriction strings from AI to match DietaryPicker IDs
+   */
+  const normalizeDietaryRestrictions = (restrictions: string[]): string[] => {
+    const normalizeMap: Record<string, string> = {
+      // French variations
+      "végétarien": "vegetarian",
+      "vegetarien": "vegetarian",
+      "végan": "vegan",
+      "vegan": "vegan",
+      "halal": "halal",
+      "casher": "kosher",
+      "kosher": "kosher",
+      "sans gluten": "gluten-free",
+      "gluten-free": "gluten-free",
+      "glutenfree": "gluten-free",
+      "pescétarien": "pescatarian",
+      "pescatarian": "pescatarian",
+      "sans lactose": "lactose-free",
+      "lactose-free": "lactose-free",
+      "lactosefree": "lactose-free",
+      "sans œufs": "no-eggs",
+      "sans oeufs": "no-eggs",
+      "no eggs": "no-eggs",
+      "no-eggs": "no-eggs",
+      "sans fruits à coque": "no-nuts",
+      "sans noix": "no-nuts",
+      "no nuts": "no-nuts",
+      "no-nuts": "no-nuts",
+    };
+
+    return restrictions
+      .map(r => normalizeMap[r.toLowerCase().trim()] || r.toLowerCase().trim())
+      .filter((v, i, arr) => arr.indexOf(v) === i); // unique
+  };
+
+  /**
    * Handle detected preferences from chat
    */
   const handlePreferencesDetection = useCallback(
-    (detectedPrefs: Partial<TripPreferences>): void => {
+    (detectedPrefs: Partial<TripPreferences & { dietaryRestrictions?: string[] }>): void => {
+      // Normalize dietary restrictions to match picker IDs
+      const normalizedPrefs = { ...detectedPrefs };
+      if (detectedPrefs.dietaryRestrictions && detectedPrefs.dietaryRestrictions.length > 0) {
+        normalizedPrefs.dietaryRestrictions = normalizeDietaryRestrictions(detectedPrefs.dietaryRestrictions);
+      }
+
       updatePreferences({
-        ...detectedPrefs,
+        ...normalizedPrefs,
         detectedFromChat: true,
       });
 
       // Build summary
       const summary: string[] = [];
-      if (detectedPrefs.pace) summary.push(`rythme ${detectedPrefs.pace}`);
-      if (detectedPrefs.interests && detectedPrefs.interests.length > 0) {
-        summary.push(`centres d'intérêt: ${detectedPrefs.interests.join(", ")}`);
+      if (normalizedPrefs.pace) summary.push(`rythme ${normalizedPrefs.pace}`);
+      if (normalizedPrefs.interests && normalizedPrefs.interests.length > 0) {
+        summary.push(`centres d'intérêt: ${normalizedPrefs.interests.join(", ")}`);
       }
-      if (detectedPrefs.travelStyle) summary.push(`style ${detectedPrefs.travelStyle}`);
-      if (detectedPrefs.comfortLevel !== undefined) {
+      if (normalizedPrefs.travelStyle) summary.push(`style ${normalizedPrefs.travelStyle}`);
+      if (normalizedPrefs.comfortLevel !== undefined) {
         const comfortLabel =
-          detectedPrefs.comfortLevel < 25
+          normalizedPrefs.comfortLevel < 25
             ? "économique"
-            : detectedPrefs.comfortLevel < 50
+            : normalizedPrefs.comfortLevel < 50
             ? "confort"
-            : detectedPrefs.comfortLevel < 75
+            : normalizedPrefs.comfortLevel < 75
             ? "premium"
             : "luxe";
         summary.push(`niveau ${comfortLabel}`);
       }
+      if (normalizedPrefs.dietaryRestrictions && normalizedPrefs.dietaryRestrictions.length > 0) {
+        summary.push(`alimentation: ${normalizedPrefs.dietaryRestrictions.join(", ")}`);
+      }
 
       if (summary.length > 0) {
-        console.log(`[Chat] Detected preferences:`, detectedPrefs);
+        console.log(`[Chat] Detected preferences:`, normalizedPrefs);
         toastSuccess(
           "Préférences détectées",
           `L'IA a détecté: ${summary.join(", ")}. Modifiez-les dans l'onglet Préférences.`

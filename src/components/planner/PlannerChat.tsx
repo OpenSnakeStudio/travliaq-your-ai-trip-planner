@@ -815,7 +815,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         pendingWidgetsContext ? `[OPTIONS WIDGETS ACTIFS]\n${pendingWidgetsContext}` : ""
       ].filter(Boolean).join("\n\n").trim();
 
-      const { content, flightData, quickReplies, destinationSuggestionRequest, intentClassification } = await streamResponse(
+      const { content, flightData, preferencesData, quickReplies, destinationSuggestionRequest, intentClassification } = await streamResponse(
         apiMessages,
         messageId,
         {
@@ -861,7 +861,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         }
       }
 
-      // Handle destination suggestion request from LLM
+      // Handle detected preferences from chat (dietary restrictions, travel style, etc.)
+      if (preferencesData && Object.keys(preferencesData).length > 0) {
+        console.log("[PlannerChat] Preferences detected from chat:", preferencesData);
+        imperativeHandlers.handlePreferencesDetection(preferencesData);
+      }
+
       if (destinationSuggestionRequest) {
         console.log("[PlannerChat] LLM requested destination suggestions:", destinationSuggestionRequest);
         
