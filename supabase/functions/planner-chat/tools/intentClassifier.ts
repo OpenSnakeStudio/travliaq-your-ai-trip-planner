@@ -150,6 +150,25 @@ Tu DOIS appeler cet outil en PREMIER pour CHAQUE message utilisateur avant de r�
               type: "array",
               items: { type: "string" },
               description: "Centres d'intérêt détectés: culture, plage, nature, gastronomie, etc."
+            },
+            // Dietary restrictions - CRITICAL: always extract when mentioned
+            dietaryRestrictions: {
+              type: "array",
+              items: { type: "string" },
+              description: "Restrictions alimentaires TOUJOURS extraites: 'je mange vegan'=['vegan'], 'halal'=['halal'], 'végétarien'=['vegetarian'], 'sans gluten'=['gluten-free'], 'casher'=['kosher'], 'pescatarien'=['pescatarian'], 'sans lactose'=['lactose-free'], 'sans œufs'=['no-eggs'], 'sans noix'=['no-nuts']"
+            },
+            // Accessibility needs
+            accessibilityRequired: {
+              type: "boolean",
+              description: "'fauteuil roulant', 'mobilité réduite', 'handicap' = true"
+            },
+            petFriendly: {
+              type: "boolean",
+              description: "'avec mon chien', 'avec mon chat', 'animal de compagnie' = true"
+            },
+            familyFriendly: {
+              type: "boolean",
+              description: "'avec enfants', 'adapté aux enfants' = true"
             }
           },
           description: "Entités extraites du message"
@@ -231,6 +250,11 @@ export interface IntentClassificationResult {
     travelStyle?: "solo" | "couple" | "family" | "friends" | "group";
     budgetLevel?: "budget" | "moderate" | "luxury";
     interests?: string[];
+    // Preferences
+    dietaryRestrictions?: string[];
+    accessibilityRequired?: boolean;
+    petFriendly?: boolean;
+    familyFriendly?: boolean;
   };
   widgetToShow?: {
     type: string;

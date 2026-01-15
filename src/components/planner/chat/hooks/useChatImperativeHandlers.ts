@@ -410,6 +410,8 @@ export function useChatImperativeHandlers(options: UseChatImperativeHandlersOpti
    */
   const handlePreferencesDetection = useCallback(
     (detectedPrefs: AIPreferencesData): void => {
+      console.log("[handlePreferencesDetection] Raw input:", detectedPrefs);
+      
       // Build properly structured preferences for the store
       const storeUpdates: Partial<TripPreferences> = {};
 
