@@ -13,6 +13,7 @@ import {
   analyzeLastAssistantMessage, 
   analyzeUserIntent, 
   getAnticipatedSuggestions,
+  detectLanguage,
   type AnticipatedSuggestion
 } from './messageAnalyzer';
 
@@ -410,7 +411,10 @@ export function getSuggestions(context: SuggestionContext): Suggestion[] {
     const userIntent = analyzeUserIntent(context.lastUserMessage);
     const conversationTurn = context.conversationTurn ?? 0;
     
-    const anticipated = getAnticipatedSuggestions(lastContent, userIntent, conversationTurn);
+    // Detect language from conversation (prefer user message, fallback to assistant)
+    const detectedLang = detectLanguage(context.lastUserMessage || context.lastAssistantMessage);
+    
+    const anticipated = getAnticipatedSuggestions(lastContent, userIntent, conversationTurn, detectedLang);
     
     if (anticipated.length > 0) {
       return anticipated.map(convertAnticipatedToSuggestion).slice(0, 4);

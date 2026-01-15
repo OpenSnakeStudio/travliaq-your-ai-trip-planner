@@ -14,6 +14,7 @@ import type { FlightMemory } from "@/stores/hooks";
 import type { WidgetType } from "@/types/flight";
 import type { IntentClassification } from "./useChatStream";
 import type { WidgetInteraction } from "@/contexts/WidgetHistoryContext";
+import { boostIntentConfidence } from "../services/intentConfidenceBooster";
 
 /**
  * Flow state computed from memory
@@ -57,6 +58,10 @@ export interface UseUnifiedIntentRouterOptions {
   memory: FlightMemory;
   /** Widget interaction history from useWidgetTracking */
   widgetInteractions?: WidgetInteraction[];
+  /** Last user message for confidence boosting */
+  lastUserMessage?: string;
+  /** Last assistant message for context */
+  lastAssistantMessage?: string;
   onWidgetTriggered?: (widgetType: WidgetType, data?: Record<string, unknown>) => void;
   onSearchTriggered?: () => void;
   onDelegateChoice?: (intent: IntentClassification) => void;
@@ -204,6 +209,8 @@ const WIDGET_TO_INTERACTION_MAP: Record<string, string[]> = {
 export function useUnifiedIntentRouter({
   memory,
   widgetInteractions = [],
+  lastUserMessage,
+  lastAssistantMessage,
   onWidgetTriggered,
   onSearchTriggered,
   onDelegateChoice,
@@ -390,6 +397,7 @@ export function useUnifiedIntentRouter({
   /**
    * Process a backend intent classification
    * This is the main entry point - trusts the backend as source of truth
+   * Now enhanced with frontend confidence boosting
    */
   const processIntent = useCallback((intent: IntentClassification | null): IntentProcessResult => {
     lastIntentRef.current = intent;
@@ -398,11 +406,23 @@ export function useUnifiedIntentRouter({
       return { shouldShowWidget: false, widgetType: null, action: "none" };
     }
     
-    console.log("[UnifiedIntentRouter] Processing intent:", intent.primaryIntent, "confidence:", intent.confidence);
+    // BOOST CONFIDENCE: Cross-reference with frontend analysis
+    const boostResult = boostIntentConfidence(intent, lastUserMessage || '', lastAssistantMessage);
+    const effectiveConfidence = boostResult.boostedConfidence;
     
-    // Check confidence level
-    if (intent.confidence < CONFIDENCE_THRESHOLDS.LOW) {
-      console.log("[UnifiedIntentRouter] Low confidence, requesting clarification");
+    console.log("[UnifiedIntentRouter] Processing intent:", intent.primaryIntent, 
+      "original:", intent.confidence, "boosted:", effectiveConfidence,
+      "lang:", boostResult.detectedLanguage);
+    
+    // Handle undecided users with delegate suggestion
+    if (boostResult.suggestedIntent === 'delegate_choice' && boostResult.frontendSignals.isUndecided) {
+      if (onDelegateChoice) onDelegateChoice(intent);
+      return { shouldShowWidget: false, widgetType: null, action: "delegate" };
+    }
+    
+    // Check boosted confidence level (not original)
+    if (effectiveConfidence < CONFIDENCE_THRESHOLDS.LOW && boostResult.shouldClarify) {
+      console.log("[UnifiedIntentRouter] Low confidence after boost, requesting clarification");
       return { 
         shouldShowWidget: false, 
         widgetType: null, 
