@@ -11,7 +11,16 @@ export {
   type StreamError,
   type StreamErrorType,
   type UseChatStreamOptions,
+  type ReasoningData,
+  type IntentClassification,
 } from "./useChatStream";
+
+// Thinking/Reasoning state management (Chain of Thought)
+export {
+  useThinkingState,
+  type ThinkingState,
+  type UseThinkingStateReturn,
+} from "./useThinkingState";
 
 // Widget flow management
 export { useChatWidgetFlow, type UseChatWidgetFlowOptions, type WidgetFlowState } from "./useChatWidgetFlow";
