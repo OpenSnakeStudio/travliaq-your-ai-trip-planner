@@ -1007,7 +1007,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           widgetFlow.setPendingPreferredMonth(flightData.preferredMonth);
         }
 
-        const memoryUpdates = flightDataToMemory(flightData);
+        const memoryUpdates = flightDataToMemory(flightData, memory);
         updateMemory(memoryUpdates);
         nextMem = { ...nextMem, ...memoryUpdates };
 
