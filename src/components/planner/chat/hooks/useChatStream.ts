@@ -64,6 +64,7 @@ export interface StreamResult {
   content: string;
   flightData: FlightFormData | null;
   accommodationData: any | null;
+  preferencesData: any | null;
   quickReplies: QuickReplyData | null;
   destinationSuggestionRequest: DestinationSuggestionRequest | null;
   intentClassification: IntentClassification | null;
@@ -466,6 +467,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
       let destinationSuggestionRequest: DestinationSuggestionRequest | null = null;
       let intentClassification: IntentClassification | null = null;
       let reasoning: ReasoningData | null = null;
+      let preferencesData: any | null = null;
       
       // Throttle UI updates to reduce re-renders (max every 50ms)
           let lastUpdateTime = 0;
@@ -526,6 +528,9 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                     flightData = parsed.flightData;
                   } else if (parsed.type === "accommodationData" && parsed.accommodationData) {
                     accommodationData = parsed.accommodationData;
+                  } else if (parsed.type === "preferencesData" && parsed.preferencesData) {
+                    preferencesData = parsed.preferencesData;
+                    console.log("[Stream] Preferences detected:", preferencesData);
                   } else if (parsed.type === "quickReplies" && parsed.quickReplies) {
                     quickReplies = parsed.quickReplies;
                   } else if (parsed.type === "destinationSuggestionRequest" && parsed.destinationSuggestionRequest) {
@@ -547,7 +552,7 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
             onContentUpdate(messageId, fullContent, true);
           }
 
-          return { content: fullContent, flightData, accommodationData, quickReplies, destinationSuggestionRequest, intentClassification, reasoning };
+          return { content: fullContent, flightData, accommodationData, preferencesData, quickReplies, destinationSuggestionRequest, intentClassification, reasoning };
 
         } catch (err) {
           lastError = err instanceof Error && "type" in err
