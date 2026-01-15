@@ -1,9 +1,10 @@
 /**
  * Flight Data to Memory Converter
  * Converts FlightFormData from chat responses to FlightMemory updates
+ * Preserves existing GPS-detected airport info when merging
  */
 
-import type { AirportInfo, MissingField } from "@/stores/hooks";
+import type { AirportInfo, MissingField, FlightMemory } from "@/stores/hooks";
 import type { FlightFormData } from "@/types/flight";
 import i18n from "@/i18n/config";
 
@@ -20,16 +21,46 @@ export interface FlightMemoryUpdate {
 }
 
 /**
- * Convert FlightFormData (from AI response) to FlightMemory updates
+ * Merge new airport info with existing, preserving GPS-detected data
+ * If existing has IATA and new only has city, keep existing if cities match
  */
-export function flightDataToMemory(flightData: FlightFormData): FlightMemoryUpdate {
+function mergeAirportInfo(
+  existing: AirportInfo | null | undefined,
+  newCity: string
+): AirportInfo {
+  // If we have existing airport info with IATA (e.g., from GPS detection)
+  if (existing?.iata && existing?.city) {
+    // If the new city matches the existing city, preserve all GPS data
+    const existingCityNorm = existing.city.toLowerCase().trim();
+    const newCityNorm = newCity.toLowerCase().trim();
+    
+    if (existingCityNorm === newCityNorm || 
+        existingCityNorm.includes(newCityNorm) || 
+        newCityNorm.includes(existingCityNorm)) {
+      // City matches, keep existing with all GPS data
+      return existing;
+    }
+  }
+  
+  // New city or different city, create fresh entry
+  return { city: newCity };
+}
+
+/**
+ * Convert FlightFormData (from AI response) to FlightMemory updates
+ * Accepts optional currentMemory to preserve GPS-detected airport info
+ */
+export function flightDataToMemory(
+  flightData: FlightFormData,
+  currentMemory?: FlightMemory
+): FlightMemoryUpdate {
   const updates: FlightMemoryUpdate = {};
 
   if (flightData.from) {
-    updates.departure = { city: flightData.from };
+    updates.departure = mergeAirportInfo(currentMemory?.departure, flightData.from);
   }
   if (flightData.to) {
-    updates.arrival = { city: flightData.to };
+    updates.arrival = mergeAirportInfo(currentMemory?.arrival, flightData.to);
   }
   if (flightData.departureDate) {
     updates.departureDate = new Date(flightData.departureDate);
