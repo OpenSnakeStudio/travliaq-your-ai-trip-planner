@@ -896,7 +896,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
       );
 
       // Emit event for other panels to react
-      eventBus.emit("budget:selected", range);
+      eventBus.emit("budget:selected", { range, perPerson: false });
     },
     [setMessages, tracking]
   );
@@ -930,7 +930,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         })
       );
 
-      eventBus.emit("filters:changed", { chipId });
+      eventBus.emit("filters:changed", { filterId: chipId, selected: true });
     },
     [setMessages, tracking]
   );
@@ -947,7 +947,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
             : m
         )
       );
-      eventBus.emit("filters:cleared", {});
+      eventBus.emit("filters:cleared");
     },
     [setMessages]
   );
@@ -976,7 +976,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         )
       );
 
-      eventBus.emit("hotels:starRating", { minStars, maxStars });
+      eventBus.emit("hotels:starRating", { min: minStars, max: maxStars });
     },
     [setMessages, tracking]
   );
@@ -1061,7 +1061,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         )
       );
 
-      eventBus.emit("activities:duration", { durationId });
+      eventBus.emit("activities:duration", { duration: durationId });
     },
     [setMessages, tracking]
   );
@@ -1119,7 +1119,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         )
       );
 
-      eventBus.emit("comparison:selected", { itemId });
+      eventBus.emit("comparison:selected", { itemId, itemType: "unknown" });
     },
     [setMessages, tracking]
   );
@@ -1187,7 +1187,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
         `Action sur alerte prix`
       );
 
-      eventBus.emit("priceAlert:action", { messageId });
+      eventBus.emit("priceAlert:action", { alertId: messageId });
     },
     [tracking]
   );

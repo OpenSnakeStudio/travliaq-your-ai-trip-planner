@@ -105,6 +105,43 @@ export interface WidgetData {
   // Destination suggestions widget data
   suggestions?: DestinationSuggestion[];
   basedOnProfile?: ProfileCompleteness;
+  
+  // Budget range slider
+  presets?: unknown[];
+  label?: string;
+  currency?: string;
+  showSlider?: boolean;
+  perPerson?: boolean;
+  initialValue?: boolean;
+  
+  // Quick filter chips
+  chips?: unknown[];
+  multiSelect?: boolean;
+  
+  // Star rating selector
+  initialMin?: number;
+  initialMax?: number;
+  
+  // Cabin class / Duration / Time of day
+  selected?: unknown;
+  compact?: boolean;
+  options?: unknown[];
+  
+  // Comparison widget - use unknown[] to allow flexible item structures
+  items?: unknown[];
+  metrics?: unknown[];
+  allowRemove?: boolean;
+  expandable?: boolean;
+  highlightBest?: boolean;
+  showWinner?: boolean;
+  
+  // Conflict alert - use unknown[] to allow flexible conflict structures
+  conflicts?: unknown[];
+  showResolved?: boolean;
+  
+  // Price alert
+  alert?: unknown;
+  onAction?: () => void;
 }
 
 /**
