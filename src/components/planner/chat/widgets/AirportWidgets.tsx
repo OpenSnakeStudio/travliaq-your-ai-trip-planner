@@ -416,7 +416,7 @@ export function AirportConfirmationWidget({
                 <span className="font-medium text-foreground">{leg.from.city} → {leg.to.city}</span>
                 {leg.date && (
                   <span className="ml-auto text-xs bg-muted px-2 py-0.5 rounded-full">
-                    {leg.date.toLocaleDateString(i18n.language === "en" ? "en-US" : "fr-FR", { day: "numeric", month: "short" })}
+                    {(leg.date instanceof Date ? leg.date : new Date(leg.date)).toLocaleDateString(i18n.language === "en" ? "en-US" : "fr-FR", { day: "numeric", month: "short" })}
                   </span>
                 )}
               </div>
