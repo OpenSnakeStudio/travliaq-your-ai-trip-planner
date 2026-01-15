@@ -854,6 +854,360 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
     };
   }, []);
 
+  // ============================================================
+  // NEW WIDGET HANDLERS (Phase 2-4 Integration)
+  // ============================================================
+
+  /**
+   * Handle budget range selection
+   */
+  const handleBudgetSelect = useCallback(
+    (messageId: string, range: { min: number; max: number } | null) => {
+      if (!range) {
+        // User cleared the budget filter
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === messageId
+              ? { ...m, widgetConfirmed: false, widgetSelectedValue: undefined, widgetDisplayLabel: undefined }
+              : m
+          )
+        );
+        return;
+      }
+
+      const budgetLabel = range.max >= 1000
+        ? `${range.min}€ - ${(range.max / 1000).toFixed(1)}k€`
+        : `${range.min}€ - ${range.max}€`;
+
+      // Track the interaction
+      tracking.recordInteraction(
+        `budget-${Date.now()}`,
+        "budget_selected",
+        range,
+        `Budget défini : ${budgetLabel}`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: range, widgetDisplayLabel: budgetLabel }
+            : m
+        )
+      );
+
+      // Emit event for other panels to react
+      eventBus.emit("budget:selected", range);
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle quick filter chip selection
+   */
+  const handleQuickFilterSelect = useCallback(
+    (messageId: string, chipId: string) => {
+      tracking.recordInteraction(
+        `filter-${Date.now()}`,
+        "filter_selected",
+        { chipId },
+        `Filtre appliqué : ${chipId}`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== messageId) return m;
+
+          const currentSelected = (m.widgetSelectedValue as string[]) || [];
+          const newSelected = currentSelected.includes(chipId)
+            ? currentSelected.filter((id) => id !== chipId)
+            : [...currentSelected, chipId];
+
+          return {
+            ...m,
+            widgetSelectedValue: newSelected,
+            widgetDisplayLabel: newSelected.length > 0 ? `${newSelected.length} filtre(s)` : undefined,
+          };
+        })
+      );
+
+      eventBus.emit("filters:changed", { chipId });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle clear all quick filters
+   */
+  const handleQuickFilterClear = useCallback(
+    (messageId: string) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetSelectedValue: [], widgetDisplayLabel: undefined, widgetConfirmed: false }
+            : m
+        )
+      );
+      eventBus.emit("filters:cleared", {});
+    },
+    [setMessages]
+  );
+
+  /**
+   * Handle star rating selection
+   */
+  const handleStarRatingSelect = useCallback(
+    (messageId: string, minStars: number, maxStars: number) => {
+      const ratingLabel = minStars === maxStars
+        ? `${minStars} étoiles`
+        : `${minStars}-${maxStars} étoiles`;
+
+      tracking.recordInteraction(
+        `rating-${Date.now()}`,
+        "rating_selected",
+        { minStars, maxStars },
+        `Classement hôtel : ${ratingLabel}`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: { minStars, maxStars }, widgetDisplayLabel: ratingLabel }
+            : m
+        )
+      );
+
+      eventBus.emit("hotels:starRating", { minStars, maxStars });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle cabin class selection
+   */
+  const handleCabinClassSelect = useCallback(
+    (messageId: string, cabinClass: string) => {
+      const cabinLabels: Record<string, string> = {
+        economy: "Économique",
+        premium_economy: "Premium Éco",
+        business: "Affaires",
+        first: "Première",
+      };
+      const cabinLabel = cabinLabels[cabinClass] || cabinClass;
+
+      tracking.recordInteraction(
+        `cabin-${Date.now()}`,
+        "cabin_class_selected",
+        { cabinClass },
+        `Classe de cabine : ${cabinLabel}`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: cabinClass, widgetDisplayLabel: cabinLabel }
+            : m
+        )
+      );
+
+      updateMemory({ cabinClass: cabinClass as FlightMemory["cabinClass"] });
+    },
+    [setMessages, updateMemory, tracking]
+  );
+
+  /**
+   * Handle direct flight toggle
+   */
+  const handleDirectFlightToggle = useCallback(
+    (messageId: string, directOnly: boolean) => {
+      const label = directOnly ? "Vols directs uniquement" : "Avec escales";
+
+      tracking.recordInteraction(
+        `direct-${Date.now()}`,
+        "direct_flight_toggled",
+        { directOnly },
+        label
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: directOnly, widgetDisplayLabel: label }
+            : m
+        )
+      );
+
+      eventBus.emit("flights:directOnly", { directOnly });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle duration selection (for activities)
+   */
+  const handleDurationSelect = useCallback(
+    (messageId: string, durationId: string) => {
+      tracking.recordInteraction(
+        `duration-${Date.now()}`,
+        "duration_selected",
+        { durationId },
+        `Durée : ${durationId}`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: durationId, widgetDisplayLabel: durationId }
+            : m
+        )
+      );
+
+      eventBus.emit("activities:duration", { durationId });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle time of day selection (for activities)
+   */
+  const handleTimeOfDaySelect = useCallback(
+    (messageId: string, timeSlot: string) => {
+      const timeLabels: Record<string, string> = {
+        morning: "Matin",
+        afternoon: "Après-midi",
+        evening: "Soir",
+        night: "Nuit",
+      };
+      const timeLabel = timeLabels[timeSlot] || timeSlot;
+
+      tracking.recordInteraction(
+        `time-${Date.now()}`,
+        "time_of_day_selected",
+        { timeSlot },
+        `Moment : ${timeLabel}`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: timeSlot, widgetDisplayLabel: timeLabel }
+            : m
+        )
+      );
+
+      eventBus.emit("activities:timeOfDay", { timeSlot });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle comparison widget item selection
+   */
+  const handleComparisonSelect = useCallback(
+    (messageId: string, itemId: string) => {
+      tracking.recordInteraction(
+        `comparison-select-${Date.now()}`,
+        "comparison_item_selected",
+        { itemId },
+        `Option sélectionnée dans la comparaison`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widgetConfirmed: true, widgetSelectedValue: itemId }
+            : m
+        )
+      );
+
+      eventBus.emit("comparison:selected", { itemId });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle comparison widget item removal
+   */
+  const handleComparisonRemove = useCallback(
+    (messageId: string, itemId: string) => {
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== messageId || !m.widgetData?.items) return m;
+
+          const newItems = (m.widgetData.items as Array<{ id: string }>).filter((item) => item.id !== itemId);
+          return {
+            ...m,
+            widgetData: { ...m.widgetData, items: newItems },
+          };
+        })
+      );
+    },
+    [setMessages]
+  );
+
+  /**
+   * Handle conflict resolution
+   */
+  const handleConflictResolve = useCallback(
+    (messageId: string, conflictId: string) => {
+      tracking.recordInteraction(
+        `conflict-${Date.now()}`,
+        "conflict_resolved",
+        { conflictId },
+        `Conflit résolu`
+      );
+
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id !== messageId || !m.widgetData?.conflicts) return m;
+
+          const newConflicts = (m.widgetData.conflicts as Array<{ id: string; resolved?: boolean }>).map((c) =>
+            c.id === conflictId ? { ...c, resolved: true } : c
+          );
+          return {
+            ...m,
+            widgetData: { ...m.widgetData, conflicts: newConflicts },
+          };
+        })
+      );
+
+      eventBus.emit("conflict:resolved", { conflictId });
+    },
+    [setMessages, tracking]
+  );
+
+  /**
+   * Handle price alert action
+   */
+  const handlePriceAlertAction = useCallback(
+    (messageId: string) => {
+      tracking.recordInteraction(
+        `price-alert-${Date.now()}`,
+        "price_alert_action",
+        {},
+        `Action sur alerte prix`
+      );
+
+      eventBus.emit("priceAlert:action", { messageId });
+    },
+    [tracking]
+  );
+
+  /**
+   * Handle price alert dismiss
+   */
+  const handlePriceAlertDismiss = useCallback(
+    (messageId: string) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? { ...m, widget: undefined, widgetData: undefined }
+            : m
+        )
+      );
+    },
+    [setMessages]
+  );
+
   return {
     // Flow state management
     resetFlowState,
@@ -863,7 +1217,7 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
     markSearchButtonShown,
     isSearchButtonShown,
 
-    // Handlers
+    // Core Handlers
     handleAirportSelect,
     handleDateSelect,
     handleDateRangeSelect,
@@ -874,6 +1228,25 @@ export function useChatWidgetFlow(options: UseChatWidgetFlowOptions) {
     handleSearchButtonClick,
     handleTravelersConfirmSolo,
     handleTravelersEditBeforeSearch,
+
+    // Selection widget handlers (Phase 2)
+    handleBudgetSelect,
+    handleQuickFilterSelect,
+    handleQuickFilterClear,
+    handleStarRatingSelect,
+    handleCabinClassSelect,
+    handleDirectFlightToggle,
+    handleDurationSelect,
+    handleTimeOfDaySelect,
+
+    // Comparison widget handlers (Phase 3)
+    handleComparisonSelect,
+    handleComparisonRemove,
+
+    // Alert widget handlers (Phase 4)
+    handleConflictResolve,
+    handlePriceAlertAction,
+    handlePriceAlertDismiss,
 
     // Widget determination
     determineNextWidget,

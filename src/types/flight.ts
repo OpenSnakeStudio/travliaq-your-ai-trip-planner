@@ -198,7 +198,12 @@ export type WidgetType =
   | "timeOfDayChips"
   | "cabinClassSelector"
   | "directFlightToggle"
-  | "budgetRangeSlider";
+  | "budgetRangeSlider"
+  // Comparison widgets (Phase 3)
+  | "comparisonWidget"
+  // Alert widgets (Phase 4)
+  | "conflictAlert"
+  | "priceAlert";
 
 // ===== Chat Actions =====
 
