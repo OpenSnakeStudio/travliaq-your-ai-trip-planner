@@ -730,19 +730,49 @@ ${phasePrompt}`;
     if (!content && choice?.message?.tool_calls) {
       console.log("Making follow-up call for conversational response, stream:", stream);
       
+      // Build tool responses for ALL tool calls (not just the first one)
+      const toolResponses = choice.message.tool_calls.map((toolCall: any) => {
+        let responseContent = { success: true, message: "Processed" };
+        
+        // Customize response based on tool type
+        if (toolCall.function?.name === "plan_response") {
+          responseContent = { 
+            success: true, 
+            message: "Reasoning processed",
+            reasoning: reasoningData 
+          };
+        } else if (toolCall.function?.name === "classify_intent") {
+          responseContent = { 
+            success: true, 
+            message: "Intent classified",
+            intent: intentClassification 
+          };
+        } else if (toolCall.function?.name === "update_flight_widget") {
+          responseContent = { 
+            success: true, 
+            message: "Widget mis à jour",
+            extracted: flightData 
+          };
+        } else if (toolCall.function?.name === "generate_quick_replies") {
+          responseContent = { 
+            success: true, 
+            message: "Quick replies generated",
+            replies: quickRepliesData 
+          };
+        }
+        
+        return {
+          role: "tool",
+          tool_call_id: toolCall.id,
+          content: JSON.stringify(responseContent)
+        };
+      });
+      
       const followUpMessages = [
         { role: "system", content: systemPrompt },
         ...messages,
         choice.message,
-        {
-          role: "tool",
-          tool_call_id: choice.message.tool_calls[0].id,
-          content: JSON.stringify({ 
-            success: true, 
-            message: "Widget mis à jour",
-            extracted: flightData 
-          })
-        }
+        ...toolResponses
       ];
 
       if (stream) {
