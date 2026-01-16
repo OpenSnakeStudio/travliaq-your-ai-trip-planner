@@ -9,7 +9,7 @@
  * - useChatMapContext: Map/widget context for LLM
  */
 
-import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback, memo } from "react";
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef, useCallback, memo, useMemo } from "react";
 import { Plane, History, Send, PanelLeftClose } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
