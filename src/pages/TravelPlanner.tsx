@@ -10,7 +10,8 @@ import PlannerCard from "@/components/planner/PlannerCard";
 import PlannerChat, { FlightFormData, PlannerChatRef, AirportChoice, DualAirportChoice, AirportConfirmationData, ConfirmedAirports } from "@/components/planner/PlannerChat";
 import PlannerTopBar from "@/components/planner/PlannerTopBar";
 import PlannerMobileTopBar, { MobileView } from "@/components/planner/PlannerMobileTopBar";
-import PlannerMobileTabBar from "@/components/planner/PlannerMobileTabBar";
+import PlannerMobileBottomBar from "@/components/planner/PlannerMobileBottomBar";
+import MobileLocationButton from "@/components/planner/MobileLocationButton";
 import DestinationPopup from "@/components/planner/DestinationPopup";
 import YouTubeShortsPanel from "@/components/planner/YouTubeShortsPanel";
 import OnboardingTour from "@/components/planner/OnboardingTour";
@@ -225,35 +226,28 @@ const TravelPlanner = () => {
                 {/* Mobile Layout */}
                 {isMobile ? (
                   <div className="h-full flex flex-col">
-                    {/* Mobile Top Bar with Chat/Maps toggle */}
+                    {/* Mobile Top Bar - Logo + TabBar (maps view) + Settings */}
                     <PlannerMobileTopBar
                       mobileView={mobileView}
-                      onMobileViewChange={setMobileView}
+                      activeTab={activeTab}
+                      onTabChange={handleTabChange}
                       confirmLeave={shouldConfirmLeave}
                       confirmLeaveMessage={t("planner.leaveConfirmation")}
                     />
 
-                    {/* Mobile Content */}
-                    {mobileView === "chat" ? (
-                      /* Full-screen Chat */
-                      <div className="flex-1 overflow-hidden">
+                    {/* Mobile Content - flex-1 */}
+                    <div className="flex-1 overflow-hidden relative">
+                      {mobileView === "chat" ? (
+                        /* Full-screen Chat */
                         <PlannerChat
                           ref={chatRef}
                           isCollapsed={false}
                           onToggleCollapse={() => setMobileView("maps")}
                         />
-                      </div>
-                    ) : (
-                      /* Maps View with Tab Bar and Widgets at top */
-                      <div className="flex-1 flex flex-col overflow-hidden relative">
-                        {/* Tab Bar for Maps view */}
-                        <PlannerMobileTabBar
-                          activeTab={activeTab}
-                          onTabChange={handleTabChange}
-                        />
-
-                        {/* Map */}
-                        <div className="flex-1 relative">
+                      ) : (
+                        /* Maps View with Widgets at top */
+                        <div className="h-full relative">
+                          {/* Map - full height behind everything */}
                           <PlannerErrorBoundary componentName="PlannerMap">
                             <PlannerMap
                               activeTab={activeTab}
@@ -271,12 +265,14 @@ const TravelPlanner = () => {
                               userLocation={userLocation}
                               userDefaultFocusNonce={userDefaultFocusNonce}
                               onDestinationClick={handleDestinationClick}
+                              isMobile={true}
+                              mobileWidgetOpen={isPanelVisible}
                             />
                           </PlannerErrorBoundary>
 
-                          {/* Widget Panel - positioned at top on mobile */}
+                          {/* Widget Panel - positioned at top on mobile (max 35vh) */}
                           {youtubePanel ? (
-                            <div className="absolute top-0 left-0 right-0 z-10 max-h-[50vh] overflow-hidden">
+                            <div className="absolute top-0 left-0 right-0 z-10 max-h-[35vh] overflow-hidden animate-fade-in">
                               <div className="h-full overflow-hidden rounded-b-2xl bg-card/95 backdrop-blur-xl border-b border-x border-border/50 shadow-lg">
                                 <YouTubeShortsPanel
                                   city={youtubePanel.city}
@@ -324,6 +320,17 @@ const TravelPlanner = () => {
                             </PlannerErrorBoundary>
                           )}
 
+                          {/* GPS Location Button */}
+                          <MobileLocationButton
+                            onLocate={async () => {
+                              if (userLocation) {
+                                setMapCenter([userLocation.lng, userLocation.lat]);
+                                setMapZoom(12);
+                              }
+                            }}
+                            widgetOpen={isPanelVisible}
+                          />
+
                           {/* Destination popup */}
                           <DestinationPopup
                             cityName={destinationPopup?.cityName || ""}
@@ -342,8 +349,14 @@ const TravelPlanner = () => {
                             <PlannerCard pin={selectedPin} onClose={handleCloseCard} onAddToTrip={handleAddToTrip} />
                           )}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    {/* Bottom Bar with Chat/Maps toggle */}
+                    <PlannerMobileBottomBar
+                      mobileView={mobileView}
+                      onMobileViewChange={setMobileView}
+                    />
                   </div>
                 ) : (
                   /* Desktop Layout - Original ResizablePanelGroup */

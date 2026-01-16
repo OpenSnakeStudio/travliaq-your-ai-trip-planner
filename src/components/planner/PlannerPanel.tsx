@@ -72,7 +72,7 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
 
   const wrapperClass =
     layout === "mobile-top"
-      ? "absolute top-0 left-0 right-0 z-10 max-h-[45vh]"
+      ? "absolute top-0 left-0 right-0 z-10 max-h-[35vh] animate-fade-in"
       : layout === "overlay"
       ? "pointer-events-none absolute top-16 left-4 bottom-4 w-[320px] sm:w-[360px] md:w-[400px] lg:w-[420px] xl:w-[480px] 2xl:w-[540px] z-10"
       : "w-80 sm:w-96 lg:w-[480px] xl:w-[520px] 2xl:w-[600px] border-l border-border bg-card overflow-y-auto themed-scroll shrink-0";
@@ -91,9 +91,19 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
         layout === "mobile-top" && "rounded-b-2xl bg-card/95 backdrop-blur-xl border-b border-x border-border/50 shadow-lg overflow-hidden",
         layout === "overlay" && "rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg overflow-hidden"
       )}>
+        {/* Handle bar for mobile - visual indicator for drag */}
+        {layout === "mobile-top" && (
+          <div className="flex justify-center py-2 bg-transparent">
+            <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
+          </div>
+        )}
+        
         {/* Header with close button */}
         {(layout === "overlay" || layout === "mobile-top") && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
+          <div className={cn(
+            "flex items-center justify-between px-4 border-b border-border/30",
+            layout === "mobile-top" ? "py-2" : "py-3"
+          )}>
             <h2 className="font-medium text-foreground text-sm">{tabLabels[activeTab]}</h2>
             {onClose && (
               <button
@@ -110,7 +120,7 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
         <div 
           className={cn(
             "flex-1 overflow-y-auto themed-scroll p-4",
-            layout === "mobile-top" ? "max-h-[calc(45vh-3.5rem)]" : "max-h-[calc(100vh-8rem)]"
+            layout === "mobile-top" ? "max-h-[calc(35vh-4.5rem)]" : "max-h-[calc(100vh-8rem)]"
           )}
           data-tour="widget-container"
         >
