@@ -59,7 +59,8 @@ export function DestinationCards() {
   const { t } = useTranslation();
 
   const handleClick = (query: string) => {
-    navigate(`/planner?q=${encodeURIComponent(query)}`);
+    // Add new=1 to force a new session when coming from home page
+    navigate(`/planner?q=${encodeURIComponent(query)}&new=1`);
   };
 
   return (

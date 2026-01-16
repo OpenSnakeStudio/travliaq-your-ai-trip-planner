@@ -24,8 +24,8 @@ export function HeroChatInput({ className, variant = "dark" }: HeroChatInputProp
 
   const handleSubmit = () => {
     if (!value.trim()) return;
-    // Navigate to planner with the message as query param
-    navigate(`/planner?q=${encodeURIComponent(value.trim())}`);
+    // Navigate to planner with the message as query param and new=1 to force new session
+    navigate(`/planner?q=${encodeURIComponent(value.trim())}&new=1`);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
