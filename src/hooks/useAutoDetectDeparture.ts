@@ -75,8 +75,13 @@ export function useAutoDetectDeparture() {
 
           console.log('[useAutoDetectDeparture] User city:', geoData.city, geoData.countryCode);
 
-          // Step 2: Find nearest airports
-          const airportsResult = await findNearestAirports(geoData.city, 1, geoData.countryCode);
+          // Step 2: Find nearest airports (use coords for reliability, city as fallback for display)
+          const airportsResult = await findNearestAirports(
+            geoData.city, 
+            1, 
+            geoData.countryCode,
+            { lat: latitude, lon: longitude }
+          );
           
           if (!airportsResult?.airports?.length) {
             console.warn('[useAutoDetectDeparture] No airports found near', geoData.city);

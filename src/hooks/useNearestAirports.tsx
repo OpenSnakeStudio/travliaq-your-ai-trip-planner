@@ -69,16 +69,28 @@ function isCountryName(name: string): boolean {
 export async function findNearestAirports(
   city: string,
   limit: number = 3,
-  countryCode?: string
+  countryCode?: string,
+  coords?: { lat: number; lon: number }
 ): Promise<NearestAirportsResponse | null> {
-  // Guard: don't call API with country names
-  if (isCountryName(city)) {
+  // Guard: don't call API with country names (unless we have coords fallback)
+  if (!coords && isCountryName(city)) {
     console.warn(`[useNearestAirports] Rejected country name as city: "${city}"`);
     return null;
   }
 
   try {
-    const body: { city: string; limit: number; country_code?: string } = { city, limit };
+    const body: { city?: string; lat?: number; lon?: number; limit: number; country_code?: string } = { limit };
+    
+    // Prefer coords if provided (more reliable than city name lookup)
+    if (coords) {
+      body.lat = coords.lat;
+      body.lon = coords.lon;
+    }
+    
+    // Still send city if not a country name (for matched_city in response)
+    if (city && !isCountryName(city)) {
+      body.city = city;
+    }
     
     if (countryCode) {
       body.country_code = countryCode;
