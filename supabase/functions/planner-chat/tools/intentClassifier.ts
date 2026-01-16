@@ -41,22 +41,35 @@ Tu DOIS appeler cet outil en PREMIER pour CHAQUE message utilisateur avant de r�
 - Nombre exact ("2 adultes") → Pas de widget, extraire le nombre
 - "en couple" → Pas de widget, adults: 2
 
-### PRÉFÉRENCES & CONTRAINTES (CRITIQUE)
-- Restrictions alimentaires mentionnées → widgetType: "dietary"
-  - FR: "végétarien", "vegan", "halal", "casher", "sans gluten", "restrictions alimentaires", "régime", "allergie", "je mange"
-  - EN: "vegetarian", "vegan", "halal", "kosher", "gluten-free", "dietary restrictions", "allergy"
-- Accessibilité/mobilité → widgetType: "mustHaves"
-  - FR: "fauteuil roulant", "mobilité réduite", "PMR", "handicap", "accessible"
-  - EN: "wheelchair", "disability", "accessible", "mobility"
-- Animal de compagnie → widgetType: "mustHaves"
-  - FR: "chien", "chat", "animal de compagnie", "avec mon chien"
-  - EN: "dog", "cat", "pet", "with my pet"
-- Critères obligatoires → widgetType: "mustHaves"
-  - "wifi obligatoire", "piscine", "parking", "climatisation"
-- Style de voyage/intérêts → widgetType: "preferenceInterests"
-  - "j'aime la plage", "culture", "nature", "gastronomie", "aventure"
-- Style de confort → widgetType: "preferenceStyle"
-  - "voyage luxe", "économique", "backpacker"
+### PRÉFÉRENCES & CONTRAINTES (CRITIQUE - TOUJOURS DÉCLENCHER LE WIDGET APPROPRIÉ)
+
+**dietary** - Restrictions alimentaires (PRIORITÉ 10):
+- FR: "végétarien", "vegan", "halal", "casher", "sans gluten", "lactose", "allergie", "régime", "restriction alimentaire", "je mange", "intolérant"
+- EN: "vegetarian", "vegan", "halal", "kosher", "gluten-free", "lactose", "allergy", "diet", "dietary restriction"
+
+**mustHaves** - Accessibilité/animaux/critères obligatoires (PRIORITÉ 9):
+- FR: "fauteuil roulant", "mobilité réduite", "PMR", "handicap", "accessible", "chien", "chat", "animal de compagnie", "avec mon chien", "wifi obligatoire", "piscine"
+- EN: "wheelchair", "disability", "accessible", "mobility", "dog", "cat", "pet", "with my pet", "wifi", "pool"
+
+**preferenceInterests** - Activités et centres d'intérêt (PRIORITÉ 7):
+- FR: "plage", "culture", "nature", "gastronomie", "sport", "aventure", "spa", "wellness", "shopping", "musée", "randonnée", "montagne", "mer", "safari", "plongée", "surf", "ski", "j'aime", "j'adore", "passion", "fan de"
+- EN: "beach", "culture", "nature", "gastronomy", "sport", "adventure", "spa", "shopping", "museum", "hiking", "mountain", "diving", "surfing", "i like", "i love", "passion"
+
+**preferenceStyle** - Style de voyage et budget (PRIORITÉ 6):
+- FR: "luxe", "économique", "pas cher", "budget", "backpacker", "routard", "premium", "haut de gamme", "5 étoiles", "confort", "relax", "zen", "chill", "intensif", "authentique", "romantique"
+- EN: "luxury", "cheap", "budget", "backpacker", "premium", "high-end", "comfort", "relaxing", "chill", "authentic", "romantic"
+
+**datePicker** - Dates de voyage (PRIORITÉ 5):
+- FR: "quand partir", "quelle date", "quel mois", "janvier" à "décembre", "été", "hiver", "printemps", "automne", "vacances", "pâques", "noël"
+- EN: "when to go", "what date", "which month", "january" to "december", "summer", "winter", "spring", "fall", "vacation", "easter", "christmas"
+
+**travelersSelector** - Composition du groupe (PRIORITÉ 5):
+- FR: "seul", "solo", "couple", "à deux", "famille", "en famille", "avec enfants", "groupe", "entre amis", "combien de personnes", "nous sommes", "on est"
+- EN: "alone", "solo", "couple", "family", "with children", "with kids", "group", "with friends", "how many people", "we are"
+
+**destinationSuggestions** - Inspiration (PRIORITÉ 4):
+- FR: "inspire-moi", "où aller", "quelle destination", "idée de voyage", "suggestion", "recommandation", "conseille-moi", "je ne sais pas où", "surprise-moi"
+- EN: "inspire me", "where to go", "travel idea", "suggestion", "recommend", "don't know where", "surprise me"
 
 ### ACTIONS SPÉCIALES
 - "choisis pour moi" → primaryIntent: "delegate_choice"
