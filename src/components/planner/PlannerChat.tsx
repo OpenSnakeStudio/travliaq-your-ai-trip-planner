@@ -109,6 +109,8 @@ export interface PlannerChatRef {
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/stores/hooks").TripPreferences>) => void;
   /** Start a fresh session (clears all memories and creates new session) */
   startNewSession: () => void;
+  /** Send a message programmatically (e.g., from URL query param) */
+  sendInitialMessage: (message: string) => void;
 }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
@@ -736,6 +738,12 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     handleAddActivityForCity: imperativeHandlers.handleAddActivityForCity,
     handlePreferencesDetection: imperativeHandlers.handlePreferencesDetection,
     startNewSession: handleStartNewSession,
+    sendInitialMessage: (message: string) => {
+      // Delay to ensure session is ready after creation
+      setTimeout(() => {
+        sendText(message);
+      }, 100);
+    },
   }));
 
   // Send message

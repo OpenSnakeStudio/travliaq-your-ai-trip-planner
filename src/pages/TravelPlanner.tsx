@@ -76,6 +76,8 @@ const TravelPlanner = () => {
   
   // Check if coming from home page (new=1 query param) - forces a new session
   const forceNewSession = searchParams.has("new");
+  // Get the initial query message from home page
+  const initialQuery = searchParams.get("q");
 
   // Check if user has already completed onboarding in a previous session
   const hasSeenOnboarding = localStorage.getItem("travliaq_onboarding_completed") === "true";
@@ -139,6 +141,7 @@ const TravelPlanner = () => {
   const newSessionTriggeredRef = useRef(false);
   
   // Force new session when coming from home page (new=1 query param)
+  // Then send the initial query as the first message
   useEffect(() => {
     if (forceNewSession && !newSessionTriggeredRef.current) {
       newSessionTriggeredRef.current = true;
@@ -148,12 +151,23 @@ const TravelPlanner = () => {
         if (chatRef.current?.startNewSession) {
           chatRef.current.startNewSession();
           console.log("[TravelPlanner] Created new session from home page navigation");
+          
+          // Send the initial query as the first message if provided
+          if (initialQuery) {
+            // Additional delay to ensure session is fully initialized
+            setTimeout(() => {
+              if (chatRef.current?.sendInitialMessage) {
+                chatRef.current.sendInitialMessage(initialQuery);
+                console.log("[TravelPlanner] Sent initial message:", initialQuery);
+              }
+            }, 500);
+          }
         }
       }, 100);
       
       return () => clearTimeout(timer);
     }
-  }, [forceNewSession]);
+  }, [forceNewSession, initialQuery]);
 
   // When switching between widgets OR closing the panel, default the map to the user's position.
   // IMPORTANT: Don't trigger during initial animation - only on subsequent tab/panel changes
