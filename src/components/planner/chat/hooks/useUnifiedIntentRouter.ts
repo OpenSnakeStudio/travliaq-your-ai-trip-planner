@@ -490,7 +490,82 @@ export function useUnifiedIntentRouter({
       "provide_travelers",
       "specify_composition",
       "confirm_selection",
+      "express_preference",
+      "express_constraint",
     ];
+    
+    // PREFERENCE INTENT → WIDGET MAPPING
+    // Check for preference-related intents and trigger appropriate widgets
+    const PREFERENCE_KEYWORD_TRIGGERS: Array<{
+      keywords: string[];
+      widgetType: WidgetType;
+    }> = [
+      // Dietary restrictions (FR + EN)
+      { 
+        keywords: ["végétarien", "vegan", "végan", "halal", "casher", "kosher", "sans gluten", "gluten-free", "lactose", "allergie", "allergy", "régime", "diet", "restriction alimentaire", "dietary", "je mange"],
+        widgetType: "dietary" 
+      },
+      // Accessibility / Must-haves (FR + EN)
+      { 
+        keywords: ["fauteuil", "wheelchair", "mobilité réduite", "mobility", "pmr", "handicap", "disability", "accessible", "chien", "dog", "chat", "cat", "animal de compagnie", "pet", "wifi obligatoire", "piscine obligatoire"],
+        widgetType: "mustHaves" 
+      },
+      // Interests (FR + EN)
+      { 
+        keywords: ["j'aime la plage", "j'aime la culture", "j'aime la nature", "gastronomie", "aventure", "sport", "musées", "museums", "shopping", "nightlife", "vie nocturne"],
+        widgetType: "preferenceInterests" 
+      },
+      // Style (FR + EN)
+      { 
+        keywords: ["voyage luxe", "luxury trip", "économique", "budget trip", "backpacker", "haut de gamme", "premium"],
+        widgetType: "preferenceStyle" 
+      },
+    ];
+    
+    // Check if user message contains preference keywords
+    if (lastUserMessage && (intent.primaryIntent === "express_preference" || intent.primaryIntent === "express_constraint")) {
+      const messageLower = lastUserMessage.toLowerCase();
+      
+      for (const trigger of PREFERENCE_KEYWORD_TRIGGERS) {
+        const matchedKeyword = trigger.keywords.find(kw => messageLower.includes(kw));
+        if (matchedKeyword) {
+          const validation = canShowWidget(trigger.widgetType);
+          if (validation.valid) {
+            console.log(`[UnifiedIntentRouter] Preference keyword matched: "${matchedKeyword}" → ${trigger.widgetType}`);
+            if (onWidgetTriggered) {
+              onWidgetTriggered(trigger.widgetType);
+            }
+            return {
+              shouldShowWidget: true,
+              widgetType: trigger.widgetType,
+              action: "none",
+              reason: `User mentioned "${matchedKeyword}"`,
+            };
+          }
+        }
+      }
+      
+      // Check entities from intent classification
+      if (intent.entities) {
+        const entities = intent.entities as Record<string, unknown>;
+        if (entities.dietaryRestrictions && canShowWidget("dietary").valid) {
+          if (onWidgetTriggered) onWidgetTriggered("dietary");
+          return { shouldShowWidget: true, widgetType: "dietary", action: "none", reason: "Dietary restrictions detected" };
+        }
+        if ((entities.accessibilityRequired || entities.petFriendly) && canShowWidget("mustHaves").valid) {
+          if (onWidgetTriggered) onWidgetTriggered("mustHaves");
+          return { shouldShowWidget: true, widgetType: "mustHaves", action: "none", reason: "Must-haves detected" };
+        }
+        if (entities.interests && canShowWidget("preferenceInterests").valid) {
+          if (onWidgetTriggered) onWidgetTriggered("preferenceInterests");
+          return { shouldShowWidget: true, widgetType: "preferenceInterests", action: "none", reason: "Interests detected" };
+        }
+        if (entities.budgetLevel && canShowWidget("preferenceStyle").valid) {
+          if (onWidgetTriggered) onWidgetTriggered("preferenceStyle");
+          return { shouldShowWidget: true, widgetType: "preferenceStyle", action: "none", reason: "Budget/style detected" };
+        }
+      }
+    }
     
     if (widgetTriggeringIntents.includes(intent.primaryIntent)) {
       const nextRequired = getNextRequiredWidget();
@@ -524,7 +599,7 @@ export function useUnifiedIntentRouter({
     }
     
     return { shouldShowWidget: false, widgetType: null, action: "none" };
-  }, [canShowWidget, getNextRequiredWidget, onWidgetTriggered, onSearchTriggered, onDelegateChoice]);
+  }, [canShowWidget, getNextRequiredWidget, onWidgetTriggered, onSearchTriggered, onDelegateChoice, lastUserMessage]);
 
   return {
     processIntent,
