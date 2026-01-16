@@ -712,31 +712,145 @@ ${phasePrompt}`;
               console.log("Preferences data from intent classification:", preferencesData);
             }
             
-            // FORCE WIDGET: Detect dietary/preference keywords and force appropriate widget
+            // ============================================================================
+            // FORCE WIDGET: Comprehensive keyword detection for all widget types
+            // Priority order: dietary > mustHaves > interests > style > dates > travelers > inspiration
+            // ============================================================================
             const messageLower = lastUserMessage?.toLowerCase() || "";
-            const dietaryKeywords = ["végétarien", "vegetarian", "vegan", "végan", "halal", "casher", "kosher", "sans gluten", "gluten-free", "lactose", "allergie", "allergy", "régime", "diet", "restriction alimentaire", "dietary restriction", "restriction", "alimentaire", "je mange"];
-            const mustHavesKeywords = ["fauteuil", "wheelchair", "mobilité réduite", "mobility", "pmr", "handicap", "disability", "accessible", "chien", "dog", "chat", "cat", "animal de compagnie", "pet", "avec mon chien", "with my pet"];
             
+            // Dietary keywords (priority 10)
+            const dietaryKeywords = [
+              "végétarien", "végétarienne", "vegan", "végan", "halal", "casher", "kosher", 
+              "sans gluten", "gluten", "lactose", "intolérant", "allergie", "allergique", 
+              "régime", "restriction alimentaire", "alimentaire", "pescétarien", "je mange",
+              "vegetarian", "vegan", "halal", "kosher", "gluten-free", "gluten free", 
+              "lactose", "intolerant", "allergy", "allergic", "diet", "dietary", "restriction"
+            ];
+            
+            // MustHaves keywords (priority 9)
+            const mustHavesKeywords = [
+              "fauteuil roulant", "fauteuil", "mobilité réduite", "pmr", "handicap", 
+              "accessible", "accessibilité", "chien", "chat", "animal", "pet",
+              "avec mon chien", "avec mon chat", "animal de compagnie",
+              "wheelchair", "mobility", "disability", "accessible", "dog", "cat", "with my dog"
+            ];
+            
+            // Interests keywords (priority 7)
+            const interestsKeywords = [
+              "plage", "culture", "nature", "gastronomie", "cuisine", "sport", "aventure",
+              "spa", "wellness", "shopping", "histoire", "musée", "musées", "nightlife",
+              "randonnée", "montagne", "mer", "océan", "safari", "plongée", "surf", "ski",
+              "j'aime", "j'adore", "passion", "fan de", "découvrir", "explorer",
+              "beach", "culture", "nature", "gastronomy", "sport", "adventure", "spa",
+              "shopping", "history", "museum", "hiking", "mountain", "diving", "surfing",
+              "i like", "i love", "passion", "discover", "explore"
+            ];
+            
+            // Style keywords (priority 6)
+            const styleKeywords = [
+              "luxe", "luxueux", "économique", "pas cher", "budget", "backpacker", "routard",
+              "premium", "haut de gamme", "5 étoiles", "4 étoiles", "confort", "relax",
+              "zen", "chill", "intensif", "dynamique", "authentique", "romantique",
+              "luxury", "cheap", "budget", "backpacker", "premium", "high-end", "comfort",
+              "relaxing", "chill", "intense", "authentic", "romantic"
+            ];
+            
+            // Date keywords (priority 5)
+            const dateKeywords = [
+              "quand partir", "quelle date", "quel mois", "partir en", "voyage en",
+              "janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+              "septembre", "octobre", "novembre", "décembre", "été", "hiver", "printemps", "automne",
+              "vacances", "congés", "pâques", "noël",
+              "when to go", "what date", "which month", "travel in",
+              "january", "february", "march", "april", "may", "june", "july", "august",
+              "september", "october", "november", "december", "summer", "winter", "spring", "fall",
+              "vacation", "holiday", "easter", "christmas"
+            ];
+            
+            // Travelers keywords (priority 5)
+            const travelersKeywords = [
+              "seul", "solo", "en solo", "couple", "à deux", "en couple",
+              "famille", "en famille", "avec enfants", "groupe", "entre amis",
+              "combien de personnes", "nous sommes", "on est", "voyager avec",
+              "alone", "solo", "by myself", "couple", "family", "with children", "with kids",
+              "group", "with friends", "how many people", "we are", "traveling with"
+            ];
+            
+            // Inspiration keywords (priority 4)
+            const inspirationKeywords = [
+              "inspire", "inspire-moi", "où aller", "quelle destination", "idée de voyage",
+              "suggestion", "recommandation", "conseille-moi", "je ne sais pas où", "surprise",
+              "propose-moi", "recommande-moi", "aide-moi à choisir",
+              "inspire me", "where to go", "travel idea", "suggestion", "recommend",
+              "don't know where", "no idea", "surprise me", "help me choose"
+            ];
+            
+            // Check keywords in priority order
             const hasDietaryKeyword = dietaryKeywords.some(kw => messageLower.includes(kw));
             const hasMustHavesKeyword = mustHavesKeywords.some(kw => messageLower.includes(kw));
+            const hasInterestsKeyword = interestsKeywords.some(kw => messageLower.includes(kw));
+            const hasStyleKeyword = styleKeywords.some(kw => messageLower.includes(kw));
+            const hasDateKeyword = dateKeywords.some(kw => messageLower.includes(kw));
+            const hasTravelersKeyword = travelersKeywords.some(kw => messageLower.includes(kw));
+            const hasInspirationKeyword = inspirationKeywords.some(kw => messageLower.includes(kw));
+            
+            // Entity-based detection
             const hasDietaryEntities = entities.dietaryRestrictions && entities.dietaryRestrictions.length > 0;
             const hasMustHavesEntities = entities.accessibilityRequired || entities.petFriendly;
+            const hasInterestsEntities = entities.interests && entities.interests.length > 0;
+            const hasStyleEntities = entities.budgetLevel;
             
-            // Force dietary widget
-            if ((hasDietaryKeyword || hasDietaryEntities) && !intentClassification.widgetToShow) {
-              intentClassification.widgetToShow = {
-                type: "dietary",
-                reason: "User mentioned dietary restrictions or preferences"
-              };
-              console.log("FORCED dietary widget based on keywords/entities");
-            }
-            // Force mustHaves widget
-            else if ((hasMustHavesKeyword || hasMustHavesEntities) && !intentClassification.widgetToShow) {
-              intentClassification.widgetToShow = {
-                type: "mustHaves",
-                reason: "User mentioned accessibility or pet requirements"
-              };
-              console.log("FORCED mustHaves widget based on keywords/entities");
+            // Force widget based on priority (only if no widget already suggested)
+            if (!intentClassification.widgetToShow) {
+              if (hasDietaryKeyword || hasDietaryEntities) {
+                intentClassification.widgetToShow = {
+                  type: "dietary",
+                  reason: "User mentioned dietary restrictions or preferences"
+                };
+                console.log("FORCED dietary widget based on keywords/entities");
+              }
+              else if (hasMustHavesKeyword || hasMustHavesEntities) {
+                intentClassification.widgetToShow = {
+                  type: "mustHaves",
+                  reason: "User mentioned accessibility or pet requirements"
+                };
+                console.log("FORCED mustHaves widget based on keywords/entities");
+              }
+              else if (hasInterestsKeyword || hasInterestsEntities) {
+                intentClassification.widgetToShow = {
+                  type: "preferenceInterests",
+                  reason: "User mentioned interests or activities"
+                };
+                console.log("FORCED preferenceInterests widget based on keywords/entities");
+              }
+              else if (hasStyleKeyword || hasStyleEntities) {
+                intentClassification.widgetToShow = {
+                  type: "preferenceStyle",
+                  reason: "User mentioned travel style or budget level"
+                };
+                console.log("FORCED preferenceStyle widget based on keywords/entities");
+              }
+              else if (hasDateKeyword) {
+                intentClassification.widgetToShow = {
+                  type: "datePicker",
+                  reason: "User mentioned dates or timing"
+                };
+                console.log("FORCED datePicker widget based on keywords");
+              }
+              else if (hasTravelersKeyword) {
+                intentClassification.widgetToShow = {
+                  type: "travelersSelector",
+                  reason: "User mentioned travelers or group composition"
+                };
+                console.log("FORCED travelersSelector widget based on keywords");
+              }
+              else if (hasInspirationKeyword) {
+                intentClassification.widgetToShow = {
+                  type: "destinationSuggestions",
+                  reason: "User asked for destination inspiration"
+                };
+                console.log("FORCED destinationSuggestions widget based on keywords");
+              }
             }
           }
         }

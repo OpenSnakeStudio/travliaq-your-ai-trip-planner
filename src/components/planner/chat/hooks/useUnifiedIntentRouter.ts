@@ -492,46 +492,179 @@ export function useUnifiedIntentRouter({
       "confirm_selection",
       "express_preference",
       "express_constraint",
+      "ask_inspiration",
+      "ask_recommendations",
     ];
     
-    // PREFERENCE INTENT → WIDGET MAPPING
-    // Check for preference-related intents and trigger appropriate widgets
-    const PREFERENCE_KEYWORD_TRIGGERS: Array<{
+    // ============================================================================
+    // COMPREHENSIVE KEYWORD TRIGGERS - Maps user keywords to widgets (sorted by priority)
+    // ============================================================================
+    const COMPREHENSIVE_KEYWORD_TRIGGERS: Array<{
       keywords: string[];
       widgetType: WidgetType;
+      priority: number;
     }> = [
-      // Dietary restrictions (FR + EN)
+      // === DIETARY (priority 10 - highest) ===
       { 
-        keywords: ["végétarien", "vegan", "végan", "halal", "casher", "kosher", "sans gluten", "gluten-free", "lactose", "allergie", "allergy", "régime", "diet", "restriction alimentaire", "dietary", "je mange"],
-        widgetType: "dietary" 
+        keywords: [
+          // FR
+          "végétarien", "végétarienne", "vegan", "végan", "halal", "casher", "kosher", 
+          "sans gluten", "gluten", "lactose", "intolérant", "allergie", "allergique", 
+          "régime", "restriction alimentaire", "alimentaire", "pescétarien", 
+          "sans œuf", "sans noix", "noix", "arachide", "je mange",
+          // EN
+          "vegetarian", "vegan", "halal", "kosher", "gluten-free", "gluten free", 
+          "lactose", "intolerant", "allergy", "allergic", "diet", "dietary", 
+          "restriction", "pescatarian", "no eggs", "no nuts", "nut", "peanut"
+        ],
+        widgetType: "dietary",
+        priority: 10
       },
-      // Accessibility / Must-haves (FR + EN)
+      
+      // === MUST-HAVES (priority 9) ===
       { 
-        keywords: ["fauteuil", "wheelchair", "mobilité réduite", "mobility", "pmr", "handicap", "disability", "accessible", "chien", "dog", "chat", "cat", "animal de compagnie", "pet", "wifi obligatoire", "piscine obligatoire"],
-        widgetType: "mustHaves" 
+        keywords: [
+          // FR
+          "fauteuil roulant", "fauteuil", "mobilité réduite", "pmr", "handicap", 
+          "handicapé", "accessible", "accessibilité", "chien", "chat", "animal", 
+          "animaux", "pet", "wifi obligatoire", "piscine", "famille nombreuse",
+          "bébé", "poussette", "ascenseur", "rez-de-chaussée", "avec mon chien",
+          "avec mon chat", "animal de compagnie",
+          // EN
+          "wheelchair", "mobility", "disability", "disabled", "accessible", 
+          "accessibility", "dog", "cat", "pet", "pets", "wifi", "pool", 
+          "baby", "stroller", "elevator", "ground floor", "with my dog", "with my cat"
+        ],
+        widgetType: "mustHaves",
+        priority: 9
       },
-      // Interests (FR + EN)
+      
+      // === PREFERENCE INTERESTS (priority 7) ===
       { 
-        keywords: ["j'aime la plage", "j'aime la culture", "j'aime la nature", "gastronomie", "aventure", "sport", "musées", "museums", "shopping", "nightlife", "vie nocturne"],
-        widgetType: "preferenceInterests" 
+        keywords: [
+          // FR - Direct interests
+          "plage", "culture", "nature", "gastronomie", "cuisine locale", 
+          "sport", "aventure", "bien-être", "wellness", "spa", "massage",
+          "shopping", "histoire", "musée", "musées", "vie nocturne", "nightlife",
+          "randonnée", "montagne", "mer", "océan", "lac", "forêt", "parc national",
+          "temple", "église", "monument", "architecture", "art", "galerie",
+          "festival", "concert", "théâtre", "danse", "photographie", "safari",
+          "plongée", "snorkeling", "surf", "ski", "escalade", "vélo", "kayak",
+          "j'aime", "j'adore", "je préfère", "passion", "passionné", "fan de",
+          "découvrir", "explorer", "visiter", "beach", "farniente", "détente",
+          // EN
+          "beach", "culture", "nature", "gastronomy", "local food", "cuisine",
+          "sport", "adventure", "wellness", "spa", "massage", "shopping",
+          "history", "museum", "museums", "nightlife", "hiking", "mountain",
+          "sea", "ocean", "lake", "forest", "national park", "temple", "church",
+          "monument", "architecture", "art", "gallery", "festival", "concert",
+          "theater", "dance", "photography", "safari", "diving", "snorkeling",
+          "surfing", "skiing", "climbing", "cycling", "kayaking",
+          "i like", "i love", "i prefer", "passion", "passionate", "fan of",
+          "discover", "explore", "visit"
+        ],
+        widgetType: "preferenceInterests",
+        priority: 7
       },
-      // Style (FR + EN)
+      
+      // === PREFERENCE STYLE (priority 6) ===
       { 
-        keywords: ["voyage luxe", "luxury trip", "économique", "budget trip", "backpacker", "haut de gamme", "premium"],
-        widgetType: "preferenceStyle" 
+        keywords: [
+          // FR
+          "luxe", "luxueux", "économique", "pas cher", "budget", "backpacker", 
+          "routard", "premium", "haut de gamme", "5 étoiles", "4 étoiles",
+          "confort", "confortable", "relax", "relaxant", "zen", "chill", 
+          "intensif", "dynamique", "actif", "urbain", "campagne", 
+          "rural", "authentique", "local", "touristique", "populaire",
+          "tranquille", "calme", "animé", "festif", "romantique", "intime",
+          "voyage économique", "voyage luxe", "voyage relax",
+          // EN
+          "luxury", "luxurious", "cheap", "budget", "backpacker", "backpacking",
+          "premium", "high-end", "5 star", "4 star", "comfort", "comfortable",
+          "relax", "relaxing", "chill", "intense", "dynamic", "active", 
+          "urban", "city", "countryside", "rural", "authentic", "local", 
+          "touristy", "popular", "quiet", "calm", "lively", "festive", "romantic",
+          "budget trip", "luxury trip", "relaxing trip"
+        ],
+        widgetType: "preferenceStyle",
+        priority: 6
       },
+      
+      // === DATE PICKER (priority 5) ===
+      { 
+        keywords: [
+          // FR
+          "quand partir", "quelle date", "quel mois", "dates", "départ", 
+          "partir en", "voyage en", "janvier", "février", "mars", "avril", 
+          "mai", "juin", "juillet", "août", "septembre", "octobre", 
+          "novembre", "décembre", "été", "hiver", "printemps", "automne",
+          "semaine prochaine", "mois prochain", "vacances", "congés",
+          "pâques", "noël", "toussaint", "été prochain", "cet hiver",
+          // EN
+          "when to go", "what date", "which month", "dates", "departure",
+          "travel in", "january", "february", "march", "april", "may", 
+          "june", "july", "august", "september", "october", "november", 
+          "december", "summer", "winter", "spring", "fall", "autumn",
+          "next week", "next month", "vacation", "holiday", "easter",
+          "christmas", "next summer", "this winter"
+        ],
+        widgetType: "datePicker",
+        priority: 5
+      },
+      
+      // === TRAVELERS SELECTOR (priority 5) ===
+      { 
+        keywords: [
+          // FR
+          "seul", "solo", "en solo", "couple", "à deux", "en couple",
+          "famille", "en famille", "avec enfants", "groupe", "entre amis",
+          "ami", "amis", "combien de personnes", "nombre de voyageurs",
+          "adulte", "adultes", "enfant", "enfants", "bébé", "nourrisson",
+          "nous sommes", "on est", "je suis seul", "on voyage", "voyager avec",
+          "personnes", "voyageurs",
+          // EN
+          "alone", "solo", "by myself", "couple", "together", "as a couple",
+          "family", "with family", "with children", "with kids", "group",
+          "with friends", "friend", "friends", "how many people", "travelers",
+          "adult", "adults", "child", "children", "baby", "infant",
+          "we are", "traveling with", "i'm alone", "i'm traveling"
+        ],
+        widgetType: "travelersSelector",
+        priority: 5
+      },
+      
+      // === DESTINATION SUGGESTIONS (priority 4) ===
+      { 
+        keywords: [
+          // FR
+          "inspire", "inspire-moi", "où aller", "quelle destination", 
+          "idée de voyage", "suggestion", "recommandation", "conseille-moi",
+          "je ne sais pas où", "pas d'idée", "surprise", "surprise-moi",
+          "propose-moi", "recommande-moi", "aide-moi à choisir",
+          // EN
+          "inspire", "inspire me", "where to go", "which destination",
+          "travel idea", "suggestion", "recommendation", "suggest",
+          "don't know where", "no idea", "surprise", "surprise me",
+          "suggest me", "recommend me", "help me choose"
+        ],
+        widgetType: "destinationSuggestions",
+        priority: 4
+      }
     ];
     
-    // Check if user message contains preference keywords
-    if (lastUserMessage && (intent.primaryIntent === "express_preference" || intent.primaryIntent === "express_constraint")) {
+    // Sort by priority (highest first)
+    const sortedTriggers = [...COMPREHENSIVE_KEYWORD_TRIGGERS].sort((a, b) => b.priority - a.priority);
+    
+    // Check if user message contains keywords - works for ANY intent now
+    if (lastUserMessage) {
       const messageLower = lastUserMessage.toLowerCase();
       
-      for (const trigger of PREFERENCE_KEYWORD_TRIGGERS) {
+      for (const trigger of sortedTriggers) {
         const matchedKeyword = trigger.keywords.find(kw => messageLower.includes(kw));
         if (matchedKeyword) {
           const validation = canShowWidget(trigger.widgetType);
           if (validation.valid) {
-            console.log(`[UnifiedIntentRouter] Preference keyword matched: "${matchedKeyword}" → ${trigger.widgetType}`);
+            console.log(`[UnifiedIntentRouter] Keyword matched: "${matchedKeyword}" → ${trigger.widgetType} (priority ${trigger.priority})`);
             if (onWidgetTriggered) {
               onWidgetTriggered(trigger.widgetType);
             }
@@ -545,7 +678,7 @@ export function useUnifiedIntentRouter({
         }
       }
       
-      // Check entities from intent classification
+      // Check entities from intent classification as fallback
       if (intent.entities) {
         const entities = intent.entities as Record<string, unknown>;
         if (entities.dietaryRestrictions && canShowWidget("dietary").valid) {
@@ -556,7 +689,7 @@ export function useUnifiedIntentRouter({
           if (onWidgetTriggered) onWidgetTriggered("mustHaves");
           return { shouldShowWidget: true, widgetType: "mustHaves", action: "none", reason: "Must-haves detected" };
         }
-        if (entities.interests && canShowWidget("preferenceInterests").valid) {
+        if (entities.interests && Array.isArray(entities.interests) && (entities.interests as unknown[]).length > 0 && canShowWidget("preferenceInterests").valid) {
           if (onWidgetTriggered) onWidgetTriggered("preferenceInterests");
           return { shouldShowWidget: true, widgetType: "preferenceInterests", action: "none", reason: "Interests detected" };
         }
