@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo-travliaq.png";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
-import { useChatSessions, type StoredMessage } from "@/hooks/useChatSessions";
+import { useChatSessions, type StoredMessage, type ChatTranslations } from "@/hooks/useChatSessions";
 import { useChatScroll } from "@/hooks/useChatScroll";
 import { useChatMapContext } from "@/hooks/useChatMapContext";
 import { cn } from "@/lib/utils";
@@ -121,6 +121,13 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory, resetMemory: resetActivityMemory } = useActivityMemoryStore();
   const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory, getPreferences, memory: prefMemory } = usePreferenceMemoryStore();
 
+  // Chat translations
+  const chatTranslations: ChatTranslations = useMemo(() => ({
+    newConversation: t("planner.chat.newConversation"),
+    startConversation: t("planner.chat.startConversation"),
+    welcomeMessage: t("planner.chat.welcomeMessage"),
+  }), [t]);
+
   // Chat sessions
   const {
     sessions,
@@ -131,7 +138,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     createNewSession,
     deleteSession,
     deleteAllSessions,
-  } = useChatSessions({ getFlightMemory, getAccommodationMemory, getTravelMemory });
+  } = useChatSessions({ getFlightMemory, getAccommodationMemory, getTravelMemory, translations: chatTranslations });
 
   // Local state
   const [input, setInput] = useState("");

@@ -33,10 +33,17 @@ const SYNC_DEBOUNCE_MS = 3000;
 
 const generateId = () => crypto.randomUUID();
 
-const getDefaultWelcomeMessage = (): StoredMessage => ({
+// Default translations (French fallback - will be overridden by i18n in components)
+const DEFAULT_TRANSLATIONS = {
+  newConversation: "Nouvelle conversation",
+  startConversation: "Démarrez la conversation...",
+  welcomeMessage: "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage.",
+};
+
+const getDefaultWelcomeMessage = (translations = DEFAULT_TRANSLATIONS): StoredMessage => ({
   id: "welcome",
   role: "assistant",
-  text: "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage.",
+  text: translations.welcomeMessage,
 });
 
 // Emojis for trip titles based on destination keywords
@@ -71,7 +78,7 @@ const getEmojiForText = (text: string): string => {
   return "✈️";
 };
 
-const generateTitle = (messages: StoredMessage[]): string => {
+const generateTitle = (messages: StoredMessage[], translations = DEFAULT_TRANSLATIONS): string => {
   const firstUserMessage = messages.find((m) => m.role === "user");
   if (firstUserMessage) {
     const text = firstUserMessage.text.slice(0, 35);
@@ -79,26 +86,33 @@ const generateTitle = (messages: StoredMessage[]): string => {
     const truncatedText = text.length < firstUserMessage.text.length ? text + "..." : text;
     return `${emoji} ${truncatedText}`;
   }
-  return "✈️ Nouvelle conversation";
+  return `✈️ ${translations.newConversation}`;
 };
 
-const generatePreview = (messages: StoredMessage[]): string => {
+const generatePreview = (messages: StoredMessage[], translations = DEFAULT_TRANSLATIONS): string => {
   const lastMessage = [...messages].reverse().find((m) => !m.isHidden && m.text);
   if (lastMessage) {
     const text = lastMessage.text.slice(0, 50);
     return text.length < lastMessage.text.length ? text + "..." : text;
   }
-  return "Démarrez la conversation...";
+  return translations.startConversation;
 };
+
+export interface ChatTranslations {
+  newConversation: string;
+  startConversation: string;
+  welcomeMessage: string;
+}
 
 interface UseChatSessionsOptions {
   getFlightMemory?: () => Record<string, unknown>;
   getAccommodationMemory?: () => Record<string, unknown>;
   getTravelMemory?: () => Record<string, unknown>;
+  translations?: ChatTranslations;
 }
 
 export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
-  const { getFlightMemory, getAccommodationMemory, getTravelMemory } = options;
+  const { getFlightMemory, getAccommodationMemory, getTravelMemory, translations = DEFAULT_TRANSLATIONS } = options;
   const { user } = useAuth();
   
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -203,16 +217,16 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
       if (loadedSessions.length === 0) {
         const newSession: ChatSession = {
           id: generateId(),
-          title: "Nouvelle conversation",
+          title: translations.newConversation,
           createdAt: Date.now(),
           updatedAt: Date.now(),
-          preview: "Démarrez la conversation...",
+          preview: translations.startConversation,
         };
         loadedSessions = [newSession];
         localStorage.setItem(SESSIONS_INDEX_KEY, JSON.stringify(loadedSessions));
         localStorage.setItem(
           SESSION_PREFIX + newSession.id,
-          JSON.stringify([getDefaultWelcomeMessage()])
+          JSON.stringify([getDefaultWelcomeMessage(translations)])
         );
       }
 
@@ -226,23 +240,23 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
       const messagesRaw = localStorage.getItem(SESSION_PREFIX + mostRecent.id);
       if (messagesRaw) {
         const parsed = JSON.parse(messagesRaw);
-        setMessages(Array.isArray(parsed) ? parsed : [getDefaultWelcomeMessage()]);
+        setMessages(Array.isArray(parsed) ? parsed : [getDefaultWelcomeMessage(translations)]);
       } else {
-        setMessages([getDefaultWelcomeMessage()]);
+        setMessages([getDefaultWelcomeMessage(translations)]);
       }
     } catch (e) {
       console.error("Error loading chat sessions:", e);
       // Create a fresh session on error
       const newSession: ChatSession = {
         id: generateId(),
-        title: "Nouvelle conversation",
+        title: translations.newConversation,
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        preview: "Démarrez la conversation...",
+        preview: translations.startConversation,
       };
       setSessions([newSession]);
       setActiveSessionId(newSession.id);
-      setMessages([getDefaultWelcomeMessage()]);
+      setMessages([getDefaultWelcomeMessage(translations)]);
     }
   }, []);
 
@@ -386,28 +400,28 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
       const messagesRaw = localStorage.getItem(SESSION_PREFIX + sessionId);
       if (messagesRaw) {
         const parsed = JSON.parse(messagesRaw);
-        setMessages(Array.isArray(parsed) ? parsed : [getDefaultWelcomeMessage()]);
+        setMessages(Array.isArray(parsed) ? parsed : [getDefaultWelcomeMessage(translations)]);
       } else {
-        setMessages([getDefaultWelcomeMessage()]);
+        setMessages([getDefaultWelcomeMessage(translations)]);
       }
       setActiveSessionId(sessionId);
     } catch (e) {
       console.error("Error loading session:", e);
-      setMessages([getDefaultWelcomeMessage()]);
+      setMessages([getDefaultWelcomeMessage(translations)]);
     }
-  }, []);
+  }, [translations]);
 
   // Create a new session
   const createNewSession = useCallback(() => {
     const newSession: ChatSession = {
       id: generateId(),
-      title: "Nouvelle conversation",
+      title: translations.newConversation,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      preview: "Démarrez la conversation...",
+      preview: translations.startConversation,
     };
 
-    const defaultMessages = [getDefaultWelcomeMessage()];
+    const defaultMessages = [getDefaultWelcomeMessage(translations)];
 
     try {
       // Save new session
@@ -484,12 +498,12 @@ export const useChatSessions = (options: UseChatSessionsOptions = {}) => {
             // Create a new session if all are deleted
             const newSession: ChatSession = {
               id: generateId(),
-              title: "✈️ Nouvelle conversation",
+              title: `✈️ ${translations.newConversation}`,
               createdAt: Date.now(),
               updatedAt: Date.now(),
-              preview: "Démarrez la conversation...",
+              preview: translations.startConversation,
             };
-            const defaultMessages = [getDefaultWelcomeMessage()];
+            const defaultMessages = [getDefaultWelcomeMessage(translations)];
 
             // Update refs first
             sessionsRef.current = [newSession];
