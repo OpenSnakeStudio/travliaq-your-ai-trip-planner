@@ -2868,9 +2868,22 @@ const resources = {
       "planner.widget.dietaryConfigured": "Régime configuré",
       "planner.widget.destinationSelected": "Destination sélectionnée",
 
-      // Planner - YouTubeShortsPanel
-      "planner.youtube.thingsToDo": "À faire à {{city}}",
-      "planner.youtube.videoPreview": "Aperçu vidéo {{city}}",
+      // Planner - Missing keys for style/preferences callbacks
+      "planner.style.eco": "Économique",
+      "planner.style.balanced": "Équilibré",
+      "planner.mustHaves.wifi": "WiFi rapide",
+      "planner.mustHaves.none": "Aucun critère",
+      "planner.dietary.none": "Aucune restriction",
+      "planner.preference.noInterests": "Pas de préférence",
+
+      // Planner - ComparisonWidget
+      "planner.comparison.bestChoice": "Meilleur choix",
+      "planner.comparison.recommended": "Recommandé",
+      "planner.comparison.selectItem": "Sélectionner",
+      "planner.comparison.viewDetails": "Voir les détails",
+      "planner.comparison.compare": "Comparer",
+      "planner.comparison.clear": "Effacer",
+      "planner.comparison.compareCount": "Comparer ({{current}}/{{max}})",
 
       // Planner - Preferences
       "planner.preferences.wellness": "Bien-être",
@@ -5768,9 +5781,22 @@ const resources = {
       "planner.widget.dietaryConfigured": "Dietary configured",
       "planner.widget.destinationSelected": "Destination selected",
 
-      // Planner - YouTubeShortsPanel
-      "planner.youtube.thingsToDo": "Things to do in {{city}}",
-      "planner.youtube.videoPreview": "Video preview {{city}}",
+      // Planner - Missing keys for style/preferences callbacks
+      "planner.style.eco": "Budget",
+      "planner.style.balanced": "Balanced",
+      "planner.mustHaves.wifi": "Fast WiFi",
+      "planner.mustHaves.none": "No criteria",
+      "planner.dietary.none": "No restrictions",
+      "planner.preference.noInterests": "No preference",
+
+      // Planner - ComparisonWidget
+      "planner.comparison.bestChoice": "Best choice",
+      "planner.comparison.recommended": "Recommended",
+      "planner.comparison.selectItem": "Select",
+      "planner.comparison.viewDetails": "View details",
+      "planner.comparison.compare": "Compare",
+      "planner.comparison.clear": "Clear",
+      "planner.comparison.compareCount": "Compare ({{current}}/{{max}})",
 
       // Planner - Preferences
       "planner.preferences.wellness": "Wellness",

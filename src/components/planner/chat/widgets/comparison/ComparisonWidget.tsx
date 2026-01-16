@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
   X,
@@ -170,6 +171,7 @@ export function ComparisonWidget({
   highlightBest = true,
   showWinner = true,
 }: ComparisonWidgetProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   // Determine winner (item with most "best" values)
@@ -217,7 +219,7 @@ export function ComparisonWidget({
               <div className="absolute top-2 left-2">
                 <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium">
                   <Trophy size={12} />
-                  Meilleur choix
+                  {t("planner.comparison.bestChoice")}
                 </div>
               </div>
             )}
@@ -227,7 +229,7 @@ export function ComparisonWidget({
               <div className="absolute top-2 left-2">
                 <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
                   <ThumbsUp size={12} />
-                  Recommandé
+                  {t("planner.comparison.recommended")}
                 </div>
               </div>
             )}
@@ -308,7 +310,7 @@ export function ComparisonWidget({
                     size === "sm" ? "text-xs" : "text-sm"
                   )}
                 >
-                  Sélectionner
+                  {t("planner.comparison.selectItem")}
                 </button>
               )}
             </div>
@@ -323,7 +325,7 @@ export function ComparisonWidget({
           onClick={() => setExpanded(!expanded)}
           className="w-full flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
         >
-          <span>Voir les détails</span>
+          <span>{t("planner.comparison.viewDetails")}</span>
           {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       )}
@@ -379,12 +381,14 @@ export function CompactComparisonBar({
   onCompare: () => void;
   maxItems?: number;
 }) {
+  const { t } = useTranslation();
+
   if (items.length === 0) return null;
 
   return (
     <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-4 py-2">
       <span className="text-sm text-muted-foreground">
-        Comparer ({items.length}/{maxItems}):
+        {t("planner.comparison.compareCount", { current: items.length, max: maxItems })}:
       </span>
       <div className="flex items-center gap-2 flex-1 overflow-x-auto">
         {items.map((item) => (
@@ -402,7 +406,7 @@ export function CompactComparisonBar({
           onClick={onClear}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          Effacer
+          {t("planner.comparison.clear")}
         </button>
         <button
           type="button"
@@ -415,7 +419,7 @@ export function CompactComparisonBar({
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
         >
-          Comparer
+          {t("planner.comparison.compare")}
         </button>
       </div>
     </div>
