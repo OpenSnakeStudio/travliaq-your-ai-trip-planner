@@ -1667,6 +1667,12 @@ const resources = {
       "planner.accommodation.shortName": "Hébgt {{num}}",
       "planner.accommodation.searchCity": "Rechercher une ville...",
       
+      // Accommodation - Additional keys used by AccommodationPanel
+      "planner.accommodation.budgetPerNight": "Budget par nuit",
+      "planner.accommodation.accommodationIndex": "Hébergement {{index}}",
+      "planner.accommodation.accommodationShort": "Hébgt {{index}}",
+      "planner.accommodation.syncedWithFlights": "Synchronisé avec les vols",
+      
       // Hotels (HotelSearchResults)
       "planner.hotels.perNight": "nuit",
       "planner.hotels.total": "Total",
@@ -4560,6 +4566,12 @@ const resources = {
       "planner.accommodation.defaultName": "Accommodation {{num}}",
       "planner.accommodation.shortName": "Stay {{num}}",
       "planner.accommodation.searchCity": "Search for a city...",
+      
+      // Accommodation - Additional keys used by AccommodationPanel
+      "planner.accommodation.budgetPerNight": "Budget per night",
+      "planner.accommodation.accommodationIndex": "Accommodation {{index}}",
+      "planner.accommodation.accommodationShort": "Stay {{index}}",
+      "planner.accommodation.syncedWithFlights": "Synced with flights",
       
       // Hotels (HotelSearchResults)
       "planner.hotels.perNight": "night",
