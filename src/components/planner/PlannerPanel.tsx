@@ -37,7 +37,7 @@ interface PlannerPanelProps {
   activeTab: TabType;
   onMapMove: (center: [number, number], zoom: number) => void;
   mapCenter?: [number, number];
-  layout?: "sidebar" | "overlay";
+  layout?: "sidebar" | "overlay" | "mobile-top";
   onClose?: () => void;
   isVisible?: boolean;
   onFlightRoutesChange?: (routes: FlightRoutePoint[]) => void;
@@ -68,20 +68,31 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
   const { t } = useTranslation();
   const tabLabels = getTabLabels(t);
   
-  if (!isVisible && layout === "overlay") return null;
+  if (!isVisible && (layout === "overlay" || layout === "mobile-top")) return null;
 
   const wrapperClass =
-    layout === "overlay"
+    layout === "mobile-top"
+      ? "absolute top-0 left-0 right-0 z-10 max-h-[45vh]"
+      : layout === "overlay"
       ? "pointer-events-none absolute top-16 left-4 bottom-4 w-[320px] sm:w-[360px] md:w-[400px] lg:w-[420px] xl:w-[480px] 2xl:w-[540px] z-10"
       : "w-80 sm:w-96 lg:w-[480px] xl:w-[520px] 2xl:w-[600px] border-l border-border bg-card overflow-y-auto themed-scroll shrink-0";
 
-  const innerClass = layout === "overlay" ? "pointer-events-auto h-full overflow-y-auto themed-scroll" : "";
+  const innerClass = 
+    layout === "mobile-top" 
+      ? "h-full overflow-y-auto themed-scroll" 
+      : layout === "overlay" 
+      ? "pointer-events-auto h-full overflow-y-auto themed-scroll" 
+      : "";
 
   return (
     <aside className={wrapperClass} aria-label={t("planner.flights.closePanel")} data-tour="widgets-panel">
-      <div className={cn(innerClass, layout === "overlay" && "rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg overflow-hidden")}>
+      <div className={cn(
+        innerClass, 
+        layout === "mobile-top" && "rounded-b-2xl bg-card/95 backdrop-blur-xl border-b border-x border-border/50 shadow-lg overflow-hidden",
+        layout === "overlay" && "rounded-2xl bg-card/95 backdrop-blur-xl border border-border/50 shadow-lg overflow-hidden"
+      )}>
         {/* Header with close button */}
-        {layout === "overlay" && (
+        {(layout === "overlay" || layout === "mobile-top") && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
             <h2 className="font-medium text-foreground text-sm">{tabLabels[activeTab]}</h2>
             {onClose && (
@@ -97,7 +108,10 @@ const PlannerPanel = ({ activeTab, onMapMove, mapCenter, layout = "sidebar", onC
         )}
         {/* Widget container wrapper - targets the ENTIRE visible widget for onboarding */}
         <div 
-          className="flex-1 overflow-y-auto themed-scroll p-4 max-h-[calc(100vh-8rem)]"
+          className={cn(
+            "flex-1 overflow-y-auto themed-scroll p-4",
+            layout === "mobile-top" ? "max-h-[calc(45vh-3.5rem)]" : "max-h-[calc(100vh-8rem)]"
+          )}
           data-tour="widget-container"
         >
           <div data-tour="widget-flights" style={{ display: activeTab === "flights" ? "block" : "none" }}>
