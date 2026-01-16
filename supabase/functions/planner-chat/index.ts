@@ -711,6 +711,33 @@ ${phasePrompt}`;
               }
               console.log("Preferences data from intent classification:", preferencesData);
             }
+            
+            // FORCE WIDGET: Detect dietary/preference keywords and force appropriate widget
+            const messageLower = lastUserMessage?.toLowerCase() || "";
+            const dietaryKeywords = ["végétarien", "vegetarian", "vegan", "végan", "halal", "casher", "kosher", "sans gluten", "gluten-free", "lactose", "allergie", "allergy", "régime", "diet", "restriction alimentaire", "dietary restriction", "restriction", "alimentaire", "je mange"];
+            const mustHavesKeywords = ["fauteuil", "wheelchair", "mobilité réduite", "mobility", "pmr", "handicap", "disability", "accessible", "chien", "dog", "chat", "cat", "animal de compagnie", "pet", "avec mon chien", "with my pet"];
+            
+            const hasDietaryKeyword = dietaryKeywords.some(kw => messageLower.includes(kw));
+            const hasMustHavesKeyword = mustHavesKeywords.some(kw => messageLower.includes(kw));
+            const hasDietaryEntities = entities.dietaryRestrictions && entities.dietaryRestrictions.length > 0;
+            const hasMustHavesEntities = entities.accessibilityRequired || entities.petFriendly;
+            
+            // Force dietary widget
+            if ((hasDietaryKeyword || hasDietaryEntities) && !intentClassification.widgetToShow) {
+              intentClassification.widgetToShow = {
+                type: "dietary",
+                reason: "User mentioned dietary restrictions or preferences"
+              };
+              console.log("FORCED dietary widget based on keywords/entities");
+            }
+            // Force mustHaves widget
+            else if ((hasMustHavesKeyword || hasMustHavesEntities) && !intentClassification.widgetToShow) {
+              intentClassification.widgetToShow = {
+                type: "mustHaves",
+                reason: "User mentioned accessibility or pet requirements"
+              };
+              console.log("FORCED mustHaves widget based on keywords/entities");
+            }
           }
         }
         

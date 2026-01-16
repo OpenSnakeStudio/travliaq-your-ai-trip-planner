@@ -22,7 +22,8 @@ Tu DOIS appeler cet outil en PREMIER pour CHAQUE message utilisateur avant de r�
 2. Dates (dateRangePicker ou datePicker)
 3. Voyageurs (travelersSelector)
 4. Type de voyage (tripTypeConfirm)
-5. Recherche
+5. Préférences (dietary, mustHaves, preferenceInterests, preferenceStyle)
+6. Recherche
 
 ## LOGIQUE DE DÉTECTION
 
@@ -39,6 +40,23 @@ Tu DOIS appeler cet outil en PREMIER pour CHAQUE message utilisateur avant de r�
 - Composition vague ("en famille", "entre amis") → widgetType: "travelersSelector"
 - Nombre exact ("2 adultes") → Pas de widget, extraire le nombre
 - "en couple" → Pas de widget, adults: 2
+
+### PRÉFÉRENCES & CONTRAINTES (CRITIQUE)
+- Restrictions alimentaires mentionnées → widgetType: "dietary"
+  - FR: "végétarien", "vegan", "halal", "casher", "sans gluten", "restrictions alimentaires", "régime", "allergie", "je mange"
+  - EN: "vegetarian", "vegan", "halal", "kosher", "gluten-free", "dietary restrictions", "allergy"
+- Accessibilité/mobilité → widgetType: "mustHaves"
+  - FR: "fauteuil roulant", "mobilité réduite", "PMR", "handicap", "accessible"
+  - EN: "wheelchair", "disability", "accessible", "mobility"
+- Animal de compagnie → widgetType: "mustHaves"
+  - FR: "chien", "chat", "animal de compagnie", "avec mon chien"
+  - EN: "dog", "cat", "pet", "with my pet"
+- Critères obligatoires → widgetType: "mustHaves"
+  - "wifi obligatoire", "piscine", "parking", "climatisation"
+- Style de voyage/intérêts → widgetType: "preferenceInterests"
+  - "j'aime la plage", "culture", "nature", "gastronomie", "aventure"
+- Style de confort → widgetType: "preferenceStyle"
+  - "voyage luxe", "économique", "backpacker"
 
 ### ACTIONS SPÉCIALES
 - "choisis pour moi" → primaryIntent: "delegate_choice"
@@ -187,6 +205,8 @@ Tu DOIS appeler cet outil en PREMIER pour CHAQUE message utilisateur avant de r�
                 "travelersConfirmBeforeSearch",
                 "preferenceStyle",
                 "preferenceInterests",
+                "dietary",
+                "mustHaves",
                 "destinationSuggestions"
               ],
               description: "Type de widget à afficher"
