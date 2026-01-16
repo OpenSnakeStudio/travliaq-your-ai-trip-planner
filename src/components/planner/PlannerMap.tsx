@@ -298,9 +298,13 @@ interface PlannerMapProps {
    * Incrementing nonce triggers a new focus.
    */
   userDefaultFocusNonce?: number;
+  /** Whether we're on a mobile device */
+  isMobile?: boolean;
+  /** Whether the mobile widget panel is open (affects map padding) */
+  mobileWidgetOpen?: boolean;
 }
 
-const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete, isPanelOpen = false, userLocation, onDestinationClick, userDefaultFocusNonce }: PlannerMapProps) => {
+const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flightRoutes = [], animateToUserLocation = false, onAnimationComplete, isPanelOpen = false, userLocation, onDestinationClick, userDefaultFocusNonce, isMobile = false, mobileWidgetOpen = false }: PlannerMapProps) => {
   const { t } = useTranslation();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -464,6 +468,23 @@ const PlannerMap = ({ activeTab, center, zoom, onPinClick, selectedPinId, flight
 
     fetchPrices(departureAirports, destinationIatas);
   }, [activeTab, departureAirports, destinationIatas, fetchPrices]);
+
+  // Mobile: adjust map padding when widget is open/closed to keep pins visible
+  useEffect(() => {
+    if (!map.current || !mapLoaded || !isMobile) return;
+
+    // Calculate padding based on widget state
+    // Widget takes 35vh when open, plus we need space for bottom bar
+    const topPadding = mobileWidgetOpen ? Math.round(window.innerHeight * 0.35) + 10 : 60;
+    const bottomPadding = 100; // Bottom bar + some margin
+
+    map.current.setPadding({
+      top: topPadding,
+      bottom: bottomPadding,
+      left: 20,
+      right: 20,
+    });
+  }, [isMobile, mobileWidgetOpen, mapLoaded]);
 
   // Get accommodation entries for markers
   const { memory: accommodationMemory, getActiveAccommodation } = useAccommodationMemoryStore();

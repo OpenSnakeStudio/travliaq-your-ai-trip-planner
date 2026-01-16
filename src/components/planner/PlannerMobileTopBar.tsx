@@ -1,25 +1,29 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Plane, Compass, Bed, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserPreferences } from "@/contexts/UserPreferencesContext";
 import CurrencySelector from "@/components/navigation/CurrencySelector";
 import LanguageSelector from "@/components/navigation/LanguageSelector";
 import UserMenu from "@/components/navigation/UserMenu";
 import logo from "@/assets/logo-travliaq.png";
+import type { TabType } from "@/pages/TravelPlanner";
 
 export type MobileView = "chat" | "maps";
 
 interface PlannerMobileTopBarProps {
   mobileView: MobileView;
-  onMobileViewChange: (view: MobileView) => void;
+  activeTab?: TabType;
+  onTabChange?: (tab: TabType) => void;
   confirmLeave?: boolean;
   confirmLeaveMessage?: string;
 }
 
 export default function PlannerMobileTopBar({
   mobileView,
-  onMobileViewChange,
+  activeTab = "flights",
+  onTabChange,
   confirmLeave,
   confirmLeaveMessage,
 }: PlannerMobileTopBarProps) {
@@ -28,9 +32,16 @@ export default function PlannerMobileTopBar({
   const [languageOpen, setLanguageOpen] = useState(false);
   const { preferences, updateTemperatureUnit } = useUserPreferences();
 
+  const tabs = useMemo(() => [
+    { id: "flights" as TabType, icon: Plane, emoji: "✈️" },
+    { id: "stays" as TabType, icon: Bed, emoji: "🏨" },
+    { id: "activities" as TabType, icon: Compass, emoji: "🎭" },
+    { id: "preferences" as TabType, icon: SlidersHorizontal, emoji: "⚙️" },
+  ], []);
+
   return (
     <>
-      <header className="flex items-center justify-between px-3 py-2 bg-background/95 backdrop-blur-md border-b border-border/50 z-30">
+      <header className="flex items-center justify-between gap-2 px-3 py-2 bg-background/95 backdrop-blur-md border-b border-border/50 z-30">
         {/* Left: Logo */}
         <Link
           to="/"
@@ -49,34 +60,32 @@ export default function PlannerMobileTopBar({
           />
         </Link>
 
-        {/* Center: Toggle Chat / Maps */}
-        <div className="flex items-center bg-muted rounded-full p-1">
-          <button
-            onClick={() => onMobileViewChange("chat")}
-            className={cn(
-              "px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-              mobileView === "chat"
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground"
-            )}
-          >
-            Chat
-          </button>
-          <button
-            onClick={() => onMobileViewChange("maps")}
-            className={cn(
-              "px-5 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-              mobileView === "maps"
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground"
-            )}
-          >
-            Maps
-          </button>
-        </div>
+        {/* Center: Tab Bar (only in Maps view) */}
+        {mobileView === "maps" && onTabChange && (
+          <nav className="flex items-center gap-1 flex-1 justify-center" aria-label={t("planner.tabs.navigation") || "Tab navigation"}>
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => onTabChange(tab.id)}
+                  className={cn(
+                    "flex items-center justify-center px-3 py-1.5 rounded-full text-sm transition-all duration-200",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span>{tab.emoji}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
 
         {/* Right: Compact settings */}
-        <div className="flex items-center gap-0.5 rounded-lg overflow-hidden bg-muted/50 border border-border/50">
+        <div className="flex items-center gap-0.5 rounded-lg overflow-hidden bg-muted/50 border border-border/50 shrink-0">
           {/* Currency */}
           <button
             onClick={() => setCurrencyOpen(true)}
