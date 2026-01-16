@@ -107,6 +107,8 @@ export interface PlannerChatRef {
   handleActivityUpdate: (city: string, updates: Partial<import("@/stores/hooks").ActivityEntry>) => boolean;
   handleAddActivityForCity: (city: string, activity: Partial<import("@/stores/hooks").ActivityEntry>) => string | null;
   handlePreferencesDetection: (detectedPrefs: Partial<import("@/stores/hooks").TripPreferences>) => void;
+  /** Start a fresh session (clears all memories and creates new session) */
+  startNewSession: () => void;
 }
 
 const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isCollapsed, onToggleCollapse }, ref) => {
@@ -687,6 +689,41 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     widgetFlow,
   ]);
 
+  // Start new session handler (reusable for both sidebar and programmatic calls)
+  const handleStartNewSession = useCallback(() => {
+    // Hard guard: stop persistence/auto-effects while we reset everything
+    isHardResetRef.current = true;
+    isSwitchingSessionRef.current = true;
+
+    // Full reset: behave like a new user (but without onboarding)
+    setIsLoading(false);
+    setDynamicSuggestions([]);
+    setInput("");
+    lastIntentRef.current = null;
+    completedMessageIdsRef.current.clear();
+    userMessageCountRef.current = 0;
+    airportFetchKeyRef.current = null;
+    widgetFlow.resetFlowState();
+
+    // Close the widget panel when creating a new session
+    eventBus.emit("panel:toggle", { visible: false });
+
+    // Reset all persisted memories (localStorage-backed)
+    resetFlightMemory();
+    resetTravelMemory();
+    resetAccommodationMemory();
+    resetActivityMemory();
+    resetPreferenceMemory();
+
+    createNewSession();
+
+    // Re-enable effects after the reset has settled
+    setTimeout(() => {
+      isSwitchingSessionRef.current = false;
+      isHardResetRef.current = false;
+    }, 400);
+  }, [createNewSession, resetFlightMemory, resetTravelMemory, resetAccommodationMemory, resetActivityMemory, resetPreferenceMemory, widgetFlow]);
+
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
     injectSystemMessage: imperativeHandlers.injectSystemMessage,
@@ -698,6 +735,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     handleActivityUpdate: imperativeHandlers.handleActivityUpdate,
     handleAddActivityForCity: imperativeHandlers.handleAddActivityForCity,
     handlePreferencesDetection: imperativeHandlers.handlePreferencesDetection,
+    startNewSession: handleStartNewSession,
   }));
 
   // Send message
@@ -1148,39 +1186,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
         onSelectSession={selectSession}
-        onNewSession={() => {
-          // Hard guard: stop persistence/auto-effects while we reset everything
-          isHardResetRef.current = true;
-          isSwitchingSessionRef.current = true;
-
-          // Full reset: behave like a new user (but without onboarding)
-          setIsLoading(false);
-          setDynamicSuggestions([]);
-          setInput("");
-          lastIntentRef.current = null;
-          completedMessageIdsRef.current.clear();
-          userMessageCountRef.current = 0;
-          airportFetchKeyRef.current = null;
-          widgetFlow.resetFlowState();
-
-          // Close the widget panel when creating a new session
-          eventBus.emit("panel:toggle", { visible: false });
-
-          // Reset all persisted memories (localStorage-backed)
-          resetFlightMemory();
-          resetTravelMemory();
-          resetAccommodationMemory();
-          resetActivityMemory();
-          resetPreferenceMemory();
-
-          createNewSession();
-
-          // Re-enable effects after the reset has settled
-          setTimeout(() => {
-            isSwitchingSessionRef.current = false;
-            isHardResetRef.current = false;
-          }, 400);
-        }}
+        onNewSession={handleStartNewSession}
         onDeleteSession={deleteSession}
         onDeleteAllSessions={() => {
           // Hard guard: stop persistence/auto-effects while we wipe everything

@@ -70,8 +70,12 @@ const TravelPlanner = () => {
 
   // Debug/ops: allow disabling onboarding via a dedicated route (/planner-notour)
   // or a query param (?noTour=1) in normal browsing.
+  const searchParams = new URLSearchParams(location.search);
   const disableTour =
-    location.pathname === "/planner-notour" || new URLSearchParams(location.search).has("noTour");
+    location.pathname === "/planner-notour" || searchParams.has("noTour");
+  
+  // Check if coming from home page (new=1 query param) - forces a new session
+  const forceNewSession = searchParams.has("new");
 
   // Check if user has already completed onboarding in a previous session
   const hasSeenOnboarding = localStorage.getItem("travliaq_onboarding_completed") === "true";
@@ -130,6 +134,26 @@ const TravelPlanner = () => {
   } = useDestinationPopup(setIsPanelVisible);
 
   const { chatRef, userLocation, searchMessageSentRef, setUserLocation } = useChatIntegration();
+  
+  // Track if we've already triggered new session for this navigation
+  const newSessionTriggeredRef = useRef(false);
+  
+  // Force new session when coming from home page (new=1 query param)
+  useEffect(() => {
+    if (forceNewSession && !newSessionTriggeredRef.current) {
+      newSessionTriggeredRef.current = true;
+      
+      // Small delay to ensure chatRef is ready
+      const timer = setTimeout(() => {
+        if (chatRef.current?.startNewSession) {
+          chatRef.current.startNewSession();
+          console.log("[TravelPlanner] Created new session from home page navigation");
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [forceNewSession]);
 
   // When switching between widgets OR closing the panel, default the map to the user's position.
   // IMPORTANT: Don't trigger during initial animation - only on subsequent tab/panel changes

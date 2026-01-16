@@ -32,7 +32,8 @@ export function QuickActionChips({ className }: QuickActionChipsProps) {
   const { t } = useTranslation();
 
   const handleClick = (message: string) => {
-    navigate(`/planner?q=${encodeURIComponent(message)}`);
+    // Add new=1 to force a new session when coming from home page
+    navigate(`/planner?q=${encodeURIComponent(message)}&new=1`);
   };
 
   return (
