@@ -57,7 +57,7 @@ import {
   PriceAlertBanner,
 } from "./chat/widgets";
 import { QuickReplies, useDynamicQuickReplies } from "./chat/QuickReplies";
-import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useUnifiedIntentRouter, useSessionContext, useThinkingState } from "./chat/hooks";
+import { useChatStream, useChatWidgetFlow, useChatImperativeHandlers, useWidgetTracking, useWidgetActionExecutor, usePreferenceWidgetCallbacks, useUnifiedIntentRouter, useSessionContext, useThinkingState, useWidgetCooldown } from "./chat/hooks";
 import { ThinkingIndicator } from "./chat/ThinkingIndicator";
 import { IntentDebugPanel } from "./chat/IntentDebugPanel";
 import { parseAction, flightDataToMemory } from "./chat/utils";
@@ -220,14 +220,19 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   // Chain of Thought thinking state
   const thinkingState = useThinkingState();
   
+  // Widget cooldown system - prevents infinite widget loops
+  const widgetCooldown = useWidgetCooldown();
+  
   // Widget tracking for LLM context
   const widgetTracking = useWidgetTracking();
   
   // Unified Intent Router - single source of truth for intent processing
   // Now includes widget interactions for hasAlreadyProvided check
+  // Now includes widget cooldown for anti-loop protection
   const intentRouter = useUnifiedIntentRouter({
     memory,
     widgetInteractions: widgetTracking.interactions,
+    widgetCooldown, // Pass cooldown system for validation
     onWidgetTriggered: useCallback((widgetType, data) => {
       console.log("[PlannerChat] Unified intent router triggered widget:", widgetType, data);
       setLastWidgetTriggered(widgetType);
@@ -427,6 +432,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   }, [departureCity, departureCountry, departureDateValue, getPreferences]);
 
   // Preference widget callbacks (encapsulated for maintainability)
+  // Now includes widget cooldown for anti-loop protection
   const preferenceCallbacks = usePreferenceWidgetCallbacks({
     prefMemory,
     widgetTracking,
@@ -434,6 +440,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     setMessages,
     setDynamicSuggestions,
     handleFetchDestinations,
+    widgetCooldown, // Pass cooldown system
   });
 
   // Utilities to avoid infinite sync loops between local state ↔ persisted state
@@ -707,6 +714,9 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
     userMessageCountRef.current = 0;
     airportFetchKeyRef.current = null;
     widgetFlow.resetFlowState();
+    
+    // CRITICAL: Reset widget cooldowns for new session
+    widgetCooldown.resetCooldowns();
 
     // Close the widget panel when creating a new session
     eventBus.emit("panel:toggle", { visible: false });
@@ -725,7 +735,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
       isSwitchingSessionRef.current = false;
       isHardResetRef.current = false;
     }, 400);
-  }, [createNewSession, resetFlightMemory, resetTravelMemory, resetAccommodationMemory, resetActivityMemory, resetPreferenceMemory, widgetFlow]);
+  }, [createNewSession, resetFlightMemory, resetTravelMemory, resetAccommodationMemory, resetActivityMemory, resetPreferenceMemory, widgetFlow, widgetCooldown]);
 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
@@ -1750,30 +1760,73 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
               messages={messages}
               dynamicSuggestions={dynamicSuggestions}
               onSuggestionClick={(message) => {
-                // CRITICAL: Suggestions should ONLY fill the input, never trigger actions
-                // Normalize special tokens to user-friendly messages
-                let normalizedMessage = message;
+                // Handle special tokens that trigger widgets or actions directly
                 
-                if (message === "__FETCH_DESTINATIONS__") {
-                  normalizedMessage = t("planner.chat.nothingElseToAdd");
-                } else if (message.startsWith("__WIDGET__")) {
-                  const widgetType = message.replace("__WIDGET__", "");
-                  if (widgetType === "preferenceInterests") {
-                    normalizedMessage = t("planner.chat.specifyInterests");
-                  } else if (widgetType === "preferenceStyle") {
-                    normalizedMessage = t("planner.chat.adjustMyStyle");
-                  } else if (widgetType === "mustHaves") {
-                    normalizedMessage = t("planner.chat.mandatoryCriteria");
-                  } else if (widgetType === "dietary") {
-                    normalizedMessage = t("planner.chat.dietaryRestrictions");
+                // === CASE 1: Direct widget triggering ===
+                if (message.startsWith("__WIDGET__")) {
+                  const widgetType = message.replace("__WIDGET__", "") as import("@/types/flight").WidgetType;
+                  
+                  // Check cooldown before showing widget
+                  if (!widgetCooldown.canShowWidget(widgetType)) {
+                    toast.info(t("planner.widget.alreadyConfigured"));
+                    setDynamicSuggestions([]);
+                    return;
                   }
-                } else if (message === "__CHOOSE_FOR_ME__") {
-                  normalizedMessage = t("planner.chat.chooseBestDestination");
+                  
+                  // Record widget shown in cooldown system
+                  widgetCooldown.recordWidgetShown(widgetType);
+                  
+                  // Get appropriate intro text for the widget
+                  const widgetIntros: Record<string, string> = {
+                    dietary: t("planner.preference.configureDietary"),
+                    mustHaves: t("planner.preference.configureMustHaves"),
+                    preferenceStyle: t("planner.preference.configureStyle"),
+                    preferenceInterests: t("planner.preference.selectInterests"),
+                  };
+                  
+                  const widgetId = `widget-${widgetType}-${Date.now()}`;
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: widgetId,
+                      role: "assistant",
+                      text: widgetIntros[widgetType] || "",
+                      widget: widgetType,
+                    },
+                  ]);
+                  
+                  setDynamicSuggestions([]);
+                  return;
                 }
                 
-                // Fill input and focus - user must click Send
-                setInput(normalizedMessage);
-                setDynamicSuggestions([]); // Clear after selection
+                // === CASE 2: Direct destination fetch ===
+                if (message === "__FETCH_DESTINATIONS__") {
+                  const loadingId = `fetching-${Date.now()}`;
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: loadingId,
+                      role: "assistant",
+                      text: t("planner.preference.searchingDestinations"),
+                      isTyping: true,
+                    },
+                  ]);
+                  handleFetchDestinations(loadingId);
+                  setDynamicSuggestions([]);
+                  return;
+                }
+                
+                // === CASE 3: Choose for me ===
+                if (message === "__CHOOSE_FOR_ME__") {
+                  setInput(t("planner.suggestions.chooseForMeMessage"));
+                  setDynamicSuggestions([]);
+                  setTimeout(() => inputRef.current?.focus(), 0);
+                  return;
+                }
+                
+                // === DEFAULT: Fill input with the message ===
+                setInput(message);
+                setDynamicSuggestions([]);
                 setTimeout(() => {
                   inputRef.current?.focus();
                   if (inputRef.current) {

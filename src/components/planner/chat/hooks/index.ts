@@ -65,6 +65,9 @@ export {
 // Session Context for enriched LLM context (Phase 3)
 export { useSessionContext } from "./useSessionContext";
 
+// Widget Cooldown - prevents infinite widget loops
+export { useWidgetCooldown, type UseWidgetCooldownReturn } from "./useWidgetCooldown";
+
 // Performance optimization hooks
 export {
   useDebounce,
