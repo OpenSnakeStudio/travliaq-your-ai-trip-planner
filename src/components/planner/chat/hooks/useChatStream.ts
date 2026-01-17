@@ -149,6 +149,8 @@ export interface MemoryContext {
   widgetDecisions?: WidgetDecision[];
   // Trip Basket: summary of user selections (flights, hotels, activities)
   basketSummary?: string;
+  // Anti-loop: widgets already shown/confirmed that should not be re-proposed
+  blockedWidgets?: string[];
 }
 
 /**
@@ -273,6 +275,7 @@ function buildContextMessage(memoryContext: MemoryContext): string {
     sessionEntities,
     widgetDecisions,
     basketSummary,
+    blockedWidgets,
   } = memoryContext;
 
   if (!flightSummary && !activeWidgetsContext && !basketSummary) return widgetHistory || "";
@@ -282,7 +285,13 @@ function buildContextMessage(memoryContext: MemoryContext): string {
       ? missingFields.map(getMissingFieldLabel).join(", ")
       : "Aucun - prêt à chercher";
 
-  let context = flightSummary
+  // Start with blocked widgets warning (anti-loop)
+  let context = "";
+  if (blockedWidgets && blockedWidgets.length > 0) {
+    context += `[WIDGETS BLOQUÉS - NE PAS RE-PROPOSER CES WIDGETS] ${blockedWidgets.join(', ')}\n`;
+  }
+
+  context += flightSummary
     ? `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`
     : "";
 
@@ -458,6 +467,8 @@ export function useChatStream(options: UseChatStreamOptions = {}) {
                 widgetHistory: memoryContext.widgetHistory || "",
                 // CRITICAL: Send active widgets context for "choose for me" functionality
                 activeWidgetsContext: memoryContext.activeWidgetsContext || "",
+                // Anti-loop: blocked widgets that should not be re-proposed
+                blockedWidgets: memoryContext.blockedWidgets || [],
               }),
               signal: abortController.signal,
             }

@@ -935,6 +935,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           widgetDecisions: sessionContext.widgetDecisions,
           // Trip Basket: user selections summary
           basketSummary: getBasketSummary(),
+          // Anti-loop: blocked widgets that should not be re-proposed
+          blockedWidgets: widgetCooldown.getBlockedWidgets(),
         },
         (id, text, isComplete) => {
           // CRITICAL: Prevent late updates from resetting isStreaming after message is complete
