@@ -84,3 +84,18 @@ export {
   createDefaultMemory,
 } from './usePreferenceMemoryStore';
 
+// Trip Basket Store (new - central basket for all selections)
+export { useTripBasketStore } from './useTripBasketStore';
+export type { TripBasketStoreValue } from './useTripBasketStore';
+export type {
+  TripBasketState,
+  BasketItem,
+  BasketItemType,
+  FlexibleTripType,
+  BasketItemDetails,
+  FlightDetails as BasketFlightDetails,
+  HotelDetails as BasketHotelDetails,
+  ActivityDetails as BasketActivityDetails,
+  TransferDetails as BasketTransferDetails,
+} from '../slices/tripBasketTypes';
+
