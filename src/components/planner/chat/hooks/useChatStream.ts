@@ -147,6 +147,8 @@ export interface MemoryContext {
   sessionEntities?: SessionEntities;
   // NEW Phase 3: Widget decisions history
   widgetDecisions?: WidgetDecision[];
+  // Trip Basket: summary of user selections (flights, hotels, activities)
+  basketSummary?: string;
 }
 
 /**
@@ -270,9 +272,10 @@ function buildContextMessage(memoryContext: MemoryContext): string {
     conversationSummary,
     sessionEntities,
     widgetDecisions,
+    basketSummary,
   } = memoryContext;
 
-  if (!flightSummary && !activeWidgetsContext) return widgetHistory || "";
+  if (!flightSummary && !activeWidgetsContext && !basketSummary) return widgetHistory || "";
 
   const missingFieldsStr =
     missingFields.length > 0
@@ -282,6 +285,11 @@ function buildContextMessage(memoryContext: MemoryContext): string {
   let context = flightSummary
     ? `[CONTEXTE MÉMOIRE] ${flightSummary}${activityContext}${preferenceContext}\n[CHAMPS MANQUANTS] ${missingFieldsStr}`
     : "";
+
+  // Add trip basket summary (user selections)
+  if (basketSummary) {
+    context += `\n${basketSummary}`;
+  }
 
   // Add conversation summary (Phase 3)
   if (conversationSummary) {
