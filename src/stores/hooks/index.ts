@@ -86,13 +86,12 @@ export {
 
 // Trip Basket Store (new - central basket for all selections)
 export { useTripBasketStore } from './useTripBasketStore';
-export type { TripBasketStoreValue } from './useTripBasketStore';
 export type {
-  TripBasketState,
   BasketItem,
   BasketItemType,
   FlexibleTripType,
   BasketItemDetails,
+  TripBasketState,
   FlightDetails as BasketFlightDetails,
   HotelDetails as BasketHotelDetails,
   ActivityDetails as BasketActivityDetails,

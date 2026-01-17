@@ -141,9 +141,9 @@ export function TripBasketPanel() {
   const [isExpanded, setIsExpanded] = useState(true);
   
   const {
-    items,
-    tripType,
-    currency,
+    basketItems,
+    flexibleTripType,
+    basketCurrency,
     getTotalPrice,
     getCompletedSteps,
     getMissingSteps,
@@ -151,10 +151,10 @@ export function TripBasketPanel() {
     removeBasketItem,
   } = useTripBasketStore();
   
-  const totalPrice = useMemo(() => getTotalPrice(), [items]);
-  const completedSteps = useMemo(() => getCompletedSteps(), [items]);
-  const missingSteps = useMemo(() => getMissingSteps(), [items, tripType]);
-  const isComplete = useMemo(() => isBasketComplete(), [items, tripType]);
+  const totalPrice = useMemo(() => getTotalPrice(), [basketItems]);
+  const completedSteps = useMemo(() => getCompletedSteps(), [basketItems]);
+  const missingSteps = useMemo(() => getMissingSteps(), [basketItems, flexibleTripType]);
+  const isComplete = useMemo(() => isBasketComplete(), [basketItems, flexibleTripType]);
   
   // Group items by type
   const groupedItems = useMemo(() => {
@@ -168,16 +168,16 @@ export function TripBasketPanel() {
       cruise: [],
     };
     
-    items.forEach((item) => {
+    basketItems.forEach((item) => {
       if (groups[item.type]) {
         groups[item.type].push(item);
       }
     });
     
     return groups;
-  }, [items]);
+  }, [basketItems]);
   
-  const itemCount = items.length;
+  const itemCount = basketItems.length;
   
   if (itemCount === 0) {
     return null; // Don't show panel if empty
@@ -238,11 +238,11 @@ export function TripBasketPanel() {
             className="border-t border-border/50"
           >
             <div className="p-3 space-y-2 max-h-[300px] overflow-y-auto themed-scroll">
-              {items.length === 0 ? (
+              {basketItems.length === 0 ? (
                 <EmptyBasket />
               ) : (
                 <AnimatePresence mode="popLayout">
-                  {items.map((item) => (
+                  {basketItems.map((item) => (
                     <BasketItemCard
                       key={item.id}
                       item={item}
@@ -254,7 +254,7 @@ export function TripBasketPanel() {
             </div>
             
             {/* Footer with actions */}
-            {items.length > 0 && (
+            {basketItems.length > 0 && (
               <div className="border-t border-border/50 p-3 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">Total estimé</p>
