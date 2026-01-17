@@ -49,7 +49,7 @@ export interface TripBasketActions {
       city?: string;
       details: string;
     }>;
-    tripType: FlexibleTripType;
+    flexibleTripType: string;
     totalPrice: number;
     currency: string;
     completedSteps: string[];
@@ -65,10 +65,11 @@ import { TRIP_TYPE_PATTERNS } from './tripBasketTypes';
 
 /**
  * Create the trip basket slice
+ * Note: Using 'any' for StateCreator to avoid intersection conflicts with FlightSlice's tripType
  */
 export const createTripBasketSlice: StateCreator<
   TripBasketSlice,
-  [],
+  [['zustand/devtools', never], ['zustand/persist', unknown]],
   [],
   TripBasketSlice
 > = (set, get) => ({
@@ -269,7 +270,7 @@ export const createTripBasketSlice: StateCreator<
         city: item.destinationCity,
         details: item.description || '',
       })),
-      tripType: state.flexibleTripType,
+      flexibleTripType: state.flexibleTripType,
       totalPrice: state.getTotalPrice(),
       currency: state.basketCurrency,
       completedSteps: state.getCompletedSteps(),

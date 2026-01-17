@@ -1,6 +1,6 @@
 /**
  * Planner Store V2
- * Combined Zustand store with all slices
+ * Combined Zustand store with all slices (excluding TripBasket - separate store)
  */
 
 import { create } from 'zustand';
@@ -10,12 +10,11 @@ import { createFlightSlice, type FlightSlice } from './slices/flightSlice';
 import { createAccommodationSlice, type AccommodationSlice } from './slices/accommodationSlice';
 import { createActivitySlice, type ActivitySlice } from './slices/activitySlice';
 import { createPreferenceSlice, type PreferenceSlice } from './slices/preferenceSlice';
-import { createTripBasketSlice, type TripBasketSlice } from './slices/tripBasketSlice';
 
 const STORAGE_KEY = 'travliaq_planner_store_v2';
 
 // Combined store type
-export type PlannerStoreV2 = TravelSlice & FlightSlice & AccommodationSlice & ActivitySlice & PreferenceSlice & TripBasketSlice & {
+export type PlannerStoreV2 = TravelSlice & FlightSlice & AccommodationSlice & ActivitySlice & PreferenceSlice & {
   isHydrated: boolean;
   _setHydrated: (hydrated: boolean) => void;
 };
@@ -46,7 +45,6 @@ export const usePlannerStoreV2 = create<PlannerStoreV2>()(
         ...createAccommodationSlice(...args),
         ...createActivitySlice(...args),
         ...createPreferenceSlice(...args),
-        ...createTripBasketSlice(...args),
       }),
       {
         name: STORAGE_KEY,
@@ -78,13 +76,6 @@ export const usePlannerStoreV2 = create<PlannerStoreV2>()(
           localDestinations: state.localDestinations,
           activeFilters: state.activeFilters,
           preferences: state.preferences,
-          // Trip basket persistence
-          basketItems: state.basketItems,
-          flexibleTripType: state.flexibleTripType,
-          isFlightRequired: state.isFlightRequired,
-          isHotelRequired: state.isHotelRequired,
-          basketCurrency: state.basketCurrency,
-          explicitRequirements: state.explicitRequirements,
         }),
         onRehydrateStorage: () => (state) => state?._setHydrated(true),
       }
@@ -99,4 +90,3 @@ export type { FlightSlice } from './slices/flightSlice';
 export type { AccommodationSlice } from './slices/accommodationSlice';
 export type { ActivitySlice } from './slices/activitySlice';
 export type { PreferenceSlice } from './slices/preferenceSlice';
-export type { TripBasketSlice } from './slices/tripBasketSlice';
