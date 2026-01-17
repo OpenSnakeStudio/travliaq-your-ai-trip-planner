@@ -211,19 +211,6 @@ export const initialTripBasketState: TripBasketState = {
     wantsTransfer: null,
   },
 };
-export const initialTripBasketState: TripBasketState = {
-  items: [],
-  tripType: 'flight-hotel',
-  isFlightRequired: true,
-  isHotelRequired: true,
-  currency: 'EUR',
-  explicitRequirements: {
-    wantsFlight: null,
-    wantsHotel: null,
-    wantsActivities: null,
-    wantsTransfer: null,
-  },
-};
 
 /**
  * Get required steps based on trip type
