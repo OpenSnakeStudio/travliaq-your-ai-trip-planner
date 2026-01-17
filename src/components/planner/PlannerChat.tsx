@@ -74,7 +74,7 @@ import { FLIGHTS_ZOOM } from "@/constants/mapSettings";
 // Context imports
 import type { CountrySelectionEvent } from "@/types/flight";
 import { findNearestAirports } from "@/hooks/useNearestAirports";
-import { useFlightMemoryStore, useTravelMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, usePreferenceMemoryStore, type AccommodationEntry } from "@/stores/hooks";
+import { useFlightMemoryStore, useTravelMemoryStore, useAccommodationMemoryStore, useActivityMemoryStore, usePreferenceMemoryStore, useTripBasketStore, type AccommodationEntry } from "@/stores/hooks";
 import { useLocale } from "@/hooks/useLocale";
 import { eventBus, emitTabChange, emitTabAndZoom } from "@/lib/eventBus";
 
@@ -124,6 +124,7 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
   const { getSerializedState: getTravelMemory, updateTravelers, resetMemory: resetTravelMemory } = useTravelMemoryStore();
   const { addManualActivity, updateActivity, getActivitiesByDestination, getSerializedState: getActivityMemory, resetMemory: resetActivityMemory } = useActivityMemoryStore();
   const { updatePreferences, resetToDefaults: resetPreferenceMemory, getSerializedState: getPreferenceMemory, getPreferences, memory: prefMemory } = usePreferenceMemoryStore();
+  const { getBasketSummary } = useTripBasketStore();
 
   // Chat translations
   const chatTranslations: ChatTranslations = useMemo(() => ({
@@ -922,6 +923,8 @@ const PlannerChatComponent = forwardRef<PlannerChatRef, PlannerChatProps>(({ isC
           conversationSummary: sessionContext.buildConversationSummary(5),
           sessionEntities: sessionContext.sessionEntities,
           widgetDecisions: sessionContext.widgetDecisions,
+          // Trip Basket: user selections summary
+          basketSummary: getBasketSummary(),
         },
         (id, text, isComplete) => {
           // CRITICAL: Prevent late updates from resetting isStreaming after message is complete
