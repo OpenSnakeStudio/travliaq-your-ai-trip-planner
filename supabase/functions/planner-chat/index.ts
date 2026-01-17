@@ -407,11 +407,11 @@ serve(async (req) => {
       console.log("Anonymous user request");
     }
 
-    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory, activeWidgetsContext, language: requestLanguage } = await req.json();
+    const { messages, stream = false, currentStep, currentPhase, negativePreferences, widgetHistory, activeWidgetsContext, language: requestLanguage, blockedWidgets = [] } = await req.json();
     
     // Detect language from request or default to French
     const language: SupportedLanguage = detectLanguage(requestLanguage);
-    console.log("User:", userId, "Messages:", messages.length, "Stream:", stream, "Phase:", currentPhase, "Language:", language);
+    console.log("User:", userId, "Messages:", messages.length, "Stream:", stream, "Phase:", currentPhase, "Language:", language, "Blocked widgets:", blockedWidgets);
 
     const AZURE_OPENAI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY");
     const AZURE_OPENAI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");
