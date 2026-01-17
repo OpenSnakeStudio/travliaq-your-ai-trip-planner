@@ -1,6 +1,8 @@
 /**
  * usePreferenceWidgetCallbacks - Encapsulates preference widget flow callbacks
  * Reduces complexity in PlannerChat by isolating preference widget logic
+ * 
+ * Phase 2: Integrated with useWidgetCooldown to prevent infinite loops
  */
 
 import { useCallback } from "react";
@@ -9,6 +11,7 @@ import type { ChatMessage } from "../types";
 import type { InspireFlowStep } from "../MemoizedSmartSuggestions";
 import type { WidgetType } from "@/types/flight";
 import type { StyleAxes, MustHaves } from "@/stores/slices/preferenceTypes";
+import type { UseWidgetCooldownReturn } from "./useWidgetCooldown";
 
 interface PreferenceMemoryShape {
   preferences: {
@@ -39,6 +42,8 @@ interface UsePreferenceWidgetCallbacksOptions {
     React.SetStateAction<Array<{ id: string; label: string; emoji: string; message: string }>>
   >;
   handleFetchDestinations: (loadingMessageId: string) => Promise<void>;
+  /** Widget cooldown system to prevent infinite loops */
+  widgetCooldown?: UseWidgetCooldownReturn;
 }
 
 interface PreferenceWidgetCallbacks {
@@ -55,6 +60,7 @@ export function usePreferenceWidgetCallbacks({
   setMessages,
   setDynamicSuggestions,
   handleFetchDestinations,
+  widgetCooldown,
 }: UsePreferenceWidgetCallbacksOptions): PreferenceWidgetCallbacks {
   const { t } = useTranslation();
 
@@ -62,6 +68,9 @@ export function usePreferenceWidgetCallbacks({
    * Called when user completes style widget
    */
   const onStyleContinue = useCallback(() => {
+    // CRITICAL: Record widget confirmation to prevent re-triggering
+    widgetCooldown?.recordWidgetConfirmed("preferenceStyle");
+    
     // Track style configuration
     const styleAxes = prefMemory.preferences.styleAxes;
     widgetTracking.trackStyleConfig({ ...styleAxes });
@@ -83,7 +92,15 @@ export function usePreferenceWidgetCallbacks({
       )
     );
 
+    // Check if interests widget can be shown (cooldown check)
+    if (widgetCooldown && !widgetCooldown.canShowWidget("preferenceInterests")) {
+      // Skip interests, go directly to extra step
+      setInspireFlowStep("extra");
+      return;
+    }
+
     // After style, show interests widget
+    widgetCooldown?.recordWidgetShown("preferenceInterests");
     setInspireFlowStep("interests");
     const interestsId = `pref-interests-${Date.now()}`;
     setMessages((prev) => [
@@ -95,12 +112,15 @@ export function usePreferenceWidgetCallbacks({
         widget: "preferenceInterests" as WidgetType,
       },
     ]);
-  }, [prefMemory.preferences.styleAxes, widgetTracking, setInspireFlowStep, setMessages, t]);
+  }, [prefMemory.preferences.styleAxes, widgetTracking, setInspireFlowStep, setMessages, t, widgetCooldown]);
 
   /**
    * Called when user completes interests widget
    */
   const onInterestsContinue = useCallback(() => {
+    // CRITICAL: Record widget confirmation to prevent re-triggering
+    widgetCooldown?.recordWidgetConfirmed("preferenceInterests");
+    
     // Track interests selection
     const interests = prefMemory.preferences.interests;
     widgetTracking.trackInterestsSelect(interests);
@@ -131,33 +151,44 @@ export function usePreferenceWidgetCallbacks({
       },
     ]);
 
-    // Dynamic suggestions for extra options
-    setDynamicSuggestions([
-      {
+    // Dynamic suggestions for extra options - check cooldown for each
+    const suggestions: Array<{ id: string; label: string; emoji: string; message: string }> = [];
+    
+    if (!widgetCooldown || widgetCooldown.canShowWidget("mustHaves")) {
+      suggestions.push({
         id: "must-haves",
         label: t("planner.mustHaves.title"),
         emoji: "⚠️",
         message: "__WIDGET__mustHaves",
-      },
-      {
+      });
+    }
+    
+    if (!widgetCooldown || widgetCooldown.canShowWidget("dietary")) {
+      suggestions.push({
         id: "dietary",
         label: t("planner.dietary.title"),
         emoji: "🍽️",
         message: "__WIDGET__dietary",
-      },
-      {
-        id: "nothing-else",
-        label: t("planner.suggestion.nothingElse"),
-        emoji: "✈️",
-        message: "__FETCH_DESTINATIONS__",
-      },
-    ]);
-  }, [prefMemory.preferences.interests, widgetTracking, setInspireFlowStep, setMessages, setDynamicSuggestions, t]);
+      });
+    }
+    
+    suggestions.push({
+      id: "nothing-else",
+      label: t("planner.suggestion.nothingElse"),
+      emoji: "✈️",
+      message: "__FETCH_DESTINATIONS__",
+    });
+    
+    setDynamicSuggestions(suggestions);
+  }, [prefMemory.preferences.interests, widgetTracking, setInspireFlowStep, setMessages, setDynamicSuggestions, t, widgetCooldown]);
 
   /**
    * Called when user completes must-haves widget
    */
   const onMustHavesContinue = useCallback(() => {
+    // CRITICAL: Record widget confirmation to prevent re-triggering
+    widgetCooldown?.recordWidgetConfirmed("mustHaves");
+    
     // Track must-haves selection
     const mustHaves = prefMemory.preferences.mustHaves;
     widgetTracking.recordInteraction(
@@ -195,26 +226,35 @@ export function usePreferenceWidgetCallbacks({
       },
     ]);
 
-    setDynamicSuggestions([
-      {
+    // Build suggestions - check cooldown for dietary
+    const suggestions: Array<{ id: string; label: string; emoji: string; message: string }> = [];
+    
+    if (!widgetCooldown || widgetCooldown.canShowWidget("dietary")) {
+      suggestions.push({
         id: "dietary",
         label: t("planner.dietary.title"),
         emoji: "🍽️",
         message: "__WIDGET__dietary",
-      },
-      {
-        id: "nothing-else",
-        label: t("planner.suggestion.nothingElse"),
-        emoji: "✈️",
-        message: "__FETCH_DESTINATIONS__",
-      },
-    ]);
-  }, [prefMemory.preferences.mustHaves, widgetTracking, setMessages, setDynamicSuggestions, t]);
+      });
+    }
+    
+    suggestions.push({
+      id: "nothing-else",
+      label: t("planner.suggestion.nothingElse"),
+      emoji: "✈️",
+      message: "__FETCH_DESTINATIONS__",
+    });
+    
+    setDynamicSuggestions(suggestions);
+  }, [prefMemory.preferences.mustHaves, widgetTracking, setMessages, setDynamicSuggestions, t, widgetCooldown]);
 
   /**
    * Called when user completes dietary widget
    */
   const onDietaryContinue = useCallback(() => {
+    // CRITICAL: Record widget confirmation to prevent re-triggering
+    widgetCooldown?.recordWidgetConfirmed("dietary");
+    
     // Track dietary restrictions
     const dietary = prefMemory.preferences.dietaryRestrictions;
     if (dietary.length > 0) {
@@ -260,6 +300,7 @@ export function usePreferenceWidgetCallbacks({
     setDynamicSuggestions,
     handleFetchDestinations,
     t,
+    widgetCooldown,
   ]);
 
   return {

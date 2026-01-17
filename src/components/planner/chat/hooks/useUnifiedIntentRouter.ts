@@ -58,6 +58,11 @@ export interface UseUnifiedIntentRouterOptions {
   memory: FlightMemory;
   /** Widget interaction history from useWidgetTracking */
   widgetInteractions?: WidgetInteraction[];
+  /** Widget cooldown system to prevent infinite loops */
+  widgetCooldown?: {
+    canShowWidget: (widgetType: WidgetType) => boolean;
+    getBlockReason: (widgetType: WidgetType) => string | null;
+  };
   /** Last user message for confidence boosting */
   lastUserMessage?: string;
   /** Last assistant message for context */
@@ -214,6 +219,7 @@ const WIDGET_TO_INTERACTION_MAP: Record<string, string[]> = {
 export function useUnifiedIntentRouter({
   memory,
   widgetInteractions = [],
+  widgetCooldown,
   lastUserMessage,
   lastAssistantMessage,
   onWidgetTriggered,
@@ -306,13 +312,21 @@ export function useUnifiedIntentRouter({
    */
   const canShowWidget = useCallback(
     (widgetType: WidgetType): WidgetValidation => {
+      // FIRST: Check cooldown system (prevents infinite loops)
+      if (widgetCooldown && !widgetCooldown.canShowWidget(widgetType)) {
+        const reason = widgetCooldown.getBlockReason(widgetType);
+        console.log(`[UnifiedIntentRouter] Widget ${widgetType} blocked by cooldown: ${reason}`);
+        return { valid: false, reason: reason || 'blocked_by_cooldown' };
+      }
+      
+      // THEN: Check prerequisites
       const validator = WIDGET_PREREQUISITES[widgetType];
       if (!validator) {
         return { valid: true };
       }
       return validator(flowState);
     },
-    [flowState]
+    [flowState, widgetCooldown]
   );
 
   /**

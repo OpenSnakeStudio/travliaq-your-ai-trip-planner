@@ -5,7 +5,78 @@
     "inputPlaceholder": "Envoyer un message...",
     "inputHelper": "Tapez une destination ou demandez des vols, activités, hébergements",
     "startConversation": "Démarrez la conversation...",
-    "welcomeMessage": "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage."
+    "welcomeMessage": "Bonjour ! Je suis votre assistant de voyage. Dites-moi où vous souhaitez aller et je vous aiderai à planifier votre voyage.",
+    "closeChat": "Fermer le chat",
+    "inputLoading": "Réflexion en cours...",
+    "noConversation": "Aucune conversation",
+    "creating": "Création...",
+    "creatingToast": "Création d'une nouvelle conversation...",
+    "createdToast": "Nouvelle conversation créée !",
+    "deletingToast": "Suppression en cours...",
+    "deletedToast": "Historique supprimé !",
+    "excellentChoice": "Excellent choix ! {{country}} est une destination magnifique.",
+    "searchingCities": "Je recherche les meilleures villes...",
+    "errorOccurred": "Désolé, une erreur s'est produite. Réessayez."
+  },
+  "preference": {
+    "selectInterests": "Maintenant, sélectionnez vos centres d'intérêt :",
+    "anythingElse": "Autre chose à mentionner ? (critères obligatoires, restrictions alimentaires...)",
+    "afterMustHaves": "Parfait ! Avez-vous des restrictions alimentaires ?",
+    "searchingDestinations": "Je recherche les meilleures destinations pour vous...",
+    "configureDietary": "Configurons vos restrictions alimentaires :",
+    "configureMustHaves": "Configurons vos critères obligatoires :",
+    "configureStyle": "Définissons votre style de voyage :",
+    "noInterests": "Aucun intérêt sélectionné",
+    "mustHavesConfigured": "Critères configurés",
+    "dietaryConfigured": "Restrictions alimentaires : {{restrictions}}",
+    "continue": "Continuer"
+  },
+  "mustHaves": {
+    "title": "Critères obligatoires",
+    "selected": "{{count}} sélectionné(s)",
+    "accessibility": "Accessibilité PMR",
+    "petFriendly": "Animaux acceptés",
+    "familyFriendly": "Adapté aux familles",
+    "wifi": "Wi-Fi haut débit",
+    "none": "Aucun critère"
+  },
+  "dietary": {
+    "title": "Restrictions alimentaires",
+    "none": "Aucune restriction"
+  },
+  "widget": {
+    "dateSelected": "Date sélectionnée",
+    "datesSelected": "Dates sélectionnées",
+    "travelersSelected": "Voyageurs sélectionnés",
+    "travelersConfirmed": "Voyageurs confirmés",
+    "tripTypeSelected": "Type de voyage sélectionné",
+    "citySelected": "Ville sélectionnée",
+    "airportsConfirmed": "Aéroports confirmés",
+    "styleConfigured": "Style configuré",
+    "interestsSelected": "Intérêts sélectionnés",
+    "mustHavesConfigured": "Critères configurés",
+    "dietaryConfigured": "Restrictions configurées",
+    "destinationSelected": "Destination sélectionnée",
+    "selectDepartureDate": "Sélectionnez la date de départ",
+    "selectReturnDate": "Sélectionnez la date de retour",
+    "alreadyConfigured": "Cette option a déjà été configurée"
+  },
+  "style": {
+    "intense": "Intense",
+    "chill": "Relax",
+    "luxury": "Luxe",
+    "eco": "Économique",
+    "balanced": "Équilibré"
+  },
+  "inspire": {
+    "title1": "🗺️ **Prêt pour l'inspiration ?**\n\nPour vous guider vers la destination parfaite, dites-moi d'abord quel type d'expérience vous recherchez :",
+    "title2": "✨ **Trouvons votre voyage idéal !**\n\nVotre prochain voyage doit vous ressembler. Dites-moi votre style pour des suggestions personnalisées :",
+    "title3": "🌍 **L'aventure vous attend !**\n\nChaque destination a son charme. Partagez vos préférences pour des recommandations sur mesure :",
+    "title4": "🎯 **Destination mystère ?**\n\nJe suis là pour vous aider à trouver la perle rare. Commençons par définir votre profil de voyageur :",
+    "title5": "🧭 **Explorons ensemble !**\n\nLes meilleures destinations sont celles qui correspondent à vos envies. Partagez votre vision du voyage parfait :"
+  },
+  "suggestion": {
+    "nothingElse": "Rien d'autre, trouve-moi des destinations"
   },
   "suggestions": {
     "inspire": "Inspire-moi",

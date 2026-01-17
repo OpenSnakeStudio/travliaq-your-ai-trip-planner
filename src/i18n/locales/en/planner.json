@@ -5,7 +5,78 @@
     "inputPlaceholder": "Send a message...",
     "inputHelper": "Type a destination or ask about flights, activities, accommodations",
     "startConversation": "Start the conversation...",
-    "welcomeMessage": "Hello! I'm your travel assistant. Tell me where you'd like to go and I'll help you plan your trip."
+    "welcomeMessage": "Hello! I'm your travel assistant. Tell me where you'd like to go and I'll help you plan your trip.",
+    "closeChat": "Close chat",
+    "inputLoading": "Thinking...",
+    "noConversation": "No conversation",
+    "creating": "Creating...",
+    "creatingToast": "Creating a new conversation...",
+    "createdToast": "New conversation created!",
+    "deletingToast": "Deleting...",
+    "deletedToast": "History deleted!",
+    "excellentChoice": "Excellent choice! {{country}} is a beautiful destination.",
+    "searchingCities": "Searching for the best cities...",
+    "errorOccurred": "Sorry, an error occurred. Please try again."
+  },
+  "preference": {
+    "selectInterests": "Now, select your interests:",
+    "anythingElse": "Anything else to mention? (mandatory criteria, dietary restrictions...)",
+    "afterMustHaves": "Perfect! Do you have any dietary restrictions?",
+    "searchingDestinations": "Searching for the best destinations for you...",
+    "configureDietary": "Let's configure your dietary restrictions:",
+    "configureMustHaves": "Let's configure your mandatory criteria:",
+    "configureStyle": "Let's define your travel style:",
+    "noInterests": "No interests selected",
+    "mustHavesConfigured": "Criteria configured",
+    "dietaryConfigured": "Dietary restrictions: {{restrictions}}",
+    "continue": "Continue"
+  },
+  "mustHaves": {
+    "title": "Mandatory criteria",
+    "selected": "{{count}} selected",
+    "accessibility": "Wheelchair accessible",
+    "petFriendly": "Pet friendly",
+    "familyFriendly": "Family friendly",
+    "wifi": "High-speed Wi-Fi",
+    "none": "No criteria"
+  },
+  "dietary": {
+    "title": "Dietary restrictions",
+    "none": "No restrictions"
+  },
+  "widget": {
+    "dateSelected": "Date selected",
+    "datesSelected": "Dates selected",
+    "travelersSelected": "Travelers selected",
+    "travelersConfirmed": "Travelers confirmed",
+    "tripTypeSelected": "Trip type selected",
+    "citySelected": "City selected",
+    "airportsConfirmed": "Airports confirmed",
+    "styleConfigured": "Style configured",
+    "interestsSelected": "Interests selected",
+    "mustHavesConfigured": "Criteria configured",
+    "dietaryConfigured": "Restrictions configured",
+    "destinationSelected": "Destination selected",
+    "selectDepartureDate": "Select departure date",
+    "selectReturnDate": "Select return date",
+    "alreadyConfigured": "This option has already been configured"
+  },
+  "style": {
+    "intense": "Intense",
+    "chill": "Relaxed",
+    "luxury": "Luxury",
+    "eco": "Budget",
+    "balanced": "Balanced"
+  },
+  "inspire": {
+    "title1": "🗺️ **Ready for inspiration?**\n\nTo guide you to the perfect destination, first tell me what kind of experience you're looking for:",
+    "title2": "✨ **Let's find your ideal trip!**\n\nYour next trip should reflect who you are. Tell me your style for personalized suggestions:",
+    "title3": "🌍 **Adventure awaits!**\n\nEvery destination has its charm. Share your preferences for tailored recommendations:",
+    "title4": "🎯 **Mystery destination?**\n\nI'm here to help you find the hidden gem. Let's start by defining your traveler profile:",
+    "title5": "🧭 **Let's explore together!**\n\nThe best destinations are those that match your desires. Share your vision of the perfect trip:"
+  },
+  "suggestion": {
+    "nothingElse": "Nothing else, find me destinations"
   },
   "suggestions": {
     "inspire": "Inspire me",
