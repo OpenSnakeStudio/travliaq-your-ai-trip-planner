@@ -1,6 +1,6 @@
 {
-  "hero.title": "Your trip,",
-  "hero.title.ai": "powered by AI",
+  "hero.title": "Your next trip starts here.",
+  "hero.title.ai": "In one prompt.",
   "hero.subtitle": "Discover your next personalized itinerary — flights, hotels, weather, activities, all in one click.",
   "hero.subtitle.user": "{{name}}, discover your next personalized itinerary — flights, hotels, weather, activities, all in one click.",
   "hero.cta": "Create your itinerary",
